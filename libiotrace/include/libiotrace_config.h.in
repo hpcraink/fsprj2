@@ -1,0 +1,34 @@
+#ifndef LIBIOTRACE_CONFIG_H
+#define LIBIOTRACE_CONFIG_H
+
+// All the options configured by CMake
+#define LIBIOTRACE_VERSION_MAJOR @LIBIOTRACE_VERSION_MAJOR@
+#define LIBIOTRACE_VERSION_MINOR @LIBIOTRACE_VERSION_MINOR@
+
+/* Define to 1 if system has <stdlib.h> header file. */
+#cmakedefine HAVE_STDLIB_H 1
+
+/* Define to 1 if system has <sys/types.h> header file. */
+#cmakedefine HAVE_SYS_TYPES_H 1
+
+/* Define to 1 if system has <sys/stat.h> header file. */
+#cmakedefine HAVE_SYS_STAT_H 1
+
+/* Define to 1 if system has <unistd.h> header file. */
+#cmakedefine HAVE_UNISTD_H 1
+
+/*****************************************************************************/
+/*  Following is not dependent on cmake; rather evaluates from the previous  */
+/*****************************************************************************/
+
+#undef BEGIN_C_DECLS
+#undef END_C_DECLS
+#if defined(c_plusplus) || defined(__cplusplus)
+#  define BEGIN_C_DECLS          extern "C" {
+#  define END_C_DECLS            }
+#else
+#  define BEGIN_C_DECLS          /* empty */
+#  define END_C_DECLS            /* empty */
+#endif
+
+#endif /* LIBIOTRACE_CONFIG_H */

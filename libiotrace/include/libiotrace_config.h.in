@@ -5,6 +5,15 @@
 #define LIBIOTRACE_VERSION_MAJOR @LIBIOTRACE_VERSION_MAJOR@
 #define LIBIOTRACE_VERSION_MINOR @LIBIOTRACE_VERSION_MINOR@
 
+/* Define to 1 if system has <pthread.h> header file. */
+#cmakedefine HAVE_PTHREAD_H 1
+
+/* Define to 1 if system has <stdbool.h> header file. */
+#cmakedefine HAVE_STDBOOL_H 1
+
+/* Define to 1 if system has <stdint.h> header file. */
+#cmakedefine HAVE_STDINT_H 1
+
 /* Define to 1 if system has <stdlib.h> header file. */
 #cmakedefine HAVE_STDLIB_H 1
 
@@ -17,9 +26,29 @@
 /* Define to 1 if system has <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
 
+// These are checked by CheckCompilerAttributes.cmake
+/* Define to 1 if compiler supports attribute nonnull. */
+#cmakedefine HAVE_ATTRIBUTE_NONNULL 1
+
+/* Define to 1 if compiler supports attribute unused. */
+#cmakedefine HAVE_ATTRIBUTE_UNUSED 1
+
 /*****************************************************************************/
 /*  Following is not dependent on cmake; rather evaluates from the previous  */
 /*****************************************************************************/
+
+
+#ifdef HAVE_ATTRIBUTE_NONNULL
+#  define ATTRIBUTE_NONNULL(x...)  __attribute__((nonnull(x)))
+#else
+#  define ATTRIBUTE_NONNULL(x...)
+#endif
+
+#ifdef HAVE_ATTRIBUTE_UNUSED
+#  define ATTRIBUTE_UNUSED         __attribute__((unused))
+#else
+#  define ATTRIBUTE_UNUSED
+#endif
 
 #undef BEGIN_C_DECLS
 #undef END_C_DECLS

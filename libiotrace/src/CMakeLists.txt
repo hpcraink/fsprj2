@@ -7,9 +7,10 @@ check_include_files("unistd.h" HAVE_UNISTD_H)
 check_include_files("pthread.h" HAVE_PTHREAD_H)
 
 # Please keep in alphabetical order
-add_library(libiotrace STATIC
-    init.c)
+add_library(iotrace STATIC
+    init.c
+)
 
-install(TARGETS libiotrace
+install(TARGETS iotrace
         ARCHIVE DESTINATION lib
 )

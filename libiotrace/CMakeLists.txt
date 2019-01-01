@@ -17,6 +17,7 @@ include(${libiotrace_SOURCE_DIR}/cmake/CheckCompilerAttributes.cmake)
 CheckCompilerAttributes() 
 
 
+include_directories(${libiotrace_SOURCE_DIR}/include)
 include_directories(${libiotrace_BINARY_DIR}/include)
 
 add_subdirectory(src)

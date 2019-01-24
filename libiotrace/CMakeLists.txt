@@ -17,6 +17,9 @@ include(${libiotrace_SOURCE_DIR}/cmake/CheckCompilerAttributes.cmake)
 CheckCompilerAttributes() 
 
 
+# XXX ToDo: check for __uint128_t support (only on 64-bit architecture and some compiler-versions)
+
+
 include_directories(${libiotrace_SOURCE_DIR}/include)
 include_directories(${libiotrace_BINARY_DIR}/include)
 
@@ -28,6 +31,8 @@ if (WITH_UNIT_TESTS)
     # find_package(CUnit REQUIRED)
     #
     # XXX Bail out by just adding the cunit git as submodule
+    # git rm --cached ext/cunit
+    # rm -f ext
     # git submodule add https://gitlab.com/cunity/cunit.git ext/cunit
     add_subdirectory(ext/cunit)
 endif()

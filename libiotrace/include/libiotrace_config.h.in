@@ -33,6 +33,9 @@
 /* Define to 1 if compiler supports attribute unused. */
 #cmakedefine HAVE_ATTRIBUTE_UNUSED 1
 
+/* Define to 1 if compiler supports attribute constructor. */
+#cmakedefine HAVE_ATTRIBUTE_CONSTRUCTOR 1
+
 /*****************************************************************************/
 /*  Following is not dependent on cmake; rather evaluates from the previous  */
 /*****************************************************************************/
@@ -48,6 +51,12 @@
 #  define ATTRIBUTE_UNUSED         __attribute__((unused))
 #else
 #  define ATTRIBUTE_UNUSED
+#endif
+
+#ifdef HAVE_ATTRIBUTE_CONSTRUCTOR
+#  define ATTRIBUTE_CONSTRUCTOR    __attribute__((constructor))
+#else
+#  define ATTRIBUTE_CONSTRUCTOR
 #endif
 
 #undef BEGIN_C_DECLS

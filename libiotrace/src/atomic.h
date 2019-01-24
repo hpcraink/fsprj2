@@ -19,6 +19,7 @@
 
 BEGIN_C_DECLS
 
+// if expr_ evaluates to 0 the following switch doesn't compile
 #define ATOMIC_COMPILE_TIME_ASSERT(expr_) \
     do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 

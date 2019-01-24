@@ -21,4 +21,13 @@ function (CheckCompilerAttributes)
         }
     "  HAVE_ATTRIBUTE_UNUSED)
     # message ("HAVE_ATTRIBUTE_UNUSED: ${HAVE_ATTRIBUTE_UNUSED}")
+
+    check_c_source_compiles ("
+        static void init(void) __attribute__((constructor));
+        static void init(void) {}
+        int main(void) {
+            return 0;
+        }
+    "  HAVE_ATTRIBUTE_CONSTRUCTOR)
+    # message ("HAVE_ATTRIBUTE_CONSTRUCTOR: ${HAVE_ATTRIBUTE_CONSTRUCTOR}")
 endfunction ()

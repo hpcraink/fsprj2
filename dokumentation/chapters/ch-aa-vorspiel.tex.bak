@@ -1,0 +1,42 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Eidesstattliche Erklärung}
+
+Hiermit versichere ich, die vorliegende Arbeit selbstständig und unter ausschließlicher Verwendung der angegebenen Literatur und Hilfsmittel erstellt zu haben.\\\\
+Die Arbeit wurde bisher in gleicher oder ähnlicher Form keiner anderen Prüfungsbehörde vorgelegt und auch nicht veröffentlicht.\\
+\begin{tabbing}
+	Esslingen, den \workDatum ~~	\= \rule{5cm}{0.3mm}\\
+										\> Unterschrift
+\end{tabbing}
+%
+\newpage
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\chapter*{Sperrvermerk} % Optional; Hinweis auf Vertraulichkeit dieser Arbeit
+
+Die nachfolgende \workTyp enthält vertrauliche Daten der \workFirma.
+Veröffentlichungen oder Vervielfältigungen der Diplomarbeit -- auch nur auszugsweise -- sind ohne ausdrückliche Genehmigung der \workFirma nicht gestattet. Die Diplomarbeit ist nur den Korrektoren sowie den Mitgliedern des Prüfungsausschusses zugänglich zu machen.
+\newpage
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\chapter*{Zitat} % Optional
+\begin{center}
+\begin{minipage}{12cm}
+\begin{quotation}
+\textit{\enquote{Far out in the uncharted backwaters of the unfashionable
+end of the western spiral arm of the Galaxy lies a small unregarded
+yellow sun. Orbiting this at a distance of roughly ninety-two
+million miles is an utterly insignificant little blue green planet
+whose ape-descended life forms are so amazingly primitive that they
+still think digital watches are a pretty neat idea.}}
+\end{quotation}
+\hfill \textsf Douglas Adams -- The Hitchhikers Guide to the Galaxy
+\end{minipage}
+\end{center}
+\newpage{}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter*{Vorwort} % oder Danksagung; Optional
+
+Dank an die Firma und die Firmenmitarbeiter, max. 1 Seite
+
+\newpage
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

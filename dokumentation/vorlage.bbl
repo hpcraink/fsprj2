@@ -1,7 +1,55 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
+
+\bibitem{ArgonneNationalLaboratory.19.01.2019}
+Darshan-util installation and usage, 19.01.2019.
+
+\bibitem{TUDresden.2016}
+Vampirtrace 5.14.4: User manual, 2016.
+
+\bibitem{ArgonneNationalLaboratory.22.01.2019}
+Darshan-runtime installation and usage, 22.01.2019.
+
+\bibitem{Berger.30.07.2014}
+Holger Berger.
+\newblock Ludalo, 2014.
+
+\bibitem{Cazes.26.09.2013}
+John Cazes and Ritu Arora.
+\newblock Introduction to parallel i/o, 26.09.2013.
 
 \bibitem{Corbett.1995}
 Peter~et.al. Corbett.
 \newblock Mpi-io: A parallel file i/o interface for mpi, 1995.
+
+\bibitem{Kuhn.13.05.2016}
+Michael Kuhn.
+\newblock Mpi-io: Hochleistungs-ein-/ausgabe, 2016.
+
+\bibitem{Layton.02.03.2010}
+Jeffrey~B. Layton.
+\newblock Posix io must die!, 2010.
+
+\bibitem{Lockwood.11.09.2017}
+Glenn Lockwood.
+\newblock What's so bad about posix i/o?, 2017.
+
+\bibitem{Mendez.23.06.2016}
+Sandra Mendez.
+\newblock Analyzing the high performance parallel i/o on lrz hpc systems,
+  23.06.2016.
+
+\bibitem{Schanze.25.02.2016}
+Robert Schanze.
+\newblock Mooresches gesetz: Defintion und ende von moore's law -- einfach
+  erkl{\"a}rt, 25.02.2016.
+
+\bibitem{Shende.03.05.2017}
+Sameer Shende.
+\newblock Tau performance analysis, 2017.
+
+\bibitem{Shende.2011}
+Sameer Shende, Allan~D. Mallony, Wyatt Spear, and Karen Schuchardt.
+\newblock Characterizing i/o performance using the tau performance system,
+  2011.
 
 \end{thebibliography}

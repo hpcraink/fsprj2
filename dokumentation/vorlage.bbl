@@ -9,6 +9,31 @@ Vampirtrace 5.14.4: User manual, 2016.
 \bibitem{ArgonneNationalLaboratory.22.01.2019}
 Darshan-runtime installation and usage, 22.01.2019.
 
+\bibitem{man.dlsym3}
+{dlsym3}.
+\newblock \url{http://man7.org/linux/man-pages/man3/dlsym.3.html}, o. J.
+\newblock [Online; Zugriff am 07.11.2018].
+
+\bibitem{git.gitlab}
+{gitlab}.
+\newblock \url{https://gitlab.com/cunity/cunit}, o. J.
+\newblock [Online; Zugriff am 07.11.2018].
+
+\bibitem{man.intro2}
+{intro2}.
+\newblock \url{http://man7.org/linux/man-pages/man2/intro.2.html}, o. J.
+\newblock [Online; Zugriff am 07.11.2018].
+
+\bibitem{man.ld1}
+{ld1}.
+\newblock \url{http://man7.org/linux/man-pages/man1/ld.1.html}, o. J.
+\newblock [Online; Zugriff am 07.11.2018].
+
+\bibitem{man.syscalls2}
+{syscalls2}.
+\newblock \url{http://man7.org/linux/man-pages/man2/syscalls.2.html}, o. J.
+\newblock [Online; Zugriff am 07.11.2018].
+
 \bibitem{Berger.30.07.2014}
 Holger Berger.
 \newblock Ludalo, 2014.

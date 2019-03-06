@@ -1,2 +1,49 @@
 \chapter{Anhang}
 \label{sec:a-kapitel}
+
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {� }{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1,
+  basicstyle=\fontsize{10}{12}\selectfont,
+  breaklines=true,
+  backgroundcolor=\color{white},
+  keywordstyle=\color{blue},
+  stringstyle=\color{orange},
+  commentstyle=\color{teal},
+  morecomment=[l][\color{magenta}]{\#},
+  %identifierstyle=\color{olive}
+}
+\lstloadlanguages{bash,C++,C}
+
+\section{Testprogramm OpenMP}
+\label{sec:testprogramm_openmp}
+
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/test.c}
+
+\section{dynamischer Wrapper mit zentraler Buffer}
+\label{sec:dynamischer_wrapper_mit_zentraler_buffer}
+
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/wrap-preload_example.c}
+
+\section{statischer Wrapper}
+\label{sec:statischer_wrapper}
+
+Die Funktino writeData ist im folgenden Beispiel nicht definiert. Sie kann analog zu einem dynamischen Wrapper implementiert werden \verw{sec:dynamischer_wrapper_mit_zentraler_buffer}.
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/wrap-link_example.c}
+
+\section{linken statischer Wrapper}
+\label{sec:linken_statischer_wrapper}
+
+Im folgenden Beispiel wurde wrap-link.o aus einem statischen Wrapper \verw{sec:statischer_wrapper} und test-link.o aus einem Testprogramm \verw{sec:testprogramm_openmp} kompiliert.
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/wrap-link_link.txt}

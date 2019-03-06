@@ -17,9 +17,20 @@
 \BOOKMARK [1][-]{section.3.4}{3.4 TAU}{chapter.3}% 17
 \BOOKMARK [1][-]{section.3.5}{3.5 Fazit}{chapter.3}% 18
 \BOOKMARK [0][]{chapter.4}{4 Entwicklung einer eigenen Software}{}% 19
-\BOOKMARK [1][-]{section.4.1}{4.1 Architektur}{chapter.4}% 20
-\BOOKMARK [1][-]{section.4.2}{4.2 Umsetzung}{chapter.4}% 21
-\BOOKMARK [0][]{chapter.5}{5 Aktueller Stand}{}% 22
-\BOOKMARK [0][]{chapter.6}{6 Zusammenfassung und Ausblick}{}% 23
-\BOOKMARK [0][]{appendix.A}{A Anhang}{}% 24
-\BOOKMARK [0][]{chapter*.17}{Literaturverzeichnis}{}% 25
+\BOOKMARK [1][-]{section.4.1}{4.1 File-IO-Konstellationen}{chapter.4}% 20
+\BOOKMARK [2][-]{subsection.4.1.1}{4.1.1 Konsistenz und Synchronisation}{section.4.1}% 21
+\BOOKMARK [2][-]{subsection.4.1.2}{4.1.2 Metadaten}{section.4.1}% 22
+\BOOKMARK [1][-]{section.4.2}{4.2 Architektur}{chapter.4}% 23
+\BOOKMARK [2][-]{subsection.4.2.1}{4.2.1 Datenformat}{section.4.2}% 24
+\BOOKMARK [2][-]{subsection.4.2.2}{4.2.2 Wrapper}{section.4.2}% 25
+\BOOKMARK [2][-]{subsection.4.2.3}{4.2.3 System}{section.4.2}% 26
+\BOOKMARK [1][-]{section.4.3}{4.3 Umsetzung}{chapter.4}% 27
+\BOOKMARK [2][-]{subsection.4.3.1}{4.3.1 Wrapper}{section.4.3}% 28
+\BOOKMARK [0][]{chapter.5}{5 Aktueller Stand}{}% 29
+\BOOKMARK [0][]{chapter.6}{6 Zusammenfassung und Ausblick}{}% 30
+\BOOKMARK [0][]{appendix.A}{A Anhang}{}% 31
+\BOOKMARK [1][-]{section.A.1}{A.1 Testprogramm OpenMP}{appendix.A}% 32
+\BOOKMARK [1][-]{section.A.2}{A.2 dynamischer Wrapper mit zentraler Buffer}{appendix.A}% 33
+\BOOKMARK [1][-]{section.A.3}{A.3 statischer Wrapper}{appendix.A}% 34
+\BOOKMARK [1][-]{section.A.4}{A.4 linken statischer Wrapper}{appendix.A}% 35
+\BOOKMARK [0][]{chapter*.45}{Literaturverzeichnis}{}% 36

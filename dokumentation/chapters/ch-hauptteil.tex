@@ -16,7 +16,7 @@ Das Sammeln von Informationen zur Laufzeit von Programmen geschieht \"uber die S
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=12cm]{fig/Darshan.jpg}
+	\includegraphics[width=12cm]{fig/Darshan.JPG}
 	\caption{Darshan Aufbau \cite{Mendez.23.06.2016}}
 	\label{fig:darshan}
 \end{figure}
@@ -39,12 +39,582 @@ Tau ist eine Software, entwickelt von der University of Oregeon, zur Analyse von
 Keines der untersuchten Programme enth\"alt alle Features, welche in diesem Projekt gew\"unscht sind. Darshan trifft die Anforderungen jedoch am ehesten. Damit kann sowohl MPI-IO als auch POSIX-IO analysiert werden. Allerdings ist dabei keine interaktive Bedienung m\"oglich. Dasselbe ist bei VampirTrace auch der Fall. Damit kann zwar ebenfalls MPI-IO und POSIX-IO analysiert werden, jedoch ist auch hierbei keine interaktive Bedienung vorhanden. Aus diesem Grund soll in diesem Projekt eine Software entwickelt werden, welche die Features von Darshan und VampirTrace mit einer interaktiven Bedienung vereint.
 
 \chapter{Entwicklung einer eigenen Software}
+
+Zur Entwicklung einer eigenen Lösung für die Protokollierung und anschließenden Analyse von File-IO sind mehrere Schritte notwendig. Zunächst muss festgelegt werden, welche Daten ausgewertet werden sollen und wie diese erfasst werden können. Nachgelagert folgt dann die Konzeption des gesamten Systems bis hin zur visuellen Aufbereitung der Analyseergebnisse. Mit diesen Schritten befassen sich die folgenden Abschnitte.
+
+\section{File-IO-Konstellationen}
+\label{sec:file_io_konstellationen}
+
+Im Folgenden werden unterschiedliche Konstellationen von Dateizugriffen betrachtet, die bei einer Analyse unterschieden werden müssen. Dementsprechend bilden diese Konstellationen auch die Grundlage für die zu protokollierenden Daten. Es müssen ausreichend Daten protokolliert werden um diese Konstellationen erkennen zu können.
+
+\subsection{Konsistenz und Synchronisation}
+\label{subsec:konsistenz_und_synchronisation}
+
+Alle folgende Konstellationen beziehen sich auf die Laufzeit eines untersuchten Programms. Zugriffe auf Dateien vor Programmstart und nach Programmende werden nicht betrachtet. Eine Unterscheidung in Threads und Prozesse wird bei der Beschreibung der einzelnen Konstellationen nicht vorgenommen, da beide Varianten sich bezüglich der Synchronisation gleich verhalten. Vereinfachend steht der Begriff Prozess daher für Thread oder Prozess.
+
+\subsubsection{Prozess 0 schreibt einmalig in eine Datei}
+\label{subsubsec:prozess_0_schreibt_einmalig_in_eine_datei}
+
+Ein Prozess schreibt einmalig in eine Datei. Die Datei wird durch keinen anderen Prozess beschrieben und durch keinen Prozess gelesen.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node[left] {Zeit} (-1,-1);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-1);
+\draw[black] (2,0) node[above] {Datei} -- (2,-1);
+
+\draw[->,red] (0,-0.5) -- node[above,red] {schreiben} (2,-0.5);
+\end{tikzpicture}
+\caption{Prozess 0 schreibt einmalig in eine Datei}
+\label{fig:prozess_0_schreibt_einmalig_in_eine_datei}
+\end{figure}
+
+Um diese Konstellation zu erkennen, muss für alle Dateizugriffe des Programms die Datei und die Art des Zugriffs protokolliert werden. Dadurch ist es möglich zu überprüfen, ob nur einmalig schreibend auf eine Datei zugegriffen wird.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen
+\end{itemize}
+
+Bei dieser Konstellation ist keine Synchronisation während der Laufzeit des Programms erforderlich. IO kann gefahrlos optimiert werden. Lediglich vor Programmende muss eventuell geprüft werden, ob der Schreibvorgang abgeschlossen ist, damit nachfolgenden Programmen die Daten zur Verfügung stehen. Hierfür muss auch ein Schließen der Datei (POSIX close) protokolliert werden.
+
+\begin{itemize}
+ \item Art des Zugriffs: schließen
+\end{itemize}
+
+\subsubsection{Prozess 0 schreibt wiederholt in eine Datei}
+\label{subsubsec:prozess_0_schreibt_wiederholt_in_eine_datei}
+
+Ein Prozess schreibt wiederholt in eine Datei. Die Datei wird durch keinen anderen Prozess beschrieben und durch keinen Prozess gelesen.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node [left] {Zeit} (-1,-1.5);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-1.5);
+\draw[black] (2,0) node[above] {Datei} -- (2,-1.5);
+
+\draw[->,red] (0,-0.5) -- node[above,red] {schreiben} (2,-0.5);
+\draw[->,red] (0,-1) -- node[above,red] {schreiben} (2,-1);
+\end{tikzpicture}
+\caption{Prozess 0 schreibt wiederholt in eine Datei}
+\label{fig:prozess_0_schreibt_wiederholt_in_eine_datei}
+\end{figure}
+
+Um diese Konstellation zu erkennen sind die gleichen Daten wie bei einem einmaligen Schreiben in eine Datei notwendig \verw{subsubsec:prozess_0_schreibt_einmalig_in_eine_datei}. Neben der Datei selbst und der Art des Zugriffs ist hier allerdings auch noch die Zeit von Interesse. Für Optimierungen des Zugriffs ist die Reihenfolge der Zugriffe entscheidend. Nur wenn die Reihenfolge protokolliert wird, kann bei einer Optimierung das ursprüngliche Ergebnis sichergestellt werden. Hierfür ist auch die genaue Position der geschriebenen Bytes in der Datei wichtig. Nur mit dieser Information kann ein Überschreiben in der Datei oder ein sequenzielles Anhängen an ein Dateiende erkannt und bei einer Optimierung beachtet werden. Um Möglichkeiten zur Optimierung zu erkennen, ist zusätzlich die Dauer eines einzelnen Schreibvorgangs notwendig. Über diese Information kann geprüft werden, ob ein nachfolgender Schreibvorgang auf den vorhergehenden warten muss. Hierfür muss zu den Schreibvorgängen auch noch das eigentliche Öffnen (POSIX open) protokolliert werden. Dies betrifft allerdings die Art des Zugriffs und entspricht daher den oben bereits erwähnten Informationen.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+ \item Zeit: Start- und Endzeitpunkt des Zugriffs
+ \item Position: Byteposition und-länge des Zugriffs (bei schreiben und lesen)
+\end{itemize}
+
+Bei dieser Konstellation ist eine Synchronisation zwischen den einzelnen Schreibvorgängen notwendig, sofern diese sich gegenseitig überschreiben oder ein vorhergehender Schreibzugriff das Dateiende verschiebt und der aktuelle Vorgang an dieses anknüpft. Im zweiten Fall kann eventuell auf eine Synchronisation über Blockieren nachfolgender Schreibzugriffe verzichtet werden, wenn die Bytelänge und Anzahl der vorhergehenden Schreibvorgänge bekannt ist.
+
+\subsubsection{Prozess 0 liest einmalig aus einer Datei}
+\label{subsubsec:prozess_0_liest_einmalig_aus_einer_datei}
+
+Ein Prozess liest einmalig aus einer Datei. Die Datei wird durch keinen anderen Prozess gelesen und durch keinen Prozess beschrieben.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node[left] {Zeit} (-1,-1);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-1);
+\draw[black] (2,0) node[above] {Datei} -- (2,-1);
+
+\draw[<-,brown] (0,-0.5) -- node[above,brown] {lesen} (2,-0.5);
+\end{tikzpicture}
+\caption{Prozess 0 liest einmalig aus einer Datei}
+\label{fig:prozess_0_liest_einmalig_aus_einer_datei}
+\end{figure}
+
+Um diese Konstellation zu erkennen, sind die gleichen Daten wie bei einem einmaligen Schreiben in eine Datei notwendig \verw{subsubsec:prozess_0_schreibt_einmalig_in_eine_datei}. Das Schließen der Datei ist dabei ebenfalls nur zur Sicherung des Zugriffs durch nachfolgend arbeitende Programme notwendig.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+\end{itemize}
+
+Bei dieser Konstellation ist keine Synchronisation während der Laufzeit des Programms erforderlich. IO kann gefahrlos optimiert werden.
+
+\subsubsection{Prozess 0 liest wiederholt aus einer Datei}
+\label{subsubsec:prozess_0_liest_wiederholt_aus_einer_datei}
+
+Ein Prozess liest wiederholt aus einer Datei. Die Datei wird durch keinen anderen Prozess gelesen und durch keinen Prozess beschrieben.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node [left] {Zeit} (-1,-1.5);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-1.5);
+\draw[black] (2,0) node[above] {Datei} -- (2,-1.5);
+
+\draw[<-,brown] (0,-0.5) -- node[above,brown] {lesen} (2,-0.5);
+\draw[<-,brown] (0,-1) -- node[above,brown] {lesen} (2,-1);
+\end{tikzpicture}
+\caption{Prozess 0 liest wiederholt aus einer Datei}
+\label{fig:prozess_0_liest_wiederholt_aus_einer_datei}
+\end{figure}
+
+Diese Konstellation verhält sich analog zum einmaligen Lesen aus einer Datei \verw{subsubsec:prozess_0_liest_einmalig_aus_einer_datei}, da das mehrfache Lesen einer sich nicht verändernden Datei weder beim Erkennen der Konstellation noch zur Synchronisation zusätzliche Anforderungen stellt.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+\end{itemize}
+
+\subsubsection{Prozess 0 liest und schreibt eine Datei}
+\label{subsubsec:prozess_0_liest_und_schreibt_eine_datei}
+
+Ein Prozess liest und schreibt wiederholt eine Datei. Die Datei wird durch keinen anderen Prozess gelesen und durch keinen anderen Prozess beschrieben.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node [left] {Zeit} (-1,-2.5);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-2.5);
+\draw[black] (2,0) node[above] {Datei} -- (2,-2.5);
+
+\draw[<-,brown] (0,-0.5) -- node[above,brown] {lesen} (2,-0.5);
+\draw[->,red] (0,-1) -- node[above,red] {schreiben} (2,-1);
+\draw[<-,brown] (0,-1.5) -- node[above,brown] {lesen} (2,-1.5);
+\draw[->,red] (0,-2) -- node[above,red] {schreiben} (2,-2);
+\end{tikzpicture}
+\caption{Prozess 0 liest und schreibt eine Datei}
+\label{fig:prozess_0_liest_und_schreibt_eine_datei}
+\end{figure}
+
+Um zwischen Lesen und Schreiben unterscheiden zu können, sind mindestens die Informationen zum einmaligen Lesen  \verw{subsubsec:prozess_0_liest_einmalig_aus_einer_datei} und zum einmaligen Schreiben \verw{subsubsec:prozess_0_schreibt_einmalig_in_eine_datei} notwendig. Um konkurrierende und sich gegenseitig blockierende Schreibvorgänge zu identifizieren sind zudem die gleichen Daten wie beim wiederholten Schreiben nötig \verw{subsubsec:prozess_0_schreibt_wiederholt_in_eine_datei}.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+ \item Zeit: Start- und Endzeitpunkt des Zugriffs
+ \item Position: Byteposition und-länge des Zugriffs (bei schreiben und lesen)
+\end{itemize}
+
+Bei dieser Konstellation ist eine Synchronisation sowohl zwischen den einzelnen Schreibvorgängen als auch zwischen Schreibvorgängen und darauf folgenden Lesevorgängen notwendig. Hier muss also zusätzlich zu den im Abschnitt über wiederholtes Schreiben \verw{subsubsec:prozess_0_schreibt_wiederholt_in_eine_datei} genannten Prüfungen noch überprüft werden, ob ein lesender Zugriff auf zuvor durch Schreibvorgänge veränderte Bytes erfolgt.
+
+\subsubsection{Prozess 0 und Prozess 1 schreiben in eine Datei}
+\label{subsubsec:prozess_0_und_prozess_1_schreiben_in_eine_datei}
+
+Mehrere Prozesse schreiben wiederholt in die gleiche Datei. Die Datei wird durch keinen Prozess gelesen.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node [left] {Zeit} (-1,-2);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-2);
+\draw[black] (2,0) node[above] {Prozess 1} -- (2,-2);
+\draw[black] (4,0) node[above] {Datei} -- (4,-2);
+
+\draw[->,red] (0,-0.5) -- node[above,near start,red] {schreiben} (4,-0.5);
+\draw[->,red] (2,-1) -- node[above,red] {schreiben} (4,-1);
+\draw[->,red] (0,-1.5) -- node[above,near start,red] {schreiben} (4,-1.5);
+\end{tikzpicture}
+\caption{Prozess 0 und Prozess 1 schreiben in eine Datei}
+\label{fig:prozess_0_und_prozess_1_schreiben_in_eine_datei}
+\end{figure}
+
+Neben den Daten zum Erkennen mehrerer Schreibvorgänge \verw{subsubsec:prozess_0_schreibt_wiederholt_in_eine_datei} ist noch eine Information über den jeweiligen Prozess notwendig.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+ \item Zeit: Start- und Endzeitpunkt des Zugriffs
+ \item Position: Byteposition und-länge des Zugriffs (bei schreiben und lesen)
+ \item Prozess/Thread: Prozess-ID und Thread-Nummer
+\end{itemize}
+
+Wie beim wiederholten Schreiben durch einen Prozess \verw{subsubsec:prozess_0_schreibt_wiederholt_in_eine_datei} ist auch in dieser Konstellation eine Synchronisation nötig.
+
+\subsubsection{Prozess 0 und Prozess 1 lesen aus einer Datei}
+\label{subsubsec:prozess_0_und_prozess_1_lesen_aus_einer_datei}
+
+Mehrere Prozesse lesen wiederholt aus der gleichen Datei. Die Datei wird durch keinen Prozess beschrieben.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node [left] {Zeit} (-1,-2);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-2);
+\draw[black] (2,0) node[above] {Prozess 1} -- (2,-2);
+\draw[black] (4,0) node[above] {Datei} -- (4,-2);
+
+\draw[<-,brown] (0,-0.5) -- node[above,near start,brown] {lesen} (4,-0.5);
+\draw[<-,brown] (2,-1) -- node[above,brown] {lesen} (4,-1);
+\draw[<-,brown] (0,-1.5) -- node[above,near start,brown] {lesen} (4,-1.5);
+\end{tikzpicture}
+\caption{Prozess 0 und Prozess 1 lesen aus einer Datei}
+\label{fig:prozess_0_und_prozess_1_lesen_aus_einer_datei}
+\end{figure}
+
+Neben den Daten zum Erkennen mehrerer Lesevorgäng \verw{subsubsec:prozess_0_liest_wiederholt_aus_einer_datei} ist noch eine Information über den jeweiligen Prozess notwendig.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+ \item Prozess/Thread: Prozess-ID und Thread-Nummer
+\end{itemize}
+
+\subsubsection{Prozess 0 und Prozess 1 lesen und schreiben eine Datei}
+\label{subsubsec:prozess_0_und_prozess_1_lesen_und_schreiben_eine_datei}
+
+Mehrere Prozesse lesen und schreiben wiederholt eine Datei.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[->,black] (-1,0) -- node [left] {Zeit} (-1,-2.5);
+
+\draw[black] (0,0) node[above] {Prozess 0} -- (0,-2.5);
+\draw[black] (2,0) node[above] {Prozess 1} -- (2,-2.5);
+\draw[black] (4,0) node[above] {Datei} -- (4,-2.5);
+
+\draw[->,red] (0,-0.5) -- node[above,near start,red] {schreiben} (4,-0.5);
+\draw[<-,brown] (2,-1) -- node[above,brown] {lesen} (4,-1);
+\draw[->,red] (2,-1.5) -- node[above,red] {schreiben} (4,-1.5);
+\draw[<-,brown] (0,-2) -- node[above,near start,brown] {lesen} (4,-2);
+\end{tikzpicture}
+\caption{Prozess 0 und Prozess 1 lesen aus einer Datei}
+\label{fig:prozess_0_und_prozess_1_lesen_aus_einer_datei}
+\end{figure}
+
+Diese Konstellation stellt eine Kombination aller vorhergehenden Konstellationen dar. Dementsprechend werden alle Daten der einzelnen Konstellationen benötigt.
+
+\begin{itemize}
+ \item Datei: Pfad und Dateiname
+ \item Art des Zugriffs: öffnen, schreiben, lesen, schließen
+ \item Zeit: Start- und Endzeitpunkt des Zugriffs
+ \item Position: Byteposition und-länge des Zugriffs (bei schreiben und lesen)
+ \item Prozess/Thread: Prozess-ID und Thread-Nummer
+\end{itemize}
+
+Hier ist eine Synchronisation zwischen den Schreibvorgängen aller beteiligter Prozesse notwendig. Zudem müssen Lesevorgänge nach Schreibvorgängen gegebenenfalls auch synchronisiert erfolgen (wenn ein zuvor geschriebener Dateiinhalt ausgelesen wird).
+
+\subsection{Metadaten}
+\label{subsec:metadaten}
+
+Wenn Metadaten von einem überwachten Programm ausgelesen werden, so muss dies protokolliert werden. Falls kein derartiger Zugriff auf Metadaten protokolliert wurde, kann möglicherweise auf die Erstellung und Aktualisierung von Metadaten verzichtet werden. Dementsprechend könnten Methoden und Dateisysteme ohne Metadaten genutzt werden. Da Metadaten über POSIX-Methoden nicht explizit sondern implizit über jeden ändernden Zugriff auf eine Datei geschrieben werden, muss vor einem Verzicht auf Metadaten allerdings geklärt werden, ob neben dem überwachten Prozess noch nachgelagerte Zugriffe auf die Metadaten stattfinden. Dies kann nicht automatisch geschehen. Daher kann in einem solchen Fall nur eine Empfehlung durch eine Analyse erstellt werden.
+
 \section{Architektur}
-\label{sec:real}
+\label{sec:architecture}
+
+Wichtig für die Architektur ist neben dem Blick auf das gesamte System auch die Entscheidung für ein geeignetes Datenformat zur Protokollierung und die genaue Gestaltung der Wrapper. Mit einem Wrapper ist in diesem Zusammenhang das Abfangen eines File-IO-Funktionsaufrufes gemeint. Hierfür wird ein Funktionsaufruf an eine andere Funktion (den Wrapper) delegiert und erst von dort aus die ursprünglich gewünschte Funktion aufgerufen. Somit besteht die Möglichkeit im Wrapper zusätzliche Funktionalität auszuführen. Dies kann beispielsweise die Protokollierung von Informationen über den ursprünglichen Funktionsaufruf sein.
+
+\subsection{Datenformat}
+\label{subsec:datenformat}
+
+Für die im Abschnitt zu Konsistenz und Synchronisation \verw{subsec:konsistenz_und_synchronisation} aufgeführten Konstellationen müssen durch die Wrapper unterschiedliche Informationen protokolliert werden. Aus diesen Unterschieden ergeben sich folgende Satzarten:
+
+\begin{table}[H]
+\centering
+\begin{longtabu} { l | X[c,m] | X[c,m] | X[c,m] | X[c,m] | X[c,m] | X[c,m] | X[c,m] }
+  Art des Zugriffs & Prozess-ID & Thread-Nr. & Pfad und Datei & Startzeit & Endzeit & Position & Länge \\ \hline
+  \endhead
+  öffnen & \gut & \gut & \gut & \gut & \gut & \schlecht & \schlecht \\ \hline
+  schließen & \gut & \gut & \gut & \gut & \gut & \schlecht & \schlecht \\ \hline
+  lesen & \gut & \gut & \gut & \gut & \gut & \gut & \gut \\ \hline
+  schreiben & \gut & \gut & \gut & \gut & \gut & \gut & \gut \\
+\end{longtabu}
+\begin{longtabu} { l l }
+  \gut & Datum wird benötigt \\
+  \schlecht & Datum wird nicht benötigt \\
+\end{longtabu}
+\addtocounter{table}{-2}
+\caption{Übersicht Satzarten}
+\label{table:uebersicht_satzarten}
+\end{table}
+
+Es werden neben den oben aufgeführten noch weitere Daten benötigt (z.B. Optionen beim Öffnen einer Datei oder MPI-spezifische Parameter).
+
+Um die benötigten Daten nach dem Protokollieren in eine Datei durch beliebige Anwendungen nutzen zu können \verw{subsec:system} ist ein binäres Format nicht ausreichend. Es wird ein Datenformat benötigt, welches die einzelnen Werte eines Datensatzes selbst beschreibt. Somit setzt das Nutzen der Daten nicht die genaue Kenntnis um Bytelängen und Kodierung der Werte voraus, wie dies bei einem Binärformat der Fall wäre. Als Format kommt somit beispielsweise XML in Frage. Da beim Schreiben der Protokolldatei jedoch auch die Performance wichtig ist, wird ein Format mit möglichst geringem zusätzlichen Aufwand benötigt. Hier erfordert XML durch die Wiederholung der Beschreibung in öffnenden und schließenden Tags zu viele Bytes beim Schreiben der Datei. Dies wirkt sich negativ auf die Dateigröße und die zum Schreiben benötigte Zeit aus. Unter den Formaten mit hoher Verbreitung erfüllt JSON am ehesten die Anforderungen. Die in JSON-Dateien enthaltenen Werte sind als Key-Value-Paare abgelegt und enthalten somit immer einen beschreibenden Text als Key. Zusätzlich sind die eigentlichen Werte im Value-Teil immer als String-Repräsentation kodiert. Weiterhin ist der Daten-Overhead durch die Nutzung weniger Sonderzeichen anstelle von beispielsweise Tags in XML möglichst gering.
+
+\subsection{Wrapper}
+\label{subsec:architektur_wrapper}
+
+Wesentlich für die Funktion der Protokollierung ist ein effizientes und vollständiges Abfangen des File-IOs. Dies geschieht über Wrapper, welche die jeweiligen Funktionsaufrufe abfangen und anschließend alle benötigten Daten protokollieren, um danach die ursprünglich gewünschte Funktion aufzurufen. Im Folgenden wird das Wrappen von Funktionsaufrufen von C-Bibliotheken genauer erläutert. Dies geschieht anhand von POSIX-IO und der glibc. Zudem wird die Möglichkeit von direkten Aufrufen des Linux-Kernels ohne vorgeschaltete C-Bibliothek erwähnt, aber aufgrund der geringen Relevanz für dieses Projekt nicht weiter erläutert. Anschließend werden drei mögliche Architekturvarianten für die Wrapper näher erläutert und gegeneinander abgewogen.
+
+Eine Liste der vom Linux-Kernel angebotenen Systemfunktionen kann der Dokumentation in den ,,man-Pages`` entnommen werden\cite{man.syscalls2}. Hier finden sich auch die von POSIX definierten Funktionen, welche ebenfalls in der glibc-Bibliothek als C-Funktionen zur Verfügung stehen.
+
+Bei der Architektur der Wrapper liegt der Fokus insbesondere auf der Performance. Da der zu untersuchende File-IO einen Engpass in den überwachten Anwendungen darstellen kann, muss das Protokollieren des IOs mit möglichst geringem Aufwand an Speicher und Laufzeit erfolgen.
+
+\subsubsection{POSIX über glibc}
+\label{subsubsec:posix_ueber_glibc}
+
+Die POSIX Implementierung in Linux stellt Systemfunktionen entsprechend der einzelnen POSIX-Funktionen bereit. Diese werden meist nicht direkt, sondern über die entsprechende c-Bibliothek glibc aufgerufen\cite{man.intro2}. Für die Fälle, in denen die Systemfunktionen über glibc aufgerufen werden, können Wrapper für die einzelnen Funktionen bereitgestellt werden.
+
+Dabei ist zu beachten, dass einige Funktionen innerhalb der glibc wiederum andere Funktionen aufrufen. So ruft beispielsweise ,,printf`` zunächst ,,puts`` auf. In ,,puts`` wird wiederum ,,write`` aufgerufen. Da mit den folgend beschriebenen Mitteln nur Aufrufe von außen an die glibc-Bibliothek gewrappt werden können, Aufrufe innerhalb von glibc aber nicht, müssen für das Wrappen aller ,,write``-Aufrufe auch ,,puts`` und ,,printf`` gewrappt werden.
+
+Die folgenden Vorgehensweisen setzen voraus, dass die glibc genutzt wird. Dies ist abhängig von der genauen Implementierung des jeweiligen Programms. Es gibt Programme, welche direkt die Systemfunktionen aufrufen ohne die glibc zu verwenden.
+
+\paragraph{Dynamische gelinkt:}
+\label{par:dynamisch_gelinkt}
+
+Unter Linux existiert die Umgebungsvariable ,,LD\_PRELOAD``. Diese kann zur Angabe eines Pfades zu einer shared library genutzt werden. Die entsprechend über diesen Pfad angegebene Bibliothek wird dann vor allen anderen Bibliotheken geladen. Werden in dieser Bibliothek Funktionen der glibc-Bibliothek (C-Interface zu Systemfunktionen unter Linux)\cite{man.syscalls2} überschrieben, so werden anstelle der glibc-Funktionen die überschriebenen Funktionen ausgeführt.
+
+Um innerhalb der überschriebenen Funktionen die ursprünglich gerufene Funktion aus der glibc-Bibliothek aufzurufen, kann nicht direkt der Funktionsname genutzt werden, da dies zu einem Namenskonflikt mit der überschriebenen Funktion führt. Anstelle eines Aufrufs über den Namen kann allerdings mit der Funktion dlsym\cite{man.dlsym3} die Adresse der gewünschten Funktion ermittelt werden. Über diese Adresse kann dann die Funktion in glibc ausgeführt werden.
+
+Die Funktion dlsym muss mit der Konstante ,,RTLD\_NEXT`` (findet erste Routine innerhalb der geladenen Module) aufgerufen werden. Aus Performancegründen muss dabei über einen Init Hook (Linker -init) sichergestellt sein, dass einmalig nach dem Laden von glibc der jeweilige Funktionspointer ermittelt wird.
+
+Ein Beispiel für einen dynamischen Wrapper kann dem Anhang entnommen werden \verw{sec:dynamischer_wrapper_mit_zentraler_buffer}.
+
+\paragraph{Statisch gelinkt:}
+\label{par:statisch_gelinkt}
+
+Werden Funktionen nicht zur Laufzeit dynamisch ermittelt, sondern sind statisch fest eingebunden, so kann ein Wrapper nur zum Zeitpunkt des Linkens eingebunden werden. Hierfür kann im GNU Linker die Option ,,ld --wrap=symbol`` \cite{man.ld1} genutzt werden. Über den gcc kann die Option ,,-Wl``genutzt werden, damit intern der Linker mit ,,ld --wrap`` aufgerufen wird.
+
+Ein Beispiel für einen statischen Wrapper \verw{sec:statischer_wrapper} und einen dazu passenden Aufruf des Linkers \verw{sec:linken_statischer_wrapper} kann dem Anhang entnommen werden.
+
+\subsubsection{POSIX über Kernel Entry Point}
+\label{subsubsec:posix_ueber_kernel_entry_point}
+
+Im Projekt vorerst nicht relevant, da üblicherweise über glibc und nicht direkt über System Calls mittels Kernel Entry Point gearbeitet wird. Sollte der Projektfokus entsprechend erweitert werden, so sind die Wrapper \verw{subsec:architektur_wrapper} nicht ausreichend. Ansätze für mögliche Lösungen können dem Linux-Programm ptrace oder Programmen wie Plash, Systrace, Subterfugue, Chrome sandbox und Pink trace entnommen werden. Ein möglicher Ansatz ist ,,system call interposition``. Dieser Ansatz macht aber eventuell bei jedem System Call einen zusätzlichen Kontextwechsel notwendig und wirkt sich damit stark auf die Performance aus.
+
+\subsubsection{Thread Local Storage}
+\label{subsubsec:thread_local_storage}
+
+Über Thread Local Storage (TLS) sicherstellen, dass beim Schreiben in den Speicher keine Synchronisation notwendig ist und somit auch keine Wartezeiten anfallen. Im TLS für jeden Thread einer Anwendung einen Buffer zum Schreiben reservieren. Sobald ein Buffer voll ist, die enthaltenen Daten in eine eigene Datei schreiben. Dabei die Prozess-ID und die Thread-Nummer im Dateinamen vermerken. Auf diese Weise ist auch beim Schreiben in die Datei keine Synchronisation notwendig.
+
+Um den TLS beim Start eines Threads zu reservieren und ihn vor dem Ende des jeweiligen Threads abschließend in eine Datei zu übernehmen, muss das Starten und das Beenden eines Threads erkannt werden. Zusätzlich zum Reservieren und Leeren des TLS muss auch das Öffnen und Schließen der jeweiligen Datei abhängig von der Laufzeit des jeweiligen Threads erfolgen \verwb{fig:sequenzdiagramm_wrapper_mit_tls}.
+
+Da die Funktionalität zum Überprüfen, ob der Buffer noch ausreichend leeren Platz enthält, und zum Leeren des Buffers in eine Datei, in jedem Wrapper einer POSIX-/MPI-IO-Funktion benötigt wird, muss sie in separate Funktionen ausgelagert werden. Dabei kann die Funktion zum Prüfen des Buffers die Funktion zum Leeren intern nutzen/aufrufen. Somit muss in den Wrappern nur eine Funktion genutzt werden und das Leeren steht dennoch als separate Funktion für das Beenden eines Threads zur Verfügung.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex]
+\draw[black] (0,0) node[above] {Programm} -- (0,-0.5);
+\draw[black,fill=black!20] (-0.2,-0.5) rectangle (0.2,-13);
+\draw[->,black] (-0.7,-0.5) -- (-0.2,-0.5);
+\draw[->,black] (-0.2,-13) -- (-0.7,-13);
+\draw[black] (0,-13) -- (0,-13.5);
+
+\draw[black] (4,0) node[above] {IOInfolib} -- (4,-1);
+\draw[black,fill=black!20] (3.8,-1) rectangle (4.2,-3.5);
+\draw[->,black] (0.2,-1) -- node[fill=white] {startThread()} (3.8,-1);
+\draw[->,black] (4.2,-1.5) -- (4.7,-1.5) -- node[right] {TLS initialisieren} (4.7,-2) -- (4.2,-2);
+\draw[->,black] (3.8,-3.5) -- (0.2,-3.5);
+\draw[black] (4,-3.5) -- (4,-4);
+\draw[->,black] (0.2,-4) -- node[fill=white] {fileIO()} (3.8,-4);
+\draw[black,fill=black!20] (3.8,-4) rectangle (4.2,-9.5);
+\draw[->,black] (4.2,-4.5) -- (4.7,-4.5) -- node[right] {TLS ausreichend?} (4.7,-5) -- (4.2,-5);
+\draw[->,black] (4.2,-7.5) -- (4.7,-7.5) -- node[right] {log in TLS} (4.7,-8) -- (4.2,-8);
+\draw[->,black] (3.8,-9.5) -- (0.2,-9.5);
+\draw[black] (4,-9.5) -- (4,-10);
+\draw[->,black] (0.2,-10) -- node[fill=white] {stopThread()} (3.8,-10);
+\draw[black,fill=black!20] (3.8,-10) rectangle (4.2,-12.5);
+\draw[->,black] (3.8,-12.5) -- (0.2,-12.5);
+\draw[black] (4,-12.5) -- (4,-13.5);
+
+\draw[black] (8,0) node[above] {glibc} -- (8,-2.5);
+\draw[black,fill=black!20] (7.8,-2.5) rectangle (8.2,-3);
+\draw[->,black] (4.2,-2.5) -- node[fill=white] {openLogFile()} (7.8,-2.5);
+\draw[->,black] (7.8,-3) -- (4.2,-3);
+\draw[black] (8,-3) -- (8,-6);
+\draw[black,fill=black!20] (7.8,-6) rectangle (8.2,-6.5);
+\draw[->,black] (4.2,-6) -- node[fill=white] {writeLogFile()} (7.8,-6);
+\draw[->,black] (7.8,-6.5) -- (4.2,-6.5);
+\draw[black] (8,-6.5) -- (8,-8.5);
+\draw[black,fill=black!20] (7.8,-8.5) rectangle (8.2,-9);
+\draw[->,black] (4.2,-8.5) -- node[fill=white] {fileIO()} (7.8,-8.5);
+\draw[->,black] (7.8,-9) -- (4.2,-9);
+\draw[black] (8,-9) -- (8,-10.5);
+\draw[black,fill=black!20] (7.8,-10.5) rectangle (8.2,-11);
+\draw[->,black] (4.2,-10.5) -- node[fill=white] {writeLogFile()} (7.8,-10.5);
+\draw[->,black] (7.8,-11) -- (4.2,-11);
+\draw[black] (8,-11) -- (8,-11.5);
+\draw[black,fill=black!20] (7.8,-11.5) rectangle (8.2,-12);
+\draw[->,black] (4.2,-11.5) -- node[fill=white] {closeLogFile()} (7.8,-11.5);
+\draw[->,black] (7.8,-12) -- (4.2,-12);
+\draw[black] (8,-12) -- (8,-13.5);
+
+\draw[black] (-0.7,-5.5) -- node[below, at end] {TLS nicht ausreichend} (10.5,-5.5);
+\draw[black] (-0.7,-7) -- (10.5,-7);
+\end{tikzpicture}
+\caption{Sequenzdiagramm Wrapper mit TLS}
+\label{fig:sequenzdiagramm_wrapper_mit_tls}
+\end{figure}
+
+Je nach Art der Parallelisierung unter Linux kann das Starten und das Stoppen eines nebenläufigen Vorgangs unterschiedlich abgefangen werden. Bei einem Vorgehen über fork() und exit() werden separate Prozesse (heavy-weight process) gestartet. Geschieht dies über die entsprechenden Funktionen in der glibc, so kann es über Wrapper abgefangen werden. Zusätzlich müssen noch alle nicht mittels fork() sondern über einen Befehl zum Ausführen einer Datei gestarteten Prozesse abgefangen werden. Dies betrifft die Funktionen execl(), execlp(), execv() und execvp().
+Wird anstelle von fork() die Funktion clone() genutzt, so wird kein Prozess, sondern ein Thread (light-weight process) gestartet. Daher muss diese Funktion ebenfalls abgefangen werden. In diesem Fall gibt es keinen exit() für die einzelnen Threads. Stattdessen kann ein waitpid() mit der Prozess-ID des Threads genutzt werden, um das Ende des Threads zu erkennen. In diesem Fall ist der Speicher des Threads allerdings bereits freigegeben und nicht mehr sicher nutzbar. Das finale Schreiben des Buffers in eine Datei kann also auf diesem Weg nicht ermöglicht werden. Das gleiche gilt für exit\_group(). Über diese Funktion werden mehrere laufende Prozesse/Threads in einer Prozess-Gruppe gemeinsam beendet. Auch hierbei kann nicht sichergestellt werden, ob der Speicher eines Threads bereits freigegeben wurde.
+
+Wurde alternativ über die POSIX-Threads in der glibc parallelisiert, so kann über das Makro pthread\_cleanup\_push() eine weitere Funktion zum finalen Cleanup übergeben werden. Da dieses Makro allerdings immer mit einem weiteren Makro (pthread\_cleanup\_pop()) innerhalb der gleichen umschließenden Klammern kombiniert werden muss, lässt sich dieser Ansatz bei einer event-orientierten Vorgehensweise nicht nutzen. Zudem funktioniert dieses Vorgehen nur bei Threads, die mit den entsprechenden Funktionen der glibc erstellt wurden. Somit lassen sich beispielsweise über openMP parallelisierte Programme so nicht instrumentieren.
+
+Bei dieser Architektur muss also zwischen unterschiedlichen Parallelisierungsarten unterschieden werden. Zudem gibt es Vorgehensweisen, die nicht über die glibc-Funktionen gehen. So nutzen manche Programmme direkt die Funktionen des Kernels und reduziert auf diese Weise den Overhead der Parallelisierung auf ein Minimum. Leider gibt es bei diesen Programmen somit keine Funktionen in der glibc oder einer anderen Bibliothek, die durch einen Wrapper abgefangen werden können.
+
+Ein weiterer Nachteil dieser Architektur ist der erhöhte Speicherverbrauch. Um Verzögerungen durch dynamische Reservierung von Speicher (alloc() bzw. malloc()) zu vermeiden soll der benötigte Speicher einmalig reserviert werden. Beim dynamischen Reservieren müsste zum einen das Betriebssystem prüfen, ob und wenn ja wo der angefragte Speicherplatz verfügbar ist. Zum Anderen müssten Strategien für den Fall, dass nicht ausreichend Speicherplatz zur Laufzeit verfügbar ist, implementiert werden. Es findet daher kein nachträgliches Vergrößern des Speichers statt. Dies deckt sich mit den Anforderungen an TLS. Hier wird einmalig zum Start eines Threads der benötigte Speicher reserviert. Daraus ergibt sich allerdings das Problem, dass für jeden Thread bereits zum Start des Threads ein großer Buffer reserviert werden muss. Zu diesem Zeitpunkt steht noch nicht fest, wie viel File-IO der jeweilige Thread tatsächlich ausführt. Im Extremfall führt ein Thread überhaupt keinen File-IO aus und benötigt daher eigentlich keinen Buffer im TLS. Dies kann der jeweilige Wrapper zwar während der Ausführung des Threads analysieren und bei Beenden des Threads final feststellen, da die Reservierung des Speichers aber schon zum Start des Threads erfolgen muss, wird unnötigerweise Speicherplatz blockiert. Wird aufgrund dieses Umstandes ein kleiner Buffer gewählt, so wirkt sich dies negativ auf alle Threads aus, die tatsächlich viel File-IO ausführen. Bei diesen ist der kleine Buffer ständig voll und muss vor erneutem Protokollieren des IOs erst durch Schreiben in eine Datei geleert werden. Dies bremst den Thread aus und steht somit im Widerspruch zu den Anforderungen an die Wrapper-Architektur.
+
+\subsubsection{Zentraler Buffer}
+\label{subsubsec:zentraler_buffer}
+
+Ein einziger zentraler Buffer umgeht die Probleme bei der Nutzung von TLS \verw{subsubsec:thread_local_storage}. Es ist keine Unterscheidung in verschiedene Arten der Parallelisierung und kein unnötiges Reservieren von Speicher notwendig \verwb{fig:sequenzdiagramm_wrapper_mit_zentralem_buffer}. Allerdings erfordert das Schreiben in den zentralen Buffer eine Synchronisation zwischen den einzelnen Threads einer Anwendung. Hierdurch entsteht ein Engpass, durch den sich Threads gegenseitig ausbremsen können. Daher ist diese Architekturvariante zwar leicht zu implementieren, verfehlt aber die Vorgabe möglichst performant zu sein.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex]
+\draw[black] (0,-3) node[above] {Programm} -- (0,-3.5);
+\draw[black,fill=black!20] (-0.2,-3.5) rectangle (0.2,-10);
+\draw[->,black] (-0.7,-3.5) -- (-0.2,-3.5);
+\draw[->,black] (-0.2,-10) -- (-0.7,-10);
+\draw[black] (0,-10) -- (0,-10.5);
+
+\draw[black] (3,-3) node[above] {IOInfolib} -- (3,-4);
+\draw[->,black] (0.2,-4) -- node[fill=white] {fileIO()} (2.8,-4);
+\draw[black,fill=black!20] (2.8,-4) rectangle (3.2,-9.5);
+\draw[->,black] (3.2,-4.5) -- (3.7,-4.5) -- node[right] {Buffer ausreichend?} (3.7,-5) -- (3.2,-5);
+\draw[->,black] (3.2,-7.5) -- (3.7,-7.5) -- node[right] {log in Buffer} (3.7,-8) -- (3.2,-8);
+\draw[->,black] (2.8,-9.5) -- (0.2,-9.5);
+\draw[black] (3,-9.5) -- (3,-10.5);
+
+\draw[black] (7,-3) node[above] {glibc} -- (7,-6);
+\draw[black,fill=black!20] (6.8,-6) rectangle (7.2,-6.5);
+\draw[->,black] (3.2,-6) -- node[fill=white] {writeLogFile()} (6.8,-6);
+\draw[->,black] (6.8,-6.5) -- (3.2,-6.5);
+\draw[black] (7,-6.5) -- (7,-8.5);
+\draw[black,fill=black!20] (6.8,-8.5) rectangle (7.2,-9);
+\draw[->,black] (3.2,-8.5) -- node[fill=white] {fileIO()} (6.8,-8.5);
+\draw[->,black] (6.8,-9) -- (3.2,-9);
+\draw[black] (7,-9) -- (7,-10.5);
+
+\draw[black] (-0.7,-5.5) -- node[below, at end] {Buffer nicht ausreichend} (9.5,-5.5);
+\draw[black] (-0.7,-7) -- (9.5,-7);
+\end{tikzpicture}
+\caption{Sequenzdiagramm Wrapper mit zentralem Buffer}
+\label{fig:sequenzdiagramm_wrapper_mit_zentralem_buffer}
+\end{figure}
+
+\subsubsection{Lock-free Bag}
+\label{subsubsec:lock_free_bag}
+
+Um die Vorteile der Architekturvarianten Thread Local Storage \verw{subsubsec:thread_local_storage} und zentraler Buffer \verw{subsubsec:zentraler_buffer} zu kombinieren und gleichzeitig die jeweiligen Nachteile zu vermeiden kann ein lock-free Bag genutzt werden. Dabei wird in einen zentralen Bag geschrieben \verwb{fig:sequenzdiagramm_wrapper_mit_lock_free_bag}. Es ist also nicht notwendig das Verwalten von Threads zu überwachen. Zur Synchronisation der Zugriffe nutzt der Bag atomare Instruktionen. Hierbei wird lediglich ein Pointer in den Bag atomar inkrementiert. Das Schreiben in den durch den Pointer definierten Speicherbereich erfolgt nach dem Inkrementieren unsynchronisiert. Somit wird die Synchronisation auf eine einzige Instruktion beschränkt. Sie ist somit auf das absolut mögliche Minimum reduziert. Hierfür muss die zugrunde liegende Architektur des Prozessors jedoch entsprechende atomare Instruktionen zur Inkrementierung eines Pointers anbieten. Diese Architekturvariante funktioniert daher nicht mit jedem Prozessor.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex]
+\draw[black] (0,-3) node[above] {Programm} -- (0,-3.5);
+\draw[black,fill=black!20] (-0.2,-3.5) rectangle (0.2,-10.5);
+\draw[->,black] (-0.7,-3.5) -- (-0.2,-3.5);
+\draw[->,black] (-0.2,-10.5) -- (-0.7,-10.5);
+\draw[black] (0,-10.5) -- (0,-11);
+
+\draw[black] (3,-3) node[above] {IOInfolib} -- (3,-4);
+\draw[->,black] (0.2,-4) -- node[fill=white] {fileIO()} (2.8,-4);
+\draw[black,fill=black!20] (2.8,-4) rectangle (3.2,-10);
+\draw[->,black] (2.8,-10) -- (0.2,-10);
+\draw[black] (3,-10) -- (3,-11);
+
+\draw[black] (6,-3) node[above] {Bag} -- (6,-7);
+\draw[black,fill=black!20] (5.8,-7) rectangle (6.2,-9.5);
+\draw[->,black] (3.2,-7) -- node[fill=white] {log()} (5.8,-7);
+\draw[->,black] (5.8,-9.5) -- (3.2,-9.5);
+\draw[black] (6,-9.5) -- (6,-11);
+
+\draw[black] (9,-3) node[above] {glibc} -- (9,-6);
+\draw[black,fill=black!20] (8.8,-4.5) rectangle (9.2,-6);
+\draw[->,black] (3.2,-4.5) -- node[fill=white] {fileIO()} (8.8,-4.5);
+\draw[->,black] (8.8,-6) -- (3.2,-6);
+\draw[black] (9,-6) -- (9,-7.5);
+\draw[black,fill=white] (8.8,-7.5) rectangle (9.2,-9);
+\draw[->,black,dashed] (6.2,-7.5) -- node[fill=white] {fileIO()} (8.8,-7.5);
+\draw[->,black,dashed] (8.8,-9) -- (6.2,-9);
+\draw[black] (9,-9) -- (9,-11);
+
+\draw[black] (12,-3) node[above] {Kernel} -- (12,-5);
+\draw[black,fill=black!20] (11.8,-5) rectangle (12.2,-5.5);
+\draw[->,black] (9.2,-5) -- node[fill=white] {fileIO()} (11.8,-5);
+\draw[->,black] (11.8,-5.5) -- (9.2,-5.5);
+\draw[black] (12,-5.5) -- (12,-8);
+\draw[black,fill=white] (11.8,-8) rectangle (12.2,-8.5);
+\draw[->,black,dashed] (9.2,-8) -- node[fill=white] {fileIO()} (11.8,-8);
+\draw[->,black,dashed] (11.8,-8.5) -- (9.2,-8.5);
+\draw[black] (12,-8.5) -- (12,-11);
+\end{tikzpicture}
+\caption{Sequenzdiagramm Wrapper mit lock-free Bag}
+\label{fig:sequenzdiagramm_wrapper_mit_lock_free_bag}
+\end{figure}
+
+\subsection{System}
+\label{subsec:system}
+
+Die libiotrace schaltet sich zwischen den Prozess und die glibc. Dadurch kann jeder Aufruf einer Funktion für File-IO an die glibc abgefangen und protokolliert werden. Die Protokollierung erfolgt in einem JSON-File. Jeder mittels libiotrace überwachte Prozess führt somit pro Ausführung zu einer Datei mit Daten im JSON-Format \verwb{fig:systemarchitektur}. Das Ablegen der Rohdaten in Dateien hat mehrere Gründe. Zum einen wird der überwachte Prozess nicht noch zusätzlich durch eine Analyse der Daten ausgebremst. Zum anderen stehen die Daten für die Analyse durch verschiedene Anwendungen zur Verfügung. Es können neue Anwendungen auf Basis der Dateien erstellt werden, ohne dass hierfür die libiotrace angepasst oder aus der neuen Anwendung mit der libiotrace kommuniziert werden muss.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex]
+
+\node(Prozess) {Prozess};
+\node[draw,fill=white,below of=Prozess] (Thread1) {Thread};
+\node[draw,fill=white,below of=Thread1] (Thread2) {Thread};
+\node[draw,fill=white,right of=Thread1,xshift=1cm] (IOTrace) {IOTrace};
+%\draw [->] (Prozess) -- (IOTrace);
+\draw [->] (Thread1) -- (IOTrace);
+\draw [->] (Thread2) -- (IOTrace);
+\begin{scope}[on background layer]
+\node[fit=(Prozess)(Thread1)(Thread2)(IOTrace), draw,fill=black!20](Prozess_Rahmen){};
+\end{scope}
+
+\node[draw,right of=IOTrace,xshift=1.5cm] (JSON-File) {JSON-File};
+\draw [->] (IOTrace) -- (JSON-File);
+
+\node[draw,fill=white,right of=JSON-File,xshift=1.5cm] (Script) {Script};
+\draw [->] (JSON-File) -- (Script);
+\node[draw,fill=white,right of=Script,xshift=0.5cm] (DB) {DB};
+\draw [->] (Script) -- (DB);
+\node[draw,fill=white,right of=DB,xshift=1cm] (Analyselogik) {Analyselogik};
+\draw [->] (DB) -- (Analyselogik);
+\node[draw,fill=white,right of=Analyselogik,xshift=2cm] (Webclient1) {Webclient};
+\node[draw,fill=white,below of=Webclient1] (Webclient2) {Webclient};
+\draw [->] (Analyselogik) -- (Webclient1);
+\draw [->] (Analyselogik) -- (Webclient2);
+\node[above of=Script] (Analyse) {Analyse};
+\begin{scope}[on background layer]
+\node[fit=(Script)(DB)(Analyselogik)(Webclient1)(Webclient2)(Analyse), draw,fill=black!20](IO-Analyse_Rahmen){};
+\end{scope}
+
+\end{tikzpicture}
+\caption{Systemarchitektur}
+\label{fig:systemarchitektur}
+\end{figure}
+
+Ein überwachter Prozess kann, abhängig vom jeweiligen File-IO, sehr viele Protokolldaten erzeugen. Um in diesen die zur Analyse und Visualisierung interessanten Konstellationen zu finden, müssen sie performant durchsucht werden können. Sollen zudem die Protokolle mehrerer Prozesse in Abhängigkeit zueinander durchsucht werden, so wird die Datenmenge und somit das Problem größer. Für eine performante Verarbeitung der Protokolldaten muss daher eine schnelle Suche in den Daten möglich sein. Hierfür werden die einzelnen Protokolldateien über ein Script in eine Datenbank importiert. Die Datenbank stellt über die Generierung von Indizes performante Suchen zur Verfügung.
+
+Um verschiedenen Frontends über die gleiche Datenbank versorgen zu können, ohne hierbei für jedes Frontend erneut grundlegende Analysefunktionen zu implementieren, werden Analysen in eine eigene Komponente ausgelagert. Diese Komponente regelt die Datenbankverbindung und bietet Schnittstellen für die Frontends an. Über die Schnittstelle können interaktiv sowohl die Rohdaten, als auch Analyseergebnisse abgefragt werden.
+
+Die Visualisierung der Daten und Analysen erfolgt in den Frontends. Hier wird zunächst ein Webfrontend vorgesehen. Dieses ermöglicht eine Visualisierung unabhängig vom genutzten Client.
 
 \section{Umsetzung}
 \label{sec:umsetz}
 
+Vor der Implementierung von Analysen und der Visualisierung der Ergebnisse müssen die Wrapper zum Protokollieren der benötigten Daten vorhanden sein. Daher werden zunächst die Wrapper entwickelt.
+
+\subsection{Wrapper}
+\label{subsec:umsetzung_wrapper}
+
+Die benötigten Wrapper und alle zum Protokollieren in eine Datei benötigten Funktionen werden in einer Bibliothek zusammengefasst bereitgestellt. Diese Bibliothek heißt libiotrace. Sie wird in einer Variante für dynamisch gelinkte Programme und einer Variante zum statischen Linken bereitgestellt.
+
+Die Umsetzung der libiotrace erfolgt aus Performancegründen in der Programmiersprache C. Dabei wird CMake als Buildtool genutzt. Somit kann die Entwicklung der Bibliothek möglichst portabel gehalten werden. Für das Schreiben in die Protokolldatei müssen parallele Prozesse unterstützt werden. Dies macht eine threadsafe Implementierung der Bibliothek notwendig. Aus Performancegründen ist dabei eine Synchronisation über Locks unerwünscht. Stattdessen erfolgt die Umsetzung über hochperformante und möglichst lockfreie Datenstrukturen.
+
+Die Entwicklung erfolgt in einer frei verfügbaren und kostenlosen IDE mit Unterstützung für die Sprache C. Neben Netbeans kommt somit auch Eclipse in Frage. Aufgrund des Einsatzes von CMake kann die IDE beliebig gewechselt werden. Sofern die IDE CMake-Projekte nicht direkt unterstützt erfolgt die Entwicklung zwar in der IDE, der Buildvorgang wird dann aber außerhalb der IDE durchgeführt.
+
+Für die gemeinsame Entwicklung und die Verwaltung unterschiedlicher Entwicklungsstände wird ein Repository-System benötigt. Dieses muss wie die IDE frei verfügbar und kostenlos sein. Entsprechend der aktuellen Verbreitung und Popularität wurde hierfür GIT ausgewählt. Das Projektrepository ist unter \url{https://github.com/hpcraink/fsprj2} erreichbar.
+
+Um Unit-Tests zu ermöglichen wird das Projekt CUnit genutzt \cite{git.gitlab}.
+
 \chapter{Aktueller Stand}
 \label{sec:ergeb}
 
+Alle nötigen Vorarbeiten für die Erstellung der Wrapper sind abgeschlossen \verw{subsec:umsetzung_wrapper}. Die Entwicklungsumgebung und ein CMake-Projekt sind eingerichtet. Zudem sind die grundlegenden architektonischen Entscheidungen getroffen \verw{subsec:architektur_wrapper}. Hierbei wurde auch die geplante Gesamtarchitektur für das ganze System inklusive Analyse und Visualisierung beachtet \verw{subsec:system}.
+
+Durch erste kleine Testprogramme wurde die Funktionsweise der Wrapper erfolgreich getestet. Hierfür wurde ein Programm erstellt, welches in mehreren parallelen Threads die gleichen Funktionen aus der glibc aufruft \verw{sec:testprogramm_openmp}. Dieses Programm wurde dann mit einem dynamischne Wrapper \verw{sec:dynamischer_wrapper_mit_zentraler_buffer} und einem statischen Wrapper \verw{sec:statischer_wrapper} erfolgreich überwacht. Für den dynamischen Wrapper war hierbei ein Laden des Wrappers über die Umgebungsvariable ,,LD\_PRELOAD`` \verw{par:dynamisch_gelinkt} und für den statischen Wrapper ein Linken über Optionen des Linkers \verw{par:statisch_gelinkt} notwendig. Ein Beispiel für das Linken ist im Anhang enthalten \verw{sec:linken_statischer_wrapper}.
+
+Mit der Implementierung der ersten Wrapper wurde bereits begonnen. Diese wird jetzt fortgesetzt. Dabei liegt der Fokus zunächst auf POSIX-IO und MPI-IO.

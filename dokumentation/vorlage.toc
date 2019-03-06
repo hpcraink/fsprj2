@@ -1,4 +1,4 @@
-\select@language {ngerman}
+\babel@toc {ngerman}{}
 \contentsline {chapter}{\numberline {1}Einleitung}{1}{chapter.1}
 \contentsline {section}{\numberline {1.1}BWHPC}{1}{section.1.1}
 \contentsline {section}{\numberline {1.2}Mooresches Gesetz}{1}{section.1.2}
@@ -21,9 +21,35 @@
 \contentsline {section}{\numberline {3.4}TAU}{10}{section.3.4}
 \contentsline {section}{\numberline {3.5}Fazit}{10}{section.3.5}
 \contentsline {chapter}{\numberline {4}Entwicklung einer eigenen Software}{11}{chapter.4}
-\contentsline {section}{\numberline {4.1}Architektur}{11}{section.4.1}
-\contentsline {section}{\numberline {4.2}Umsetzung}{11}{section.4.2}
-\contentsline {chapter}{\numberline {5}Aktueller Stand}{12}{chapter.5}
-\contentsline {chapter}{\numberline {6}Zusammenfassung und Ausblick}{13}{chapter.6}
-\contentsline {chapter}{\numberline {A}Anhang}{14}{appendix.A}
-\contentsline {chapter}{\nonumberline Literaturverzeichnis}{15}{chapter*.17}
+\contentsline {section}{\numberline {4.1}File-IO-Konstellationen}{11}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}Konsistenz und Synchronisation}{11}{subsection.4.1.1}
+\contentsline {subsubsection}{\nonumberline Prozess 0 schreibt einmalig in eine Datei}{11}{section*.17}
+\contentsline {subsubsection}{\nonumberline Prozess 0 schreibt wiederholt in eine Datei}{12}{section*.19}
+\contentsline {subsubsection}{\nonumberline Prozess 0 liest einmalig aus einer Datei}{13}{section*.21}
+\contentsline {subsubsection}{\nonumberline Prozess 0 liest wiederholt aus einer Datei}{13}{section*.23}
+\contentsline {subsubsection}{\nonumberline Prozess 0 liest und schreibt eine Datei}{14}{section*.25}
+\contentsline {subsubsection}{\nonumberline Prozess 0 und Prozess 1 schreiben in eine Datei}{15}{section*.27}
+\contentsline {subsubsection}{\nonumberline Prozess 0 und Prozess 1 lesen aus einer Datei}{15}{section*.29}
+\contentsline {subsubsection}{\nonumberline Prozess 0 und Prozess 1 lesen und schreiben eine Datei}{16}{section*.31}
+\contentsline {subsection}{\numberline {4.1.2}Metadaten}{17}{subsection.4.1.2}
+\contentsline {section}{\numberline {4.2}Architektur}{17}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}Datenformat}{17}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}Wrapper}{18}{subsection.4.2.2}
+\contentsline {subsubsection}{\nonumberline POSIX \"uber glibc}{19}{section*.34}
+\contentsline {paragraph}{\nonumberline Dynamische gelinkt:}{19}{section*.35}
+\contentsline {paragraph}{\nonumberline Statisch gelinkt:}{20}{section*.36}
+\contentsline {subsubsection}{\nonumberline POSIX \"uber Kernel Entry Point}{20}{section*.37}
+\contentsline {subsubsection}{\nonumberline Thread Local Storage}{20}{section*.38}
+\contentsline {subsubsection}{\nonumberline Zentraler Buffer}{23}{section*.40}
+\contentsline {subsubsection}{\nonumberline Lock-free Bag}{23}{section*.42}
+\contentsline {subsection}{\numberline {4.2.3}System}{24}{subsection.4.2.3}
+\contentsline {section}{\numberline {4.3}Umsetzung}{25}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}Wrapper}{25}{subsection.4.3.1}
+\contentsline {chapter}{\numberline {5}Aktueller Stand}{27}{chapter.5}
+\contentsline {chapter}{\numberline {6}Zusammenfassung und Ausblick}{28}{chapter.6}
+\contentsline {chapter}{\numberline {A}Anhang}{30}{appendix.A}
+\contentsline {section}{\numberline {A.1}Testprogramm OpenMP}{30}{section.A.1}
+\contentsline {section}{\numberline {A.2}dynamischer Wrapper mit zentraler Buffer}{30}{section.A.2}
+\contentsline {section}{\numberline {A.3}statischer Wrapper}{32}{section.A.3}
+\contentsline {section}{\numberline {A.4}linken statischer Wrapper}{33}{section.A.4}
+\contentsline {chapter}{\nonumberline Literaturverzeichnis}{34}{chapter*.45}

@@ -1,4 +1,6 @@
-This is BibTeX, Version 0.99dThe top-level auxiliary file: vorlage.aux
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: vorlage.aux
 A level-1 auxiliary file: chapters/ch-aa-titel.aux
 A level-1 auxiliary file: chapters/ch-aa-vorspiel.aux
 A level-1 auxiliary file: chapters/ch-aa-zusfasg.aux
@@ -11,4 +13,50 @@ Database file #1: bib/bib.bib
 Warning--to sort, need author or key in ArgonneNationalLaboratory.22.01.2019
 Warning--to sort, need author or key in ArgonneNationalLaboratory.19.01.2019
 Warning--to sort, need author or key in TUDresden.2016
-(There were 3 warnings)
+Warning--to sort, need author or key in man.syscalls2
+Warning--to sort, need author or key in man.intro2
+Warning--to sort, need author or key in man.dlsym3
+Warning--to sort, need author or key in man.ld1
+Warning--to sort, need author or key in git.gitlab
+You've used 18 entries,
+            2118 wiz_defined-function locations,
+            584 strings with 5896 characters,
+and the built_in function-call counts, 3442 in all, are:
+= -- 309
+> -- 100
+< -- 0
++ -- 46
+- -- 28
+* -- 127
+:= -- 500
+add.period$ -- 38
+call.type$ -- 18
+change.case$ -- 68
+chr.to.int$ -- 0
+cite$ -- 26
+duplicate$ -- 126
+empty$ -- 405
+format.name$ -- 28
+if$ -- 784
+int.to.chr$ -- 0
+int.to.str$ -- 18
+missing$ -- 0
+newline$ -- 77
+num.names$ -- 20
+pop$ -- 161
+preamble$ -- 1
+purify$ -- 50
+quote$ -- 0
+skip$ -- 134
+stack$ -- 0
+substring$ -- 90
+swap$ -- 18
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 72
+warning$ -- 8
+while$ -- 20
+width$ -- 20
+write$ -- 150
+(There were 8 warnings)

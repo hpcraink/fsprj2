@@ -19,6 +19,8 @@
 % 10. verbatim packages
 % 11. science packages
 % 12. layout packages
+% 13. tikz packages
+% 14. Tables (longtabu)
 
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 % Encoding der Dateien (sonst funktionieren Umlaute nicht)
@@ -396,3 +398,29 @@ backgroundcolor=\color{lightgray},	  % % Hintergrundfarbe der Listings
 
 %\listfiles
 %------------------------------------------------------------------------
+
+
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% 13. tikz packages
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%Zeichnen
+\usepackage{tikz}
+\usetikzlibrary{graphs}
+\usetikzlibrary{positioning}
+\usetikzlibrary{fit}
+\usetikzlibrary{backgrounds}
+
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% 14. Tables (longtabu)
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+\usepackage{longtable}
+\usepackage{tabu}
+%Abstand nach umgebrochenen Zeilen in einer Tabellenzelle gleich dem Abstand bei Zellen ohne Umbruch
+\belowtabulinesep=5pt
+\usepackage{colortbl}
+\usepackage{xcolor}
+
+%für Postscript ZipfDingbats Schriftart (Symbole mit \ding{number})
+\usepackage{pifont}

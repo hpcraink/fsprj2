@@ -11,7 +11,7 @@ Das Mooresche Gesetz sagt im Umkehrschluss also aus, dass sich die Prozessorleis
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{fig/Moore.jpg}
+	\includegraphics[width=7cm]{fig/moore.JPG}
 	\caption{Mooresches Gesetz}
 	\label{fig:moore}
 \end{figure}
@@ -42,7 +42,7 @@ Bei Dateisystemen kann im Wesentlichen zwischen seriellen und parallelen Dateisy
 Beim seriellen IO l\"auft der komplette IO \"uber einen Masterprozess. Dies bedeutet, dass Programme nicht gleichzeitig auf eine Datei zugreifen k\"onnen. Dies ist in Abbildung \ref{fig:serial} ersichtlich.
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{fig/SerialIO.jpg}
+	\includegraphics[width=7cm]{fig/SerialIO.JPG}
 	\caption{Serial IO \cite{Cazes.26.09.2013}}
 	\label{fig:serial}
 \end{figure}
@@ -53,7 +53,7 @@ In Abbildung \ref{fig:serial} ist zu erkennen, dass es zu starken Engp\"assen ko
 Im Gegensatz zum seriellen IO ist es beim parallelen IO m\"oglich, dass mehrere Prozesse zeitgleich auf eine Datei zugreifen k\"onnen. Dies ist in \ref{fig:parallel} dargestellt. Darin wird ersichtlich, dass der IO nicht mehr \"uber einen Masterprozess l\"auft, sondern, dass die einzelnen Prozesse ihren IO unabh\"angig voneinander durchf\"uhren.
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{fig/ParallelIO.jpg}
+	\includegraphics[width=7cm]{fig/ParallelIO.JPG}
 	\caption{Parallel IO \cite{Cazes.26.09.2013}}
 	\label{fig:parallel}
 \end{figure}
@@ -67,7 +67,7 @@ Bevor eine Datei in POSIX gelesen werden kann, muss diese zun\"achst ge\"offnet 
 Der Nachteil von File-Descriptoren kommt zum Tragen, wenn viele Prozesse gleichzeitig auf ein Dateisystem zugreifen wollen. Dann muss das Betriebssystem sehr viele File-Descriptoren parallel verwalten, wodurch bspw. das \"Offnen einer Datei immer langsamer wird, je mehr Prozesse parallel auf das Dateisystem zugreifen. In Abbildung \ref{fig:posix} ist dabei ersichtlich, dass das \"Offnen einer Datei linear langsamer wird, je mehr parallele Prozesse auf das Dateisystem zugreifen.
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{fig/PosixIO.jpg}
+	\includegraphics[width=7cm]{fig/PosixIO.JPG}
 	\caption{\"Offnen einer Datei bei POSIX-IO \cite{Lockwood.11.09.2017}}
 	\label{fig:posix}
 \end{figure}
@@ -80,7 +80,7 @@ MPIO-IO ist der IO-Part des Message Passing Interface (MPI). MPIO-IO ist dabei e
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{fig/Dateityp.jpg}
+	\includegraphics[width=7cm]{fig/Dateityp.JPG}
 	\caption{Dateityp bei MPI-IO \cite{Kuhn.13.05.2016}}
 	\label{fig:dateityp}
 \end{figure}
@@ -89,7 +89,7 @@ In Abbildung \ref{fig:dateisicht} ist der Aufbau einer Datei aus Sicht von Proze
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=7cm]{fig/Dateisicht.jpg}
+	\includegraphics[width=7cm]{fig/Dateisicht.JPG}
 	\caption{Dateisicht bei MPI-IO \cite{Kuhn.13.05.2016}}
 	\label{fig:dateisicht}
 \end{figure}

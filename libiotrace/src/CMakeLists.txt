@@ -9,6 +9,7 @@ check_include_files("pthread.h" HAVE_PTHREAD_H)
 # Please keep in alphabetical order
 add_library(iotrace STATIC
     init.c
+    posix_io.c
 )
 
 install(TARGETS iotrace

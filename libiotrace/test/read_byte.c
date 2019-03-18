@@ -25,7 +25,7 @@ int main(void) {
         ret = read (fd, p, toread);
         assert (-1 != ret);
     }
-    printf ("Read %lld Bytes\n", statbuf.st_size); 
+    printf ("Read %ld Bytes\n", statbuf.st_size);
  
     ret = close (fd);
     return ret;

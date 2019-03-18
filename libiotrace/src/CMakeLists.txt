@@ -7,11 +7,30 @@ check_include_files("unistd.h" HAVE_UNISTD_H)
 check_include_files("pthread.h" HAVE_PTHREAD_H)
 
 # Please keep in alphabetical order
-add_library(iotrace STATIC
+set(SOURCE
+    event.c
     init.c
     posix_io.c
 )
 
-install(TARGETS iotrace
-        ARCHIVE DESTINATION lib
-)
+
+add_library(iotrace_shared SHARED ${SOURCE})
+
+add_library(iotrace_static STATIC ${SOURCE})
+
+add_library(iotrace_object OBJECT ${SOURCE})
+
+# needed for dlsym-function
+target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS})
+
+# needed for the RTLD_NEXT macro
+target_compile_options(iotrace_shared PRIVATE -D_GNU_SOURCE)
+target_compile_options(iotrace_static PRIVATE -D_GNU_SOURCE)
+target_compile_options(iotrace_object PRIVATE -D_GNU_SOURCE)
+
+# object for static linking needs
+target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
+
+#install(TARGETS iotrace_static
+#        ARCHIVE DESTINATION lib
+#)

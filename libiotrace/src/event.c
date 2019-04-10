@@ -1,3 +1,4 @@
+#include "libiotrace_config.h"
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -6,6 +7,7 @@
 #include <sys/syscall.h>
 
 #include "event.h"
+#include "os.h"
 
 void get_basic(struct basic data) {
 	data.process_id = getpid();
@@ -13,7 +15,7 @@ void get_basic(struct basic data) {
 	//data.pthread = gettid();
 
 	// call gettid() as syscall because there is no implementation in glibc
-	data.thread_id = syscall(__NR_gettid);
+	data.thread_id = iotrace_gettid();
 }
 
 void print_basic(struct basic data) {

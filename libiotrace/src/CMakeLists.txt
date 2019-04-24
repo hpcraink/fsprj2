@@ -5,6 +5,7 @@ check_include_files("sys/types.h" HAVE_SYS_TYPES_H)
 check_include_files("sys/stat.h" HAVE_SYS_STAT_H)
 check_include_files("unistd.h" HAVE_UNISTD_H)
 check_include_files("pthread.h" HAVE_PTHREAD_H)
+check_include_files("json-c/json.h" HAVE_JSONC_H)
 
 # Please keep in alphabetical order
 set(SOURCE
@@ -13,12 +14,13 @@ set(SOURCE
     posix_io.c
 )
 
-
 add_library(iotrace_shared SHARED ${SOURCE})
 
 add_library(iotrace_static STATIC ${SOURCE})
 
 add_library(iotrace_object OBJECT ${SOURCE})
+
+target_link_libraries(iotrace_shared PRIVATE json-c)
 
 # needed for dlsym-function
 target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS})

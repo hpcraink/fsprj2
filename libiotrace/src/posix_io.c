@@ -12,11 +12,12 @@
 
 // ToDo: other solution for this dirty hack
 // include of <bits/fcntl-linux.h> instead of <fcntl.h> because <fcntl.h> has functions who will be wrapped in this file
-#ifndef _FCNTL_H
-#define _FCNTL_H
-#include <bits/fcntl-linux.h>
-#undef _FCNTL_H
-#endif
+#include <fcntl.h>
+//#ifndef _FCNTL_H
+//#define _FCNTL_H
+//#include <bits/fcntl-linux.h>
+//#undef _FCNTL_H
+//#endif
 
 #include <string.h>
 #include "event.h"
@@ -167,19 +168,33 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf, struct 
 #ifdef IO_LIB_STATIC
 int __wrap_open(const char *pathname, int flags) {
 #else
-int open(const char *pathname, int flags) {
+	//ToDo: #pragma weak and ...
+//#pragma weak __wrap_open = open
+#ifdef HAVE_OPEN_ELLIPSES
+int open(const char *pathname, int flags, ...)
+#else
+int open(const char *pathname, int flags, ...) /*... entfernen*/
+#endif
+{
 #endif
 	int ret;
 	struct basic data;
-	struct open open_data;
+
+#ifdef HAVE_OPEN_ELLIPSES
+	// vastart vaend
+#else
+	// mode_t mode = os_getmode();
+#endif
 
 	get_basic(data);
+	data.func_type = open_function;
+	// ToDo: __func__ dependencies
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
 	data.type = descriptor;
-	strncpy(open_data.file_name, pathname, MAXFILENAME);
-	open_data.mode = get_access_mode(flags);
-	get_creation_flags(flags, &open_data.creation);
-	get_status_flags(flags, &open_data.status);
+	strncpy(data.open_data.file_name, pathname, MAXFILENAME);
+	data.open_data.mode = get_access_mode(flags);
+	get_creation_flags(flags, &data.open_data.creation);
+	get_status_flags(flags, &data.open_data.status);
 
 	// ToDo: is clock correct for evaluation in different threads
 	data.time_start = clock();
@@ -188,8 +203,7 @@ int open(const char *pathname, int flags) {
 
 	data.file_descriptor = ret;
 
-	print_basic(data);
-	print_open(open_data);
+	writeData(data);
 
 	return ret;
 }
@@ -201,9 +215,9 @@ int close(int fd) {
 #endif
 	int ret;
 	struct basic data;
-	struct close close_data;
 
 	get_basic(data);
+	data.func_type = close_function;
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
 	data.type = descriptor;
 	data.file_descriptor = fd;
@@ -212,10 +226,9 @@ int close(int fd) {
 	ret = __real_close(fd);
 	data.time_end = clock();
 
-	close_data.return_value = ret;
+	data.close_data.return_value = ret;
 
-	print_basic(data);
-	print_close(close_data);
+	writeData(data);
 
 	return ret;
 }
@@ -227,13 +240,13 @@ FILE * fopen(const char *filename, const char *mode) {
 #endif
 	FILE * file;
 	struct basic data;
-	struct open open_data;
 
 	get_basic(data);
+	data.func_type = open_function;
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
 	data.type = stream;
-	strncpy(open_data.file_name, filename, MAXFILENAME);
-	open_data.mode = check_mode(mode, &open_data.creation, &open_data.status);
+	strncpy(data.open_data.file_name, filename, MAXFILENAME);
+	data.open_data.mode = check_mode(mode, &data.open_data.creation, &data.open_data.status);
 
 	data.time_start = clock();
 	file = __real_fopen(filename, mode);
@@ -241,8 +254,7 @@ FILE * fopen(const char *filename, const char *mode) {
 
 	data.file_stream = file;
 
-	print_basic(data);
-	print_open(open_data);
+	writeData(data);
 
 	return file;
 }
@@ -270,9 +282,9 @@ int fclose(FILE *file) {
 #endif
 	int ret;
 	struct basic data;
-	struct close close_data;
 
 	get_basic(data);
+	data.func_type = close_function;
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
 	data.type = stream;
 	data.file_stream = file;
@@ -281,10 +293,9 @@ int fclose(FILE *file) {
 	ret = __real_fclose(file);
 	data.time_end = clock();
 
-	close_data.return_value = ret;
+	data.close_data.return_value = ret;
 
-	print_basic(data);
-	print_close(close_data);
+	writeData(data);
 
 	return ret;
 }

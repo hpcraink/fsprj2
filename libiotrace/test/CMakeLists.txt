@@ -2,6 +2,8 @@ enable_testing()
 
 add_subdirectory(internal)
 
+# ToDo: generate file with set LINK_OPTIONS and include ist here
+
 set(LINK_OPTIONS
     "-Wl,-wrap=open"
     "-Wl,-wrap=close"

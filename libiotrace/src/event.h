@@ -19,6 +19,11 @@ enum file_type {
 	descriptor
 };
 
+enum function_type {
+	open_function,
+	close_function
+};
+
 enum access_mode {
 	read_only,        //O_RDONLY or r
 	write_only,       //O_WRONLY or w, a
@@ -50,20 +55,6 @@ struct status_flags {
 	int sync;
 };
 
-/* basic struct for every call */
-struct basic {
-	pid_t process_id;
-	pid_t thread_id;
-	char function_name[MAXFUNCTIONNAME];
-	clock_t time_start;
-	clock_t time_end;
-	enum file_type type;
-	union {
-		FILE* file_stream;
-		int file_descriptor;
-	};
-};
-
 /* struct for file open */
 struct open {
 	char file_name[MAXFILENAME];
@@ -77,12 +68,28 @@ struct close {
 	int return_value;
 };
 
+/* basic struct for every call */
+struct basic {
+	pid_t process_id;
+	pid_t thread_id;
+	char function_name[MAXFUNCTIONNAME];
+	clock_t time_start;
+	clock_t time_end;
+	enum file_type type;
+	union {
+		FILE* file_stream;
+		int file_descriptor;
+	};
+	enum function_type func_type;
+	union {
+		// ToD: use pointers to omit padding
+		struct open open_data;
+		struct close close_data;
+	};
+};
+
 void get_basic(struct basic data);
 
 void print_basic(struct basic data);
-
-void print_open(struct open data);
-
-void print_close(struct close data);
 
 #endif /* LIBIOTRACE_EVENT_H */

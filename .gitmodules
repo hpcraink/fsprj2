@@ -1,3 +1,18 @@
 [submodule "libiotrace/ext/cunit"]
 	path = libiotrace/ext/cunit
 	url = https://gitlab.com/cunity/cunit.git
+[submodule "libiotrace/ext/yajl"]
+	path = libiotrace/ext/yajl
+	url = https://github.com/lloyd/yajl/
+[submodule "libiotrace/ext/cJSON"]
+	path = libiotrace/ext/cJSON
+	url = https://github.com/DaveGamble/cJSON/
+[submodule "libiotrace/ext/json-c"]
+	path = libiotrace/ext/json-c
+	url = https://github.com/json-c/json-c
+[submodule "libiotrace/ext/ext/json-maker"]
+	path = libiotrace/ext/ext/json-maker
+	url = https://github.com/rafagafe/json-maker
+[submodule "libiotrace/ext/json-maker"]
+	path = libiotrace/ext/json-maker
+	url = https://github.com/rafagafe/json-maker

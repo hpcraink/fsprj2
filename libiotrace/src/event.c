@@ -14,6 +14,7 @@
 #endif
 
 #include "event.h"
+#include "os.h"
 
 /* Buffer */
 #define BUFFER_SIZE 10
@@ -46,7 +47,7 @@ void get_basic(struct basic data) {
 	//data.pthread = gettid();
 
 	// call gettid() as syscall because there is no implementation in glibc
-	data.thread_id = syscall(__NR_gettid);
+	data.thread_id = iotrace_gettid();
 }
 
 void print_basic(struct basic data) {

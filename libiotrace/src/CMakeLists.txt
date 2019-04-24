@@ -1,8 +1,10 @@
 check_include_files("stdbool.h" HAVE_STDBOOL_H)
 check_include_files("stdlib.h" HAVE_STDLIB_H)
 check_include_files("stdint.h" HAVE_STDINT_H)
+check_include_files("sys/fcntl.h" HAVE_SYS_FCNTL_H)
 check_include_files("sys/types.h" HAVE_SYS_TYPES_H)
 check_include_files("sys/stat.h" HAVE_SYS_STAT_H)
+check_include_files("sys/syscall.h" HAVE_SYS_SYSCALL_H)
 check_include_files("unistd.h" HAVE_UNISTD_H)
 check_include_files("pthread.h" HAVE_PTHREAD_H)
 check_include_files("json-c/json.h" HAVE_JSONC_H)
@@ -11,6 +13,7 @@ check_include_files("json-c/json.h" HAVE_JSONC_H)
 set(SOURCE
     event.c
     init.c
+    os.c
     posix_io.c
 )
 

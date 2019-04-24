@@ -1,10 +1,14 @@
 vorlage.aux
 vorlage.bbl
+vorlage.blg
 vorlage.dvi
 vorlage.lof
 vorlage.log
 vorlage.lot
+vorlage.lpr
 vorlage.out
+vorlage.pdf
+vorlage.pdflatex_output
 vorlage.synctex*
 vorlage.tex.undo
 vorlage.toc

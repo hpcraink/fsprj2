@@ -7,3 +7,5 @@
 #endif
 
 #include "os.h"
+
+extern pid_t iotrace_gettid();

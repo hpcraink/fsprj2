@@ -9,15 +9,7 @@
 #  include <unistd.h>
 #endif
 
-
-// ToDo: other solution for this dirty hack
-// include of <bits/fcntl-linux.h> instead of <fcntl.h> because <fcntl.h> has functions who will be wrapped in this file
 #include <fcntl.h>
-//#ifndef _FCNTL_H
-//#define _FCNTL_H
-//#include <bits/fcntl-linux.h>
-//#undef _FCNTL_H
-//#endif
 
 #include <string.h>
 #include "event.h"
@@ -76,27 +68,27 @@ enum access_mode get_access_mode(int flags) {
 }
 
 void get_creation_flags(const int flags, struct creation_flags *cf) {
-	cf->cloexec = flags & O_CLOEXEC;
-	cf->creat = flags & O_CREAT;
-	cf->directory = flags & O_DIRECTORY;
-	cf->excl = flags & O_EXCL;
-	cf->noctty = flags & O_NOCTTY;
-	cf->nofollow = flags & O_NOFOLLOW;
-	cf->tmpfile = flags & O_TMPFILE;
-	cf->trunc = flags & O_TRUNC;
+	cf->cloexec = flags & O_CLOEXEC ? 1 : 0;
+	cf->creat = flags & O_CREAT ? 1 : 0;
+	cf->directory = flags & O_DIRECTORY ? 1 : 0;
+	cf->excl = flags & O_EXCL ? 1 : 0;
+	cf->noctty = flags & O_NOCTTY ? 1 : 0;
+	cf->nofollow = flags & O_NOFOLLOW ? 1 : 0;
+	cf->tmpfile = flags & O_TMPFILE ? 1 : 0;
+	cf->trunc = flags & O_TRUNC ? 1 : 0;
 }
 
 void get_status_flags(const int flags, struct status_flags *sf) {
-	sf->append = flags & O_APPEND;
-	sf->async = flags & O_ASYNC;
-	sf->direct = flags & O_DIRECT;
-	sf->dsync = flags & O_DSYNC;
-	sf->largefile = flags & O_LARGEFILE;
-	sf->noatime = flags & O_NOATIME;
-	sf->nonblock = flags & O_NONBLOCK;
-	sf->ndelay = flags & O_NDELAY;
-	sf->path = flags & O_PATH;
-	sf->sync = flags & O_SYNC;
+	sf->append = flags & O_APPEND ? 1 : 0;
+	sf->async = flags & O_ASYNC ? 1 : 0;
+	sf->direct = flags & O_DIRECT ? 1 : 0;
+	sf->dsync = flags & O_DSYNC ? 1 : 0;
+	sf->largefile = flags & O_LARGEFILE ? 1 : 0;
+	sf->noatime = flags & O_NOATIME ? 1 : 0;
+	sf->nonblock = flags & O_NONBLOCK ? 1 : 0;
+	sf->ndelay = flags & O_NDELAY ? 1 : 0;
+	sf->path = flags & O_PATH ? 1 : 0;
+	sf->sync = flags & O_SYNC ? 1 : 0;
 }
 
 enum access_mode check_mode(const char *mode, struct creation_flags *cf, struct status_flags *sf) {
@@ -179,6 +171,7 @@ int open(const char *pathname, int flags, ...) /*... entfernen*/
 #endif
 	int ret;
 	struct basic data;
+	struct open_function open_data;
 
 #ifdef HAVE_OPEN_ELLIPSES
 	// vastart vaend
@@ -187,21 +180,22 @@ int open(const char *pathname, int flags, ...) /*... entfernen*/
 #endif
 
 	get_basic(data);
-	data.func_type = open_function;
+	data.void_p_enum_function_data = open_function;
+	data.function_data = (void*)(&open_data);
 	// ToDo: __func__ dependencies
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.type = descriptor;
-	strncpy(data.open_data.file_name, pathname, MAXFILENAME);
-	data.open_data.mode = get_access_mode(flags);
-	get_creation_flags(flags, &data.open_data.creation);
-	get_status_flags(flags, &data.open_data.status);
+	data.void_p_enum_file_type = file_descriptor;
+	open_data.file_name = pathname;
+	open_data.mode = get_access_mode(flags);
+	get_creation_flags(flags, &open_data.creation);
+	get_status_flags(flags, &open_data.status);
 
 	// ToDo: is clock correct for evaluation in different threads
 	data.time_start = clock();
 	ret = __real_open(pathname, flags);
 	data.time_end = clock();
 
-	data.file_descriptor = ret;
+	data.file_type = (void*)(&ret);
 
 	writeData(data);
 
@@ -215,18 +209,20 @@ int close(int fd) {
 #endif
 	int ret;
 	struct basic data;
+	struct close_function close_data;
 
 	get_basic(data);
-	data.func_type = close_function;
+	data.void_p_enum_function_data = close_function;
+	data.function_data = (void*)(&close_data);
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.type = descriptor;
-	data.file_descriptor = fd;
+	data.void_p_enum_file_type = file_descriptor;
+	data.file_type = (void*)(&fd);
 
 	data.time_start = clock();
 	ret = __real_close(fd);
 	data.time_end = clock();
 
-	data.close_data.return_value = ret;
+	close_data.return_value = ret;
 
 	writeData(data);
 
@@ -240,19 +236,21 @@ FILE * fopen(const char *filename, const char *mode) {
 #endif
 	FILE * file;
 	struct basic data;
+	struct open_function open_data;
 
 	get_basic(data);
-	data.func_type = open_function;
+	data.void_p_enum_function_data = open_function;
+	data.function_data = (void*)(&open_data);
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.type = stream;
-	strncpy(data.open_data.file_name, filename, MAXFILENAME);
-	data.open_data.mode = check_mode(mode, &data.open_data.creation, &data.open_data.status);
+	data.void_p_enum_file_type = file_stream;
+	open_data.file_name = filename;
+	open_data.mode = check_mode(mode, &open_data.creation, &open_data.status);
 
 	data.time_start = clock();
 	file = __real_fopen(filename, mode);
 	data.time_end = clock();
 
-	data.file_stream = file;
+	data.file_type = (void*)(&file);
 
 	writeData(data);
 
@@ -282,18 +280,20 @@ int fclose(FILE *file) {
 #endif
 	int ret;
 	struct basic data;
+	struct close_function close_data;
 
 	get_basic(data);
-	data.func_type = close_function;
+	data.void_p_enum_function_data = close_function;
+	data.function_data = (void*)(&close_data);
 	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.type = stream;
-	data.file_stream = file;
+	data.void_p_enum_file_type = file_stream;
+	data.file_type = (void*)(&file);
 
 	data.time_start = clock();
 	ret = __real_fclose(file);
 	data.time_end = clock();
 
-	data.close_data.return_value = ret;
+	close_data.return_value = ret;
 
 	writeData(data);
 

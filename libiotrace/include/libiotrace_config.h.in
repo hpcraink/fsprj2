@@ -32,9 +32,6 @@
 /* Define to 1 if system has <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
 
-/* Define to 1 if system has <json-c/json.h> header file. */
-#cmakedefine HAVE_JSONC_H 1
-
 // These are checked by CheckCompilerAttributes.cmake
 /* Define to 1 if compiler supports attribute nonnull. */
 #cmakedefine HAVE_ATTRIBUTE_NONNULL 1

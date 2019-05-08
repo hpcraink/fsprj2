@@ -37,15 +37,6 @@ if (WITH_UNIT_TESTS)
     add_subdirectory(ext/cunit)
 endif()
 
-#ToDo:
-#siehe Mail von Herrn Keller
-#ExternalProject_add
-#add_dependencys
-#git submodule add https://github.com/json-c/json-c ext/json-c
-add_subdirectory(ext/json-c)
-
-#git submodule add https://github.com/rafagafe/json-maker ext/json-maker
-
 add_subdirectory(test)
 
 # configure a header file to pass some of the CMake settings

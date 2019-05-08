@@ -2,7 +2,7 @@ enable_testing()
 
 add_subdirectory(internal)
 
-# ToDo: generate file with set LINK_OPTIONS and include ist here
+# ToDo: generate file with set LINK_OPTIONS and include it here
 
 set(LINK_OPTIONS
     "-Wl,-wrap=open"
@@ -38,3 +38,8 @@ add_executable(read_stream_static
     $<TARGET_OBJECTS:iotrace_object>
 )
 target_link_libraries(read_stream_static ${LINK_OPTIONS})
+
+#test with: sudo LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
+#-fopenmp
+add_executable(read_stream_openmp_shared read_stream_openmp.c)
+target_link_libraries(read_stream_openmp_shared -fopenmp)

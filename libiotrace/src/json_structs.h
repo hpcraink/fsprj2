@@ -48,7 +48,7 @@ JSON_STRUCT_ARRAY_BITFIELD_END
 
 /* struct for file open */
 JSON_STRUCT_START(open_function)
-  JSON_STRUCT_CSTRING_P(file_name, MAXFILENAME)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
   JSON_STRUCT_ENUM(access_mode, mode)
   JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
   JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)

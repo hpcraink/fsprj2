@@ -27,6 +27,10 @@ static int count_basic;
 /* Mutex */
 static pthread_mutex_t lock;
 
+// Todo: dependencies of __thread?
+static __thread pid_t pid = 0;
+static __thread pid_t tid = 0;
+
 static void init()__attribute__((constructor));
 // ToDo: test for destructor in cmake
 static void cleanup()__attribute__((destructor));
@@ -39,29 +43,30 @@ static void init() {
 	pthread_mutex_init(&lock, NULL);
 }
 
-void get_basic(struct basic data) {
-	data.process_id = getpid();
-	//data.pthread = pthread_self();
-	//data.pthread = gettid();
-
-	// call gettid() as syscall because there is no implementation in glibc
-	data.thread_id = iotrace_gettid();
+void get_basic(struct basic *data) {
+	if (pid == 0) {
+		// ToDo: caching pid can be source of bugs, see man getpid()
+		pid = getpid();
+		tid = iotrace_gettid();
+	}
+	data->process_id = pid;
+	data->thread_id = tid;
 }
 
 void printData() {
-	struct basic data;
+	struct basic *data;
 	int ret;
-	char buf[max_size_basic() + 1]; /* +1 for trailing null character */
+	char buf[json_struct_max_size_basic() + 1]; /* +1 for trailing null character */
 	pos = data_buffer;
 
 	for (int i = 0; i < count_basic; i++) {
-		data = *((struct basic *)((void *)pos));
+		data = (struct basic *) ((void *) pos);
 
-		ret = print_basic(buf, sizeof(buf), data);
-		printf("%s\n",buf);
-		printf("json-length:   %d\n",ret);
-		ret = sizeof_basic(data);
-		printf("buffer-length: %d\n",ret);
+		ret = json_struct_print_basic(buf, sizeof(buf), data);
+		printf("%s\n", buf);
+		printf("json-length:   %d\n", ret);
+		ret = json_struct_sizeof_basic(data);
+		printf("buffer-length: %d\n", ret);
 
 		pos += ret;
 	}
@@ -69,8 +74,8 @@ void printData() {
 	count_basic = 0;
 }
 
-void writeData(struct basic data) {
-	int length = sizeof_basic(data);
+void writeData(struct basic *data) {
+	int length = json_struct_sizeof_basic(data);
 
 	/* write (synchronized) */
 	pthread_mutex_lock(&lock);
@@ -78,10 +83,14 @@ void writeData(struct basic data) {
 	if (pos + length > endpos) {
 		printData();
 	}
-	assert(pos + length <= endpos); /* buffer not big enough for even one struct basic */
-	/* ToDo: fail with error-message */
+	if (pos + length > endpos) {
+		fprintf(stderr,
+				"In function %s: buffer (%ld bytes) not big enough for even one struct basic (%d bytes).\n",
+				__func__, sizeof(data_buffer), length);
+		assert(0);
+	}
 
-	pos = (void*) copy_basic((void*)pos, data);
+	pos = (void*) json_struct_copy_basic((void*) pos, data);
 	count_basic++;
 
 	pthread_mutex_unlock(&lock);

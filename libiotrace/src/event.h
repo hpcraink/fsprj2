@@ -12,8 +12,8 @@
 #include "json_include_struct.h"
 
 
-void get_basic(struct basic data);
+void get_basic(struct basic *data);
 
-void writeData(struct basic data);
+void writeData(struct basic *data);
 
 #endif /* LIBIOTRACE_EVENT_H */

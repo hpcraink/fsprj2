@@ -12,7 +12,17 @@
 #include <fcntl.h>
 
 #include <string.h>
+#include <time.h>
 #include "event.h"
+
+// ToDo: __func__ dependencies
+#ifdef IO_LIB_STATIC
+#  define WRAP(function_name) __wrap_##function_name
+#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__ + 7, MAXFUNCTIONNAME) /* +7 removes beginning __wrap_ from __func__ */
+#else
+#  define WRAP(function_name) function_name
+#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__, MAXFUNCTIONNAME)
+#endif
 
 static void init() ATTRIBUTE_CONSTRUCTOR;
 
@@ -31,16 +41,17 @@ int __real_fclose (FILE *file);
 #else
 
 /* POSIX byte */
-static int (*__real_open) (const char *pathname, int flags) = NULL;
-static int (*__real_close) (int fd) = NULL;
+static int (*__real_open)(const char *pathname, int flags) = NULL;
+static int (*__real_close)(int fd) = NULL;
 /* POSIX stream */
-static FILE * (*__real_fopen) (const char *filename, const char *mode) = NULL;
-static FILE * (*__real_fdopen) (int fd, const char *mode) = NULL;
-static FILE * (*__real_freopen) (const char *pathname, const char *mode, FILE *stream) = NULL;
-static int (*__real_fclose) (FILE *file) = NULL;
+static FILE * (*__real_fopen)(const char *filename, const char *mode) = NULL;
+static FILE * (*__real_fdopen)(int fd, const char *mode) = NULL;
+static FILE * (*__real_freopen)(const char *pathname, const char *mode,
+		FILE *stream) = NULL;
+static int (*__real_fclose)(FILE *file) = NULL;
 
 /* initialize pointers for glibc functions */
-static void init( ){
+static void init() {
 #ifdef _GNU_SOURCE
 	__real_open = dlsym(RTLD_NEXT, "open");
 	__real_close = dlsym(RTLD_NEXT, "close");
@@ -91,7 +102,8 @@ void get_status_flags(const int flags, struct status_flags *sf) {
 	sf->sync = flags & O_SYNC ? 1 : 0;
 }
 
-enum access_mode check_mode(const char *mode, struct creation_flags *cf, struct status_flags *sf) {
+enum access_mode check_mode(const char *mode, struct creation_flags *cf,
+		struct status_flags *sf) {
 	cf->directory = 0;
 	cf->noctty = 0;
 	cf->nofollow = 0;
@@ -157,17 +169,10 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf, struct 
 	}
 }
 
-#ifdef IO_LIB_STATIC
-int __wrap_open(const char *pathname, int flags) {
-#else
-	//ToDo: #pragma weak and ...
-//#pragma weak __wrap_open = open
 #ifdef HAVE_OPEN_ELLIPSES
-int open(const char *pathname, int flags, ...)
+int WRAP(open)(const char *pathname, int flags, ...) {
 #else
-int open(const char *pathname, int flags, ...) /*... entfernen*/
-#endif
-{
+int WRAP(open)(const char *pathname, int flags, ...) { /* "..." entfernen */
 #endif
 	int ret;
 	struct basic data;
@@ -179,12 +184,9 @@ int open(const char *pathname, int flags, ...) /*... entfernen*/
 	// mode_t mode = os_getmode();
 #endif
 
-	get_basic(data);
-	data.void_p_enum_function_data = open_function;
-	data.function_data = (void*)(&open_data);
-	// ToDo: __func__ dependencies
-	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.void_p_enum_file_type = file_descriptor;
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = pathname;
 	open_data.mode = get_access_mode(flags);
 	get_creation_flags(flags, &open_data.creation);
@@ -195,28 +197,22 @@ int open(const char *pathname, int flags, ...) /*... entfernen*/
 	ret = __real_open(pathname, flags);
 	data.time_end = clock();
 
-	data.file_type = (void*)(&ret);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
 
-	writeData(data);
+	writeData(&data);
 
 	return ret;
 }
 
-#ifdef IO_LIB_STATIC
-int __wrap_close(int fd) {
-#else
-int close(int fd) {
-#endif
+int WRAP(close)(int fd) {
 	int ret;
 	struct basic data;
 	struct close_function close_data;
 
-	get_basic(data);
-	data.void_p_enum_function_data = close_function;
-	data.function_data = (void*)(&close_data);
-	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.void_p_enum_file_type = file_descriptor;
-	data.file_type = (void*)(&fd);
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, close_function, close_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
 
 	data.time_start = clock();
 	ret = __real_close(fd);
@@ -224,25 +220,19 @@ int close(int fd) {
 
 	close_data.return_value = ret;
 
-	writeData(data);
+	writeData(&data);
 
 	return ret;
 }
 
-#ifdef IO_LIB_STATIC
-FILE * __wrap_fopen(const char *filename, const char *mode) {
-#else
-FILE * fopen(const char *filename, const char *mode) {
-#endif
+FILE * WRAP(fopen)(const char *filename, const char *mode) {
 	FILE * file;
 	struct basic data;
 	struct open_function open_data;
 
-	get_basic(data);
-	data.void_p_enum_function_data = open_function;
-	data.function_data = (void*)(&open_data);
-	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.void_p_enum_file_type = file_stream;
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = check_mode(mode, &open_data.creation, &open_data.status);
 
@@ -250,44 +240,30 @@ FILE * fopen(const char *filename, const char *mode) {
 	file = __real_fopen(filename, mode);
 	data.time_end = clock();
 
-	data.file_type = (void*)(&file);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
-	writeData(data);
+	writeData(&data);
 
 	return file;
 }
 
-#ifdef IO_LIB_STATIC
-FILE *__wrap_fdopen(int fd, const char *mode) {
-#else
-FILE *fdopen(int fd, const char *mode) {
-#endif
+FILE * WRAP(fdopen)(int fd, const char *mode) {
 
 }
 
-#ifdef IO_LIB_STATIC
-FILE *__wrap_freopen(const char *pathname, const char *mode, FILE *stream) {
-#else
-FILE *freopen(const char *pathname, const char *mode, FILE *stream) {
-#endif
+FILE * WRAP(freopen)(const char *pathname, const char *mode, FILE *stream) {
 
 }
 
-#ifdef IO_LIB_STATIC
-int __wrap_fclose(FILE *file) {
-#else
-int fclose(FILE *file) {
-#endif
+int WRAP(fclose)(FILE *file) {
 	int ret;
 	struct basic data;
 	struct close_function close_data;
 
-	get_basic(data);
-	data.void_p_enum_function_data = close_function;
-	data.function_data = (void*)(&close_data);
-	strncpy(data.function_name, __func__, MAXFUNCTIONNAME);
-	data.void_p_enum_file_type = file_stream;
-	data.file_type = (void*)(&file);
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, close_function, close_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
 	data.time_start = clock();
 	ret = __real_fclose(file);
@@ -295,7 +271,7 @@ int fclose(FILE *file) {
 
 	close_data.return_value = ret;
 
-	writeData(data);
+	writeData(&data);
 
 	return ret;
 }

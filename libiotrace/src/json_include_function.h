@@ -3,9 +3,6 @@
 
 #undef JSON_STRUCT
 #include "json_structs.h"
-#define JSON_STRUCT JSON_STRUCT_SET_VOID_P
-#include "json_structs.h"
-#undef JSON_STRUCT
 #define JSON_STRUCT JSON_STRUCT_PRINT
 #include "json_structs.h"
 #undef JSON_STRUCT

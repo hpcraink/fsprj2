@@ -3,16 +3,19 @@
 #include "omp.h"
 
 int main(void) {
-#pragma omp parallel default(none) private(file, buffer)
-{
-    FILE * file;
-    char buffer;
+	FILE * file;
+	char buffer;
+	int ret;
 
-    file = fopen("/etc/passwd", "r");
-    assert (NULL != file);
+#   pragma omp parallel default(none) private(file, buffer, ret)
+    {
+        file = fopen("/etc/passwd", "r");
+        assert(NULL != file);
 
-    fread(&buffer, sizeof(char), 1, file);
+        fread(&buffer, sizeof(char), 1, file);
+        ret = fclose(file);
+        assert(ret == 0);
+    }
 
-    return fclose(file);
-}
+    return 0;
 }

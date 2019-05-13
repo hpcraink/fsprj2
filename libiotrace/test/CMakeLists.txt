@@ -13,7 +13,7 @@ set(LINK_OPTIONS
     "-Wl,-wrap=fclose"
 )
 
-# test with: sudo LD_PRELOAD=../src/libiotrace_shared.so ./read_byte
+# test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte
 add_executable(read_byte_shared read_byte.c)
 #target_link_libraries(read_byte iotrace)
 #add_test ("Read" read_byte)
@@ -27,7 +27,7 @@ add_executable(read_byte_static
 )
 target_link_libraries(read_byte_static ${LINK_OPTIONS})
 
-# test with: sudo LD_PRELOAD=../src/libiotrace_shared.so ./read_stream
+# test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_stream
 add_executable(read_stream_shared read_stream.c)
 
 add_library(read_stream_object OBJECT read_stream.c)
@@ -39,7 +39,10 @@ add_executable(read_stream_static
 )
 target_link_libraries(read_stream_static ${LINK_OPTIONS})
 
-#test with: sudo LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
-#-fopenmp
+#test with: LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
 add_executable(read_stream_openmp_shared read_stream_openmp.c)
-target_link_libraries(read_stream_openmp_shared -fopenmp)
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(read_stream_openmp_shared PUBLIC OpenMP::OpenMP_CXX)
+endif()

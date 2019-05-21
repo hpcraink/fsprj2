@@ -18,8 +18,8 @@
 
 #ifndef FATAL_ERROR
 #define FATAL_ERROR(func,errno) do { \
-    fprintf(stderr, "(FILE:%s:%d) func:%s with errno:%d\n", \
-            __FILE__, __LINE__, (func), (errno)); \
+    __real_fprintf(stderr, "(FILE:%s:%d) func:%s with errno:%d\n", \
+                   __FILE__, __LINE__, (func), (errno)); \
     exit(errno); \
 } while(0)
 #endif

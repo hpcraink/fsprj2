@@ -7,10 +7,73 @@ add_subdirectory(internal)
 set(LINK_OPTIONS
     "-Wl,-wrap=open"
     "-Wl,-wrap=close"
+    "-Wl,-wrap=read"
     "-Wl,-wrap=fopen"
-    "-Wl,-wrap=fdopen"
+    "-Wl,-wrap=fopen64"
     "-Wl,-wrap=freopen"
+    "-Wl,-wrap=freopen64"
+    "-Wl,-wrap=fdopen"
     "-Wl,-wrap=fclose"
+    "-Wl,-wrap=fcloseall"
+    "-Wl,-wrap=flockfile"
+    "-Wl,-wrap=ftrylockfile"
+    "-Wl,-wrap=funlockfile"
+    "-Wl,-wrap=fwide"
+    "-Wl,-wrap=fputc"
+    "-Wl,-wrap=fputwc"
+    "-Wl,-wrap=fputc_unlocked"
+    "-Wl,-wrap=fputwc_unlocked"
+    "-Wl,-wrap=putc"
+    "-Wl,-wrap=_IO_putc"
+    "-Wl,-wrap=putwc"
+    "-Wl,-wrap=putc_unlocked"
+    "-Wl,-wrap=putwc_unlocked"
+    "-Wl,-wrap=fputs"
+    "-Wl,-wrap=fputws"
+    "-Wl,-wrap=fputs_unlocked"
+    "-Wl,-wrap=fputws_unlocked"
+    "-Wl,-wrap=putw"
+    "-Wl,-wrap=fgetc"
+    "-Wl,-wrap=fgetwc"
+    "-Wl,-wrap=fgetc_unlocked"
+    "-Wl,-wrap=fgetwc_unlocked"
+    "-Wl,-wrap=getc"
+    "-Wl,-wrap=_IO_getc"
+    "-Wl,-wrap=getwc"
+    "-Wl,-wrap=getc_unlocked"
+    "-Wl,-wrap=getwc_unlocked"
+    "-Wl,-wrap=getw"
+    "-Wl,-wrap=getline"
+    "-Wl,-wrap=getdelim"
+    "-Wl,-wrap=fgets"
+    "-Wl,-wrap=fgetws"
+    "-Wl,-wrap=fgets_unlocked"
+    "-Wl,-wrap=fgetws_unlocked"
+    "-Wl,-wrap=ungetc"
+    "-Wl,-wrap=ungetwc"
+    "-Wl,-wrap=fread"
+    "-Wl,-wrap=fread_unlocked"
+    "-Wl,-wrap=fwrite"
+    "-Wl,-wrap=fwrite_unlocked"
+    "-Wl,-wrap=fprintf"
+    "-Wl,-wrap=fwprintf"
+    "-Wl,-wrap=vfprintf"
+    "-Wl,-wrap=vfwprintf"
+    "-Wl,-wrap=fscanf"
+    "-Wl,-wrap=fwscanf"
+    "-Wl,-wrap=vfscanf"
+    "-Wl,-wrap=vfwscanf"
+    "-Wl,-wrap=feof"
+    "-Wl,-wrap=feof_unlocked"
+    "-Wl,-wrap=ferror"
+    "-Wl,-wrap=ferror_unlocked"
+    "-Wl,-wrap=clearerr"
+    "-Wl,-wrap=clearerr_unlocked"
+    "-Wl,-wrap=__freadable"
+    "-Wl,-wrap=__fwritable"
+    "-Wl,-wrap=__freading"
+    "-Wl,-wrap=__fwriting"
+    "-Wl,-wrap=__fsetlocking"
 )
 
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte
@@ -38,6 +101,18 @@ add_executable(read_stream_static
     $<TARGET_OBJECTS:iotrace_object>
 )
 target_link_libraries(read_stream_static ${LINK_OPTIONS})
+
+# test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
+add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
+
+add_library(read_byte_and_stream_object OBJECT read_byte_and_stream.c)
+
+# test with: ./read_byte_and_stream_static
+add_executable(read_byte_and_stream_static
+    $<TARGET_OBJECTS:read_byte_and_stream_object>
+    $<TARGET_OBJECTS:iotrace_object>
+)
+target_link_libraries(read_byte_and_stream_static ${LINK_OPTIONS})
 
 #test with: LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
 add_executable(read_stream_openmp_shared read_stream_openmp.c)

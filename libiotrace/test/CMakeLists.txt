@@ -6,8 +6,30 @@ add_subdirectory(internal)
 
 set(LINK_OPTIONS
     "-Wl,-wrap=open"
+    "-Wl,-wrap=open64"
+    "-Wl,-wrap=creat"
+    "-Wl,-wrap=creat64"
     "-Wl,-wrap=close"
     "-Wl,-wrap=read"
+    "-Wl,-wrap=pread"
+    "-Wl,-wrap=pread64"
+    "-Wl,-wrap=write"
+    "-Wl,-wrap=pwrite"
+    "-Wl,-wrap=pwrite64"
+    "-Wl,-wrap=lseek"
+    "-Wl,-wrap=lseek64"
+    "-Wl,-wrap=readv"
+    "-Wl,-wrap=writev"
+    "-Wl,-wrap=preadv"
+    "-Wl,-wrap=preadv64"
+    "-Wl,-wrap=pwritev"
+    "-Wl,-wrap=pwritev64"
+    "-Wl,-wrap=preadv2"
+    "-Wl,-wrap=preadv64v2"
+    "-Wl,-wrap=pwritev2"
+    "-Wl,-wrap=pwritev64v2"
+    "-Wl,-wrap=copy_file_range"
+    "-Wl,-wrap=mmap"
     "-Wl,-wrap=fopen"
     "-Wl,-wrap=fopen64"
     "-Wl,-wrap=freopen"
@@ -69,12 +91,36 @@ set(LINK_OPTIONS
     "-Wl,-wrap=ferror_unlocked"
     "-Wl,-wrap=clearerr"
     "-Wl,-wrap=clearerr_unlocked"
+    "-Wl,-wrap=ftell"
+    "-Wl,-wrap=ftello"
+    "-Wl,-wrap=ftello64"
+    "-Wl,-wrap=fseek"
+    "-Wl,-wrap=fseeko"
+    "-Wl,-wrap=fseeko64"
+    "-Wl,-wrap=rewind"
+    "-Wl,-wrap=fgetpos"
+    "-Wl,-wrap=fgetpos64"
+    "-Wl,-wrap=fsetpos"
+    "-Wl,-wrap=fsetpos64"
+    "-Wl,-wrap=fflush"
+    "-Wl,-wrap=fflush_unlocked"
+    "-Wl,-wrap=setvbuf"
+    "-Wl,-wrap=setbuf"
+    "-Wl,-wrap=setbuffer"
+    "-Wl,-wrap=setlinebuf"
     "-Wl,-wrap=__freadable"
     "-Wl,-wrap=__fwritable"
     "-Wl,-wrap=__freading"
     "-Wl,-wrap=__fwriting"
     "-Wl,-wrap=__fsetlocking"
+    "-Wl,-wrap=_flushlbf"
+    "-Wl,-wrap=__fpurge"
+    "-Wl,-wrap=__flbf"
+    "-Wl,-wrap=__fbufsize"
+    "-Wl,-wrap=__fpending"
 )
+
+##########################################################################################################
 
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte
 add_executable(read_byte_shared read_byte.c)
@@ -90,10 +136,14 @@ add_executable(read_byte_static
 )
 target_link_libraries(read_byte_static ${LINK_OPTIONS})
 
+##########################################################################################################
+
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_stream
 add_executable(read_stream_shared read_stream.c)
+target_compile_options(read_stream_shared PRIVATE -D_GNU_SOURCE)
 
 add_library(read_stream_object OBJECT read_stream.c)
+target_compile_options(read_stream_object PRIVATE -D_GNU_SOURCE)
 
 # test with: ./read_stream_static
 add_executable(read_stream_static
@@ -101,6 +151,8 @@ add_executable(read_stream_static
     $<TARGET_OBJECTS:iotrace_object>
 )
 target_link_libraries(read_stream_static ${LINK_OPTIONS})
+
+##########################################################################################################
 
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
 add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
@@ -113,6 +165,22 @@ add_executable(read_byte_and_stream_static
     $<TARGET_OBJECTS:iotrace_object>
 )
 target_link_libraries(read_byte_and_stream_static ${LINK_OPTIONS})
+
+##########################################################################################################
+
+# test with: LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared
+add_executable(write_stream_shared write_stream.c)
+
+add_library(write_stream_object OBJECT write_stream.c)
+
+# test with: ./write_stream_static
+add_executable(write_stream_static
+    $<TARGET_OBJECTS:write_stream_object>
+    $<TARGET_OBJECTS:iotrace_object>
+)
+target_link_libraries(write_stream_static ${LINK_OPTIONS})
+
+##########################################################################################################
 
 #test with: LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
 add_executable(read_stream_openmp_shared read_stream_openmp.c)

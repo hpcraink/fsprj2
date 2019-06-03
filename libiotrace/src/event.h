@@ -14,6 +14,9 @@
 
 void get_basic(struct basic *data);
 
+// ToDo: as macro with return value?
+u_int64_t gettime(void);
+
 void writeData(struct basic *data);
 
 #endif /* LIBIOTRACE_EVENT_H */

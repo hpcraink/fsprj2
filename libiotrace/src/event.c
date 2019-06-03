@@ -23,7 +23,7 @@
 #include "posix_io.h"
 
 /* Buffer */
-#define BUFFER_SIZE 500
+#define BUFFER_SIZE 1048576 // 1 MB
 static char data_buffer[BUFFER_SIZE];
 static char* endpos;
 static char* pos;
@@ -33,7 +33,6 @@ static int count_basic;
 static pthread_mutex_t lock;
 
 // ToDo: dependencies of __thread?
-// ToDo: pid out of TLS, because all threads sharing one pid (threadgroup)
 // once per process
 static pid_t pid;
 static char hostname[HOST_NAME_MAX];
@@ -67,6 +66,16 @@ void get_basic(struct basic *data) {
 
 	// ToDo: are hostnames relevant (multiple nodes)?
 	data->hostname = hostname;
+
+	// ToDo: get errno for each wrapper
+}
+
+u_int64_t gettime(void) {
+	struct timespec t;
+	u_int64_t time;
+	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+	time = t.tv_sec * (1000 * 1000 * 1000) + t.tv_nsec;
+	return time;
 }
 
 void printData() {
@@ -100,7 +109,8 @@ void writeData(struct basic *data) {
 		printData();
 	}
 	if (pos + length > endpos) {
-		__real_fprintf(stderr,
+		// ToDo: solve circular dependency
+		CALL_REAL(fprintf)(stderr,
 				"In function %s: buffer (%ld bytes) not big enough for even one struct basic (%d bytes).\n",
 				__func__, sizeof(data_buffer), length);
 		assert(0);

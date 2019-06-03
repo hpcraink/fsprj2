@@ -4,40 +4,53 @@
 #include <assert.h>
 
 int main(void) {
-    FILE *file;
-    char buffer;
-    char *tmpLine;
-    size_t tmpSize;
-    int c;
+	FILE *file;
+	char buffer;
+	char *tmpLine;
+	size_t tmpSize;
+	int c;
 
-    file = fopen("/etc/passwd", "r");
-    assert (NULL != file);
+	file = fopen("/etc/passwd", "r");
+	assert(NULL != file);
 
-    fwide(file, 0);
+	fwide(file, 0);
 
-    __freadable(file);
-    __fwritable(file);
-    __fsetlocking(file, FSETLOCKING_QUERY);
+	__freadable(file);
+	__fwritable(file);
+	__fsetlocking(file, FSETLOCKING_QUERY);
 
-    flockfile(file);
-    fread(&buffer, sizeof(char), 1, file);
-    funlockfile(file);
+	ftell(file);
+	ftello(file);
 
-    fwide(file, 0);
+	flockfile(file);
+	fread(&buffer, sizeof(char), 1, file);
+	funlockfile(file);
 
-    file = freopen(NULL, "r", file);
-    assert (NULL != file);
+	ftell(file);
+	ftello(file);
+	fseeko(file, 4, SEEK_CUR);
+	ftello(file);
+	rewind(file);
+	ftello(file);
 
-    fgetc(file);
-    c = getc(file);
-    ungetc(c, file);
-    tmpLine = NULL;
-    tmpSize = 0;
-    getline(&tmpLine, &tmpSize, file);
+	fwide(file, 0);
 
-    fclose(file);
+	file = freopen(NULL, "r", file);
+	assert(NULL != file);
 
-    fcloseall();
+	fgetc(file);
+	c = getc(file);
+	ungetc(c, file);
+	tmpLine = NULL;
+	tmpSize = 0;
+	getline(&tmpLine, &tmpSize, file);
 
-    return 0;
+	fclose(file);
+
+	fcloseall();
+
+	file = fopen("/etc/passwd", "w");
+	//assert(NULL != file);
+
+	return 0;
 }

@@ -1,3 +1,5 @@
+include(CheckSymbolExists)
+
 check_include_files("stdbool.h" HAVE_STDBOOL_H)
 check_include_files("stdlib.h" HAVE_STDLIB_H)
 check_include_files("stdint.h" HAVE_STDINT_H)
@@ -7,6 +9,8 @@ check_include_files("sys/stat.h" HAVE_SYS_STAT_H)
 check_include_files("sys/syscall.h" HAVE_SYS_SYSCALL_H)
 check_include_files("unistd.h" HAVE_UNISTD_H)
 check_include_files("pthread.h" HAVE_PTHREAD_H)
+
+check_symbol_exists(pread64 "unistd.h" HAVE_PREAD64)
 
 # Please keep in alphabetical order
 set(SOURCE

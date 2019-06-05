@@ -1033,7 +1033,7 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 #endif
 #endif
 
-#ifdef _LARGEFILE64_SOURCE && _GNU_SOURCE
+#if defined(_LARGEFILE64_SOURCE) && defined(_GNU_SOURCE)
 ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 		off64_t *outputpos, size_t length, unsigned int flags) {
 	ssize_t ret;

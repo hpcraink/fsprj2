@@ -76,7 +76,7 @@ REAL_TYPE ssize_t REAL(pwritev2)(int fd, const struct iovec *iov, int iovcnt, of
 REAL_TYPE ssize_t REAL(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt, off64_t offset, int flags) REAL_INIT;
 #endif
 #endif
-#ifdef _LARGEFILE64_SOURCE && _GNU_SOURCE
+#if defined(_LARGEFILE64_SOURCE) && defined(_GNU_SOURCE)
 REAL_TYPE ssize_t REAL(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd, off64_t *outputpos, size_t length, unsigned int flags) REAL_INIT;
 #endif
 REAL_TYPE void * REAL(mmap)(void *address, size_t length, int protect, int flags, int filedes, off_t offset) REAL_INIT;
@@ -305,7 +305,7 @@ static void posix_io_init() {
 	DLSYM(pwritev64v2);
 #endif
 #endif
-#ifdef _LARGEFILE64_SOURCE && _GNU_SOURCE
+#if defined(_LARGEFILE64_SOURCE) && defined(_GNU_SOURCE)
 	DLSYM(copy_file_range);
 #endif
 	DLSYM(mmap);

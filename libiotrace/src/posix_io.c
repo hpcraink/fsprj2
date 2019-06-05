@@ -10,7 +10,6 @@
 #endif
 
 #include <assert.h>
-#include <dlfcn.h>
 #include <wchar.h>
 #include <stdio.h>
 #include <stdio_ext.h>
@@ -27,7 +26,6 @@
 #include "wrapper_defines.h"
 #include "posix_io.h"
 
-// ToDo: don't wrap stderr an co.
 // ToDo: wrap open, socket, accept, connectx(mac) (for logging)
 //       or use a function like lsof to get type of files
 
@@ -113,26 +111,34 @@ enum seek_where get_seek_where(int whence) {
 }
 
 void get_creation_flags(const int flags, struct creation_flags *cf) {
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
 	cf->cloexec = flags & O_CLOEXEC ? 1 : 0;
-	cf->creat = flags & O_CREAT ? 1 : 0;
 	cf->directory = flags & O_DIRECTORY ? 1 : 0;
+	cf->nofollow = flags & O_NOFOLLOW ? 1 : 0;
+#endif
+#ifdef _GNU_SOURCE
+	cf->tmpfile = flags & O_TMPFILE ? 1 : 0;
+#endif
+	cf->creat = flags & O_CREAT ? 1 : 0;
 	cf->excl = flags & O_EXCL ? 1 : 0;
 	cf->noctty = flags & O_NOCTTY ? 1 : 0;
-	cf->nofollow = flags & O_NOFOLLOW ? 1 : 0;
-	cf->tmpfile = flags & O_TMPFILE ? 1 : 0;
 	cf->trunc = flags & O_TRUNC ? 1 : 0;
 }
 
 void get_status_flags(const int flags, struct status_flags *sf) {
+#ifdef _GNU_SOURCE
+	sf->direct = flags & O_DIRECT ? 1 : 0;
+	sf->noatime = flags & O_NOATIME ? 1 : 0;
+	sf->path = flags & O_PATH ? 1 : 0;
+#endif
+#ifdef _LARGEFILE64_SOURCE
+	sf->largefile = flags & O_LARGEFILE ? 1 : 0;
+#endif
 	sf->append = flags & O_APPEND ? 1 : 0;
 	sf->async = flags & O_ASYNC ? 1 : 0;
-	sf->direct = flags & O_DIRECT ? 1 : 0;
 	sf->dsync = flags & O_DSYNC ? 1 : 0;
-	sf->largefile = flags & O_LARGEFILE ? 1 : 0;
-	sf->noatime = flags & O_NOATIME ? 1 : 0;
 	sf->nonblock = flags & O_NONBLOCK ? 1 : 0;
 	sf->ndelay = flags & O_NDELAY ? 1 : 0;
-	sf->path = flags & O_PATH ? 1 : 0;
 	sf->sync = flags & O_SYNC ? 1 : 0;
 }
 
@@ -165,6 +171,13 @@ void get_memory_protection_flags(int protect,
 	mmf->written = protect & PROT_WRITE ? 1 : 0;
 }
 
+#ifdef _GNU_SOURCE
+void get_memory_remap_flags(int flags, struct memory_remap_flags *mrf) {
+	mrf->maymove = flags & MREMAP_MAYMOVE ? 1 : 0;
+	mrf->fixed = flags & MREMAP_FIXED ? 1 : 0;
+}
+#endif
+
 void get_memory_map_flags(int flags, struct memory_map_flags *mpf) {
 	mpf->shared = flags & MAP_SHARED ? 1 : 0;
 	mpf->private = flags & MAP_PRIVATE ? 1 : 0;
@@ -192,31 +205,46 @@ void get_memory_map_flags(int flags, struct memory_map_flags *mpf) {
 #endif
 }
 
+void get_memory_sync_flags(int flags, struct memory_sync_flags *msf) {
+	msf->sync = flags & MS_SYNC ? 1 : 0;
+	msf->async = flags & MS_ASYNC ? 1 : 0;
+}
+
 enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 		struct status_flags *sf) {
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
 	cf->directory = 0;
-	cf->noctty = 0;
 	cf->nofollow = 0;
+#endif
+#ifdef _GNU_SOURCE
 	cf->tmpfile = 0;
-	sf->async = 0;
+#endif
+	cf->noctty = 0;
+#ifdef _GNU_SOURCE
 	sf->direct = 0;
-	sf->dsync = 0;
-	sf->largefile = 0;
 	sf->noatime = 0;
+	sf->path = 0;
+#endif
+#ifdef _LARGEFILE64_SOURCE
+	sf->largefile = 0;
+#endif
+	sf->async = 0;
+	sf->dsync = 0;
 	sf->nonblock = 0;
 	sf->ndelay = 0;
-	sf->path = 0;
 	sf->sync = 0;
 
 	// ToDo: c
 	// ToDo: m
 	// ToDo: ,ccs=<string>
 	// ToDo: largefile from first write/read?
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
 	if (strchr(mode, 'e') != NULL) {
 		cf->cloexec = 1;
 	} else {
 		cf->cloexec = 0;
 	}
+#endif
 
 	if (strchr(mode, 'x') != NULL) {
 		cf->excl = 1;
@@ -281,7 +309,7 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	get_status_flags(flags, &open_data.status);
 
 #ifdef HAVE_OPEN_ELLIPSES
-	if (((flags) & O_CREAT) != 0 || ((flags) & O_TMPFILE) == O_TMPFILE) {
+	if (__OPEN_NEEDS_MODE(flags)) {
 		va_list ap;
 		mode_t mode;
 		va_start(ap, flags);	//get_mode_flags
@@ -305,6 +333,7 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 #ifdef HAVE_OPEN_ELLIPSES
 int WRAP(open64)(const char *filename, int flags, ...) {
 #else
@@ -324,7 +353,7 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 	get_status_flags(flags, &open_data.status);
 
 #ifdef HAVE_OPEN_ELLIPSES
-	if (((flags) & O_CREAT) != 0 || ((flags) & O_TMPFILE) == O_TMPFILE) {
+	if (__OPEN_NEEDS_MODE(flags)) {
 		va_list ap;
 		mode_t mode;
 		va_start(ap, flags);	//get_mode_flags
@@ -347,6 +376,58 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
+
+#if _POSIX_C_SOURCE >= 200809L || _ATFILE_SOURCE
+#ifdef HAVE_OPEN_ELLIPSES
+int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
+#else
+	int WRAP(openat)(int dirfd, const char *pathname, int flags, mode_t mode) {
+#endif
+	int ret;
+	struct basic data;
+	struct openat_function openat_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, openat_function, openat_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	openat_data.file_name = pathname;
+	openat_data.mode = get_access_mode(flags);
+	get_creation_flags(flags, &openat_data.creation);
+	get_status_flags(flags, &openat_data.status);
+	openat_data.file_descriptor = dirfd;
+	if (AT_FDCWD == dirfd) {
+		openat_data.relative_to = current_working_dir;
+	} else {
+		openat_data.relative_to = file;
+	}
+
+#ifdef HAVE_OPEN_ELLIPSES
+	if (__OPEN_NEEDS_MODE(flags)) {
+		va_list ap;
+		mode_t mode;
+		va_start(ap, flags);
+		mode = va_arg(ap, mode_t);
+		va_end(ap);
+		get_mode_flags(mode, &openat_data.file_mode);
+		CALL_REAL_FUNCTION_RET(data, ret, openat, dirfd, pathname, flags, mode)
+	} else {
+		get_mode_flags(0, &openat_data.file_mode);
+		CALL_REAL_FUNCTION_RET(data, ret, openat, dirfd, pathname, flags)
+	}
+#else
+	// ToDo: mode_t mode = os_getmode();
+	get_mode_flags(mode, &open_data.file_mode);
+	CALL_REAL_FUNCTION_RET(data, ret, open, filename, flags, mode)
+#endif
+
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
 
 int WRAP(creat)(const char *filename, mode_t mode) {
 	int ret;
@@ -372,6 +453,7 @@ int WRAP(creat)(const char *filename, mode_t mode) {
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 int WRAP(creat64)(const char *filename, mode_t mode) {
 	int ret;
 	struct basic data;
@@ -395,6 +477,7 @@ int WRAP(creat64)(const char *filename, mode_t mode) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(close)(int filedes) {
 	int ret;
@@ -447,6 +530,7 @@ ssize_t WRAP(read)(int filedes, void *buffer, size_t size) {
 	return ret;
 }
 
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 500
 ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -476,6 +560,7 @@ ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -504,6 +589,8 @@ ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
+#endif
 
 ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 	ssize_t ret;
@@ -530,6 +617,7 @@ ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 	return ret;
 }
 
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 500
 ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -556,6 +644,7 @@ ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset)
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 		off64_t offset) {
 	ssize_t ret;
@@ -582,6 +671,8 @@ ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 	WRAP_END(data)
 	return ret;
 }
+#endif
+#endif
 
 off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 	off_t ret;
@@ -597,6 +688,7 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, lseek, filedes, offset, whence)
 
+	//ToDo: check for SEEK_DATA and SEEK_HOLE (_GNU_SOURCE in <unistd.h>)
 	if (-1 == ret) {
 		lpositioning_data.return_state = error;
 		lpositioning_data.offset = offset;
@@ -613,6 +705,7 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	off64_t ret;
 	struct basic data;
@@ -642,6 +735,9 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
+
+#ifdef _DEFAULT_SOURCE
 
 ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
@@ -725,6 +821,7 @@ ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset) 
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
@@ -754,6 +851,7 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
@@ -781,6 +879,7 @@ ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset)
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
@@ -807,6 +906,7 @@ ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 		int flags) {
@@ -839,6 +939,7 @@ ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
@@ -870,6 +971,7 @@ ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 		off_t offset, int flags) {
@@ -899,6 +1001,7 @@ ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
@@ -927,7 +1030,10 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_END(data)
 	return ret;
 }
+#endif
+#endif
 
+#ifdef _LARGEFILE64_SOURCE && _GNU_SOURCE
 ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 		off64_t *outputpos, size_t length, unsigned int flags) {
 	ssize_t ret;
@@ -985,6 +1091,7 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 		int filedes, off_t offset) {
@@ -1017,6 +1124,140 @@ void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
+void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
+		int filedes, off64_t offset) {
+	void *ret;
+	struct basic data;
+	struct memory_map_function memory_map_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
+			memory_map_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	get_memory_protection_flags(protect, &memory_map_data.protection_flags);
+	get_memory_map_flags(flags, &memory_map_data.map_flags);
+	memory_map_data.offset = offset;
+	memory_map_data.length = length;
+
+	CALL_REAL_FUNCTION_RET(data, ret, mmap64, address, length, protect, flags,
+			filedes, offset)
+
+	if (MAP_FAILED == ret) {
+		memory_map_data.return_state = error;
+	} else {
+		memory_map_data.return_state = ok;
+	}
+	memory_map_data.address = ret;
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+int WRAP(munmap)(void *addr, size_t length) {
+	int ret;
+	int filedes = 0;
+	struct basic data;
+	struct memory_unmap_function memory_unmap_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, memory_unmap_function,
+			memory_unmap_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	memory_unmap_data.length = length;
+	memory_unmap_data.address = addr;
+
+	CALL_REAL_FUNCTION_RET(data, ret, munmap, addr, length)
+
+	if (-1 == ret) {
+		memory_unmap_data.return_state = error;
+	} else {
+		memory_unmap_data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+int WRAP(msync)(void *address, size_t length, int flags) {
+	int ret;
+	int filedes = 0;
+	struct basic data;
+	struct memory_sync_function memory_sync_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, memory_sync_function,
+			memory_sync_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	get_memory_sync_flags(flags, &memory_sync_data.sync_flags);
+	memory_sync_data.length = length;
+	memory_sync_data.address = address;
+
+	CALL_REAL_FUNCTION_RET(data, ret, msync, address, length, flags)
+
+	if (-1 == ret) {
+		memory_sync_data.return_state = error;
+	} else {
+		memory_sync_data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+#ifdef _GNU_SOURCE
+void * WRAP(mremap)(void *old_address, size_t old_length, size_t new_length,
+		int flags, ...) {
+	void *ret;
+	int filedes = 0;
+	struct basic data;
+	struct memory_remap_function memory_remap_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	// ToDo: set ..._function via typeof()?
+	JSON_STRUCT_SET_VOID_P(data, function_data, memory_remap_function,
+			memory_remap_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	get_memory_remap_flags(flags, &memory_remap_data.remap_flags);
+	memory_remap_data.length = old_length;
+	memory_remap_data.address = old_address;
+	memory_remap_data.new_length = new_length;
+
+	if (memory_remap_data.remap_flags.maymove
+			&& memory_remap_data.remap_flags.fixed) {
+		va_list ap;
+		void *new_address;
+		va_start(ap, flags);
+		new_address = va_arg(ap, void *);
+		va_end(ap);
+		CALL_REAL_FUNCTION_RET(data, ret, mremap, old_address, old_length,
+				new_length, flags, new_address)
+	} else {
+		CALL_REAL_FUNCTION_RET(data, ret, mremap, old_address, old_length,
+				new_length, flags)
+	}
+
+	if (MAP_FAILED == ret) {
+		memory_remap_data.return_state = error;
+	} else {
+		memory_remap_data.new_address = ret;
+		memory_remap_data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
 FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 	FILE * file;
 	struct basic data;
@@ -1040,6 +1281,7 @@ FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 	return file;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 	FILE * file;
 	struct basic data;
@@ -1062,6 +1304,7 @@ FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 	WRAP_END(data)
 	return file;
 }
+#endif
 
 FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 	FILE * file;
@@ -1086,6 +1329,7 @@ FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 	return file;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream) {
 	FILE * file;
 	struct basic data;
@@ -1108,6 +1352,7 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 	WRAP_END(data)
 	return file;
 }
+#endif
 
 FILE * WRAP(fdopen)(int fd, const char *opentype) {
 	FILE * file;
@@ -2455,8 +2700,7 @@ off_t WRAP(ftello)(FILE *stream) {
 	return ret;
 }
 
-// ToDo: check if off64_t is available
-//#if 0
+#ifdef _LARGEFILE64_SOURCE
 off64_t WRAP(ftello64)(FILE *stream) {
 	off64_t ret;
 	struct basic data;
@@ -2482,7 +2726,7 @@ off64_t WRAP(ftello64)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
-//#endif
+#endif
 
 int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 	int ret;
@@ -2540,7 +2784,7 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 	return ret;
 }
 
-// ToDo: check if off64_t is available
+#ifdef _LARGEFILE64_SOURCE
 int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 	int ret;
 	struct basic data;
@@ -2568,6 +2812,7 @@ int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 void WRAP(rewind)(FILE *stream) {
 	struct basic data;
@@ -2613,6 +2858,7 @@ int WRAP(fgetpos)(FILE *stream, fpos_t *position) {
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 	int ret;
 	struct basic data;
@@ -2635,6 +2881,7 @@ int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(fsetpos)(FILE *stream, const fpos_t *position) {
 	int ret;
@@ -2659,6 +2906,7 @@ int WRAP(fsetpos)(FILE *stream, const fpos_t *position) {
 	return ret;
 }
 
+#ifdef _LARGEFILE64_SOURCE
 int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 	int ret;
 	struct basic data;
@@ -2681,6 +2929,7 @@ int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(fflush)(FILE *stream) {
 	int ret;

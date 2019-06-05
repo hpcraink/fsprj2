@@ -7,6 +7,7 @@ add_subdirectory(internal)
 set(LINK_OPTIONS
     "-Wl,-wrap=open"
     "-Wl,-wrap=open64"
+    "-Wl,-wrap=openat"
     "-Wl,-wrap=creat"
     "-Wl,-wrap=creat64"
     "-Wl,-wrap=close"
@@ -30,6 +31,10 @@ set(LINK_OPTIONS
     "-Wl,-wrap=pwritev64v2"
     "-Wl,-wrap=copy_file_range"
     "-Wl,-wrap=mmap"
+    "-Wl,-wrap=mmap64"
+    "-Wl,-wrap=munmap"
+    "-Wl,-wrap=msync"
+    "-Wl,-wrap=mremap"
     "-Wl,-wrap=fopen"
     "-Wl,-wrap=fopen64"
     "-Wl,-wrap=freopen"

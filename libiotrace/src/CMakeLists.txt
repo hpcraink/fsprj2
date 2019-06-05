@@ -25,7 +25,7 @@ add_library(iotrace_object OBJECT ${SOURCE})
 # needed for dlsym-function
 target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS})
 
-# needed for the RTLD_NEXT macro
+# needed for the RTLD_NEXT macro and other GNU functions
 target_compile_options(iotrace_shared PRIVATE -D_GNU_SOURCE)
 target_compile_options(iotrace_static PRIVATE -D_GNU_SOURCE)
 target_compile_options(iotrace_object PRIVATE -D_GNU_SOURCE)

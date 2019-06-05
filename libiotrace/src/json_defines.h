@@ -109,12 +109,11 @@
 #  define JSON_STRUCT_LONG_INT(name) long int name;
 #  define JSON_STRUCT_SIZE_T(name) size_t name;
 #  define JSON_STRUCT_SSIZE_T(name) ssize_t name;
-// ToDo: check if off64_t is available
-//#  if 0
+#  ifdef _LARGEFILE64_SOURCE
 #    define JSON_STRUCT_OFF_T(name) off64_t name;
-//#  else
-//#    define JSON_STRUCT_OFF_T(name) off_t name;
-//#  endif
+#  else
+#    define JSON_STRUCT_OFF_T(name) off_t name;
+#  endif
 /* insert new line for new data-type here */
 #  define JSON_STRUCT_U_INT64_T(name) u_int64_t name;
 #  define JSON_STRUCT_VOID_P(name) void *name;

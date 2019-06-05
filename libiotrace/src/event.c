@@ -20,7 +20,6 @@
 #include "os.h"
 
 #include "json_include_function.h"
-#include "posix_io.h"
 
 /* Buffer */
 #define BUFFER_SIZE 1048576 // 1 MB

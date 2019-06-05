@@ -6,6 +6,7 @@
 
 #define MAXFILENAME PATH_MAX /* get length filename from limits.h */
 #define MAXFUNCTIONNAME 40
+#define MAXERRORTEXT 1024
 
 JSON_STRUCT_START(file_stream)
   JSON_STRUCT_FILE_P(stream)
@@ -25,26 +26,35 @@ JSON_STRUCT_ENUM_END
 // ToDo: check if all possible flags for each BITFIELD are covered
 
 JSON_STRUCT_ARRAY_BITFIELD_START(creation_flags)
+#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(cloexec)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(creat)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(nofollow)
+#endif
+#ifdef _GNU_SOURCE
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(tmpfile)
+#endif
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(creat)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(excl)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(noctty)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(nofollow)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(tmpfile)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(trunc)
 JSON_STRUCT_ARRAY_BITFIELD_END
 
 JSON_STRUCT_ARRAY_BITFIELD_START(status_flags)
+#ifdef _GNU_SOURCE
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(direct)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(noatime)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(path)
+#endif
+#ifdef _LARGEFILE64_SOURCE
+  //ToDo: can this be used for all off64_t functions
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(largefile)
+#endif
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(append)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(async)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(direct)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(dsync)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(largefile)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(noatime)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(nonblock)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(ndelay)
-  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(path)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(sync)
 JSON_STRUCT_ARRAY_BITFIELD_END
 
@@ -103,6 +113,21 @@ JSON_STRUCT_ARRAY_BITFIELD_START(memory_protection_flags)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(written)  //PROT_WRITE
 JSON_STRUCT_ARRAY_BITFIELD_END
 
+JSON_STRUCT_ARRAY_BITFIELD_START(memory_sync_flags)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(sync)  //MS_SYNC
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(async) //MS_ASYNC
+JSON_STRUCT_ARRAY_BITFIELD_END
+
+JSON_STRUCT_ARRAY_BITFIELD_START(memory_remap_flags)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(maymove) //MREMAP_MAYMOVE
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(fixed)   //MREMAP_FIXED
+JSON_STRUCT_ARRAY_BITFIELD_END
+
+JSON_STRUCT_ENUM_START(open_relative_to)
+  JSON_STRUCT_ENUM_ELEMENT(file)
+  JSON_STRUCT_ENUM_ELEMENT(current_working_dir)
+JSON_STRUCT_ENUM_END
+
 JSON_STRUCT_ENUM_START(lock_mode)
   JSON_STRUCT_ENUM_ELEMENT(internal)        //FSETLOCKING_INTERNAL
   JSON_STRUCT_ENUM_ELEMENT(bycaller)        //FSETLOCKING_BYCALLER
@@ -150,6 +175,17 @@ JSON_STRUCT_START(open_function)
   JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
   JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
   JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
+JSON_STRUCT_END
+
+/* struct for file openat */
+JSON_STRUCT_START(openat_function)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_ENUM(access_mode, mode)
+  JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
+  JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
+  JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
+  JSON_STRUCT_ENUM(open_relative_to, relative_to)
+  JSON_STRUCT_INT(file_descriptor)
 JSON_STRUCT_END
 
 /* struct for file open descriptor as stream */
@@ -327,6 +363,31 @@ JSON_STRUCT_START(memory_map_function)
   JSON_STRUCT_ARRAY_BITFIELD(memory_map_flags, map_flags)
 JSON_STRUCT_END
 
+/* struct for memory unmap */
+JSON_STRUCT_START(memory_unmap_function)
+  JSON_STRUCT_ENUM(read_write_state, return_state)
+  JSON_STRUCT_VOID_P(address)
+  JSON_STRUCT_SIZE_T(length)
+JSON_STRUCT_END
+
+/* struct for memory sync */
+JSON_STRUCT_START(memory_sync_function)
+  JSON_STRUCT_ENUM(read_write_state, return_state)
+  JSON_STRUCT_VOID_P(address)
+  JSON_STRUCT_SIZE_T(length)
+  JSON_STRUCT_ARRAY_BITFIELD(memory_sync_flags, sync_flags)
+JSON_STRUCT_END
+
+/* struct for memory remap */
+JSON_STRUCT_START(memory_remap_function)
+  JSON_STRUCT_ENUM(read_write_state, return_state)
+  JSON_STRUCT_VOID_P(address)
+  JSON_STRUCT_SIZE_T(length)
+  JSON_STRUCT_VOID_P(new_address)
+  JSON_STRUCT_SIZE_T(new_length)
+  JSON_STRUCT_ARRAY_BITFIELD(memory_remap_flags, remap_flags)
+JSON_STRUCT_END
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -337,8 +398,7 @@ JSON_STRUCT_START(basic)
   JSON_STRUCT_U_INT64_T(time_start)
   JSON_STRUCT_U_INT64_T(time_end)
   JSON_STRUCT_INT(errno_value)
-  // ToDo: get 1024 from predefined macro
-  JSON_STRUCT_CSTRING_P(errno_text, 1024)
+  JSON_STRUCT_CSTRING_P(errno_text, MAXERRORTEXT)
   JSON_STRUCT_VOID_P_START(file_type)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_descriptor)
@@ -346,6 +406,7 @@ JSON_STRUCT_START(basic)
   // ToDo: new field for boolean which shows if file position is changed (e.g. copy_file_range don't change file position)
   JSON_STRUCT_VOID_P_START(function_data)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, open_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, openat_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, fdopen_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, close_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, lock_function)
@@ -374,6 +435,9 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, buffer_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, bufsize_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_map_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_unmap_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_sync_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_remap_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

@@ -2,6 +2,17 @@
 #define LIBIOTRACE_WRAPPER_DEFINES_H
 
 #include <errno.h>
+#include <dlfcn.h>
+#include "json_include_struct.h"
+
+#ifdef _GNU_SOURCE
+#  define DLSYM(function_macro) __DLSYM(function_macro)
+#  define __DLSYM(function) do { __real_##function = dlsym(RTLD_NEXT, #function); \
+                                 assert(NULL != __real_##function); \
+                               } while (0)
+#else
+#  error "Function dlsym without macro _GNU_SOURCE not usable!"
+#endif
 
 #define CALL_REAL(function_macro) __CALL_REAL(function_macro)
 #define __CALL_REAL(function) __real_##function
@@ -27,9 +38,19 @@
 #  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__, MAXFUNCTIONNAME)
 #endif
 
-#define GET_ERRNO(data) char tmp_errno_text[1024]; \
+#define ERROR_FUNCTION(data) __ERROR_FUNCTION(data)
+#if (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE
+#  define __ERROR_FUNCTION(data) if (0 != strerror_r(data.errno_value, tmp_errno_text, MAXERRORTEXT)) { \
+                                     snprintf(tmp_errno_text, MAXERRORTEXT, "Unknown error %d", data.errno_value); \
+                                 } \
+								 data.errno_text = tmp_errno_text;
+#else
+#  define __ERROR_FUNCTION(data) data.errno_text = strerror_r(data.errno_value, tmp_errno_text, MAXERRORTEXT);
+#endif
+
+#define GET_ERRNO(data) char tmp_errno_text[MAXERRORTEXT]; \
                         if (0 != data.errno_value) { \
-                        	data.errno_text = strerror_r(data.errno_value, tmp_errno_text, 1024); /* ToDo: get 1024 from predefined macro */\
+                        	ERROR_FUNCTION(data) \
                         } else { \
                         	*tmp_errno_text = '\0'; \
                         	data.errno_text = tmp_errno_text; \

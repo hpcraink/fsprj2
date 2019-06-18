@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdio_ext.h>
+#include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
 
@@ -44,6 +45,7 @@ int main(void) {
 	tmpLine = NULL;
 	tmpSize = 0;
 	getline(&tmpLine, &tmpSize, file);
+	free(tmpLine);
 
 	fclose(file);
 

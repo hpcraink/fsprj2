@@ -111,12 +111,16 @@ enum seek_where get_seek_where(int whence) {
 }
 
 void get_creation_flags(const int flags, struct creation_flags *cf) {
-#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+#if HAVE_O_CLOEXEC
 	cf->cloexec = flags & O_CLOEXEC ? 1 : 0;
+#endif
+#if HAVE_O_DIRECTORY
 	cf->directory = flags & O_DIRECTORY ? 1 : 0;
+#endif
+#if HAVE_O_NOFOLLOW
 	cf->nofollow = flags & O_NOFOLLOW ? 1 : 0;
 #endif
-#ifdef _GNU_SOURCE
+#if HAVE_O_TMPFILE
 	cf->tmpfile = flags & O_TMPFILE ? 1 : 0;
 #endif
 	cf->creat = flags & O_CREAT ? 1 : 0;
@@ -126,12 +130,16 @@ void get_creation_flags(const int flags, struct creation_flags *cf) {
 }
 
 void get_status_flags(const int flags, struct status_flags *sf) {
-#ifdef _GNU_SOURCE
+#if HAVE_O_DIRECT
 	sf->direct = flags & O_DIRECT ? 1 : 0;
+#endif
+#if HAVE_O_NOATIME
 	sf->noatime = flags & O_NOATIME ? 1 : 0;
+#endif
+#if HAVE_O_PATH
 	sf->path = flags & O_PATH ? 1 : 0;
 #endif
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_O_LARGEFILE
 	sf->largefile = flags & O_LARGEFILE ? 1 : 0;
 #endif
 	sf->append = flags & O_APPEND ? 1 : 0;
@@ -147,7 +155,7 @@ void get_rwf_flags(const int flags, struct rwf_flags *rf) {
 	rf->dsync = flags & RWF_DSYNC ? 1 : 0;
 	rf->sync = flags & RWF_SYNC ? 1 : 0;
 	rf->nowait = flags & RWF_NOWAIT ? 1 : 0;
-#ifdef RWF_APPEND
+#ifdef HAVE_RWF_APPEND
 	rf->append = flags & RWF_APPEND ? 1 : 0;
 #endif
 }
@@ -171,7 +179,7 @@ void get_memory_protection_flags(int protect,
 	mmf->written = protect & PROT_WRITE ? 1 : 0;
 }
 
-#ifdef _GNU_SOURCE
+#if HAVE_MREMAP
 void get_memory_remap_flags(int flags, struct memory_remap_flags *mrf) {
 	mrf->maymove = flags & MREMAP_MAYMOVE ? 1 : 0;
 	mrf->fixed = flags & MREMAP_FIXED ? 1 : 0;
@@ -181,26 +189,50 @@ void get_memory_remap_flags(int flags, struct memory_remap_flags *mrf) {
 void get_memory_map_flags(int flags, struct memory_map_flags *mpf) {
 	mpf->shared = flags & MAP_SHARED ? 1 : 0;
 	mpf->private = flags & MAP_PRIVATE ? 1 : 0;
-	mpf->bit32 = flags & MAP_32BIT ? 1 : 0;
-	mpf->anonymous = flags & MAP_ANONYMOUS ? 1 : 0;
-	mpf->denywrite = flags & MAP_DENYWRITE ? 1 : 0;
-	mpf->executable = flags & MAP_EXECUTABLE ? 1 : 0;
-	mpf->file = flags & MAP_FILE ? 1 : 0;
 	mpf->fixed = flags & MAP_FIXED ? 1 : 0;
+#if HAVE_MAP_32BIT
+	mpf->bit32 = flags & MAP_32BIT ? 1 : 0;
+#endif
+#if HAVE_MAP_ANONYMOUS
+	mpf->anonymous = flags & MAP_ANONYMOUS ? 1 : 0;
+#endif
+#if HAVE_MAP_DENYWRITE
+	mpf->denywrite = flags & MAP_DENYWRITE ? 1 : 0;
+#endif
+#if HAVE_MAP_EXECUTABLE
+	mpf->executable = flags & MAP_EXECUTABLE ? 1 : 0;
+#endif
+#if HAVE_MAP_FILE
+	mpf->file = flags & MAP_FILE ? 1 : 0;
+#endif
+#if HAVE_MAP_GROWSDOWN
 	mpf->growsdown = flags & MAP_GROWSDOWN ? 1 : 0;
+#endif
+#if HAVE_MAP_HUGETLB
 	mpf->hugetlb = flags & MAP_HUGETLB ? 1 : 0;
-#ifdef MAP_HUGE_2MB
+#endif
+#if HAVE_MAP_HUGE_2MB
 	mpf->huge_2mb = flags & MAP_HUGE_2MB ? 1 : 0;
 #endif
-#ifdef MAP_HUGE_1GB
+#if HAVE_MAP_HUGE_1GB
 	mpf->huge_1gb = flags & MAP_HUGE_1GB ? 1 : 0;
 #endif
+#if HAVE_MAP_LOCKED
 	mpf->locked = flags & MAP_LOCKED ? 1 : 0;
+#endif
+#if HAVE_MAP_NONBLOCK
 	mpf->nonblock = flags & MAP_NONBLOCK ? 1 : 0;
+#endif
+#if HAVE_MAP_NORESERVE
 	mpf->noreserve = flags & MAP_NORESERVE ? 1 : 0;
+#endif
+#if HAVE_MAP_POPULATE
 	mpf->populate = flags & MAP_POPULATE ? 1 : 0;
+#endif
+#if HAVE_MAP_STACK
 	mpf->stack = flags & MAP_STACK ? 1 : 0;
-#ifdef MAP_UNINITIALIZED
+#endif
+#if HAVE_MAP_UNINITIALIZED
 	mpf->uninitialized = flags & MAP_UNINITIALIZED ? 1 : 0;
 #endif
 }
@@ -208,24 +240,31 @@ void get_memory_map_flags(int flags, struct memory_map_flags *mpf) {
 void get_memory_sync_flags(int flags, struct memory_sync_flags *msf) {
 	msf->sync = flags & MS_SYNC ? 1 : 0;
 	msf->async = flags & MS_ASYNC ? 1 : 0;
+	msf->invalidate = flags & MS_INVALIDATE ? 1 : 0;
 }
 
 enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 		struct status_flags *sf) {
-#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+#if HAVE_O_DIRECTORY
 	cf->directory = 0;
+#endif
+#if HAVE_O_NOFOLLOW
 	cf->nofollow = 0;
 #endif
-#ifdef _GNU_SOURCE
+#if HAVE_O_TMPFILE
 	cf->tmpfile = 0;
 #endif
 	cf->noctty = 0;
-#ifdef _GNU_SOURCE
+#if HAVE_O_DIRECT
 	sf->direct = 0;
+#endif
+#if HAVE_O_NOATIME
 	sf->noatime = 0;
+#endif
+#if HAVE_O_PATH
 	sf->path = 0;
 #endif
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_O_LARGEFILE
 	sf->largefile = 0;
 #endif
 	sf->async = 0;
@@ -238,7 +277,7 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 	// ToDo: m
 	// ToDo: ,ccs=<string>
 	// ToDo: largefile from first write/read?
-#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700
+#if HAVE_O_CLOEXEC
 	if (strchr(mode, 'e') != NULL) {
 		cf->cloexec = 1;
 	} else {
@@ -327,13 +366,19 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	CALL_REAL_FUNCTION_RET(data, ret, open, filename, flags, mode)
 #endif
 
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
 
 	WRAP_END(data)
 	return ret;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_OPEN64
 #ifdef HAVE_OPEN_ELLIPSES
 int WRAP(open64)(const char *filename, int flags, ...) {
 #else
@@ -371,6 +416,12 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 	CALL_REAL_FUNCTION_RET(data, ret, open64, filename, flags, mode)
 #endif
 
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
 
 	WRAP_END(data)
@@ -378,7 +429,7 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 }
 #endif
 
-#if _POSIX_C_SOURCE >= 200809L || _ATFILE_SOURCE
+#if HAVE_OPENAT
 #ifdef HAVE_OPEN_ELLIPSES
 int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 #else
@@ -422,6 +473,12 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 	CALL_REAL_FUNCTION_RET(data, ret, open, filename, flags, mode)
 #endif
 
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
 
 	WRAP_END(data)
@@ -447,13 +504,19 @@ int WRAP(creat)(const char *filename, mode_t mode) {
 	get_mode_flags(mode, &open_data.file_mode);
 	CALL_REAL_FUNCTION_RET(data, ret, creat, filename, mode)
 
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
 
 	WRAP_END(data)
 	return ret;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#ifdef HAVE_CREAT64
 int WRAP(creat64)(const char *filename, mode_t mode) {
 	int ret;
 	struct basic data;
@@ -471,6 +534,12 @@ int WRAP(creat64)(const char *filename, mode_t mode) {
 
 	get_mode_flags(mode, &open_data.file_mode);
 	CALL_REAL_FUNCTION_RET(data, ret, creat64, filename, mode)
+
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
 
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
 
@@ -493,9 +562,9 @@ int WRAP(close)(int filedes) {
 	CALL_REAL_FUNCTION_RET(data, ret, close, filedes)
 
 	if (0 == ret) {
-		close_data.return_state = ok;
+		data.return_state = ok;
 	} else {
-		close_data.return_state = error;
+		data.return_state = error;
 	}
 
 	WRAP_END(data)
@@ -516,13 +585,13 @@ ssize_t WRAP(read)(int filedes, void *buffer, size_t size) {
 	CALL_REAL_FUNCTION_RET(data, ret, read, filedes, buffer, size)
 
 	if (ret == -1) {
-		read_data.return_state = error;
+		data.return_state = error;
 		read_data.read_bytes = 0;
 	} else if (ret == 0 && size != 0) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = ret;
 	}
 
@@ -530,7 +599,7 @@ ssize_t WRAP(read)(int filedes, void *buffer, size_t size) {
 	return ret;
 }
 
-#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 500
+#if HAVE_PREAD
 ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -546,21 +615,22 @@ ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 	CALL_REAL_FUNCTION_RET(data, ret, pread, filedes, buffer, size, offset)
 
 	if (ret == -1) {
-		pread_data.return_state = error;
+		data.return_state = error;
 		pread_data.read_bytes = 0;
 	} else if (ret == 0 && size != 0) {
-		pread_data.return_state = eof;
+		data.return_state = eof;
 		pread_data.read_bytes = 0;
 	} else {
-		pread_data.return_state = ok;
+		data.return_state = ok;
 		pread_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_PREAD64
 ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -576,20 +646,19 @@ ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 	CALL_REAL_FUNCTION_RET(data, ret, pread64, filedes, buffer, size, offset)
 
 	if (ret == -1) {
-		pread_data.return_state = error;
+		data.return_state = error;
 		pread_data.read_bytes = 0;
 	} else if (ret == 0 && size != 0) {
-		pread_data.return_state = eof;
+		data.return_state = eof;
 		pread_data.read_bytes = 0;
 	} else {
-		pread_data.return_state = ok;
+		data.return_state = ok;
 		pread_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
-#endif
 #endif
 
 ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
@@ -606,10 +675,10 @@ ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 	CALL_REAL_FUNCTION_RET(data, ret, write, filedes, buffer, size)
 
 	if (-1 == ret) {
-		write_data.return_state = error;
+		data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		data.return_state = ok;
 		write_data.written_bytes = ret;
 	}
 
@@ -617,7 +686,7 @@ ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 	return ret;
 }
 
-#if _POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 500
+#if HAVE_PWRITE
 ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -633,18 +702,19 @@ ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset)
 	CALL_REAL_FUNCTION_RET(data, ret, pwrite, filedes, buffer, size, offset)
 
 	if (-1 == ret) {
-		pwrite_data.return_state = error;
+		data.return_state = error;
 		pwrite_data.written_bytes = 0;
 	} else {
-		pwrite_data.return_state = ok;
+		data.return_state = ok;
 		pwrite_data.written_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_PWRITE64
 ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 		off64_t offset) {
 	ssize_t ret;
@@ -661,17 +731,16 @@ ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 	CALL_REAL_FUNCTION_RET(data, ret, pwrite, filedes, buffer, size, offset)
 
 	if (-1 == ret) {
-		pwrite_data.return_state = error;
+		data.return_state = error;
 		pwrite_data.written_bytes = 0;
 	} else {
-		pwrite_data.return_state = ok;
+		data.return_state = ok;
 		pwrite_data.written_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
-#endif
 #endif
 
 off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
@@ -690,12 +759,12 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 
 	//ToDo: check for SEEK_DATA and SEEK_HOLE (_GNU_SOURCE in <unistd.h>)
 	if (-1 == ret) {
-		lpositioning_data.return_state = error;
+		data.return_state = error;
 		lpositioning_data.offset = offset;
 		lpositioning_data.relative_to = get_seek_where(whence);
 		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	} else {
-		lpositioning_data.return_state = ok;
+		data.return_state = ok;
 		lpositioning_data.offset = offset;
 		lpositioning_data.relative_to = get_seek_where(whence);
 		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
@@ -705,7 +774,7 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 	return ret;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_LSEEK64
 off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	off64_t ret;
 	struct basic data;
@@ -721,12 +790,12 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	CALL_REAL_FUNCTION_RET(data, ret, lseek64, filedes, offset, whence)
 
 	if (-1 == ret) {
-		lpositioning_data.return_state = error;
+		data.return_state = error;
 		lpositioning_data.offset = offset;
 		lpositioning_data.relative_to = get_seek_where(whence);
 		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	} else {
-		lpositioning_data.return_state = ok;
+		data.return_state = ok;
 		lpositioning_data.offset = offset;
 		lpositioning_data.relative_to = get_seek_where(whence);
 		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
@@ -737,8 +806,7 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 }
 #endif
 
-#ifdef _DEFAULT_SOURCE
-
+#if HAVE_READV
 ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
 	struct basic data;
@@ -753,20 +821,22 @@ ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 	CALL_REAL_FUNCTION_RET(data, ret, readv, filedes, vector, count)
 
 	if (ret == -1) {
-		read_data.return_state = error;
+		data.return_state = error;
 		read_data.read_bytes = 0;
 	} else if (ret == 0 && count != 0) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_WRITEV
 ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
 	struct basic data;
@@ -781,17 +851,19 @@ ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count) {
 	CALL_REAL_FUNCTION_RET(data, ret, writev, filedes, vector, count)
 
 	if (-1 == ret) {
-		write_data.return_state = error;
+		data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		data.return_state = ok;
 		write_data.written_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_PREADV
 ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -807,21 +879,22 @@ ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset) 
 	CALL_REAL_FUNCTION_RET(data, ret, preadv, fd, iov, iovcnt, offset)
 
 	if (ret == -1) {
-		pread_data.return_state = error;
+		data.return_state = error;
 		pread_data.read_bytes = 0;
 	} else if (ret == 0 && iovcnt != 0) {
-		pread_data.return_state = eof;
+		data.return_state = eof;
 		pread_data.read_bytes = 0;
 	} else {
-		pread_data.return_state = ok;
+		data.return_state = ok;
 		pread_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_PREADV64
 ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
@@ -838,13 +911,13 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 	CALL_REAL_FUNCTION_RET(data, ret, preadv64, fd, iov, iovcnt, offset)
 
 	if (ret == -1) {
-		pread_data.return_state = error;
+		data.return_state = error;
 		pread_data.read_bytes = 0;
 	} else if (ret == 0 && iovcnt != 0) {
-		pread_data.return_state = eof;
+		data.return_state = eof;
 		pread_data.read_bytes = 0;
 	} else {
-		pread_data.return_state = ok;
+		data.return_state = ok;
 		pread_data.read_bytes = ret;
 	}
 
@@ -853,6 +926,7 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
+#if HAVE_PWRITEV
 ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -868,18 +942,19 @@ ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset)
 	CALL_REAL_FUNCTION_RET(data, ret, pwritev, fd, iov, iovcnt, offset)
 
 	if (-1 == ret) {
-		pwrite_data.return_state = error;
+		data.return_state = error;
 		pwrite_data.written_bytes = 0;
 	} else {
-		pwrite_data.return_state = ok;
+		data.return_state = ok;
 		pwrite_data.written_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_PWRITEV64
 ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
@@ -896,10 +971,10 @@ ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 	CALL_REAL_FUNCTION_RET(data, ret, pwritev64, fd, iov, iovcnt, offset)
 
 	if (-1 == ret) {
-		pwrite_data.return_state = error;
+		data.return_state = error;
 		pwrite_data.written_bytes = 0;
 	} else {
-		pwrite_data.return_state = ok;
+		data.return_state = ok;
 		pwrite_data.written_bytes = ret;
 	}
 
@@ -908,6 +983,7 @@ ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
+#if HAVE_PREADV2
 ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 		int flags) {
 	ssize_t ret;
@@ -925,21 +1001,22 @@ ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 	CALL_REAL_FUNCTION_RET(data, ret, preadv2, fd, iov, iovcnt, offset, flags)
 
 	if (ret == -1) {
-		pread2_data.return_state = error;
+		data.return_state = error;
 		pread2_data.read_bytes = 0;
 	} else if (ret == 0 && iovcnt != 0) {
-		pread2_data.return_state = eof;
+		data.return_state = eof;
 		pread2_data.read_bytes = 0;
 	} else {
-		pread2_data.return_state = ok;
+		data.return_state = ok;
 		pread2_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_PREADV64V2
 ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
@@ -958,13 +1035,13 @@ ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 			flags)
 
 	if (ret == -1) {
-		pread2_data.return_state = error;
+		data.return_state = error;
 		pread2_data.read_bytes = 0;
 	} else if (ret == 0 && iovcnt != 0) {
-		pread2_data.return_state = eof;
+		data.return_state = eof;
 		pread2_data.read_bytes = 0;
 	} else {
-		pread2_data.return_state = ok;
+		data.return_state = ok;
 		pread2_data.read_bytes = ret;
 	}
 
@@ -973,6 +1050,7 @@ ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
+#if HAVE_PWRITEV2
 ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 		off_t offset, int flags) {
 	ssize_t ret;
@@ -990,18 +1068,19 @@ ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 	CALL_REAL_FUNCTION_RET(data, ret, pwritev2, fd, iov, iovcnt, offset, flags)
 
 	if (-1 == ret) {
-		pwrite2_data.return_state = error;
+		data.return_state = error;
 		pwrite2_data.written_bytes = 0;
 	} else {
-		pwrite2_data.return_state = ok;
+		data.return_state = ok;
 		pwrite2_data.written_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_PWRITEV64V2
 ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
@@ -1020,10 +1099,10 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 			flags)
 
 	if (-1 == ret) {
-		pwrite2_data.return_state = error;
+		data.return_state = error;
 		pwrite2_data.written_bytes = 0;
 	} else {
-		pwrite2_data.return_state = ok;
+		data.return_state = ok;
 		pwrite2_data.written_bytes = ret;
 	}
 
@@ -1031,9 +1110,8 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 	return ret;
 }
 #endif
-#endif
 
-#if defined(_LARGEFILE64_SOURCE) && defined(_GNU_SOURCE)
+#if HAVE_COPY_FILE_RANGE
 ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 		off64_t *outputpos, size_t length, unsigned int flags) {
 	ssize_t ret;
@@ -1065,18 +1143,15 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 			outputfd, outputpos, length, flags)
 
 	if (ret == -1) {
-		copy_read_data.return_state = error;
-		copy_write_data.return_state = error;
+		data.return_state = error;
 		copy_read_data.read_bytes = 0;
 		copy_write_data.written_bytes = 0;
 	} else if (ret == 0 && length != 0) {
-		copy_read_data.return_state = eof;
-		copy_write_data.return_state = eof;
+		data.return_state = eof;
 		copy_read_data.read_bytes = 0;
 		copy_write_data.written_bytes = 0;
 	} else {
-		copy_read_data.return_state = ok;
-		copy_write_data.return_state = ok;
+		data.return_state = ok;
 		copy_read_data.read_bytes = ret;
 		copy_write_data.written_bytes = ret;
 	}
@@ -1093,6 +1168,7 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 }
 #endif
 
+#if HAVE_MMAP
 void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 		int filedes, off_t offset) {
 	void *ret;
@@ -1114,17 +1190,18 @@ void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 			filedes, offset)
 
 	if (MAP_FAILED == ret) {
-		memory_map_data.return_state = error;
+		data.return_state = error;
 	} else {
-		memory_map_data.return_state = ok;
+		data.return_state = ok;
 	}
 	memory_map_data.address = ret;
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_MMAP64
 void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 		int filedes, off64_t offset) {
 	void *ret;
@@ -1146,9 +1223,9 @@ void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 			filedes, offset)
 
 	if (MAP_FAILED == ret) {
-		memory_map_data.return_state = error;
+		data.return_state = error;
 	} else {
-		memory_map_data.return_state = ok;
+		data.return_state = ok;
 	}
 	memory_map_data.address = ret;
 
@@ -1157,6 +1234,7 @@ void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 }
 #endif
 
+#if HAVE_MUNMAP
 int WRAP(munmap)(void *addr, size_t length) {
 	int ret;
 	int filedes = 0;
@@ -1175,15 +1253,17 @@ int WRAP(munmap)(void *addr, size_t length) {
 	CALL_REAL_FUNCTION_RET(data, ret, munmap, addr, length)
 
 	if (-1 == ret) {
-		memory_unmap_data.return_state = error;
+		data.return_state = error;
 	} else {
-		memory_unmap_data.return_state = ok;
+		data.return_state = ok;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_MSYNC
 int WRAP(msync)(void *address, size_t length, int flags) {
 	int ret;
 	int filedes = 0;
@@ -1203,16 +1283,17 @@ int WRAP(msync)(void *address, size_t length, int flags) {
 	CALL_REAL_FUNCTION_RET(data, ret, msync, address, length, flags)
 
 	if (-1 == ret) {
-		memory_sync_data.return_state = error;
+		data.return_state = error;
 	} else {
-		memory_sync_data.return_state = ok;
+		data.return_state = ok;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _GNU_SOURCE
+#if HAVE_MREMAP
 void * WRAP(mremap)(void *old_address, size_t old_length, size_t new_length,
 		int flags, ...) {
 	void *ret;
@@ -1247,10 +1328,10 @@ void * WRAP(mremap)(void *old_address, size_t old_length, size_t new_length,
 	}
 
 	if (MAP_FAILED == ret) {
-		memory_remap_data.return_state = error;
+		data.return_state = error;
 	} else {
 		memory_remap_data.new_address = ret;
-		memory_remap_data.return_state = ok;
+		data.return_state = ok;
 	}
 
 	WRAP_END(data)
@@ -1275,13 +1356,19 @@ FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 
 	CALL_REAL_FUNCTION_RET(data, file, fopen, filename, opentype)
 
+	if (NULL == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
 	WRAP_END(data)
 	return file;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_FOPEN64
 FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 	FILE * file;
 	struct basic data;
@@ -1298,6 +1385,12 @@ FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 			&open_data.file_mode);
 
 	CALL_REAL_FUNCTION_RET(data, file, fopen64, filename, opentype)
+
+	if (NULL == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
 
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
@@ -1323,13 +1416,19 @@ FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, file, freopen, filename, opentype, stream)
 
+	if (NULL == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
 	WRAP_END(data)
 	return file;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_FREOPEN64
 FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream) {
 	FILE * file;
 	struct basic data;
@@ -1347,6 +1446,12 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 
 	CALL_REAL_FUNCTION_RET(data, file, freopen64, filename, opentype, stream)
 
+	if (NULL == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
 	WRAP_END(data)
@@ -1354,6 +1459,7 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 }
 #endif
 
+#if HAVE_FDOPEN
 FILE * WRAP(fdopen)(int fd, const char *opentype) {
 	FILE * file;
 	struct basic data;
@@ -1369,11 +1475,18 @@ FILE * WRAP(fdopen)(int fd, const char *opentype) {
 
 	CALL_REAL_FUNCTION_RET(data, file, fdopen, fd, opentype)
 
+	if (NULL == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
 
 	WRAP_END(data)
 	return file;
 }
+#endif
 
 int WRAP(fclose)(FILE *stream) {
 	int ret;
@@ -1389,15 +1502,16 @@ int WRAP(fclose)(FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fclose, stream)
 
 	if (0 == ret) {
-		close_data.return_state = ok;
+		data.return_state = ok;
 	} else {
-		close_data.return_state = error;
+		data.return_state = error;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
 
+#if HAVE_FCLOSEALL
 int WRAP(fcloseall)(void) {
 	int ret;
 	struct basic data;
@@ -1413,15 +1527,17 @@ int WRAP(fcloseall)(void) {
 	CALL_REAL_FUNCTION_RET(data, ret, fcloseall)
 
 	if (0 == ret) {
-		close_data.return_state = ok;
+		data.return_state = ok;
 	} else {
-		close_data.return_state = error;
+		data.return_state = error;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_FLOCKFILE
 void WRAP(flockfile)(FILE *stream) {
 	struct basic data;
 	struct lock_function lock_data;
@@ -1434,10 +1550,14 @@ void WRAP(flockfile)(FILE *stream) {
 
 	CALL_REAL_FUNCTION(data, flockfile, stream)
 
+	data.return_state = ok;
+
 	WRAP_END(data)
 	return;
 }
+#endif
 
+#if HAVE_FTRYLOCKFILE
 int WRAP(ftrylockfile)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1452,15 +1572,17 @@ int WRAP(ftrylockfile)(FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, ftrylockfile, stream)
 
 	if (0 == ret) {
-		trylock_data.return_state = ok;
+		data.return_state = ok;
 	} else {
-		trylock_data.return_state = error;
+		data.return_state = error;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_FUNLOCKFILE
 void WRAP(funlockfile)(FILE *stream) {
 	struct basic data;
 	struct lock_function lock_data;
@@ -1473,10 +1595,14 @@ void WRAP(funlockfile)(FILE *stream) {
 
 	CALL_REAL_FUNCTION(data, funlockfile, stream)
 
+	data.return_state = ok;
+
 	WRAP_END(data)
 	return;
 }
+#endif
 
+#if HAVE_FWIDE
 int WRAP(fwide)(FILE *stream, int mode) {
 	int ret;
 	struct basic data;
@@ -1492,11 +1618,13 @@ int WRAP(fwide)(FILE *stream, int mode) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fwide, stream, mode)
 
+	data.return_state = ok;
 	orientation_mode_data.return_mode = get_orientation_mode(ret, 0);
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(fputc)(int c, FILE *stream) {
 	int ret;
@@ -1511,8 +1639,8 @@ int WRAP(fputc)(int c, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputc, c, stream)
 
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = 1;
 	} else {
 		write_data.written_bytes = 0;
@@ -1535,8 +1663,8 @@ wint_t WRAP(fputwc)(wchar_t wc, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputwc, wc, stream)
 
-	write_data.return_state = get_return_state_wc(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = sizeof(wchar_t);
 	} else {
 		write_data.written_bytes = 0;
@@ -1546,6 +1674,7 @@ wint_t WRAP(fputwc)(wchar_t wc, FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FPUTC_UNLOCKED
 int WRAP(fputc_unlocked)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1559,8 +1688,8 @@ int WRAP(fputc_unlocked)(int c, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputc_unlocked, c, stream)
 
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = 1;
 	} else {
 		write_data.written_bytes = 0;
@@ -1569,7 +1698,9 @@ int WRAP(fputc_unlocked)(int c, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_FPUTWC_UNLOCKED
 wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -1583,8 +1714,8 @@ wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputwc_unlocked, wc, stream)
 
-	write_data.return_state = get_return_state_wc(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = sizeof(wchar_t);
 	} else {
 		write_data.written_bytes = 0;
@@ -1593,6 +1724,7 @@ wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(putc_MACRO)(int c, FILE *stream) {
 	int ret;
@@ -1607,8 +1739,8 @@ int WRAP(putc_MACRO)(int c, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, putc_MACRO, c, stream)
 
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = 1;
 	} else {
 		write_data.written_bytes = 0;
@@ -1631,8 +1763,8 @@ wint_t WRAP(putwc_MACRO)(wchar_t wc, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, putwc_MACRO, wc, stream)
 
-	write_data.return_state = get_return_state_wc(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = sizeof(wchar_t);
 	} else {
 		write_data.written_bytes = 0;
@@ -1642,6 +1774,7 @@ wint_t WRAP(putwc_MACRO)(wchar_t wc, FILE *stream) {
 	return ret;
 }
 
+#if HAVE_PUTC_UNLOCKED
 int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1655,8 +1788,8 @@ int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, putc_unlocked_MACRO, c, stream)
 
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = 1;
 	} else {
 		write_data.written_bytes = 0;
@@ -1665,7 +1798,9 @@ int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_PUTWC_UNLOCKED
 wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -1679,8 +1814,8 @@ wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, putwc_unlocked_MACRO, wc, stream)
 
-	write_data.return_state = get_return_state_wc(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = sizeof(wchar_t);
 	} else {
 		write_data.written_bytes = 0;
@@ -1689,6 +1824,7 @@ wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(fputs)(const char *s, FILE *stream) {
 	int ret;
@@ -1703,8 +1839,8 @@ int WRAP(fputs)(const char *s, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputs, s, stream)
 
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = strlen(s);
 	} else {
 		write_data.written_bytes = 0;
@@ -1728,8 +1864,8 @@ int WRAP(fputws)(const wchar_t *ws, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fputws, ws, stream)
 
 	// ToDo: wchar.h says WEOF is error, man pages says -1 is error, what if WEOF isn't -1 ??? ???
-	write_data.return_state = get_return_state_wc(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = wcslen(ws) * sizeof(wchar_t);
 	} else {
 		write_data.written_bytes = 0;
@@ -1739,6 +1875,7 @@ int WRAP(fputws)(const wchar_t *ws, FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FPUTS_UNLOCKED
 int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1752,8 +1889,8 @@ int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputs_unlocked, s, stream)
 
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = strlen(s);
 	} else {
 		write_data.written_bytes = 0;
@@ -1762,7 +1899,9 @@ int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_FPUTWS_UNLOCKED
 int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1777,8 +1916,8 @@ int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fputws_unlocked, ws, stream)
 
 	// ToDo: wchar.h says WEOF is error, man pages says -1 is error, what if WEOF isn't -1 ???
-	write_data.return_state = get_return_state_wc(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = wcslen(ws) * sizeof(wchar_t);
 	} else {
 		write_data.written_bytes = 0;
@@ -1787,7 +1926,9 @@ int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_PUTW
 int WRAP(putw)(int w, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1802,8 +1943,8 @@ int WRAP(putw)(int w, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, putw, w, stream)
 
 	// ToDo: behavior as described in man pages because header file says nothing about errors
-	write_data.return_state = get_return_state_c(ret);
-	if (write_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		write_data.written_bytes = sizeof(int);
 	} else {
 		write_data.written_bytes = 0;
@@ -1812,6 +1953,7 @@ int WRAP(putw)(int w, FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(fgetc)(FILE *stream) {
 	int ret;
@@ -1826,8 +1968,8 @@ int WRAP(fgetc)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetc, stream)
 
-	read_data.return_state = get_return_state_c(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = 1;
 	} else {
 		read_data.read_bytes = 0;
@@ -1850,8 +1992,8 @@ wint_t WRAP(fgetwc)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetwc, stream)
 
-	read_data.return_state = get_return_state_wc(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = sizeof(wchar_t);
 	} else {
 		read_data.read_bytes = 0;
@@ -1861,6 +2003,7 @@ wint_t WRAP(fgetwc)(FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FGETC_UNLOCKED
 int WRAP(fgetc_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1874,8 +2017,8 @@ int WRAP(fgetc_unlocked)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetc_unlocked, stream)
 
-	read_data.return_state = get_return_state_c(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = 1;
 	} else {
 		read_data.read_bytes = 0;
@@ -1884,7 +2027,9 @@ int WRAP(fgetc_unlocked)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_FGETWC_UNLOCKED
 wint_t WRAP(fgetwc_unlocked)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -1898,8 +2043,8 @@ wint_t WRAP(fgetwc_unlocked)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetwc_unlocked, stream)
 
-	read_data.return_state = get_return_state_wc(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = sizeof(wchar_t);
 	} else {
 		read_data.read_bytes = 0;
@@ -1908,6 +2053,7 @@ wint_t WRAP(fgetwc_unlocked)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(getc_MACRO)(FILE *stream) {
 	int ret;
@@ -1922,8 +2068,8 @@ int WRAP(getc_MACRO)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, getc_MACRO, stream)
 
-	read_data.return_state = get_return_state_c(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = 1;
 	} else {
 		read_data.read_bytes = 0;
@@ -1946,8 +2092,8 @@ wint_t WRAP(getwc_MACRO)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, getwc_MACRO, stream)
 
-	read_data.return_state = get_return_state_wc(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = sizeof(wchar_t);
 	} else {
 		read_data.read_bytes = 0;
@@ -1957,6 +2103,7 @@ wint_t WRAP(getwc_MACRO)(FILE *stream) {
 	return ret;
 }
 
+#if HAVE_GETC_UNLOCKED
 int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -1970,8 +2117,8 @@ int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, getc_unlocked_MACRO, stream)
 
-	read_data.return_state = get_return_state_c(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = 1;
 	} else {
 		read_data.read_bytes = 0;
@@ -1980,7 +2127,9 @@ int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_GETWC_UNLOCKED
 wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -1994,8 +2143,8 @@ wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, getwc_unlocked_MACRO, stream)
 
-	read_data.return_state = get_return_state_wc(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = sizeof(wchar_t);
 	} else {
 		read_data.read_bytes = 0;
@@ -2004,7 +2153,9 @@ wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_GETW
 int WRAP(getw)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2018,8 +2169,8 @@ int WRAP(getw)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, getw, stream)
 
-	read_data.return_state = get_return_state_c(ret);
-	if (read_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		read_data.read_bytes = sizeof(int);
 	} else {
 		read_data.read_bytes = 0;
@@ -2028,7 +2179,9 @@ int WRAP(getw)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_GETLINE
 ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream) {
 	ssize_t ret;
 	struct basic data;
@@ -2043,17 +2196,19 @@ ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, getline, lineptr, n, stream)
 
 	if (ret == -1) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_GETDELIM
 ssize_t WRAP(getdelim)(char **lineptr, size_t *n, int delimiter, FILE *stream) {
 	ssize_t ret;
 	struct basic data;
@@ -2068,16 +2223,17 @@ ssize_t WRAP(getdelim)(char **lineptr, size_t *n, int delimiter, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, getdelim, lineptr, n, delimiter, stream)
 
 	if (ret == -1) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 char * WRAP(fgets)(char *s, int count, FILE *stream) {
 	char * ret;
@@ -2093,10 +2249,10 @@ char * WRAP(fgets)(char *s, int count, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fgets, s, count, stream)
 
 	if (NULL == ret) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = strlen(s);
 	}
 
@@ -2118,10 +2274,10 @@ wchar_t * WRAP(fgetws)(wchar_t *ws, int count, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fgetws, ws, count, stream)
 
 	if (NULL == ret) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = wcslen(ws) * sizeof(wchar_t);
 	}
 
@@ -2129,6 +2285,7 @@ wchar_t * WRAP(fgetws)(wchar_t *ws, int count, FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FGETS_UNLOCKED
 char * WRAP(fgets_unlocked)(char *s, int count, FILE *stream) {
 	char * ret;
 	struct basic data;
@@ -2143,17 +2300,19 @@ char * WRAP(fgets_unlocked)(char *s, int count, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fgets_unlocked, s, count, stream)
 
 	if (NULL == ret) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = strlen(s);
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_FGETWS_UNLOCKED
 wchar_t * WRAP(fgetws_unlocked)(wchar_t *ws, int count, FILE *stream) {
 	wchar_t * ret;
 	struct basic data;
@@ -2168,16 +2327,17 @@ wchar_t * WRAP(fgetws_unlocked)(wchar_t *ws, int count, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(data, ret, fgetws_unlocked, ws, count, stream)
 
 	if (NULL == ret) {
-		read_data.return_state = eof;
+		data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		data.return_state = ok;
 		read_data.read_bytes = wcslen(ws) * sizeof(wchar_t);
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(ungetc)(int c, FILE *stream) {
 	int ret;
@@ -2192,8 +2352,8 @@ int WRAP(ungetc)(int c, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ungetc, c, stream)
 
-	unget_data.return_state = get_return_state_c(ret);
-	if (unget_data.return_state == ok) {
+	data.return_state = get_return_state_c(ret);
+	if (data.return_state == ok) {
 		unget_data.buffer_bytes = -1;
 	} else {
 		unget_data.buffer_bytes = 0;
@@ -2216,8 +2376,8 @@ wint_t WRAP(ungetwc)(wint_t wc, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ungetwc, wc, stream)
 
-	unget_data.return_state = get_return_state_wc(ret);
-	if (unget_data.return_state == ok) {
+	data.return_state = get_return_state_wc(ret);
+	if (data.return_state == ok) {
 		unget_data.buffer_bytes = -1;
 	} else {
 		unget_data.buffer_bytes = 0;
@@ -2240,11 +2400,11 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fread, data, size, count, stream)
 
-	if (ret == 0) {
-		read_data.return_state = eof;
+	if (0 == ret) {
+		_data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		_data.return_state = ok;
 		read_data.read_bytes = ret * size;
 	}
 
@@ -2252,6 +2412,7 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FREAD_UNLOCKED
 size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) {
 	size_t ret;
 	struct basic _data;
@@ -2266,17 +2427,18 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked, data, size, count,
 			stream)
 
-	if (ret == 0) {
-		read_data.return_state = eof;
+	if (0 == ret) {
+		_data.return_state = eof;
 		read_data.read_bytes = 0;
 	} else {
-		read_data.return_state = ok;
+		_data.return_state = ok;
 		read_data.read_bytes = ret * size;
 	}
 
 	WRAP_END(_data)
 	return ret;
 }
+#endif
 
 size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream) {
 	size_t ret;
@@ -2292,10 +2454,10 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream) {
 	CALL_REAL_FUNCTION_RET(_data, ret, fwrite, data, size, count, stream)
 
 	if (ret != count) {
-		write_data.return_state = error;
+		_data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		_data.return_state = ok;
 		write_data.written_bytes = ret * size;
 	}
 
@@ -2303,6 +2465,7 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FWRITE_UNLOCKED
 size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 		FILE *stream) {
 	size_t ret;
@@ -2319,16 +2482,17 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 			stream)
 
 	if (ret != count) {
-		write_data.return_state = error;
+		_data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		_data.return_state = ok;
 		write_data.written_bytes = ret * size;
 	}
 
 	WRAP_END(_data)
 	return ret;
 }
+#endif
 
 int WRAP(fprintf)(FILE *stream, const char *template, ...) {
 	int ret;
@@ -2347,10 +2511,10 @@ int WRAP(fprintf)(FILE *stream, const char *template, ...) {
 	va_end(ap);
 
 	if (ret < 0) {
-		write_data.return_state = error;
+		data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		data.return_state = ok;
 		write_data.written_bytes = ret;
 	}
 
@@ -2358,6 +2522,7 @@ int WRAP(fprintf)(FILE *stream, const char *template, ...) {
 	return ret;
 }
 
+#if HAVE_FWPRINTF
 int WRAP(fwprintf)(FILE *stream, const wchar_t *template, ...) {
 	int ret;
 	va_list ap;
@@ -2375,16 +2540,17 @@ int WRAP(fwprintf)(FILE *stream, const wchar_t *template, ...) {
 	va_end(ap);
 
 	if (ret < 0) {
-		write_data.return_state = error;
+		data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		data.return_state = ok;
 		write_data.written_bytes = ret * sizeof(wchar_t);
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap) {
 	int ret;
@@ -2400,10 +2566,10 @@ int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap) {
 	CALL_REAL_FUNCTION_RET(data, ret, vfprintf, stream, template, ap)
 
 	if (ret < 0) {
-		write_data.return_state = error;
+		data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		data.return_state = ok;
 		write_data.written_bytes = ret;
 	}
 
@@ -2411,6 +2577,7 @@ int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap) {
 	return ret;
 }
 
+#if HAVE_VFWPRINTF
 int WRAP(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap) {
 	int ret;
 	struct basic data;
@@ -2425,16 +2592,17 @@ int WRAP(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap) {
 	CALL_REAL_FUNCTION_RET(data, ret, vfwprintf, stream, template, ap)
 
 	if (ret < 0) {
-		write_data.return_state = error;
+		data.return_state = error;
 		write_data.written_bytes = 0;
 	} else {
-		write_data.return_state = ok;
+		data.return_state = ok;
 		write_data.written_bytes = ret * sizeof(wchar_t);
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(fscanf)(FILE *stream, const char *template, ...) {
 	int ret;
@@ -2452,12 +2620,13 @@ int WRAP(fscanf)(FILE *stream, const char *template, ...) {
 	CALL_REAL_FUNCTION_RET(data, ret, vfscanf, stream, template, ap)
 	va_end(ap);
 
-	scan_data.return_state = get_return_state_c(ret);
+	data.return_state = get_return_state_c(ret);
 
 	WRAP_END(data)
 	return ret;
 }
 
+#if HAVE_FWSCANF
 int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...) {
 	int ret;
 	va_list ap;
@@ -2474,12 +2643,14 @@ int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...) {
 	CALL_REAL_FUNCTION_RET(data, ret, vfwscanf, stream, template, ap)
 	va_end(ap);
 
-	scan_data.return_state = get_return_state_wc(ret);
+	data.return_state = get_return_state_wc(ret);
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_VFSCANF
 int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap) {
 	int ret;
 	struct basic data;
@@ -2493,12 +2664,14 @@ int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfscanf, stream, template, ap)
 
-	scan_data.return_state = get_return_state_c(ret);
+	data.return_state = get_return_state_c(ret);
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
+#if HAVE_VFWSCANF
 int WRAP(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) {
 	int ret;
 	struct basic data;
@@ -2512,11 +2685,12 @@ int WRAP(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfwscanf, stream, template, ap)
 
-	scan_data.return_state = get_return_state_wc(ret);
+	data.return_state = get_return_state_wc(ret);
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(feof)(FILE *stream) {
 	int ret;
@@ -2532,7 +2706,8 @@ int WRAP(feof)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, feof, stream)
 
-	if (0 == ret) {
+	data.return_state = ok;
+	if (ret == 0) {
 		information_data.return_bool = false;
 	} else {
 		information_data.return_bool = true;
@@ -2542,6 +2717,7 @@ int WRAP(feof)(FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FEOF_UNLOCKED
 int WRAP(feof_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2556,6 +2732,7 @@ int WRAP(feof_unlocked)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, feof_unlocked, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -2565,6 +2742,7 @@ int WRAP(feof_unlocked)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(ferror)(FILE *stream) {
 	int ret;
@@ -2580,6 +2758,7 @@ int WRAP(ferror)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ferror, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -2590,6 +2769,7 @@ int WRAP(ferror)(FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FERROR_UNLOCKED
 int WRAP(ferror_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2604,6 +2784,7 @@ int WRAP(ferror_unlocked)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ferror_unlocked, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -2613,6 +2794,7 @@ int WRAP(ferror_unlocked)(FILE *stream) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 void WRAP(clearerr)(FILE *stream) {
 	struct basic data;
@@ -2627,10 +2809,13 @@ void WRAP(clearerr)(FILE *stream) {
 
 	CALL_REAL_FUNCTION(data, clearerr, stream)
 
+	data.return_state = ok;
+
 	WRAP_END(data)
 	return;
 }
 
+#if HAVE_CLEARERR_UNLOCKED
 void WRAP(clearerr_unlocked)(FILE *stream) {
 	struct basic data;
 	struct clearerr_function clearerr_data;
@@ -2644,9 +2829,12 @@ void WRAP(clearerr_unlocked)(FILE *stream) {
 
 	CALL_REAL_FUNCTION(data, clearerr_unlocked, stream)
 
+	data.return_state = ok;
+
 	WRAP_END(data)
 	return;
 }
+#endif
 
 long int WRAP(ftell)(FILE *stream) {
 	long int ret;
@@ -2662,11 +2850,11 @@ long int WRAP(ftell)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftell, stream)
 
-	if (ret == -1) {
-		position_data.return_state = error;
+	if (-1 == ret) {
+		data.return_state = error;
 		position_data.position = 0;
 	} else {
-		position_data.return_state = ok;
+		data.return_state = ok;
 		position_data.position = ret;
 	}
 
@@ -2674,6 +2862,7 @@ long int WRAP(ftell)(FILE *stream) {
 	return ret;
 }
 
+#if HAVE_FTELLO
 off_t WRAP(ftello)(FILE *stream) {
 	off_t ret;
 	struct basic data;
@@ -2688,19 +2877,20 @@ off_t WRAP(ftello)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftello, stream)
 
-	if (ret == -1) {
-		position_data.return_state = error;
+	if (-1 == ret) {
+		data.return_state = error;
 		position_data.position = 0;
 	} else {
-		position_data.return_state = ok;
+		data.return_state = ok;
 		position_data.position = ret;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_FTELLO64
 off64_t WRAP(ftello64)(FILE *stream) {
 	off64_t ret;
 	struct basic data;
@@ -2715,11 +2905,11 @@ off64_t WRAP(ftello64)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftello64, stream)
 
-	if (ret == -1) {
-		position_data.return_state = error;
+	if (-1 == ret) {
+		data.return_state = error;
 		position_data.position = 0;
 	} else {
-		position_data.return_state = ok;
+		data.return_state = ok;
 		position_data.position = ret;
 	}
 
@@ -2742,12 +2932,12 @@ int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseek, stream, offset, whence)
 
-	if (ret == 0) {
-		positioning_data.return_state = ok;
+	if (0 == ret) {
+		data.return_state = ok;
 		positioning_data.offset = offset;
 		positioning_data.relative_to = get_seek_where(whence);
 	} else {
-		positioning_data.return_state = error;
+		data.return_state = error;
 		positioning_data.offset = offset;
 		positioning_data.relative_to = get_seek_where(whence);
 	}
@@ -2756,6 +2946,7 @@ int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 	return ret;
 }
 
+#if HAVE_FSEEKO
 int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 	int ret;
 	struct basic data;
@@ -2770,12 +2961,12 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseeko, stream, offset, whence)
 
-	if (ret == 0) {
-		positioning_data.return_state = ok;
+	if (0 == ret) {
+		data.return_state = ok;
 		positioning_data.offset = offset;
 		positioning_data.relative_to = get_seek_where(whence);
 	} else {
-		positioning_data.return_state = error;
+		data.return_state = error;
 		positioning_data.offset = offset;
 		positioning_data.relative_to = get_seek_where(whence);
 	}
@@ -2783,8 +2974,9 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_FSEEKO64
 int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 	int ret;
 	struct basic data;
@@ -2799,12 +2991,12 @@ int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseeko64, stream, offset, whence)
 
-	if (ret == 0) {
-		positioning_data.return_state = ok;
+	if (0 == ret) {
+		data.return_state = ok;
 		positioning_data.offset = offset;
 		positioning_data.relative_to = get_seek_where(whence);
 	} else {
-		positioning_data.return_state = error;
+		data.return_state = error;
 		positioning_data.offset = offset;
 		positioning_data.relative_to = get_seek_where(whence);
 	}
@@ -2827,7 +3019,7 @@ void WRAP(rewind)(FILE *stream) {
 
 	CALL_REAL_FUNCTION(data, rewind, stream)
 
-	positioning_data.return_state = ok;
+	data.return_state = ok;
 	positioning_data.offset = 0;
 	positioning_data.relative_to = get_seek_where(SEEK_SET);
 
@@ -2848,17 +3040,17 @@ int WRAP(fgetpos)(FILE *stream, fpos_t *position) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetpos, stream, position)
 
-	if (ret != 0) {
-		pos_data.return_state = error;
+	if (0 != ret) {
+		data.return_state = error;
 	} else {
-		pos_data.return_state = ok;
+		data.return_state = ok;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_FGETPOS64
 int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 	int ret;
 	struct basic data;
@@ -2872,10 +3064,10 @@ int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetpos64, stream, position)
 
-	if (ret != 0) {
-		pos_data.return_state = error;
+	if (0 != ret) {
+		data.return_state = error;
 	} else {
-		pos_data.return_state = ok;
+		data.return_state = ok;
 	}
 
 	WRAP_END(data)
@@ -2896,17 +3088,17 @@ int WRAP(fsetpos)(FILE *stream, const fpos_t *position) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsetpos, stream, position)
 
-	if (ret == 0) {
-		pos_data.return_state = ok;
+	if (0 == ret) {
+		data.return_state = ok;
 	} else {
-		pos_data.return_state = error;
+		data.return_state = error;
 	}
 
 	WRAP_END(data)
 	return ret;
 }
 
-#ifdef _LARGEFILE64_SOURCE
+#if HAVE_FSETPOS64
 int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 	int ret;
 	struct basic data;
@@ -2920,10 +3112,10 @@ int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsetpos64, stream, position)
 
-	if (ret == 0) {
-		pos_data.return_state = ok;
+	if (0 == ret) {
+		data.return_state = ok;
 	} else {
-		pos_data.return_state = error;
+		data.return_state = error;
 	}
 
 	WRAP_END(data)
@@ -2944,12 +3136,13 @@ int WRAP(fflush)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fflush, stream)
 
-	flush_data.return_state = get_return_state_c(ret);
+	data.return_state = get_return_state_c(ret);
 
 	WRAP_END(data)
 	return ret;
 }
 
+#if HAVE_FFLUSH_UNLOCKED
 int WRAP(fflush_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2963,11 +3156,12 @@ int WRAP(fflush_unlocked)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, fflush_unlocked, stream)
 
-	flush_data.return_state = get_return_state_c(ret);
+	data.return_state = get_return_state_c(ret);
 
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 int WRAP(setvbuf)(FILE *stream, char *buf, int mode, size_t size) {
 	int ret;
@@ -2982,12 +3176,12 @@ int WRAP(setvbuf)(FILE *stream, char *buf, int mode, size_t size) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, setvbuf, stream, buf, mode, size)
 
-	if (ret == 0) {
-		buffer_data.return_state = ok;
+	if (0 == ret) {
+		data.return_state = ok;
 		buffer_data.buffer_mode = get_buffer_mode(mode);
 		buffer_data.buffer_size = size;
 	} else {
-		buffer_data.return_state = error;
+		data.return_state = error;
 		buffer_data.buffer_mode = get_buffer_mode(mode);
 		buffer_data.buffer_size = size;
 	}
@@ -3009,11 +3203,11 @@ void WRAP(setbuf)(FILE *stream, char *buf) {
 	CALL_REAL_FUNCTION(data, setbuf, stream, buf)
 
 	if (NULL == buf) {
-		buffer_data.return_state = ok;
+		data.return_state = ok;
 		buffer_data.buffer_mode = unbuffered;
 		buffer_data.buffer_size = 0;
 	} else {
-		buffer_data.return_state = ok;
+		data.return_state = ok;
 		buffer_data.buffer_mode = fully_buffered;
 		buffer_data.buffer_size = BUFSIZ;
 	}
@@ -3022,6 +3216,7 @@ void WRAP(setbuf)(FILE *stream, char *buf) {
 	return;
 }
 
+#if HAVE_SETBUFFER
 void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 	struct basic data;
 	struct buffer_function buffer_data;
@@ -3035,11 +3230,11 @@ void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 	CALL_REAL_FUNCTION(data, setbuffer, stream, buf, size)
 
 	if (NULL == buf) {
-		buffer_data.return_state = ok;
+		data.return_state = ok;
 		buffer_data.buffer_mode = unbuffered;
 		buffer_data.buffer_size = 0;
 	} else {
-		buffer_data.return_state = ok;
+		data.return_state = ok;
 		buffer_data.buffer_mode = fully_buffered;
 		buffer_data.buffer_size = size;
 	}
@@ -3047,7 +3242,9 @@ void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 	WRAP_END(data)
 	return;
 }
+#endif
 
+#if HAVE_SETLINEBUF
 void WRAP(setlinebuf)(FILE *stream) {
 	struct basic data;
 	struct buffer_function buffer_data;
@@ -3060,13 +3257,14 @@ void WRAP(setlinebuf)(FILE *stream) {
 
 	CALL_REAL_FUNCTION(data, setlinebuf, stream)
 
-	buffer_data.return_state = ok;
+	data.return_state = ok;
 	buffer_data.buffer_mode = line_buffered;
 	buffer_data.buffer_size = 0;
 
 	WRAP_END(data)
 	return;
 }
+#endif
 
 int WRAP(__freadable)(FILE *stream) {
 	int ret;
@@ -3082,6 +3280,7 @@ int WRAP(__freadable)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __freadable, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -3107,6 +3306,7 @@ int WRAP(__fwritable)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fwritable, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -3131,6 +3331,7 @@ int WRAP(__freading)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __freading, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -3155,6 +3356,7 @@ int WRAP(__fwriting)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fwriting, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -3180,6 +3382,7 @@ int WRAP(__fsetlocking)(FILE *stream, int type) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fsetlocking, stream, type)
 
+	data.return_state = ok;
 	lock_mode_data.return_mode = get_lock_mode(ret);
 
 	WRAP_END(data)
@@ -3200,6 +3403,8 @@ void WRAP(_flushlbf)(void) {
 
 	CALL_REAL_FUNCTION(data, _flushlbf)
 
+	data.return_state = ok;
+
 	WRAP_END(data)
 	return;
 }
@@ -3215,6 +3420,8 @@ void WRAP(__fpurge)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
 
 	CALL_REAL_FUNCTION(data, __fpurge, stream)
+
+	data.return_state = ok;
 
 	WRAP_END(data)
 	return;
@@ -3234,6 +3441,7 @@ int WRAP(__flbf)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __flbf, stream)
 
+	data.return_state = ok;
 	if (0 == ret) {
 		information_data.return_bool = false;
 	} else {
@@ -3257,6 +3465,7 @@ size_t WRAP(__fbufsize)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fbufsize, stream)
 
+	data.return_state = ok;
 	bufsize_data.buffer_size = ret;
 
 	WRAP_END(data)
@@ -3276,6 +3485,7 @@ size_t WRAP(__fpending)(FILE *stream) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fpending, stream)
 
+	data.return_state = ok;
 	bufsize_data.buffer_size = ret;
 
 	WRAP_END(data)

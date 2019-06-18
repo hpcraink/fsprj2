@@ -7,6 +7,7 @@
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
+#include <unistd.h>
 #ifdef HAVE_SYS_SYSCALL_H
 #  include <sys/syscall.h>
 #endif

@@ -49,7 +49,7 @@
 #endif
 
 #define GET_ERRNO(data) char tmp_errno_text[MAXERRORTEXT]; \
-                        if (0 != data.errno_value) { \
+                        if (ok != data.return_state && 0 != data.errno_value) { \
                         	ERROR_FUNCTION(data) \
                         } else { \
                         	*tmp_errno_text = '\0'; \
@@ -59,14 +59,12 @@
                                                                   errno = data.errno_value; \
                                                                   return_value = CALL_REAL(function)(__VA_ARGS__); \
                                                                   data.errno_value = errno; \
-                                                                  data.time_end = gettime(); \
-                                                                  GET_ERRNO(data)
+                                                                  data.time_end = gettime();
 #define CALL_REAL_FUNCTION(data, function, ...) data.time_start = gettime(); \
                                                 errno = data.errno_value; \
                                                 CALL_REAL(function)(__VA_ARGS__); \
                                                 data.errno_value = errno; \
-                                                data.time_end = gettime(); \
-                                                GET_ERRNO(data)
+                                                data.time_end = gettime();
 #define WRAP_START(data) data.errno_value = errno;
 #define WRAP_END(data) if((data.void_p_enum_file_type == file_descriptor \
                            && *(int *)data.file_type != STDIN_FILENO \
@@ -77,6 +75,7 @@
                            && *(FILE **)data.file_type != stdin /* ToDo: dup can duplicate a stream, use fileno to get descriptor? */\
                            && *(FILE **)data.file_type != stdout \
                            && *(FILE **)data.file_type != stderr)) { \
+                           GET_ERRNO(data) \
                            writeData(&data); \
                        } \
                        errno = data.errno_value;

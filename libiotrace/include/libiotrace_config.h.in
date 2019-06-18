@@ -32,8 +32,281 @@
 /* Define to 1 if system has <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
 
+/* Define to 1 if system supports open64(). */
+#cmakedefine HAVE_OPEN64 1
+
+/* Define to 1 if system supports openat(). */
+#cmakedefine HAVE_OPENAT 1
+
+/* Define to 1 if system supports creat64(). */
+#cmakedefine HAVE_CREAT64 1
+
+/* Define to 1 if system supports pread(). */
+#cmakedefine HAVE_PREAD 1
+
 /* Define to 1 if system supports pread64(). */
 #cmakedefine HAVE_PREAD64 1
+
+/* Define to 1 if system supports pwrite(). */
+#cmakedefine HAVE_PWRITE 1
+
+/* Define to 1 if system supports pwrite64(). */
+#cmakedefine HAVE_PWRITE64 1
+
+/* Define to 1 if system supports lseek64(). */
+#cmakedefine HAVE_LSEEK64 1
+
+/* Define to 1 if system supports readv(). */
+#cmakedefine HAVE_READV 1
+
+/* Define to 1 if system supports writev(). */
+#cmakedefine HAVE_WRITEV 1
+
+/* Define to 1 if system supports preadv(). */
+#cmakedefine HAVE_PREADV 1
+
+/* Define to 1 if system supports preadv64(). */
+#cmakedefine HAVE_PREADV64 1
+
+/* Define to 1 if system supports pwritev(). */
+#cmakedefine HAVE_PWRITEV 1
+
+/* Define to 1 if system supports pwritev64(). */
+#cmakedefine HAVE_PWRITEV64 1
+
+/* Define to 1 if system supports preadv2(). */
+#cmakedefine HAVE_PREADV2 1
+
+/* Define to 1 if system supports preadv64v2(). */
+#cmakedefine HAVE_PREADV64V2 1
+
+/* Define to 1 if system supports pwritev2(). */
+#cmakedefine HAVE_PWRITEV2 1
+
+/* Define to 1 if system supports pwritev64v2(). */
+#cmakedefine HAVE_PWRITEV64V2 1
+
+/* Define to 1 if system supports copy_file_range(). */
+#cmakedefine HAVE_COPY_FILE_RANGE 1
+
+/* Define to 1 if system supports mmap(). */
+#cmakedefine HAVE_MMAP 1
+
+/* Define to 1 if system supports mmap64(). */
+#cmakedefine HAVE_MMAP64 1
+
+/* Define to 1 if system supports munmap(). */
+#cmakedefine HAVE_MUNMAP 1
+
+/* Define to 1 if system supports msync(). */
+#cmakedefine HAVE_MSYNC 1
+
+/* Define to 1 if system supports mremap(). */
+#cmakedefine HAVE_MREMAP 1
+
+/* Define to 1 if system supports fopen64(). */
+#cmakedefine HAVE_FOPEN64 1
+
+/* Define to 1 if system supports freopen64(). */
+#cmakedefine HAVE_FREOPEN64 1
+
+/* Define to 1 if system supports fdopen(). */
+#cmakedefine HAVE_FDOPEN 1
+
+/* Define to 1 if system supports fcloseall(). */
+#cmakedefine HAVE_FCLOSEALL 1
+
+/* Define to 1 if system supports flockfile(). */
+#cmakedefine HAVE_FLOCKFILE 1
+
+/* Define to 1 if system supports ftrylockfile(). */
+#cmakedefine HAVE_FTRYLOCKFILE 1
+
+/* Define to 1 if system supports funlockfile(). */
+#cmakedefine HAVE_FUNLOCKFILE 1
+
+/* Define to 1 if system supports fwide(). */
+#cmakedefine HAVE_FWIDE 1
+
+/* Define to 1 if system supports fputc_unlocked(). */
+#cmakedefine HAVE_FPUTC_UNLOCKED 1
+
+/* Define to 1 if system supports fputwc_unlocked(). */
+#cmakedefine HAVE_FPUTWC_UNLOCKED 1
+
+/* Define to 1 if system supports putc_unlocked(). */
+#cmakedefine HAVE_PUTC_UNLOCKED 1
+
+/* Define to 1 if system supports putwc_unlocked(). */
+#cmakedefine HAVE_PUTWC_UNLOCKED 1
+
+/* Define to 1 if system supports fputs_unlocked(). */
+#cmakedefine HAVE_FPUTS_UNLOCKED 1
+
+/* Define to 1 if system supports fputws_unlocked(). */
+#cmakedefine HAVE_FPUTWS_UNLOCKED 1
+
+/* Define to 1 if system supports putw(). */
+#cmakedefine HAVE_PUTW 1
+
+/* Define to 1 if system supports fgetc_unlocked(). */
+#cmakedefine HAVE_FGETC_UNLOCKED 1
+
+/* Define to 1 if system supports fgetwc_unlocked(). */
+#cmakedefine HAVE_FGETWC_UNLOCKED 1
+
+/* Define to 1 if system supports getc_unlocked(). */
+#cmakedefine HAVE_GETC_UNLOCKED 1
+
+/* Define to 1 if system supports getwc_unlocked(). */
+#cmakedefine HAVE_GETWC_UNLOCKED 1
+
+/* Define to 1 if system supports getw(). */
+#cmakedefine HAVE_GETW 1
+
+/* Define to 1 if system supports getline(). */
+#cmakedefine HAVE_GETLINE 1
+
+/* Define to 1 if system supports getdelim(). */
+#cmakedefine HAVE_GETDELIM 1
+
+/* Define to 1 if system supports fgets_unlocked(). */
+#cmakedefine HAVE_FGETS_UNLOCKED 1
+
+/* Define to 1 if system supports fgetws_unlocked(). */
+#cmakedefine HAVE_FGETWS_UNLOCKED 1
+
+/* Define to 1 if system supports fread_unlocked(). */
+#cmakedefine HAVE_FREAD_UNLOCKED 1
+
+/* Define to 1 if system supports fwrite_unlocked(). */
+#cmakedefine HAVE_FWRITE_UNLOCKED 1
+
+/* Define to 1 if system supports fwprintf(). */
+#cmakedefine HAVE_FWPRINTF 1
+
+/* Define to 1 if system supports vfwprintf(). */
+#cmakedefine HAVE_VFWPRINTF 1
+
+/* Define to 1 if system supports fwscanf(). */
+#cmakedefine HAVE_FWSCANF 1
+
+/* Define to 1 if system supports vfscanf(). */
+#cmakedefine HAVE_VFSCANF 1
+
+/* Define to 1 if system supports vfwscanf(). */
+#cmakedefine HAVE_VFWSCANF 1
+
+/* Define to 1 if system supports feof_unlocked(). */
+#cmakedefine HAVE_FEOF_UNLOCKED 1
+
+/* Define to 1 if system supports ferror_unlocked(). */
+#cmakedefine HAVE_FERROR_UNLOCKED 1
+
+/* Define to 1 if system supports clearerr_unlocked(). */
+#cmakedefine HAVE_CLEARERR_UNLOCKED 1
+
+/* Define to 1 if system supports ftello(). */
+#cmakedefine HAVE_FTELLO 1
+
+/* Define to 1 if system supports ftello64(). */
+#cmakedefine HAVE_FTELLO64 1
+
+/* Define to 1 if system supports fseeko(). */
+#cmakedefine HAVE_FSEEKO 1
+
+/* Define to 1 if system supports fseeko64(). */
+#cmakedefine HAVE_FSEEKO64 1
+
+/* Define to 1 if system supports fgetpos64(). */
+#cmakedefine HAVE_FGETPOS64 1
+
+/* Define to 1 if system supports fsetpos64(). */
+#cmakedefine HAVE_FSETPOS64 1
+
+/* Define to 1 if system supports fflush_unlocked(). */
+#cmakedefine HAVE_FFLUSH_UNLOCKED 1
+
+/* Define to 1 if system supports setbuffer(). */
+#cmakedefine HAVE_SETBUFFER 1
+
+/* Define to 1 if system supports setlinebuf(). */
+#cmakedefine HAVE_SETLINEBUF 1
+
+/* Define to 1 if system supports off64_t. */
+#cmakedefine HAVE_OFF64_T 1
+
+/* Define to 1 if system supports O_CLOEXEC. */
+#cmakedefine HAVE_O_CLOEXEC 1
+
+/* Define to 1 if system supports O_DIRECTORY. */
+#cmakedefine HAVE_O_DIRECTORY 1
+
+/* Define to 1 if system supports O_NOFOLLOW. */
+#cmakedefine HAVE_O_NOFOLLOW 1
+
+/* Define to 1 if system supports O_TMPFILE. */
+#cmakedefine HAVE_O_TMPFILE 1
+
+/* Define to 1 if system supports O_DIRECT. */
+#cmakedefine HAVE_O_DIRECT 1
+
+/* Define to 1 if system supports O_NOATIME. */
+#cmakedefine HAVE_O_NOATIME 1
+
+/* Define to 1 if system supports O_PATH. */
+#cmakedefine HAVE_O_PATH 1
+
+/* Define to 1 if system supports O_LARGEFILE. */
+#cmakedefine HAVE_O_LARGEFILE 1
+
+/* Define to 1 if system supports RWF_APPEND. */
+#cmakedefine HAVE_RWF_APPEND 1
+
+/* Define to 1 if system supports MAP_32BIT. */
+#cmakedefine HAVE_MAP_32BIT 1
+
+/* Define to 1 if system supports MAP_ANONYMOUS. */
+#cmakedefine HAVE_MAP_ANONYMOUS 1
+
+/* Define to 1 if system supports MAP_DENYWRITE. */
+#cmakedefine HAVE_MAP_DENYWRITE 1
+
+/* Define to 1 if system supports MAP_EXECUTABLE. */
+#cmakedefine HAVE_MAP_EXECUTABLE 1
+
+/* Define to 1 if system supports MAP_FILE. */
+#cmakedefine HAVE_MAP_FILE 1
+
+/* Define to 1 if system supports MAP_GROWSDOWN. */
+#cmakedefine HAVE_MAP_GROWSDOWN 1
+
+/* Define to 1 if system supports MAP_HUGETLB. */
+#cmakedefine HAVE_MAP_HUGETLB 1
+
+/* Define to 1 if system supports MAP_HUGE_2MB. */
+#cmakedefine HAVE_MAP_HUGE_2MB 1
+
+/* Define to 1 if system supports MAP_HUGE_1GB. */
+#cmakedefine HAVE_MAP_HUGE_1GB 1
+
+/* Define to 1 if system supports MAP_LOCKED. */
+#cmakedefine HAVE_MAP_LOCKED 1
+
+/* Define to 1 if system supports MAP_NONBLOCK. */
+#cmakedefine HAVE_MAP_NONBLOCK 1
+
+/* Define to 1 if system supports MAP_NORESERVE. */
+#cmakedefine HAVE_MAP_NORESERVE 1
+
+/* Define to 1 if system supports MAP_POPULATE. */
+#cmakedefine HAVE_MAP_POPULATE 1
+
+/* Define to 1 if system supports MAP_STACK. */
+#cmakedefine HAVE_MAP_STACK 1
+
+/* Define to 1 if system supports MAP_UNINITIALIZED. */
+#cmakedefine HAVE_MAP_UNINITIALIZED 1
 
 // These are checked by CheckCompilerAttributes.cmake
 /* Define to 1 if compiler supports attribute nonnull. */

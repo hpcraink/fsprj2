@@ -109,7 +109,7 @@
 #  define JSON_STRUCT_LONG_INT(name) long int name;
 #  define JSON_STRUCT_SIZE_T(name) size_t name;
 #  define JSON_STRUCT_SSIZE_T(name) ssize_t name;
-#  ifdef _LARGEFILE64_SOURCE
+#  if HAVE_OFF64_T
 #    define JSON_STRUCT_OFF_T(name) off64_t name;
 #  else
 #    define JSON_STRUCT_OFF_T(name) off_t name;
@@ -408,8 +408,13 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                                   + 1) /* for sign (-) */
 #  define JSON_STRUCT_SSIZE_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(ssize_t) \
                                                                    + 1) /* for sign (-) */
-#  define JSON_STRUCT_OFF_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(off_t) \
-                                                                 + 1) /* for sign (-) */
+#  if HAVE_OFF64_T
+#    define JSON_STRUCT_OFF_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(off64_t) \
+                                                                   + 1) /* for sign (-) */
+#  else
+#    define JSON_STRUCT_OFF_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(off_t) \
+                                                                   + 1) /* for sign (-) */
+#  endif
 #  define JSON_STRUCT_U_INT64_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(u_int64_t))
 #  define JSON_STRUCT_VOID_P(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_HEX(void*) \
                                                                   + 2) /* quotation marks (for value) */

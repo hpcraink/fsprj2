@@ -16,6 +16,16 @@ JSON_STRUCT_START(file_descriptor)
   JSON_STRUCT_INT(descriptor)
 JSON_STRUCT_END
 
+JSON_STRUCT_START(file_memory)
+  JSON_STRUCT_VOID_P(address)
+  JSON_STRUCT_SIZE_T(length)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(errno_detail)
+  JSON_STRUCT_INT(errno_value)
+  JSON_STRUCT_CSTRING_P(errno_text, MAXERRORTEXT)
+JSON_STRUCT_END
+
 JSON_STRUCT_ENUM_START(access_mode)
   JSON_STRUCT_ENUM_ELEMENT(read_only)      //O_RDONLY or r
   JSON_STRUCT_ENUM_ELEMENT(write_only)     //O_WRONLY or w, a
@@ -197,6 +207,57 @@ JSON_STRUCT_ENUM_START(buffer_mode)
   JSON_STRUCT_ENUM_ELEMENT(unknown_buffer_mode)
 JSON_STRUCT_ENUM_END
 
+JSON_STRUCT_ENUM_START(madvice_advice)
+  JSON_STRUCT_ENUM_ELEMENT(normal)         //MADV_NORMAL
+  JSON_STRUCT_ENUM_ELEMENT(madvice_random) //MADV_RANDOM
+  JSON_STRUCT_ENUM_ELEMENT(sequential)     //MADV_SEQUENTIAL
+  JSON_STRUCT_ENUM_ELEMENT(willneed)       //MADV_WILLNEED
+  JSON_STRUCT_ENUM_ELEMENT(dontneed)       //MADV_DONTNEED
+#if MADV_REMOVE
+  JSON_STRUCT_ENUM_ELEMENT(madvice_remove) //MADV_REMOVE
+#endif
+#if MADV_DONTFORK
+  JSON_STRUCT_ENUM_ELEMENT(dontfork)       //MADV_DONTFORK
+#endif
+#if MADV_DOFORK
+  JSON_STRUCT_ENUM_ELEMENT(dofork)         //MADV_DOFORK
+#endif
+#if MADV_HWPOISON
+  JSON_STRUCT_ENUM_ELEMENT(hwpoison)       //MADV_HWPOISON
+#endif
+#if MADV_MERGEABLE
+  JSON_STRUCT_ENUM_ELEMENT(mergeable)      //MADV_MERGEABLE
+#endif
+#if MADV_UNMERGEABLE
+  JSON_STRUCT_ENUM_ELEMENT(unmergeable)    //MADV_UNMERGEABLE
+#endif
+#if MADV_SOFT_OFFLINE
+  JSON_STRUCT_ENUM_ELEMENT(soft_offline)   //MADV_SOFT_OFFLINE
+#endif
+#if MADV_HUGEPAGE
+  JSON_STRUCT_ENUM_ELEMENT(hugepage)       //MADV_HUGEPAGE
+#endif
+#if MADV_NOHUGEPAGE
+  JSON_STRUCT_ENUM_ELEMENT(nohugepage)     //MADV_NOHUGEPAGE
+#endif
+#if MADV_DONTDUMP
+  JSON_STRUCT_ENUM_ELEMENT(dontdump)       //MADV_DONTDUMP
+#endif
+#if MADV_DODUMP
+  JSON_STRUCT_ENUM_ELEMENT(dodump)         //MADV_DODUMP
+#endif
+#if MADV_FREE
+  JSON_STRUCT_ENUM_ELEMENT(madvice_free)   //MADV_FREE
+#endif
+#if MADV_WIPEONFORK
+  JSON_STRUCT_ENUM_ELEMENT(wipeonfork)     //MADV_WIPEONFORK
+#endif
+#if MADV_KEEPONFORK
+  JSON_STRUCT_ENUM_ELEMENT(keeponfork)     //MADV_KEEPONFORK
+#endif
+  JSON_STRUCT_ENUM_ELEMENT(unknown_madvice_advice)
+JSON_STRUCT_ENUM_END
+
 JSON_STRUCT_ENUM_START(boolean)
   JSON_STRUCT_ENUM_ELEMENT(true)
   JSON_STRUCT_ENUM_ELEMENT(false)
@@ -204,11 +265,11 @@ JSON_STRUCT_ENUM_END
 
 /* struct for file open */
 JSON_STRUCT_START(open_function)
-  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
   JSON_STRUCT_ENUM(access_mode, mode)
   JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
   JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
   JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
 JSON_STRUCT_END
 
 /* struct for file openat */
@@ -228,18 +289,6 @@ JSON_STRUCT_START(fdopen_function)
   JSON_STRUCT_ENUM(access_mode, mode)
   JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
   JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
-JSON_STRUCT_END
-
-/* struct for file close */
-JSON_STRUCT_START(close_function)
-JSON_STRUCT_END
-
-/* struct for file lock */
-JSON_STRUCT_START(lock_function)
-JSON_STRUCT_END
-
-/* struct for file try lock */
-JSON_STRUCT_START(trylock_function)
 JSON_STRUCT_END
 
 /* struct for file information */
@@ -311,26 +360,14 @@ JSON_STRUCT_START(copy_write_function)
   JSON_STRUCT_INT(from_file_descriptor)
 JSON_STRUCT_END
 
-/* struct for file scan */
-JSON_STRUCT_START(scan_function)
-JSON_STRUCT_END
-
 /* struct for file unget */
 JSON_STRUCT_START(unget_function)
   JSON_STRUCT_INT(buffer_bytes)
 JSON_STRUCT_END
 
-/* struct for file clear error */
-JSON_STRUCT_START(clearerr_function)
-JSON_STRUCT_END
-
 /* struct for file position */
 JSON_STRUCT_START(position_function)
   JSON_STRUCT_OFF_T(position)
-JSON_STRUCT_END
-
-/* struct for file pos */
-JSON_STRUCT_START(pos_function)
 JSON_STRUCT_END
 
 /* struct for file positioning */
@@ -344,18 +381,6 @@ JSON_STRUCT_START(lpositioning_function)
   JSON_STRUCT_ENUM(seek_where, relative_to)
   JSON_STRUCT_OFF_T(offset)
   JSON_STRUCT_OFF_T(new_offset_relative_to_beginning_of_file)
-JSON_STRUCT_END
-
-/* struct for file flush */
-JSON_STRUCT_START(flush_function)
-JSON_STRUCT_END
-
-/* struct for file flushlbf */
-JSON_STRUCT_START(flushlbf_function)
-JSON_STRUCT_END
-
-/* struct for file purge */
-JSON_STRUCT_START(purge_function)
 JSON_STRUCT_END
 
 /* struct for file buffer */
@@ -378,26 +403,21 @@ JSON_STRUCT_START(memory_map_function)
   JSON_STRUCT_ARRAY_BITFIELD(memory_map_flags, map_flags)
 JSON_STRUCT_END
 
-/* struct for memory unmap */
-JSON_STRUCT_START(memory_unmap_function)
-  JSON_STRUCT_VOID_P(address)
-  JSON_STRUCT_SIZE_T(length)
-JSON_STRUCT_END
-
 /* struct for memory sync */
 JSON_STRUCT_START(memory_sync_function)
-  JSON_STRUCT_VOID_P(address)
-  JSON_STRUCT_SIZE_T(length)
   JSON_STRUCT_ARRAY_BITFIELD(memory_sync_flags, sync_flags)
 JSON_STRUCT_END
 
 /* struct for memory remap */
 JSON_STRUCT_START(memory_remap_function)
-  JSON_STRUCT_VOID_P(address)
-  JSON_STRUCT_SIZE_T(length)
   JSON_STRUCT_VOID_P(new_address)
   JSON_STRUCT_SIZE_T(new_length)
   JSON_STRUCT_ARRAY_BITFIELD(memory_remap_flags, remap_flags)
+JSON_STRUCT_END
+
+/* struct for memory madvise */
+JSON_STRUCT_START(memory_madvise_function)
+  JSON_STRUCT_ENUM(madvice_advice, advice)
 JSON_STRUCT_END
 
 /* basic struct for every call */
@@ -410,20 +430,17 @@ JSON_STRUCT_START(basic)
   JSON_STRUCT_U_INT64_T(time_start)
   JSON_STRUCT_U_INT64_T(time_end)
   JSON_STRUCT_ENUM(read_write_state, return_state)
-  JSON_STRUCT_INT(errno_value)
-  JSON_STRUCT_CSTRING_P(errno_text, MAXERRORTEXT)
+  JSON_STRUCT_STRUCT_P(errno_detail, return_state_detail)
   JSON_STRUCT_VOID_P_START(file_type)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_descriptor)
+    JSON_STRUCT_VOID_P_ELEMENT(file_type, file_memory)
   JSON_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position is changed (e.g. copy_file_range don't change file position)
   JSON_STRUCT_VOID_P_START(function_data)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, open_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, openat_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, fdopen_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, close_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, lock_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, trylock_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, information_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, lock_mode_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, orientation_mode_function)
@@ -435,22 +452,16 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, pread2_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, copy_read_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, copy_write_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, scan_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, unget_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, clearerr_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, position_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, pos_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, positioning_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, lpositioning_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, flush_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, flushlbf_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, purge_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, buffer_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, bufsize_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_map_function)
-    JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_unmap_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_sync_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_remap_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_madvise_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

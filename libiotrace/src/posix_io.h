@@ -103,6 +103,10 @@ REAL_TYPE int REAL(msync)(void *address, size_t length, int flags) REAL_INIT;
 #if HAVE_MREMAP
 REAL_TYPE void * REAL(mremap)(void *old_address, size_t old_length, size_t new_length, int flags, ...) REAL_INIT;
 #endif
+#if HAVE_MADVISE
+REAL_TYPE int REAL(madvise)(void *addr, size_t length, int advice) REAL_INIT;
+#endif
+//ToDo: posix_madvise()
 //ToDo: dprintf(), vdprintf() + feature test
 //ToDo: dup
 //ToDo: int fcntl(int fd, int cmd, ... /* arg */ );
@@ -426,6 +430,9 @@ static void posix_io_init() {
 #endif
 #if HAVE_MREMAP
 	DLSYM(mremap);
+#endif
+#if HAVE_MADVISE
+	DLSYM(madvise);
 #endif
 	DLSYM(fopen);
 #if HAVE_FOPEN64

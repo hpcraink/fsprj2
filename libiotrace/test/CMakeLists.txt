@@ -35,6 +35,7 @@ set(LINK_OPTIONS
     "-Wl,-wrap=munmap"
     "-Wl,-wrap=msync"
     "-Wl,-wrap=mremap"
+    "-Wl,-wrap=madvise"
     "-Wl,-wrap=fopen"
     "-Wl,-wrap=fopen64"
     "-Wl,-wrap=freopen"

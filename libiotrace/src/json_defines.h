@@ -34,9 +34,10 @@
                                             }
 #endif
 
-/* macro for setting VOID_P elements */
+/* macros for setting VOID_P elements */
 #define JSON_STRUCT_SET_VOID_P(struct_name, element, substruct_type, value) struct_name.void_p_enum_##element = substruct_type; \
                                                                             struct_name.element = (void*) (&value);
+#define JSON_STRUCT_SET_VOID_P_NULL(struct_name, element) struct_name.element = NULL;
 
 /* #define's for escaping cstrings (used in print_cstring()-function) */
 #ifndef JSON_STRUCT_ESCAPE_SLASH
@@ -60,6 +61,7 @@
 #undef JSON_STRUCT_VOID_P_ELEMENT
 #undef JSON_STRUCT_VOID_P_END
 
+#undef JSON_STRUCT_STRUCT_P
 #undef JSON_STRUCT_STRUCT
 #undef JSON_STRUCT_ARRAY_BITFIELD
 #undef JSON_STRUCT_ENUM
@@ -96,6 +98,7 @@
 #  define JSON_STRUCT_START(name) struct name {
 #  define JSON_STRUCT_END };
 
+#  define JSON_STRUCT_STRUCT_P(type, name) struct type *name;
 #  define JSON_STRUCT_STRUCT(type, name) struct type name;
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name) struct type name;
 #  define JSON_STRUCT_ENUM(type, name) enum type name;
@@ -295,9 +298,10 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                           JSON_STRUCT_WRITE("}") \
                           return json_struct_start_size - json_struct_size;}
 
-#  define JSON_STRUCT_VOID_P_START(name) json_struct_hasElements = 1; \
-                                         JSON_STRUCT_WRITE(JSON_STRUCT_QUOT(name)":") \
-                                         switch (json_struct_data->void_p_enum_##name) {
+#  define JSON_STRUCT_VOID_P_START(name) if (NULL != json_struct_data->name) { \
+                                           json_struct_hasElements = 1; \
+                                           JSON_STRUCT_WRITE(JSON_STRUCT_QUOT(name)":") \
+                                           switch (json_struct_data->void_p_enum_##name) {
 #  define JSON_STRUCT_VOID_P_ELEMENT(name, element) case element: \
                                                       json_struct_ret = json_struct_print_##element(json_struct_buf, \
                                                                           json_struct_size, (struct element*) \
@@ -305,11 +309,21 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                       json_struct_buf += json_struct_ret;  /* set pointer to end of written characters */ \
                                                       json_struct_size -= json_struct_ret; /* resize buffer size */\
                                                       break;
-#  define JSON_STRUCT_VOID_P_END(name) default: \
-                                         JSON_STRUCT_ENUM_ERROR(json_struct_data->void_p_enum_##name) \
-                                       } \
-                                       JSON_STRUCT_WRITE(",")
+#  define JSON_STRUCT_VOID_P_END(name)   default: \
+                                           JSON_STRUCT_ENUM_ERROR(json_struct_data->void_p_enum_##name) \
+                                         } \
+                                         JSON_STRUCT_WRITE(",") \
+                                       }
 
+#  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
+                                             json_struct_hasElements = 1; \
+                                             JSON_STRUCT_WRITE(JSON_STRUCT_QUOT(name)":") \
+                                             json_struct_ret = json_struct_print_##type(json_struct_buf, json_struct_size, \
+                                                                                        json_struct_data->name); \
+                                             json_struct_buf += json_struct_ret;  /* set pointer to end of written characters */ \
+                                             json_struct_size -= json_struct_ret; /* resize buffer size */ \
+                                             JSON_STRUCT_WRITE(",") \
+                                           }
 #  define JSON_STRUCT_STRUCT(type, name) JSON_STRUCT_TYPE(name, json_struct_print_##type) \
                                          JSON_STRUCT_WRITE(",")
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name) JSON_STRUCT_TYPE(name, json_struct_print_array_##type)
@@ -388,6 +402,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                       json_struct_size_void_p = json_struct_size_void_p_tmp;
 #  define JSON_STRUCT_VOID_P_END(name) json_struct_size += json_struct_size_void_p;
 
+#  define JSON_STRUCT_STRUCT_P(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_##type())
 #  define JSON_STRUCT_STRUCT(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_##type())
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_array_##type())
 #  define JSON_STRUCT_ENUM(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_enum_##type())
@@ -430,17 +445,22 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define JSON_STRUCT_ARRAY_BITFIELD_END
 
-#  define JSON_STRUCT_VOID_P_START(name) switch (json_struct_data->void_p_enum_##name) {
+#  define JSON_STRUCT_VOID_P_START(name) if (NULL != json_struct_data->name) { \
+                                           switch (json_struct_data->void_p_enum_##name) {
 #  define JSON_STRUCT_VOID_P_ELEMENT(name, element) case element: \
                                                       json_struct_size += json_struct_sizeof_##element( \
                                                                             (struct element*) json_struct_data->name); \
                                                       break;
-#  define JSON_STRUCT_VOID_P_END(name) }
+#  define JSON_STRUCT_VOID_P_END(name) } }
 
 #  define JSON_STRUCT_START(name) int json_struct_sizeof_##name(struct name *json_struct_data) { \
                                     size_t json_struct_size = sizeof(struct name);
 #  define JSON_STRUCT_END return json_struct_size;}
 
+#  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
+                                             json_struct_size += json_struct_sizeof_##type( \
+                                                                   json_struct_data->name); \
+                                           }
 #  define JSON_STRUCT_STRUCT(type, name)
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)
@@ -491,13 +511,14 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define JSON_STRUCT_ARRAY_BITFIELD_END
 
-#  define JSON_STRUCT_VOID_P_START(name) switch (json_struct_data->void_p_enum_##name) {
+#  define JSON_STRUCT_VOID_P_START(name) if (NULL != json_struct_data->name) { \
+                                           switch (json_struct_data->void_p_enum_##name) {
 #  define JSON_STRUCT_VOID_P_ELEMENT(name, element) case element: \
                                                       json_struct_copy->name = json_struct_buf; \
                                                       json_struct_buf = json_struct_copy_##element(json_struct_buf, \
                                                                           (struct element*) json_struct_data->name); \
                                                       break;
-#  define JSON_STRUCT_VOID_P_END(name) }
+#  define JSON_STRUCT_VOID_P_END(name) } }
 
 #  define JSON_STRUCT_START(name) void* json_struct_copy_##name(void *json_struct_buf, struct name *json_struct_data) { \
                                     struct name *json_struct_copy = (struct name *)json_struct_buf; \
@@ -506,6 +527,11 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
                                     json_struct_buf += sizeof(struct name);
 #  define JSON_STRUCT_END return json_struct_buf;}
 
+#  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
+                                             json_struct_copy->name = json_struct_buf; \
+                                             json_struct_buf = json_struct_copy_##type(json_struct_buf, \
+                                                                 json_struct_data->name); \
+                                           }
 #  define JSON_STRUCT_STRUCT(type, name)
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)

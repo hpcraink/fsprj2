@@ -233,6 +233,9 @@
 /* Define to 1 if system supports setlinebuf(). */
 #cmakedefine HAVE_SETLINEBUF 1
 
+/* Define to 1 if system supports madvise(). */
+#cmakedefine HAVE_MADVISE 1
+
 /* Define to 1 if system supports off64_t. */
 #cmakedefine HAVE_OFF64_T 1
 
@@ -307,6 +310,48 @@
 
 /* Define to 1 if system supports MAP_UNINITIALIZED. */
 #cmakedefine HAVE_MAP_UNINITIALIZED 1
+
+/* Define to 1 if system supports MADV_REMOVE. */
+#cmakedefine HAVE_MADV_REMOVE 1
+
+/* Define to 1 if system supports MADV_DONTFORK. */
+#cmakedefine HAVE_MADV_DONTFORK 1
+
+/* Define to 1 if system supports MADV_DOFORK. */
+#cmakedefine HAVE_MADV_DOFORK 1
+
+/* Define to 1 if system supports MADV_HWPOISON. */
+#cmakedefine HAVE_MADV_HWPOISON 1
+
+/* Define to 1 if system supports MADV_MERGEABLE. */
+#cmakedefine HAVE_MADV_MERGEABLE 1
+
+/* Define to 1 if system supports MADV_UNMERGEABLE. */
+#cmakedefine HAVE_MADV_UNMERGEABLE 1
+
+/* Define to 1 if system supports MADV_SOFT_OFFLINE. */
+#cmakedefine HAVE_MADV_SOFT_OFFLINE 1
+
+/* Define to 1 if system supports MADV_HUGEPAGE. */
+#cmakedefine HAVE_MADV_HUGEPAGE 1
+
+/* Define to 1 if system supports MADV_NOHUGEPAGE. */
+#cmakedefine HAVE_MADV_NOHUGEPAGE 1
+
+/* Define to 1 if system supports MADV_DONTDUMP. */
+#cmakedefine HAVE_MADV_DONTDUMP 1
+
+/* Define to 1 if system supports MADV_DODUMP. */
+#cmakedefine HAVE_MADV_DODUMP 1
+
+/* Define to 1 if system supports MADV_FREE. */
+#cmakedefine HAVE_MADV_FREE 1
+
+/* Define to 1 if system supports MADV_WIPEONFORK. */
+#cmakedefine HAVE_MADV_WIPEONFORK 1
+
+/* Define to 1 if system supports MADV_KEEPONFORK. */
+#cmakedefine HAVE_MADV_KEEPONFORK 1
 
 // These are checked by CheckCompilerAttributes.cmake
 /* Define to 1 if compiler supports attribute nonnull. */

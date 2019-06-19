@@ -40,32 +40,33 @@
 
 #define ERROR_FUNCTION(data) __ERROR_FUNCTION(data)
 #if (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE
-#  define __ERROR_FUNCTION(data) if (0 != strerror_r(data.errno_value, tmp_errno_text, MAXERRORTEXT)) { \
-                                     snprintf(tmp_errno_text, MAXERRORTEXT, "Unknown error %d", data.errno_value); \
+#  define __ERROR_FUNCTION(data) if (0 != strerror_r(errno_data.errno_value, tmp_errno_text, MAXERRORTEXT)) { \
+                                     snprintf(tmp_errno_text, MAXERRORTEXT, "Unknown error %d", errno_data.errno_value); \
                                  } \
-								 data.errno_text = tmp_errno_text;
+								 errno_data.errno_text = tmp_errno_text;
 #else
-#  define __ERROR_FUNCTION(data) data.errno_text = strerror_r(data.errno_value, tmp_errno_text, MAXERRORTEXT);
+#  define __ERROR_FUNCTION(data) errno_data.errno_text = strerror_r(errno_data.errno_value, tmp_errno_text, MAXERRORTEXT);
 #endif
 
 #define GET_ERRNO(data) char tmp_errno_text[MAXERRORTEXT]; \
-                        if (ok != data.return_state && 0 != data.errno_value) { \
+                        if (ok != data.return_state && 0 != errno_data.errno_value) { \
                         	ERROR_FUNCTION(data) \
+							data.return_state_detail = &errno_data; \
                         } else { \
-                        	*tmp_errno_text = '\0'; \
-                        	data.errno_text = tmp_errno_text; \
+                            data.return_state_detail = NULL; \
                         }
 #define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
-                                                                  errno = data.errno_value; \
+                                                                  errno = errno_data.errno_value; \
                                                                   return_value = CALL_REAL(function)(__VA_ARGS__); \
-                                                                  data.errno_value = errno; \
+                                                                  errno_data.errno_value = errno; \
                                                                   data.time_end = gettime();
 #define CALL_REAL_FUNCTION(data, function, ...) data.time_start = gettime(); \
-                                                errno = data.errno_value; \
+                                                errno = errno_data.errno_value; \
                                                 CALL_REAL(function)(__VA_ARGS__); \
-                                                data.errno_value = errno; \
+                                                errno_data.errno_value = errno; \
                                                 data.time_end = gettime();
-#define WRAP_START(data) data.errno_value = errno;
+#define WRAP_START(data) struct errno_detail errno_data;\
+                         errno_data.errno_value = errno;
 #define WRAP_END(data) if((data.void_p_enum_file_type == file_descriptor \
                            && *(int *)data.file_type != STDIN_FILENO \
                            && *(int *)data.file_type != STDOUT_FILENO \
@@ -78,6 +79,6 @@
                            GET_ERRNO(data) \
                            writeData(&data); \
                        } \
-                       errno = data.errno_value;
+                       errno = errno_data.errno_value;
 
 #endif /* LIBIOTRACE_WRAPPER_DEFINES_H */

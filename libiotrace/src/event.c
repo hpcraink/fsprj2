@@ -65,8 +65,6 @@ void get_basic(struct basic *data) {
 
 	// ToDo: are hostnames relevant (multiple nodes)?
 	data->hostname = hostname;
-
-	// ToDo: get errno for each wrapper
 }
 
 u_int64_t gettime(void) {

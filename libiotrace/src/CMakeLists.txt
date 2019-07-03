@@ -120,6 +120,9 @@ check_symbol_exists(MADV_FREE "sys/mman.h" HAVE_MADV_FREE)
 check_symbol_exists(MADV_WIPEONFORK "sys/mman.h" HAVE_MADV_WIPEONFORK)
 check_symbol_exists(MADV_KEEPONFORK "sys/mman.h" HAVE_MADV_KEEPONFORK)
 
+
+check_symbol_exists(HOST_NAME_MAX "limits.h" HAVE_HOST_NAME_MAX)
+
 # Please keep in alphabetical order
 set(SOURCE
     event.c

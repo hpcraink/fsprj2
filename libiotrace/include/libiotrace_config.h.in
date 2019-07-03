@@ -387,6 +387,11 @@
 #  define ATTRIBUTE_CONSTRUCTOR
 #endif
 
+#if !defined(HAVE_HOST_NAME_MAX)
+extern int host_name_max;
+#    define HOST_NAME_MAX host_name_max;
+#endif
+
 #undef BEGIN_C_DECLS
 #undef END_C_DECLS
 #if defined(c_plusplus) || defined(__cplusplus)

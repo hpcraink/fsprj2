@@ -4,6 +4,8 @@
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
+#else
+#error NOT DEFINED
 #endif
 
 #ifdef HAVE_STDLIB_H
@@ -28,6 +30,10 @@ static char* endpos;
 static char* pos;
 static int count_basic;
 
+#if !defined (HAVE_HOST_NAME_MAX)
+static int host_name_max;
+#endif
+
 /* Mutex */
 static pthread_mutex_t lock;
 
@@ -47,6 +53,10 @@ static void init() {
 	endpos = data_buffer + BUFFER_SIZE;
 	pos = data_buffer;
 	count_basic = 0;
+
+#if !defined(HAVE_HOST_NAME_MAX)
+        host_name_max = sysconf(POSIX_HOST_NAME_MAX);
+#endif
 
 	pid = getpid();
 	gethostname(hostname, HOST_NAME_MAX);

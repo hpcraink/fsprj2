@@ -127,6 +127,9 @@ check_symbol_exists(MADV_KEEPONFORK "sys/mman.h" HAVE_MADV_KEEPONFORK)
 check_symbol_exists(SEEK_DATA "unistd.h" HAVE_SEEK_DATA)
 check_symbol_exists(SEEK_HOLE "unistd.h" HAVE_SEEK_HOLE)
 
+
+check_symbol_exists(HOST_NAME_MAX "limits.h" HAVE_HOST_NAME_MAX)
+
 # Please keep in alphabetical order
 set(SOURCE
     event.c

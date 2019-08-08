@@ -32,13 +32,14 @@
 enum access_mode get_access_mode(int flags) {
 	int access_mode = flags & O_ACCMODE;
 
-	if (access_mode == O_RDONLY) {
+	switch (access_mode) {
+	case O_RDONLY:
 		return read_only;
-	} else if (access_mode == O_WRONLY) {
+	case O_WRONLY:
 		return write_only;
-	} else if (access_mode == O_RDWR) {
+	case O_RDWR:
 		return read_and_write;
-	} else {
+	default:
 		return unknown_access_mode;
 	}
 }
@@ -105,6 +106,14 @@ enum seek_where get_seek_where(int whence) {
 		return current_position;
 	case SEEK_END:
 		return end_of_file;
+#if HAVE_SEEK_DATA
+	case SEEK_DATA:
+		return next_data;
+#endif
+#if HAVE_SEEK_HOLE
+	case SEEK_HOLE:
+		return next_hole;
+#endif
 	default:
 		return unknown_seek_where;
 	}
@@ -122,64 +131,81 @@ enum madvice_advice get_madvice_advice(int advice) {
 		return willneed;
 	case MADV_DONTNEED:
 		return dontneed;
-#if MADV_REMOVE
+#if HAVE_MADV_REMOVE
 	case MADV_REMOVE:
 		return madvice_remove;
 #endif
-#if MADV_DONTFORK
+#if HAVE_MADV_DONTFORK
 	case MADV_DONTFORK:
 		return dontfork;
 #endif
-#if MADV_DOFORK
+#if HAVE_MADV_DOFORK
 	case MADV_DOFORK:
 		return dofork;
 #endif
-#if MADV_HWPOISON
+#if HAVE_MADV_HWPOISON
 	case MADV_HWPOISON:
 		return hwpoison;
 #endif
-#if MADV_MERGEABLE
+#if HAVE_MADV_MERGEABLE
 	case MADV_MERGEABLE:
 		return mergeable;
 #endif
-#if MADV_UNMERGEABLE
+#if HAVE_MADV_UNMERGEABLE
 	case MADV_UNMERGEABLE:
 		return unmergeable;
 #endif
-#if MADV_SOFT_OFFLINE
+#if HAVE_MADV_SOFT_OFFLINE
 		case MADV_SOFT_OFFLINE:
 		return soft_offline;
 #endif
-#if MADV_HUGEPAGE
+#if HAVE_MADV_HUGEPAGE
 	case MADV_HUGEPAGE:
 		return hugepage;
 #endif
-#if MADV_NOHUGEPAGE
+#if HAVE_MADV_NOHUGEPAGE
 	case MADV_NOHUGEPAGE:
 		return nohugepage;
 #endif
-#if MADV_DONTDUMP
+#if HAVE_MADV_DONTDUMP
 	case MADV_DONTDUMP:
 		return dontdump;
 #endif
-#if MADV_DODUMP
+#if HAVE_MADV_DODUMP
 	case MADV_DODUMP:
 		return dodump;
 #endif
-#if MADV_FREE
+#if HAVE_MADV_FREE
 	case MADV_FREE:
 		return madvice_free;
 #endif
-#if MADV_WIPEONFORK
+#if HAVE_MADV_WIPEONFORK
 	case MADV_WIPEONFORK:
 		return wipeonfork;
 #endif
-#if MADV_KEEPONFORK
+#if HAVE_MADV_KEEPONFORK
 	case MADV_KEEPONFORK:
 		return keeponfork;
 #endif
 	default:
 		return unknown_madvice_advice;
+	}
+}
+
+enum posix_madvice_advice get_posix_madvice_advice(int advice) {
+	switch (advice) {
+	case POSIX_MADV_NORMAL:
+		return posix_normal;
+	case POSIX_MADV_RANDOM:
+		return posix_madvice_random;
+	case POSIX_MADV_SEQUENTIAL:
+		return posix_sequential;
+	case POSIX_MADV_WILLNEED:
+		return posix_willneed;
+	case POSIX_MADV_DONTNEED:
+		return posix_dontneed;
+	default:
+		return unknown_posix_madvice_advice;
 	}
 }
 
@@ -447,7 +473,8 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	}
 
 	file_descriptor_data.descriptor = ret;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, file_descriptor_data)
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	WRAP_END(data)
 	return ret;
@@ -499,7 +526,8 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 	}
 
 	file_descriptor_data.descriptor = ret;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, file_descriptor_data)
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	WRAP_END(data)
 	return ret;
@@ -514,6 +542,7 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 #endif
 	int ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct openat_function openat_data;
 	WRAP_START(data)
 
@@ -556,7 +585,9 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
+	file_descriptor_data.descriptor = ret;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	WRAP_END(data)
 	return ret;
@@ -566,6 +597,7 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 int WRAP(creat)(const char *filename, mode_t mode) {
 	int ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct open_function open_data;
 	int flags = O_CREAT | O_WRONLY | O_TRUNC;
 	WRAP_START(data)
@@ -587,7 +619,9 @@ int WRAP(creat)(const char *filename, mode_t mode) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
+	file_descriptor_data.descriptor = ret;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	WRAP_END(data)
 	return ret;
@@ -597,6 +631,7 @@ int WRAP(creat)(const char *filename, mode_t mode) {
 int WRAP(creat64)(const char *filename, mode_t mode) {
 	int ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct open_function open_data;
 	int flags = O_CREAT | O_WRONLY | O_TRUNC;
 	WRAP_START(data)
@@ -618,7 +653,9 @@ int WRAP(creat64)(const char *filename, mode_t mode) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, ret)
+	file_descriptor_data.descriptor = ret;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	WRAP_END(data)
 	return ret;
@@ -627,13 +664,16 @@ int WRAP(creat64)(const char *filename, mode_t mode) {
 
 int WRAP(close)(int filedes) {
 	int ret;
+	struct file_descriptor file_descriptor_data;
 	struct basic data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, close, filedes)
 
@@ -650,13 +690,16 @@ int WRAP(close)(int filedes) {
 ssize_t WRAP(read)(int filedes, void *buffer, size_t size) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, read, filedes, buffer, size)
 
@@ -679,13 +722,16 @@ ssize_t WRAP(read)(int filedes, void *buffer, size_t size) {
 ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pread_function pread_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pread_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, pread, filedes, buffer, size, offset)
@@ -710,13 +756,16 @@ ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pread_function pread_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pread_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, pread64, filedes, buffer, size, offset)
@@ -740,13 +789,16 @@ ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, write, filedes, buffer, size)
 
@@ -766,13 +818,16 @@ ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pwrite_function pwrite_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pwrite_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, pwrite, filedes, buffer, size, offset)
@@ -795,13 +850,16 @@ ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 		off64_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pwrite_function pwrite_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pwrite_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, pwrite, filedes, buffer, size, offset)
@@ -822,6 +880,7 @@ ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 	off_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct lpositioning_function lpositioning_data;
 	WRAP_START(data)
 
@@ -829,21 +888,19 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, lpositioning_function,
 			lpositioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, lseek, filedes, offset, whence)
 
-	//ToDo: check for SEEK_DATA and SEEK_HOLE (_GNU_SOURCE in <unistd.h>)
+	lpositioning_data.offset = offset;
+	lpositioning_data.relative_to = get_seek_where(whence);
+	lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	if (-1 == ret) {
 		data.return_state = error;
-		lpositioning_data.offset = offset;
-		lpositioning_data.relative_to = get_seek_where(whence);
-		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	} else {
 		data.return_state = ok;
-		lpositioning_data.offset = offset;
-		lpositioning_data.relative_to = get_seek_where(whence);
-		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	}
 
 	WRAP_END(data)
@@ -854,6 +911,7 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	off64_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct lpositioning_function lpositioning_data;
 	WRAP_START(data)
 
@@ -861,20 +919,19 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, lpositioning_function,
 			lpositioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, lseek64, filedes, offset, whence)
 
+	lpositioning_data.offset = offset;
+	lpositioning_data.relative_to = get_seek_where(whence);
+	lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	if (-1 == ret) {
 		data.return_state = error;
-		lpositioning_data.offset = offset;
-		lpositioning_data.relative_to = get_seek_where(whence);
-		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	} else {
 		data.return_state = ok;
-		lpositioning_data.offset = offset;
-		lpositioning_data.relative_to = get_seek_where(whence);
-		lpositioning_data.new_offset_relative_to_beginning_of_file = ret;
 	}
 
 	WRAP_END(data)
@@ -886,13 +943,16 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, readv, filedes, vector, count)
 
@@ -916,13 +976,16 @@ ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, writev, filedes, vector, count)
 
@@ -943,13 +1006,16 @@ ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count) {
 ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pread_function pread_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pread_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, preadv, fd, iov, iovcnt, offset)
@@ -975,13 +1041,16 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pread_function pread_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pread_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, preadv64, fd, iov, iovcnt, offset)
@@ -1006,13 +1075,16 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pwrite_function pwrite_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pwrite_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, pwritev, fd, iov, iovcnt, offset)
@@ -1035,13 +1107,16 @@ ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pwrite_function pwrite_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pwrite_data.position = offset;
 
 	CALL_REAL_FUNCTION_RET(data, ret, pwritev64, fd, iov, iovcnt, offset)
@@ -1064,13 +1139,16 @@ ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 		int flags) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pread2_function pread2_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pread2_function, pread2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pread2_data.position = offset;
 	get_rwf_flags(flags, &pread2_data.flags);
 
@@ -1097,13 +1175,16 @@ ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pread2_function pread2_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pread2_function, pread2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pread2_data.position = offset;
 	get_rwf_flags(flags, &pread2_data.flags);
 
@@ -1131,13 +1212,16 @@ ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 		off_t offset, int flags) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pwrite2_function pwrite2_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite2_function, pwrite2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pwrite2_data.position = offset;
 	get_rwf_flags(flags, &pwrite2_data.flags);
 
@@ -1161,13 +1245,16 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct pwrite2_function pwrite2_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite2_function, pwrite2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, fd)
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	pwrite2_data.position = offset;
 	get_rwf_flags(flags, &pwrite2_data.flags);
 
@@ -1192,6 +1279,8 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 		off64_t *outputpos, size_t length, unsigned int flags) {
 	ssize_t ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_read_data;
+	struct file_descriptor file_descriptor_write_data;
 	struct copy_read_function copy_read_data;
 	struct copy_write_function copy_write_data;
 	WRAP_START(data)
@@ -1232,11 +1321,15 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 		copy_write_data.written_bytes = ret;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, inputfd)
+	file_descriptor_read_data.descriptor = inputfd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_read_data)
 	JSON_STRUCT_SET_VOID_P(data, function_data, copy_read_function,
 			copy_read_data)
 	WRAP_END(data)
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, outputfd)
+	file_descriptor_write_data.descriptor = outputfd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_write_data)
 	JSON_STRUCT_SET_VOID_P(data, function_data, copy_write_function,
 			copy_write_data)
 	WRAP_END(data)
@@ -1249,6 +1342,7 @@ void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 		int filedes, off_t offset) {
 	void *ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct memory_map_function memory_map_data;
 	WRAP_START(data)
 
@@ -1256,7 +1350,9 @@ void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 	JSON_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
 			memory_map_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	get_memory_protection_flags(protect, &memory_map_data.protection_flags);
 	get_memory_map_flags(flags, &memory_map_data.map_flags);
 	memory_map_data.offset = offset;
@@ -1282,6 +1378,7 @@ void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 		int filedes, off64_t offset) {
 	void *ret;
 	struct basic data;
+	struct file_descriptor file_descriptor_data;
 	struct memory_map_function memory_map_data;
 	WRAP_START(data)
 
@@ -1289,7 +1386,9 @@ void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 	JSON_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
 			memory_map_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor, filedes)
+	file_descriptor_data.descriptor = filedes;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
 	get_memory_protection_flags(protect, &memory_map_data.protection_flags);
 	get_memory_map_flags(flags, &memory_map_data.map_flags);
 	memory_map_data.offset = offset;
@@ -1442,9 +1541,242 @@ int WRAP(madvise)(void *addr, size_t length, int advice) {
 }
 #endif
 
+#if HAVE_POSIX_MADVISE
+int WRAP(posix_madvise)(void *addr, size_t len, int advice) {
+	int ret;
+	struct basic data;
+	struct file_memory file_memory_data;
+	struct memory_posix_madvise_function memory_posix_madvise_function_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, memory_posix_madvise_function,
+			memory_posix_madvise_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	memory_posix_madvise_function_data.advice = get_posix_madvice_advice(advice);
+	file_memory_data.length = len;
+	file_memory_data.address = addr;
+
+	CALL_REAL_FUNCTION_RET(data, ret, posix_madvise, addr, len, advice)
+
+	if (0 == ret) {
+		data.return_state = ok;
+	} else {
+		data.return_state = error;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+int WRAP(select)(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+		struct timeval *timeout) {
+	int ret;
+	struct basic data;
+	struct select_function select_function_data;
+	fd_set readfds_before;
+	fd_set writefds_before;
+	fd_set exceptfds_before;
+	fd_set readfds_after;
+	fd_set writefds_after;
+	fd_set exceptfds_after;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, select_function,
+			select_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	select_function_data.timeout.sec = timeout->tv_sec;
+	select_function_data.timeout.micro_sec = timeout->tv_usec;
+	if (NULL != readfds) {
+		readfds_before = *readfds;
+		select_function_data.files_waiting_for_read = &readfds_before;
+	} else {
+		select_function_data.files_waiting_for_read = NULL;
+	}
+	if (NULL != writefds) {
+		writefds_before = *writefds;
+		select_function_data.files_waiting_for_write = &writefds_before;
+	} else {
+		select_function_data.files_waiting_for_write = NULL;
+	}
+	if (NULL != exceptfds) {
+		exceptfds_before = *exceptfds;
+		select_function_data.files_waiting_for_except = &exceptfds_before;
+	} else {
+		select_function_data.files_waiting_for_except = NULL;
+	}
+
+	CALL_REAL_FUNCTION_RET(data, ret, select, nfds, readfds, writefds,
+			exceptfds, timeout)
+
+	if (-1 == ret) {
+		data.return_state = error;
+		select_function_data.files_ready_for_read = NULL;
+		select_function_data.files_ready_for_write = NULL;
+		select_function_data.files_ready_for_except = NULL;
+	} else {
+		data.return_state = ok;
+		if (NULL != readfds) {
+			readfds_after = *readfds;
+			select_function_data.files_ready_for_read = &readfds_after;
+		} else {
+			select_function_data.files_ready_for_read = NULL;
+		}
+		if (NULL != writefds) {
+			writefds_after = *writefds;
+			select_function_data.files_ready_for_write = &writefds_after;
+		} else {
+			select_function_data.files_ready_for_write = NULL;
+		}
+		if (NULL != exceptfds) {
+			exceptfds_after = *exceptfds;
+			select_function_data.files_ready_for_except = &exceptfds_after;
+		} else {
+			select_function_data.files_ready_for_except = NULL;
+		}
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+#if HAVE_SYNC
+void WRAP(sync)(void) {
+	struct basic data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	CALL_REAL_FUNCTION(data, sync)
+
+	data.return_state = ok;
+
+	WRAP_END(data)
+	return;
+}
+#endif
+
+#if HAVE_SYNCFS
+int WRAP(syncfs)(int fd) {
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, syncfs, fd)
+
+	if (-1 == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+#if HAVE_FSYNC
+int WRAP(fsync)(int fd) {
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, fsync, fd)
+
+	if (-1 == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+#if HAVE_FDATASYNC
+int WRAP(fdatasync)(int fd) {
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = fd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, fdatasync, fd)
+
+	if (-1 == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+//int WRAP(aio_read)(struct aiocb *aiocbp) {
+//	int ret;
+//	struct basic data;
+//	struct asynchronous_read_function asynchronous_read_function_data;
+//	struct file_descriptor file_descriptor_data;
+//	WRAP_START(data)
+//
+//	get_basic(&data);
+//	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_read_function,
+//			asynchronous_read_function_data)
+//	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+//	file_descriptor_data.descriptor = aiocbp->aio_fildes;
+//	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+//			file_descriptor_data)
+//	asynchronous_read_function_data.bytes_to_read = aiocbp->aio_nbytes;
+//	asynchronous_read_function_data.position = aiocbp->aio_offset;
+//
+//	CALL_REAL_FUNCTION_RET(data, ret, aio_read, aiocbp)
+//
+//	if (-1 == file) {
+//		data.return_state = error;
+//	} else {
+//		data.return_state = ok;
+//	}
+//
+//	WRAP_END(data)
+//	return ret;
+//}
+
 FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 	FILE * file;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct open_function open_data;
 	WRAP_START(data)
 
@@ -1465,7 +1797,8 @@ FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	file_stream_data.stream = file;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data)
 	return file;
@@ -1475,6 +1808,7 @@ FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 	FILE * file;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct open_function open_data;
 	WRAP_START(data)
 
@@ -1495,7 +1829,8 @@ FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	file_stream_data.stream = file;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data)
 	return file;
@@ -1505,6 +1840,7 @@ FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 	FILE * file;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct open_function open_data;
 	WRAP_START(data)
 
@@ -1525,7 +1861,8 @@ FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	file_stream_data.stream = file;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data)
 	return file;
@@ -1535,6 +1872,7 @@ FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream) {
 	FILE * file;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct open_function open_data;
 	WRAP_START(data)
 
@@ -1555,7 +1893,8 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	file_stream_data.stream = file;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data)
 	return file;
@@ -1566,6 +1905,7 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 FILE * WRAP(fdopen)(int fd, const char *opentype) {
 	FILE * file;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct fdopen_function fdopen_data;
 	WRAP_START(data)
 
@@ -1584,7 +1924,8 @@ FILE * WRAP(fdopen)(int fd, const char *opentype) {
 		data.return_state = ok;
 	}
 
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	file_stream_data.stream = file;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data)
 	return file;
@@ -1594,12 +1935,14 @@ FILE * WRAP(fdopen)(int fd, const char *opentype) {
 int WRAP(fclose)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fclose, stream)
 
@@ -1617,13 +1960,12 @@ int WRAP(fclose)(FILE *stream) {
 int WRAP(fcloseall)(void) {
 	int ret;
 	struct basic data;
-	FILE *file = NULL;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fcloseall)
 
@@ -1641,12 +1983,14 @@ int WRAP(fcloseall)(void) {
 #if HAVE_FLOCKFILE
 void WRAP(flockfile)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, flockfile, stream)
 
@@ -1661,12 +2005,14 @@ void WRAP(flockfile)(FILE *stream) {
 int WRAP(ftrylockfile)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftrylockfile, stream)
 
@@ -1684,12 +2030,14 @@ int WRAP(ftrylockfile)(FILE *stream) {
 #if HAVE_FUNLOCKFILE
 void WRAP(funlockfile)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, funlockfile, stream)
 
@@ -1704,6 +2052,7 @@ void WRAP(funlockfile)(FILE *stream) {
 int WRAP(fwide)(FILE *stream, int mode) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct orientation_mode_function orientation_mode_data;
 	WRAP_START(data)
 
@@ -1712,7 +2061,8 @@ int WRAP(fwide)(FILE *stream, int mode) {
 			orientation_mode_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	orientation_mode_data.set_mode = get_orientation_mode(mode, 1);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fwide, stream, mode)
 
@@ -1727,13 +2077,15 @@ int WRAP(fwide)(FILE *stream, int mode) {
 int WRAP(fputc)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputc, c, stream)
 
@@ -1751,13 +2103,15 @@ int WRAP(fputc)(int c, FILE *stream) {
 wint_t WRAP(fputwc)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputwc, wc, stream)
 
@@ -1776,13 +2130,15 @@ wint_t WRAP(fputwc)(wchar_t wc, FILE *stream) {
 int WRAP(fputc_unlocked)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputc_unlocked, c, stream)
 
@@ -1802,13 +2158,15 @@ int WRAP(fputc_unlocked)(int c, FILE *stream) {
 wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputwc_unlocked, wc, stream)
 
@@ -1827,13 +2185,15 @@ wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream) {
 int WRAP(putc_MACRO)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putc_MACRO, c, stream)
 
@@ -1851,13 +2211,15 @@ int WRAP(putc_MACRO)(int c, FILE *stream) {
 wint_t WRAP(putwc_MACRO)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putwc_MACRO, wc, stream)
 
@@ -1876,13 +2238,15 @@ wint_t WRAP(putwc_MACRO)(wchar_t wc, FILE *stream) {
 int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putc_unlocked_MACRO, c, stream)
 
@@ -1902,13 +2266,15 @@ int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putwc_unlocked_MACRO, wc, stream)
 
@@ -1927,13 +2293,15 @@ wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream) {
 int WRAP(fputs)(const char *s, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputs, s, stream)
 
@@ -1951,13 +2319,15 @@ int WRAP(fputs)(const char *s, FILE *stream) {
 int WRAP(fputws)(const wchar_t *ws, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputws, ws, stream)
 
@@ -1977,13 +2347,15 @@ int WRAP(fputws)(const wchar_t *ws, FILE *stream) {
 int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputs_unlocked, s, stream)
 
@@ -2003,13 +2375,15 @@ int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputws_unlocked, ws, stream)
 
@@ -2030,13 +2404,15 @@ int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 int WRAP(putw)(int w, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putw, w, stream)
 
@@ -2056,13 +2432,15 @@ int WRAP(putw)(int w, FILE *stream) {
 int WRAP(fgetc)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetc, stream)
 
@@ -2080,13 +2458,15 @@ int WRAP(fgetc)(FILE *stream) {
 wint_t WRAP(fgetwc)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetwc, stream)
 
@@ -2105,13 +2485,15 @@ wint_t WRAP(fgetwc)(FILE *stream) {
 int WRAP(fgetc_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetc_unlocked, stream)
 
@@ -2131,13 +2513,15 @@ int WRAP(fgetc_unlocked)(FILE *stream) {
 wint_t WRAP(fgetwc_unlocked)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetwc_unlocked, stream)
 
@@ -2156,13 +2540,15 @@ wint_t WRAP(fgetwc_unlocked)(FILE *stream) {
 int WRAP(getc_MACRO)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getc_MACRO, stream)
 
@@ -2180,13 +2566,15 @@ int WRAP(getc_MACRO)(FILE *stream) {
 wint_t WRAP(getwc_MACRO)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getwc_MACRO, stream)
 
@@ -2205,13 +2593,15 @@ wint_t WRAP(getwc_MACRO)(FILE *stream) {
 int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getc_unlocked_MACRO, stream)
 
@@ -2231,13 +2621,15 @@ int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getwc_unlocked_MACRO, stream)
 
@@ -2257,13 +2649,15 @@ wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 int WRAP(getw)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getw, stream)
 
@@ -2283,13 +2677,15 @@ int WRAP(getw)(FILE *stream) {
 ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream) {
 	ssize_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getline, lineptr, n, stream)
 
@@ -2310,13 +2706,15 @@ ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream) {
 ssize_t WRAP(getdelim)(char **lineptr, size_t *n, int delimiter, FILE *stream) {
 	ssize_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getdelim, lineptr, n, delimiter, stream)
 
@@ -2336,13 +2734,15 @@ ssize_t WRAP(getdelim)(char **lineptr, size_t *n, int delimiter, FILE *stream) {
 char * WRAP(fgets)(char *s, int count, FILE *stream) {
 	char * ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgets, s, count, stream)
 
@@ -2361,13 +2761,15 @@ char * WRAP(fgets)(char *s, int count, FILE *stream) {
 wchar_t * WRAP(fgetws)(wchar_t *ws, int count, FILE *stream) {
 	wchar_t * ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetws, ws, count, stream)
 
@@ -2387,13 +2789,15 @@ wchar_t * WRAP(fgetws)(wchar_t *ws, int count, FILE *stream) {
 char * WRAP(fgets_unlocked)(char *s, int count, FILE *stream) {
 	char * ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgets_unlocked, s, count, stream)
 
@@ -2414,13 +2818,15 @@ char * WRAP(fgets_unlocked)(char *s, int count, FILE *stream) {
 wchar_t * WRAP(fgetws_unlocked)(wchar_t *ws, int count, FILE *stream) {
 	wchar_t * ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetws_unlocked, ws, count, stream)
 
@@ -2440,13 +2846,15 @@ wchar_t * WRAP(fgetws_unlocked)(wchar_t *ws, int count, FILE *stream) {
 int WRAP(ungetc)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct unget_function unget_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, unget_function, unget_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ungetc, c, stream)
 
@@ -2464,13 +2872,15 @@ int WRAP(ungetc)(int c, FILE *stream) {
 wint_t WRAP(ungetwc)(wint_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct unget_function unget_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, unget_function, unget_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ungetwc, wc, stream)
 
@@ -2488,13 +2898,15 @@ wint_t WRAP(ungetwc)(wint_t wc, FILE *stream) {
 size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream) {
 	size_t ret;
 	struct basic _data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(_data)
 
 	get_basic(&_data);
 	JSON_STRUCT_SET_VOID_P(_data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fread, data, size, count, stream)
 
@@ -2514,13 +2926,15 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream) {
 size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) {
 	size_t ret;
 	struct basic _data;
+	struct file_stream file_stream_data;
 	struct read_function read_data;
 	WRAP_START(_data)
 
 	get_basic(&_data);
 	JSON_STRUCT_SET_VOID_P(_data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked, data, size, count,
 			stream)
@@ -2541,13 +2955,15 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream) {
 	size_t ret;
 	struct basic _data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(_data)
 
 	get_basic(&_data);
 	JSON_STRUCT_SET_VOID_P(_data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fwrite, data, size, count, stream)
 
@@ -2568,13 +2984,15 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 		FILE *stream) {
 	size_t ret;
 	struct basic _data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(_data)
 
 	get_basic(&_data);
 	JSON_STRUCT_SET_VOID_P(_data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fwrite_unlocked, data, size, count,
 			stream)
@@ -2596,13 +3014,15 @@ int WRAP(fprintf)(FILE *stream, const char *template, ...) {
 	int ret;
 	va_list ap;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfprintf, stream, template, ap)
@@ -2625,13 +3045,15 @@ int WRAP(fwprintf)(FILE *stream, const wchar_t *template, ...) {
 	int ret;
 	va_list ap;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfwprintf, stream, template, ap)
@@ -2653,13 +3075,15 @@ int WRAP(fwprintf)(FILE *stream, const wchar_t *template, ...) {
 int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfprintf, stream, template, ap)
 
@@ -2679,13 +3103,15 @@ int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap) {
 int WRAP(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct write_function write_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfwprintf, stream, template, ap)
 
@@ -2706,12 +3132,14 @@ int WRAP(fscanf)(FILE *stream, const char *template, ...) {
 	int ret;
 	va_list ap;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfscanf, stream, template, ap)
@@ -2728,12 +3156,14 @@ int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...) {
 	int ret;
 	va_list ap;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfwscanf, stream, template, ap)
@@ -2750,12 +3180,14 @@ int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...) {
 int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfscanf, stream, template, ap)
 
@@ -2770,12 +3202,14 @@ int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap) {
 int WRAP(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfwscanf, stream, template, ap)
 
@@ -2789,6 +3223,7 @@ int WRAP(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) {
 int WRAP(feof)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -2796,7 +3231,8 @@ int WRAP(feof)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, feof, stream)
 
@@ -2815,6 +3251,7 @@ int WRAP(feof)(FILE *stream) {
 int WRAP(feof_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -2822,7 +3259,8 @@ int WRAP(feof_unlocked)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, feof_unlocked, stream)
 
@@ -2841,6 +3279,7 @@ int WRAP(feof_unlocked)(FILE *stream) {
 int WRAP(ferror)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -2848,7 +3287,8 @@ int WRAP(ferror)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ferror, stream)
 
@@ -2867,6 +3307,7 @@ int WRAP(ferror)(FILE *stream) {
 int WRAP(ferror_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -2874,7 +3315,8 @@ int WRAP(ferror_unlocked)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ferror_unlocked, stream)
 
@@ -2892,12 +3334,14 @@ int WRAP(ferror_unlocked)(FILE *stream) {
 
 void WRAP(clearerr)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, clearerr, stream)
 
@@ -2910,12 +3354,14 @@ void WRAP(clearerr)(FILE *stream) {
 #if HAVE_CLEARERR_UNLOCKED
 void WRAP(clearerr_unlocked)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, clearerr_unlocked, stream)
 
@@ -2929,6 +3375,7 @@ void WRAP(clearerr_unlocked)(FILE *stream) {
 long int WRAP(ftell)(FILE *stream) {
 	long int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct position_function position_data;
 	WRAP_START(data)
 
@@ -2936,7 +3383,8 @@ long int WRAP(ftell)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, position_function,
 			position_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftell, stream)
 
@@ -2956,6 +3404,7 @@ long int WRAP(ftell)(FILE *stream) {
 off_t WRAP(ftello)(FILE *stream) {
 	off_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct position_function position_data;
 	WRAP_START(data)
 
@@ -2963,7 +3412,8 @@ off_t WRAP(ftello)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, position_function,
 			position_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftello, stream)
 
@@ -2984,6 +3434,7 @@ off_t WRAP(ftello)(FILE *stream) {
 off64_t WRAP(ftello64)(FILE *stream) {
 	off64_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct position_function position_data;
 	WRAP_START(data)
 
@@ -2991,7 +3442,8 @@ off64_t WRAP(ftello64)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, position_function,
 			position_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftello64, stream)
 
@@ -3011,6 +3463,7 @@ off64_t WRAP(ftello64)(FILE *stream) {
 int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct positioning_function positioning_data;
 	WRAP_START(data)
 
@@ -3018,18 +3471,17 @@ int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 			positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseek, stream, offset, whence)
 
+	positioning_data.offset = offset;
+	positioning_data.relative_to = get_seek_where(whence);
 	if (0 == ret) {
 		data.return_state = ok;
-		positioning_data.offset = offset;
-		positioning_data.relative_to = get_seek_where(whence);
 	} else {
 		data.return_state = error;
-		positioning_data.offset = offset;
-		positioning_data.relative_to = get_seek_where(whence);
 	}
 
 	WRAP_END(data)
@@ -3040,6 +3492,7 @@ int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct positioning_function positioning_data;
 	WRAP_START(data)
 
@@ -3047,18 +3500,17 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 			positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseeko, stream, offset, whence)
 
+	positioning_data.offset = offset;
+	positioning_data.relative_to = get_seek_where(whence);
 	if (0 == ret) {
 		data.return_state = ok;
-		positioning_data.offset = offset;
-		positioning_data.relative_to = get_seek_where(whence);
 	} else {
 		data.return_state = error;
-		positioning_data.offset = offset;
-		positioning_data.relative_to = get_seek_where(whence);
 	}
 
 	WRAP_END(data)
@@ -3070,6 +3522,7 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct positioning_function positioning_data;
 	WRAP_START(data)
 
@@ -3077,18 +3530,17 @@ int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 			positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseeko64, stream, offset, whence)
 
+	positioning_data.offset = offset;
+	positioning_data.relative_to = get_seek_where(whence);
 	if (0 == ret) {
 		data.return_state = ok;
-		positioning_data.offset = offset;
-		positioning_data.relative_to = get_seek_where(whence);
 	} else {
 		data.return_state = error;
-		positioning_data.offset = offset;
-		positioning_data.relative_to = get_seek_where(whence);
 	}
 
 	WRAP_END(data)
@@ -3098,6 +3550,7 @@ int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 
 void WRAP(rewind)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct positioning_function positioning_data;
 	WRAP_START(data)
 
@@ -3105,7 +3558,8 @@ void WRAP(rewind)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 			positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, rewind, stream)
 
@@ -3120,12 +3574,14 @@ void WRAP(rewind)(FILE *stream) {
 int WRAP(fgetpos)(FILE *stream, fpos_t *position) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetpos, stream, position)
 
@@ -3143,12 +3599,14 @@ int WRAP(fgetpos)(FILE *stream, fpos_t *position) {
 int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetpos64, stream, position)
 
@@ -3166,12 +3624,14 @@ int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 int WRAP(fsetpos)(FILE *stream, const fpos_t *position) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsetpos, stream, position)
 
@@ -3189,12 +3649,14 @@ int WRAP(fsetpos)(FILE *stream, const fpos_t *position) {
 int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsetpos64, stream, position)
 
@@ -3212,12 +3674,14 @@ int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 int WRAP(fflush)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fflush, stream)
 
@@ -3231,12 +3695,14 @@ int WRAP(fflush)(FILE *stream) {
 int WRAP(fflush_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fflush_unlocked, stream)
 
@@ -3250,24 +3716,24 @@ int WRAP(fflush_unlocked)(FILE *stream) {
 int WRAP(setvbuf)(FILE *stream, char *buf, int mode, size_t size) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct buffer_function buffer_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, setvbuf, stream, buf, mode, size)
 
+	buffer_data.buffer_mode = get_buffer_mode(mode);
+	buffer_data.buffer_size = size;
 	if (0 == ret) {
 		data.return_state = ok;
-		buffer_data.buffer_mode = get_buffer_mode(mode);
-		buffer_data.buffer_size = size;
 	} else {
 		data.return_state = error;
-		buffer_data.buffer_mode = get_buffer_mode(mode);
-		buffer_data.buffer_size = size;
 	}
 
 	WRAP_END(data)
@@ -3276,13 +3742,15 @@ int WRAP(setvbuf)(FILE *stream, char *buf, int mode, size_t size) {
 
 void WRAP(setbuf)(FILE *stream, char *buf) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct buffer_function buffer_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, setbuf, stream, buf)
 
@@ -3303,13 +3771,15 @@ void WRAP(setbuf)(FILE *stream, char *buf) {
 #if HAVE_SETBUFFER
 void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct buffer_function buffer_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, setbuffer, stream, buf, size)
 
@@ -3331,13 +3801,15 @@ void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 #if HAVE_SETLINEBUF
 void WRAP(setlinebuf)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct buffer_function buffer_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, setlinebuf, stream)
 
@@ -3353,6 +3825,7 @@ void WRAP(setlinebuf)(FILE *stream) {
 int WRAP(__freadable)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -3360,7 +3833,8 @@ int WRAP(__freadable)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __freadable, stream)
 
@@ -3375,10 +3849,10 @@ int WRAP(__freadable)(FILE *stream) {
 	return ret;
 }
 
-// ToDo: check dependencies
 int WRAP(__fwritable)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -3386,7 +3860,8 @@ int WRAP(__fwritable)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fwritable, stream)
 
@@ -3404,6 +3879,7 @@ int WRAP(__fwritable)(FILE *stream) {
 int WRAP(__freading)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -3411,7 +3887,8 @@ int WRAP(__freading)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __freading, stream)
 
@@ -3429,6 +3906,7 @@ int WRAP(__freading)(FILE *stream) {
 int WRAP(__fwriting)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -3436,7 +3914,8 @@ int WRAP(__fwriting)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fwriting, stream)
 
@@ -3454,6 +3933,7 @@ int WRAP(__fwriting)(FILE *stream) {
 int WRAP(__fsetlocking)(FILE *stream, int type) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct lock_mode_function lock_mode_data;
 	WRAP_START(data)
 
@@ -3462,7 +3942,8 @@ int WRAP(__fsetlocking)(FILE *stream, int type) {
 			lock_mode_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	lock_mode_data.set_mode = get_lock_mode(type);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fsetlocking, stream, type)
 
@@ -3475,13 +3956,12 @@ int WRAP(__fsetlocking)(FILE *stream, int type) {
 
 void WRAP(_flushlbf)(void) {
 	struct basic data;
-	FILE *file = NULL;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file)
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION(data, _flushlbf)
 
@@ -3493,12 +3973,14 @@ void WRAP(_flushlbf)(void) {
 
 void WRAP(__fpurge)(FILE *stream) {
 	struct basic data;
+	struct file_stream file_stream_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, __fpurge, stream)
 
@@ -3511,6 +3993,7 @@ void WRAP(__fpurge)(FILE *stream) {
 int WRAP(__flbf)(FILE *stream) {
 	int ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct information_function information_data;
 	WRAP_START(data)
 
@@ -3518,7 +4001,8 @@ int WRAP(__flbf)(FILE *stream) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
 			information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __flbf, stream)
 
@@ -3536,13 +4020,15 @@ int WRAP(__flbf)(FILE *stream) {
 size_t WRAP(__fbufsize)(FILE *stream) {
 	size_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct bufsize_function bufsize_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, bufsize_function, bufsize_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fbufsize, stream)
 
@@ -3556,13 +4042,15 @@ size_t WRAP(__fbufsize)(FILE *stream) {
 size_t WRAP(__fpending)(FILE *stream) {
 	size_t ret;
 	struct basic data;
+	struct file_stream file_stream_data;
 	struct bufsize_function bufsize_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, bufsize_function, bufsize_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, stream)
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fpending, stream)
 

@@ -197,6 +197,12 @@ JSON_STRUCT_ENUM_START(seek_where)
   JSON_STRUCT_ENUM_ELEMENT(beginning_of_file)
   JSON_STRUCT_ENUM_ELEMENT(current_position)
   JSON_STRUCT_ENUM_ELEMENT(end_of_file)
+#if HAVE_SEEK_DATA
+  JSON_STRUCT_ENUM_ELEMENT(next_data)
+#endif
+#if HAVE_SEEK_HOLE
+  JSON_STRUCT_ENUM_ELEMENT(next_hole)
+#endif
   JSON_STRUCT_ENUM_ELEMENT(unknown_seek_where)
 JSON_STRUCT_ENUM_END
 
@@ -258,10 +264,25 @@ JSON_STRUCT_ENUM_START(madvice_advice)
   JSON_STRUCT_ENUM_ELEMENT(unknown_madvice_advice)
 JSON_STRUCT_ENUM_END
 
+JSON_STRUCT_ENUM_START(posix_madvice_advice)
+  JSON_STRUCT_ENUM_ELEMENT(posix_normal)         //POSIX_MADV_NORMAL
+  JSON_STRUCT_ENUM_ELEMENT(posix_madvice_random) //POSIX_MADV_RANDOM
+  JSON_STRUCT_ENUM_ELEMENT(posix_sequential)     //POSIX_MADV_SEQUENTIAL
+  JSON_STRUCT_ENUM_ELEMENT(posix_willneed)       //POSIX_MADV_WILLNEED
+  JSON_STRUCT_ENUM_ELEMENT(posix_dontneed)       //POSIX_MADV_DONTNEED
+  JSON_STRUCT_ENUM_ELEMENT(unknown_posix_madvice_advice)
+JSON_STRUCT_ENUM_END
+
 JSON_STRUCT_ENUM_START(boolean)
   JSON_STRUCT_ENUM_ELEMENT(true)
   JSON_STRUCT_ENUM_ELEMENT(false)
 JSON_STRUCT_ENUM_END
+
+/* struct for timeval */
+JSON_STRUCT_START(json_timeval)
+  JSON_STRUCT_LONG_INT(sec)
+  JSON_STRUCT_LONG_INT(micro_sec)
+JSON_STRUCT_END
 
 /* struct for file open */
 JSON_STRUCT_START(open_function)
@@ -420,6 +441,28 @@ JSON_STRUCT_START(memory_madvise_function)
   JSON_STRUCT_ENUM(madvice_advice, advice)
 JSON_STRUCT_END
 
+/* struct for memory posix madvise */
+JSON_STRUCT_START(memory_posix_madvise_function)
+  JSON_STRUCT_ENUM(posix_madvice_advice, advice)
+JSON_STRUCT_END
+
+/* struct for file select */
+JSON_STRUCT_START(select_function)
+  JSON_STRUCT_STRUCT(json_timeval, timeout)
+  JSON_STRUCT_FD_SET_P(files_waiting_for_read)
+  JSON_STRUCT_FD_SET_P(files_waiting_for_write)
+  JSON_STRUCT_FD_SET_P(files_waiting_for_except)
+  JSON_STRUCT_FD_SET_P(files_ready_for_read)
+  JSON_STRUCT_FD_SET_P(files_ready_for_write)
+  JSON_STRUCT_FD_SET_P(files_ready_for_except)
+JSON_STRUCT_END
+
+/* struct for file asynchronous read */
+JSON_STRUCT_START(asynchronous_read_function)
+  JSON_STRUCT_SIZE_T(bytes_to_read)
+  JSON_STRUCT_OFF_T(position)
+JSON_STRUCT_END
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -462,6 +505,9 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_sync_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_remap_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_madvise_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, select_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_posix_madvise_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_read_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

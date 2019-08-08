@@ -2,9 +2,9 @@ enable_testing()
 
 add_subdirectory(internal)
 
-# ToDo: generate file with set LINK_OPTIONS and include it here
+# ToDo: generate file with set LINK_OPTIONS_STATIC and include it here
 
-set(LINK_OPTIONS
+set(LINK_OPTIONS_STATIC
     "-Wl,-wrap=open"
     "-Wl,-wrap=open64"
     "-Wl,-wrap=openat"
@@ -36,6 +36,13 @@ set(LINK_OPTIONS
     "-Wl,-wrap=msync"
     "-Wl,-wrap=mremap"
     "-Wl,-wrap=madvise"
+    "-Wl,-wrap=posix_madvise"
+    "-Wl,-wrap=select"
+    "-Wl,-wrap=sync"
+    "-Wl,-wrap=syncfs"
+    "-Wl,-wrap=fsync"
+    "-Wl,-wrap=fdatasync"
+    "-Wl,-wrap=aio_read"
     "-Wl,-wrap=fopen"
     "-Wl,-wrap=fopen64"
     "-Wl,-wrap=freopen"
@@ -126,11 +133,17 @@ set(LINK_OPTIONS
     "-Wl,-wrap=__fpending"
 )
 
+set(LINK_OPTIONS
+    # needed for aio-functions
+    "-lrt"
+    "-lpthread"
+)
+
 ##########################################################################################################
 
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte
 add_executable(read_byte_shared read_byte.c)
-#target_link_libraries(read_byte iotrace)
+target_link_libraries(read_byte_shared ${LINK_OPTIONS})
 #add_test ("Read" read_byte)
 
 add_library(read_byte_object OBJECT read_byte.c)
@@ -140,6 +153,7 @@ add_executable(read_byte_static
     $<TARGET_OBJECTS:read_byte_object>
     $<TARGET_OBJECTS:iotrace_object>
 )
+target_link_libraries(read_byte_static ${LINK_OPTIONS_STATIC})
 target_link_libraries(read_byte_static ${LINK_OPTIONS})
 
 ##########################################################################################################
@@ -147,6 +161,7 @@ target_link_libraries(read_byte_static ${LINK_OPTIONS})
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_stream
 add_executable(read_stream_shared read_stream.c)
 target_compile_options(read_stream_shared PRIVATE -D_GNU_SOURCE)
+target_link_libraries(read_stream_shared ${LINK_OPTIONS})
 
 add_library(read_stream_object OBJECT read_stream.c)
 target_compile_options(read_stream_object PRIVATE -D_GNU_SOURCE)
@@ -156,12 +171,14 @@ add_executable(read_stream_static
     $<TARGET_OBJECTS:read_stream_object>
     $<TARGET_OBJECTS:iotrace_object>
 )
+target_link_libraries(read_stream_static ${LINK_OPTIONS_STATIC})
 target_link_libraries(read_stream_static ${LINK_OPTIONS})
 
 ##########################################################################################################
 
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
 add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
+target_link_libraries(read_byte_and_stream_shared ${LINK_OPTIONS})
 
 add_library(read_byte_and_stream_object OBJECT read_byte_and_stream.c)
 
@@ -170,12 +187,14 @@ add_executable(read_byte_and_stream_static
     $<TARGET_OBJECTS:read_byte_and_stream_object>
     $<TARGET_OBJECTS:iotrace_object>
 )
+target_link_libraries(read_byte_and_stream_static ${LINK_OPTIONS_STATIC})
 target_link_libraries(read_byte_and_stream_static ${LINK_OPTIONS})
 
 ##########################################################################################################
 
 # test with: LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared
 add_executable(write_stream_shared write_stream.c)
+target_link_libraries(write_stream_shared ${LINK_OPTIONS})
 
 add_library(write_stream_object OBJECT write_stream.c)
 
@@ -184,12 +203,14 @@ add_executable(write_stream_static
     $<TARGET_OBJECTS:write_stream_object>
     $<TARGET_OBJECTS:iotrace_object>
 )
+target_link_libraries(write_stream_static ${LINK_OPTIONS_STATIC})
 target_link_libraries(write_stream_static ${LINK_OPTIONS})
 
 ##########################################################################################################
 
 #test with: LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
 add_executable(read_stream_openmp_shared read_stream_openmp.c)
+#target_link_libraries(read_stream_openmp_shared ${LINK_OPTIONS})
 
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)

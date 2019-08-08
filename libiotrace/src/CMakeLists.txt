@@ -79,6 +79,11 @@ check_symbol_exists(fflush_unlocked "stdio.h" HAVE_FFLUSH_UNLOCKED)
 check_symbol_exists(setbuffer "stdio.h" HAVE_SETBUFFER)
 check_symbol_exists(setlinebuf "stdio.h" HAVE_SETLINEBUF)
 check_symbol_exists(madvise "sys/mman.h" HAVE_MADVISE)
+check_symbol_exists(posix_madvise "sys/mman.h" HAVE_POSIX_MADVISE)
+check_symbol_exists(sync "unistd.h" HAVE_SYNC)
+check_symbol_exists(syncfs "unistd.h" HAVE_SYNCFS)
+check_symbol_exists(fsync "unistd.h" HAVE_FSYNC)
+check_symbol_exists(fdatasync "unistd.h" HAVE_FDATASYNC)
 #ToDo: right place to search for off64_t?
 check_symbol_exists(off64_t "stdio.h,sys/types.h" HAVE_OFF64_T)
 check_symbol_exists(O_CLOEXEC "fcntl.h" HAVE_O_CLOEXEC)
@@ -119,6 +124,8 @@ check_symbol_exists(MADV_DODUMP "sys/mman.h" HAVE_MADV_DODUMP)
 check_symbol_exists(MADV_FREE "sys/mman.h" HAVE_MADV_FREE)
 check_symbol_exists(MADV_WIPEONFORK "sys/mman.h" HAVE_MADV_WIPEONFORK)
 check_symbol_exists(MADV_KEEPONFORK "sys/mman.h" HAVE_MADV_KEEPONFORK)
+check_symbol_exists(SEEK_DATA "unistd.h" HAVE_SEEK_DATA)
+check_symbol_exists(SEEK_HOLE "unistd.h" HAVE_SEEK_HOLE)
 
 # Please keep in alphabetical order
 set(SOURCE

@@ -236,6 +236,21 @@
 /* Define to 1 if system supports madvise(). */
 #cmakedefine HAVE_MADVISE 1
 
+/* Define to 1 if system supports posix_madvise(). */
+#cmakedefine HAVE_POSIX_MADVISE 1
+
+/* Define to 1 if system supports sync(). */
+#cmakedefine HAVE_SYNC 1
+
+/* Define to 1 if system supports syncfs(). */
+#cmakedefine HAVE_SYNCFS 1
+
+/* Define to 1 if system supports fsync(). */
+#cmakedefine HAVE_FSYNC 1
+
+/* Define to 1 if system supports fdatasync(). */
+#cmakedefine HAVE_FDATASYNC 1
+
 /* Define to 1 if system supports off64_t. */
 #cmakedefine HAVE_OFF64_T 1
 
@@ -352,6 +367,12 @@
 
 /* Define to 1 if system supports MADV_KEEPONFORK. */
 #cmakedefine HAVE_MADV_KEEPONFORK 1
+
+/* Define to 1 if system supports SEEK_DATA. */
+#cmakedefine HAVE_SEEK_DATA 1
+
+/* Define to 1 if system supports SEEK_HOLE. */
+#cmakedefine HAVE_SEEK_HOLE 1
 
 // These are checked by CheckCompilerAttributes.cmake
 /* Define to 1 if compiler supports attribute nonnull. */

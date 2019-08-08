@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
+#include <aio.h>
 #include "wrapper_defines.h"
 
 /* Function pointers for glibc functions */
@@ -106,13 +107,30 @@ REAL_TYPE void * REAL(mremap)(void *old_address, size_t old_length, size_t new_l
 #if HAVE_MADVISE
 REAL_TYPE int REAL(madvise)(void *addr, size_t length, int advice) REAL_INIT;
 #endif
-//ToDo: posix_madvise()
+#if HAVE_POSIX_MADVISE
+REAL_TYPE int REAL(posix_madvise)(void *addr, size_t len, int advice) REAL_INIT;
+#endif
+REAL_TYPE int REAL(select)(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout) REAL_INIT;
+#if HAVE_SYNC
+REAL_TYPE void REAL(sync)(void) REAL_INIT;
+#endif
+#if HAVE_SYNCFS
+REAL_TYPE int REAL(syncfs)(int fd) REAL_INIT;
+#endif
+#if HAVE_FSYNC
+REAL_TYPE int REAL(fsync)(int fd) REAL_INIT;
+#endif
+#if HAVE_FDATASYNC
+REAL_TYPE int REAL(fdatasync)(int fd) REAL_INIT;
+#endif
+//REAL_TYPE int REAL(aio_read)(struct aiocb *aiocbp) REAL_INIT;
+//ToDo: pselect
+//ToDo: poll
+//ToDo: int posix_fadvise(int fd, off_t offset, off_t len, int advice);
 //ToDo: dprintf(), vdprintf() + feature test
 //ToDo: dup
 //ToDo: int fcntl(int fd, int cmd, ... /* arg */ );
-//ToDo: int fsync(int fd);
-//ToDo: sync
-//ToDo: int fdatasync(int fd);
+//ToDo: int sync_file_range(int fd, off64_t offset, off64_t nbytes, unsigned int flags);
 //ToDo: int unlink(const char *pathname); and int unlinkat(int dirfd, const char *pathname, int flags); ????
 //ToDo: struct dirent *readdir(DIR *dirp); ???? Dir-functions?
 //ToDo: int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
@@ -434,6 +452,23 @@ static void posix_io_init() {
 #if HAVE_MADVISE
 	DLSYM(madvise);
 #endif
+#if HAVE_POSIX_MADVISE
+	DLSYM(posix_madvise);
+#endif
+	DLSYM(select);
+#if HAVE_SYNC
+	DLSYM(sync);
+#endif
+#if HAVE_SYNCFS
+	DLSYM(syncfs);
+#endif
+#if HAVE_FSYNC
+	DLSYM(fsync);
+#endif
+#if HAVE_FDATASYNC
+	DLSYM(fdatasync);
+#endif
+	//DLSYM(aio_read);
 	DLSYM(fopen);
 #if HAVE_FOPEN64
 	DLSYM(fopen64);

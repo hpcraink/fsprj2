@@ -67,15 +67,17 @@
                                                 data.time_end = gettime();
 #define WRAP_START(data) struct errno_detail errno_data;\
                          errno_data.errno_value = errno;
-#define WRAP_END(data) if((data.void_p_enum_file_type == file_descriptor \
-                           && *(int *)data.file_type != STDIN_FILENO \
-                           && *(int *)data.file_type != STDOUT_FILENO \
-                           && *(int *)data.file_type != STDERR_FILENO) \
+#define WRAP_END(data) if(data.file_type == NULL || \
+                          data.void_p_enum_file_type == file_memory || \
+                          (data.void_p_enum_file_type == file_descriptor \
+                           && STDIN_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
+                           && STDOUT_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
+                           && STDERR_FILENO != ((struct file_descriptor *)data.file_type)->descriptor) \
                           || \
                           (data.void_p_enum_file_type == file_stream \
-                           && *(FILE **)data.file_type != stdin /* ToDo: dup can duplicate a stream, use fileno to get descriptor? */\
-                           && *(FILE **)data.file_type != stdout \
-                           && *(FILE **)data.file_type != stderr)) { \
+                           && stdin != ((struct file_stream *)data.file_type)->stream \
+                           && stdout != ((struct file_stream *)data.file_type)->stream \
+                           && stderr != ((struct file_stream *)data.file_type)->stream)) { \
                            GET_ERRNO(data) \
                            writeData(&data); \
                        } \

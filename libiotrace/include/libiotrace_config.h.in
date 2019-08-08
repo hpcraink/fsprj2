@@ -384,6 +384,8 @@
 /* Define to 1 if compiler supports attribute constructor. */
 #cmakedefine HAVE_ATTRIBUTE_CONSTRUCTOR 1
 
+/*  Define to 1 if limits.h has HOST_NAME_MAX. */
+#cmakedefine HAVE_HOST_NAME_MAX 1
 
 /*****************************************************************************/
 /*  Following is not dependent on cmake; rather evaluates from the previous  */

@@ -30,6 +30,8 @@ static char* endpos;
 static char* pos;
 static int count_basic;
 
+
+// Todo: multiple definition of host_name_max in libiotrace_config.h and here?
 #if !defined (HAVE_HOST_NAME_MAX)
 static int host_name_max;
 #endif

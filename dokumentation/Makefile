@@ -143,11 +143,13 @@ $(CONVERT_PNG_EPS):
 %.pdf: %.fig
 	fig2dev -L pdftex -p 1 $< $@
 
+#%.pdf: %.eps
+#	epspdf --outfile=$@ $<
 %.pdf: %.eps
-	epspdf --outfile=$@ $<
+	epspdf $< $@
 
 %.pdf: %.ps
-	epspdf --outfile=$@ $<
+	epspdf $< $@
 
 aspell:
 	aspell --encoding=iso-8859-1 --mode=tex --lang=de -c *.tex

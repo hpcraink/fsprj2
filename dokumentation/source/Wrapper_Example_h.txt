@@ -1,0 +1,9 @@
+REAL_TYPE int REAL(close)(int filedes) REAL_INIT;
+
+#ifndef IO_LIB_STATIC
+static void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
+
+static void posix_io_init() {
+	DLSYM(close);
+}
+#endif

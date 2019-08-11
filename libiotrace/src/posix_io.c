@@ -106,11 +106,11 @@ enum seek_where get_seek_where(int whence) {
 		return current_position;
 	case SEEK_END:
 		return end_of_file;
-#if HAVE_SEEK_DATA
+#ifdef HAVE_SEEK_DATA
 	case SEEK_DATA:
 		return next_data;
 #endif
-#if HAVE_SEEK_HOLE
+#ifdef HAVE_SEEK_HOLE
 	case SEEK_HOLE:
 		return next_hole;
 #endif
@@ -131,59 +131,59 @@ enum madvice_advice get_madvice_advice(int advice) {
 		return willneed;
 	case MADV_DONTNEED:
 		return dontneed;
-#if HAVE_MADV_REMOVE
+#ifdef HAVE_MADV_REMOVE
 	case MADV_REMOVE:
 		return madvice_remove;
 #endif
-#if HAVE_MADV_DONTFORK
+#ifdef HAVE_MADV_DONTFORK
 	case MADV_DONTFORK:
 		return dontfork;
 #endif
-#if HAVE_MADV_DOFORK
+#ifdef HAVE_MADV_DOFORK
 	case MADV_DOFORK:
 		return dofork;
 #endif
-#if HAVE_MADV_HWPOISON
+#ifdef HAVE_MADV_HWPOISON
 	case MADV_HWPOISON:
 		return hwpoison;
 #endif
-#if HAVE_MADV_MERGEABLE
+#ifdef HAVE_MADV_MERGEABLE
 	case MADV_MERGEABLE:
 		return mergeable;
 #endif
-#if HAVE_MADV_UNMERGEABLE
+#ifdef HAVE_MADV_UNMERGEABLE
 	case MADV_UNMERGEABLE:
 		return unmergeable;
 #endif
-#if HAVE_MADV_SOFT_OFFLINE
+#ifdef HAVE_MADV_SOFT_OFFLINE
 		case MADV_SOFT_OFFLINE:
 		return soft_offline;
 #endif
-#if HAVE_MADV_HUGEPAGE
+#ifdef HAVE_MADV_HUGEPAGE
 	case MADV_HUGEPAGE:
 		return hugepage;
 #endif
-#if HAVE_MADV_NOHUGEPAGE
+#ifdef HAVE_MADV_NOHUGEPAGE
 	case MADV_NOHUGEPAGE:
 		return nohugepage;
 #endif
-#if HAVE_MADV_DONTDUMP
+#ifdef HAVE_MADV_DONTDUMP
 	case MADV_DONTDUMP:
 		return dontdump;
 #endif
-#if HAVE_MADV_DODUMP
+#ifdef HAVE_MADV_DODUMP
 	case MADV_DODUMP:
 		return dodump;
 #endif
-#if HAVE_MADV_FREE
+#ifdef HAVE_MADV_FREE
 	case MADV_FREE:
 		return madvice_free;
 #endif
-#if HAVE_MADV_WIPEONFORK
+#ifdef HAVE_MADV_WIPEONFORK
 	case MADV_WIPEONFORK:
 		return wipeonfork;
 #endif
-#if HAVE_MADV_KEEPONFORK
+#ifdef HAVE_MADV_KEEPONFORK
 	case MADV_KEEPONFORK:
 		return keeponfork;
 #endif
@@ -210,16 +210,16 @@ enum posix_madvice_advice get_posix_madvice_advice(int advice) {
 }
 
 void get_creation_flags(const int flags, struct creation_flags *cf) {
-#if HAVE_O_CLOEXEC
+#ifdef HAVE_O_CLOEXEC
 	cf->cloexec = flags & O_CLOEXEC ? 1 : 0;
 #endif
-#if HAVE_O_DIRECTORY
+#ifdef HAVE_O_DIRECTORY
 	cf->directory = flags & O_DIRECTORY ? 1 : 0;
 #endif
-#if HAVE_O_NOFOLLOW
+#ifdef HAVE_O_NOFOLLOW
 	cf->nofollow = flags & O_NOFOLLOW ? 1 : 0;
 #endif
-#if HAVE_O_TMPFILE
+#ifdef HAVE_O_TMPFILE
 	cf->tmpfile = flags & O_TMPFILE ? 1 : 0;
 #endif
 	cf->creat = flags & O_CREAT ? 1 : 0;
@@ -229,16 +229,16 @@ void get_creation_flags(const int flags, struct creation_flags *cf) {
 }
 
 void get_status_flags(const int flags, struct status_flags *sf) {
-#if HAVE_O_DIRECT
+#ifdef HAVE_O_DIRECT
 	sf->direct = flags & O_DIRECT ? 1 : 0;
 #endif
-#if HAVE_O_NOATIME
+#ifdef HAVE_O_NOATIME
 	sf->noatime = flags & O_NOATIME ? 1 : 0;
 #endif
-#if HAVE_O_PATH
+#ifdef HAVE_O_PATH
 	sf->path = flags & O_PATH ? 1 : 0;
 #endif
-#if HAVE_O_LARGEFILE
+#ifdef HAVE_O_LARGEFILE
 	sf->largefile = flags & O_LARGEFILE ? 1 : 0;
 #endif
 	sf->append = flags & O_APPEND ? 1 : 0;
@@ -278,7 +278,7 @@ void get_memory_protection_flags(int protect,
 	mmf->written = protect & PROT_WRITE ? 1 : 0;
 }
 
-#if HAVE_MREMAP
+#ifdef HAVE_MREMAP
 void get_memory_remap_flags(int flags, struct memory_remap_flags *mrf) {
 	mrf->maymove = flags & MREMAP_MAYMOVE ? 1 : 0;
 	mrf->fixed = flags & MREMAP_FIXED ? 1 : 0;
@@ -289,49 +289,49 @@ void get_memory_map_flags(int flags, struct memory_map_flags *mpf) {
 	mpf->shared = flags & MAP_SHARED ? 1 : 0;
 	mpf->private = flags & MAP_PRIVATE ? 1 : 0;
 	mpf->fixed = flags & MAP_FIXED ? 1 : 0;
-#if HAVE_MAP_32BIT
+#ifdef HAVE_MAP_32BIT
 	mpf->bit32 = flags & MAP_32BIT ? 1 : 0;
 #endif
-#if HAVE_MAP_ANONYMOUS
+#ifdef HAVE_MAP_ANONYMOUS
 	mpf->anonymous = flags & MAP_ANONYMOUS ? 1 : 0;
 #endif
-#if HAVE_MAP_DENYWRITE
+#ifdef HAVE_MAP_DENYWRITE
 	mpf->denywrite = flags & MAP_DENYWRITE ? 1 : 0;
 #endif
-#if HAVE_MAP_EXECUTABLE
+#ifdef HAVE_MAP_EXECUTABLE
 	mpf->executable = flags & MAP_EXECUTABLE ? 1 : 0;
 #endif
-#if HAVE_MAP_FILE
+#ifdef HAVE_MAP_FILE
 	mpf->file = flags & MAP_FILE ? 1 : 0;
 #endif
-#if HAVE_MAP_GROWSDOWN
+#ifdef HAVE_MAP_GROWSDOWN
 	mpf->growsdown = flags & MAP_GROWSDOWN ? 1 : 0;
 #endif
-#if HAVE_MAP_HUGETLB
+#ifdef HAVE_MAP_HUGETLB
 	mpf->hugetlb = flags & MAP_HUGETLB ? 1 : 0;
 #endif
-#if HAVE_MAP_HUGE_2MB
+#ifdef HAVE_MAP_HUGE_2MB
 	mpf->huge_2mb = flags & MAP_HUGE_2MB ? 1 : 0;
 #endif
-#if HAVE_MAP_HUGE_1GB
+#ifdef HAVE_MAP_HUGE_1GB
 	mpf->huge_1gb = flags & MAP_HUGE_1GB ? 1 : 0;
 #endif
-#if HAVE_MAP_LOCKED
+#ifdef HAVE_MAP_LOCKED
 	mpf->locked = flags & MAP_LOCKED ? 1 : 0;
 #endif
-#if HAVE_MAP_NONBLOCK
+#ifdef HAVE_MAP_NONBLOCK
 	mpf->nonblock = flags & MAP_NONBLOCK ? 1 : 0;
 #endif
-#if HAVE_MAP_NORESERVE
+#ifdef HAVE_MAP_NORESERVE
 	mpf->noreserve = flags & MAP_NORESERVE ? 1 : 0;
 #endif
-#if HAVE_MAP_POPULATE
+#ifdef HAVE_MAP_POPULATE
 	mpf->populate = flags & MAP_POPULATE ? 1 : 0;
 #endif
-#if HAVE_MAP_STACK
+#ifdef HAVE_MAP_STACK
 	mpf->stack = flags & MAP_STACK ? 1 : 0;
 #endif
-#if HAVE_MAP_UNINITIALIZED
+#ifdef HAVE_MAP_UNINITIALIZED
 	mpf->uninitialized = flags & MAP_UNINITIALIZED ? 1 : 0;
 #endif
 }
@@ -344,26 +344,26 @@ void get_memory_sync_flags(int flags, struct memory_sync_flags *msf) {
 
 enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 		struct status_flags *sf) {
-#if HAVE_O_DIRECTORY
+#ifdef HAVE_O_DIRECTORY
 	cf->directory = 0;
 #endif
-#if HAVE_O_NOFOLLOW
+#ifdef HAVE_O_NOFOLLOW
 	cf->nofollow = 0;
 #endif
-#if HAVE_O_TMPFILE
+#ifdef HAVE_O_TMPFILE
 	cf->tmpfile = 0;
 #endif
 	cf->noctty = 0;
-#if HAVE_O_DIRECT
+#ifdef HAVE_O_DIRECT
 	sf->direct = 0;
 #endif
-#if HAVE_O_NOATIME
+#ifdef HAVE_O_NOATIME
 	sf->noatime = 0;
 #endif
-#if HAVE_O_PATH
+#ifdef HAVE_O_PATH
 	sf->path = 0;
 #endif
-#if HAVE_O_LARGEFILE
+#ifdef HAVE_O_LARGEFILE
 	sf->largefile = 0;
 #endif
 	sf->async = 0;
@@ -376,7 +376,7 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 	// ToDo: m
 	// ToDo: ,ccs=<string>
 	// ToDo: largefile from first write/read?
-#if HAVE_O_CLOEXEC
+#ifdef HAVE_O_CLOEXEC
 	if (strchr(mode, 'e') != NULL) {
 		cf->cloexec = 1;
 	} else {
@@ -480,7 +480,7 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	return ret;
 }
 
-#if HAVE_OPEN64
+#ifdef HAVE_OPEN64
 #ifdef HAVE_OPEN_ELLIPSES
 int WRAP(open64)(const char *filename, int flags, ...) {
 #else
@@ -534,7 +534,7 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 }
 #endif
 
-#if HAVE_OPENAT
+#ifdef HAVE_OPENAT
 #ifdef HAVE_OPEN_ELLIPSES
 int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 #else
@@ -718,7 +718,7 @@ ssize_t WRAP(read)(int filedes, void *buffer, size_t size) {
 	return ret;
 }
 
-#if HAVE_PREAD
+#ifdef HAVE_PREAD
 ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -752,7 +752,7 @@ ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset) {
 }
 #endif
 
-#if HAVE_PREAD64
+#ifdef HAVE_PREAD64
 ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -814,7 +814,7 @@ ssize_t WRAP(write)(int filedes, const void *buffer, size_t size) {
 	return ret;
 }
 
-#if HAVE_PWRITE
+#ifdef HAVE_PWRITE
 ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -845,7 +845,7 @@ ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset)
 }
 #endif
 
-#if HAVE_PWRITE64
+#ifdef HAVE_PWRITE64
 ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 		off64_t offset) {
 	ssize_t ret;
@@ -907,7 +907,7 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence) {
 	return ret;
 }
 
-#if HAVE_LSEEK64
+#ifdef HAVE_LSEEK64
 off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 	off64_t ret;
 	struct basic data;
@@ -939,7 +939,7 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence) {
 }
 #endif
 
-#if HAVE_READV
+#ifdef HAVE_READV
 ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
 	struct basic data;
@@ -972,7 +972,7 @@ ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count) {
 }
 #endif
 
-#if HAVE_WRITEV
+#ifdef HAVE_WRITEV
 ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count) {
 	ssize_t ret;
 	struct basic data;
@@ -1002,7 +1002,7 @@ ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count) {
 }
 #endif
 
-#if HAVE_PREADV
+#ifdef HAVE_PREADV
 ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -1036,7 +1036,7 @@ ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset) 
 }
 #endif
 
-#if HAVE_PREADV64
+#ifdef HAVE_PREADV64
 ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
@@ -1071,7 +1071,7 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
-#if HAVE_PWRITEV
+#ifdef HAVE_PWRITEV
 ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset) {
 	ssize_t ret;
 	struct basic data;
@@ -1102,7 +1102,7 @@ ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset)
 }
 #endif
 
-#if HAVE_PWRITEV64
+#ifdef HAVE_PWRITEV64
 ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset) {
 	ssize_t ret;
@@ -1134,7 +1134,7 @@ ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
-#if HAVE_PREADV2
+#ifdef HAVE_PREADV2
 ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 		int flags) {
 	ssize_t ret;
@@ -1170,7 +1170,7 @@ ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 }
 #endif
 
-#if HAVE_PREADV64V2
+#ifdef HAVE_PREADV64V2
 ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
@@ -1207,7 +1207,7 @@ ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
-#if HAVE_PWRITEV2
+#ifdef HAVE_PWRITEV2
 ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 		off_t offset, int flags) {
 	ssize_t ret;
@@ -1240,7 +1240,7 @@ ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
-#if HAVE_PWRITEV64V2
+#ifdef HAVE_PWRITEV64V2
 ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 		off64_t offset, int flags) {
 	ssize_t ret;
@@ -1274,7 +1274,7 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 }
 #endif
 
-#if HAVE_COPY_FILE_RANGE
+#ifdef HAVE_COPY_FILE_RANGE
 ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 		off64_t *outputpos, size_t length, unsigned int flags) {
 	ssize_t ret;
@@ -1337,7 +1337,7 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 }
 #endif
 
-#if HAVE_MMAP
+#ifdef HAVE_MMAP
 void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 		int filedes, off_t offset) {
 	void *ret;
@@ -1373,7 +1373,7 @@ void * WRAP(mmap)(void *address, size_t length, int protect, int flags,
 }
 #endif
 
-#if HAVE_MMAP64
+#ifdef HAVE_MMAP64
 void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 		int filedes, off64_t offset) {
 	void *ret;
@@ -1409,7 +1409,7 @@ void * WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 }
 #endif
 
-#if HAVE_MUNMAP
+#ifdef HAVE_MUNMAP
 int WRAP(munmap)(void *addr, size_t length) {
 	int ret;
 	struct basic data;
@@ -1436,7 +1436,7 @@ int WRAP(munmap)(void *addr, size_t length) {
 }
 #endif
 
-#if HAVE_MSYNC
+#ifdef HAVE_MSYNC
 int WRAP(msync)(void *address, size_t length, int flags) {
 	int ret;
 	struct basic data;
@@ -1466,7 +1466,7 @@ int WRAP(msync)(void *address, size_t length, int flags) {
 }
 #endif
 
-#if HAVE_MREMAP
+#ifdef HAVE_MREMAP
 void * WRAP(mremap)(void *old_address, size_t old_length, size_t new_length,
 		int flags, ...) {
 	void *ret;
@@ -1511,7 +1511,7 @@ void * WRAP(mremap)(void *old_address, size_t old_length, size_t new_length,
 }
 #endif
 
-#if HAVE_MADVISE
+#ifdef HAVE_MADVISE
 int WRAP(madvise)(void *addr, size_t length, int advice) {
 	int ret;
 	struct basic data;
@@ -1541,7 +1541,7 @@ int WRAP(madvise)(void *addr, size_t length, int advice) {
 }
 #endif
 
-#if HAVE_POSIX_MADVISE
+#ifdef HAVE_POSIX_MADVISE
 int WRAP(posix_madvise)(void *addr, size_t len, int advice) {
 	int ret;
 	struct basic data;
@@ -1644,7 +1644,7 @@ int WRAP(select)(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 	return ret;
 }
 
-#if HAVE_SYNC
+#ifdef HAVE_SYNC
 void WRAP(sync)(void) {
 	struct basic data;
 	WRAP_START(data)
@@ -1663,7 +1663,7 @@ void WRAP(sync)(void) {
 }
 #endif
 
-#if HAVE_SYNCFS
+#ifdef HAVE_SYNCFS
 int WRAP(syncfs)(int fd) {
 	int ret;
 	struct basic data;
@@ -1690,7 +1690,7 @@ int WRAP(syncfs)(int fd) {
 }
 #endif
 
-#if HAVE_FSYNC
+#ifdef HAVE_FSYNC
 int WRAP(fsync)(int fd) {
 	int ret;
 	struct basic data;
@@ -1717,7 +1717,7 @@ int WRAP(fsync)(int fd) {
 }
 #endif
 
-#if HAVE_FDATASYNC
+#ifdef HAVE_FDATASYNC
 int WRAP(fdatasync)(int fd) {
 	int ret;
 	struct basic data;
@@ -1804,7 +1804,7 @@ FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 	return file;
 }
 
-#if HAVE_FOPEN64
+#ifdef HAVE_FOPEN64
 FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 	FILE * file;
 	struct basic data;
@@ -1868,7 +1868,7 @@ FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 	return file;
 }
 
-#if HAVE_FREOPEN64
+#ifdef HAVE_FREOPEN64
 FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream) {
 	FILE * file;
 	struct basic data;
@@ -1901,7 +1901,7 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 }
 #endif
 
-#if HAVE_FDOPEN
+#ifdef HAVE_FDOPEN
 FILE * WRAP(fdopen)(int fd, const char *opentype) {
 	FILE * file;
 	struct basic data;
@@ -1956,7 +1956,7 @@ int WRAP(fclose)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FCLOSEALL
+#ifdef HAVE_FCLOSEALL
 int WRAP(fcloseall)(void) {
 	int ret;
 	struct basic data;
@@ -1980,7 +1980,7 @@ int WRAP(fcloseall)(void) {
 }
 #endif
 
-#if HAVE_FLOCKFILE
+#ifdef HAVE_FLOCKFILE
 void WRAP(flockfile)(FILE *stream) {
 	struct basic data;
 	struct file_stream file_stream_data;
@@ -2001,7 +2001,7 @@ void WRAP(flockfile)(FILE *stream) {
 }
 #endif
 
-#if HAVE_FTRYLOCKFILE
+#ifdef HAVE_FTRYLOCKFILE
 int WRAP(ftrylockfile)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2027,7 +2027,7 @@ int WRAP(ftrylockfile)(FILE *stream) {
 }
 #endif
 
-#if HAVE_FUNLOCKFILE
+#ifdef HAVE_FUNLOCKFILE
 void WRAP(funlockfile)(FILE *stream) {
 	struct basic data;
 	struct file_stream file_stream_data;
@@ -2048,7 +2048,7 @@ void WRAP(funlockfile)(FILE *stream) {
 }
 #endif
 
-#if HAVE_FWIDE
+#ifdef HAVE_FWIDE
 int WRAP(fwide)(FILE *stream, int mode) {
 	int ret;
 	struct basic data;
@@ -2126,7 +2126,7 @@ wint_t WRAP(fputwc)(wchar_t wc, FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FPUTC_UNLOCKED
+#ifdef HAVE_FPUTC_UNLOCKED
 int WRAP(fputc_unlocked)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2154,7 +2154,7 @@ int WRAP(fputc_unlocked)(int c, FILE *stream) {
 }
 #endif
 
-#if HAVE_FPUTWC_UNLOCKED
+#ifdef HAVE_FPUTWC_UNLOCKED
 wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -2234,7 +2234,7 @@ wint_t WRAP(putwc_MACRO)(wchar_t wc, FILE *stream) {
 	return ret;
 }
 
-#if HAVE_PUTC_UNLOCKED
+#ifdef HAVE_PUTC_UNLOCKED
 int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2262,7 +2262,7 @@ int WRAP(putc_unlocked_MACRO)(int c, FILE *stream) {
 }
 #endif
 
-#if HAVE_PUTWC_UNLOCKED
+#ifdef HAVE_PUTWC_UNLOCKED
 wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -2343,7 +2343,7 @@ int WRAP(fputws)(const wchar_t *ws, FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FPUTS_UNLOCKED
+#ifdef HAVE_FPUTS_UNLOCKED
 int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2371,7 +2371,7 @@ int WRAP(fputs_unlocked)(const char *s, FILE *stream) {
 }
 #endif
 
-#if HAVE_FPUTWS_UNLOCKED
+#ifdef HAVE_FPUTWS_UNLOCKED
 int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2400,7 +2400,7 @@ int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream) {
 }
 #endif
 
-#if HAVE_PUTW
+#ifdef HAVE_PUTW
 int WRAP(putw)(int w, FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2481,7 +2481,7 @@ wint_t WRAP(fgetwc)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FGETC_UNLOCKED
+#ifdef HAVE_FGETC_UNLOCKED
 int WRAP(fgetc_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2509,7 +2509,7 @@ int WRAP(fgetc_unlocked)(FILE *stream) {
 }
 #endif
 
-#if HAVE_FGETWC_UNLOCKED
+#ifdef HAVE_FGETWC_UNLOCKED
 wint_t WRAP(fgetwc_unlocked)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -2589,7 +2589,7 @@ wint_t WRAP(getwc_MACRO)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_GETC_UNLOCKED
+#ifdef HAVE_GETC_UNLOCKED
 int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2617,7 +2617,7 @@ int WRAP(getc_unlocked_MACRO)(FILE *stream) {
 }
 #endif
 
-#if HAVE_GETWC_UNLOCKED
+#ifdef HAVE_GETWC_UNLOCKED
 wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 	wint_t ret;
 	struct basic data;
@@ -2645,7 +2645,7 @@ wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream) {
 }
 #endif
 
-#if HAVE_GETW
+#ifdef HAVE_GETW
 int WRAP(getw)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -2673,7 +2673,7 @@ int WRAP(getw)(FILE *stream) {
 }
 #endif
 
-#if HAVE_GETLINE
+#ifdef HAVE_GETLINE
 ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream) {
 	ssize_t ret;
 	struct basic data;
@@ -2702,7 +2702,7 @@ ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream) {
 }
 #endif
 
-#if HAVE_GETDELIM
+#ifdef HAVE_GETDELIM
 ssize_t WRAP(getdelim)(char **lineptr, size_t *n, int delimiter, FILE *stream) {
 	ssize_t ret;
 	struct basic data;
@@ -2785,7 +2785,7 @@ wchar_t * WRAP(fgetws)(wchar_t *ws, int count, FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FGETS_UNLOCKED
+#ifdef HAVE_FGETS_UNLOCKED
 char * WRAP(fgets_unlocked)(char *s, int count, FILE *stream) {
 	char * ret;
 	struct basic data;
@@ -2814,7 +2814,7 @@ char * WRAP(fgets_unlocked)(char *s, int count, FILE *stream) {
 }
 #endif
 
-#if HAVE_FGETWS_UNLOCKED
+#ifdef HAVE_FGETWS_UNLOCKED
 wchar_t * WRAP(fgetws_unlocked)(wchar_t *ws, int count, FILE *stream) {
 	wchar_t * ret;
 	struct basic data;
@@ -2922,7 +2922,7 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FREAD_UNLOCKED
+#ifdef HAVE_FREAD_UNLOCKED
 size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) {
 	size_t ret;
 	struct basic _data;
@@ -2979,7 +2979,7 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FWRITE_UNLOCKED
+#ifdef HAVE_FWRITE_UNLOCKED
 size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 		FILE *stream) {
 	size_t ret;
@@ -3040,7 +3040,7 @@ int WRAP(fprintf)(FILE *stream, const char *template, ...) {
 	return ret;
 }
 
-#if HAVE_FWPRINTF
+#ifdef HAVE_FWPRINTF
 int WRAP(fwprintf)(FILE *stream, const wchar_t *template, ...) {
 	int ret;
 	va_list ap;
@@ -3099,7 +3099,7 @@ int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap) {
 	return ret;
 }
 
-#if HAVE_VFWPRINTF
+#ifdef HAVE_VFWPRINTF
 int WRAP(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap) {
 	int ret;
 	struct basic data;
@@ -3151,7 +3151,7 @@ int WRAP(fscanf)(FILE *stream, const char *template, ...) {
 	return ret;
 }
 
-#if HAVE_FWSCANF
+#ifdef HAVE_FWSCANF
 int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...) {
 	int ret;
 	va_list ap;
@@ -3176,7 +3176,7 @@ int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...) {
 }
 #endif
 
-#if HAVE_VFSCANF
+#ifdef HAVE_VFSCANF
 int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap) {
 	int ret;
 	struct basic data;
@@ -3198,7 +3198,7 @@ int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap) {
 }
 #endif
 
-#if HAVE_VFWSCANF
+#ifdef HAVE_VFWSCANF
 int WRAP(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) {
 	int ret;
 	struct basic data;
@@ -3247,7 +3247,7 @@ int WRAP(feof)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FEOF_UNLOCKED
+#ifdef HAVE_FEOF_UNLOCKED
 int WRAP(feof_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -3303,7 +3303,7 @@ int WRAP(ferror)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FERROR_UNLOCKED
+#ifdef HAVE_FERROR_UNLOCKED
 int WRAP(ferror_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -3351,7 +3351,7 @@ void WRAP(clearerr)(FILE *stream) {
 	return;
 }
 
-#if HAVE_CLEARERR_UNLOCKED
+#ifdef HAVE_CLEARERR_UNLOCKED
 void WRAP(clearerr_unlocked)(FILE *stream) {
 	struct basic data;
 	struct file_stream file_stream_data;
@@ -3400,7 +3400,7 @@ long int WRAP(ftell)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FTELLO
+#ifdef HAVE_FTELLO
 off_t WRAP(ftello)(FILE *stream) {
 	off_t ret;
 	struct basic data;
@@ -3430,7 +3430,7 @@ off_t WRAP(ftello)(FILE *stream) {
 }
 #endif
 
-#if HAVE_FTELLO64
+#ifdef HAVE_FTELLO64
 off64_t WRAP(ftello64)(FILE *stream) {
 	off64_t ret;
 	struct basic data;
@@ -3488,7 +3488,7 @@ int WRAP(fseek)(FILE *stream, long int offset, int whence) {
 	return ret;
 }
 
-#if HAVE_FSEEKO
+#ifdef HAVE_FSEEKO
 int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 	int ret;
 	struct basic data;
@@ -3518,7 +3518,7 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence) {
 }
 #endif
 
-#if HAVE_FSEEKO64
+#ifdef HAVE_FSEEKO64
 int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence) {
 	int ret;
 	struct basic data;
@@ -3595,7 +3595,7 @@ int WRAP(fgetpos)(FILE *stream, fpos_t *position) {
 	return ret;
 }
 
-#if HAVE_FGETPOS64
+#ifdef HAVE_FGETPOS64
 int WRAP(fgetpos64)(FILE *stream, fpos64_t *position) {
 	int ret;
 	struct basic data;
@@ -3645,7 +3645,7 @@ int WRAP(fsetpos)(FILE *stream, const fpos_t *position) {
 	return ret;
 }
 
-#if HAVE_FSETPOS64
+#ifdef HAVE_FSETPOS64
 int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position) {
 	int ret;
 	struct basic data;
@@ -3691,7 +3691,7 @@ int WRAP(fflush)(FILE *stream) {
 	return ret;
 }
 
-#if HAVE_FFLUSH_UNLOCKED
+#ifdef HAVE_FFLUSH_UNLOCKED
 int WRAP(fflush_unlocked)(FILE *stream) {
 	int ret;
 	struct basic data;
@@ -3768,7 +3768,7 @@ void WRAP(setbuf)(FILE *stream, char *buf) {
 	return;
 }
 
-#if HAVE_SETBUFFER
+#ifdef HAVE_SETBUFFER
 void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 	struct basic data;
 	struct file_stream file_stream_data;
@@ -3798,7 +3798,7 @@ void WRAP(setbuffer)(FILE *stream, char *buf, size_t size) {
 }
 #endif
 
-#if HAVE_SETLINEBUF
+#ifdef HAVE_SETLINEBUF
 void WRAP(setlinebuf)(FILE *stream) {
 	struct basic data;
 	struct file_stream file_stream_data;

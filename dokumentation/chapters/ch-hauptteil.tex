@@ -2,18 +2,29 @@
 
 \chapter{Ziel des Projekts}
 \label{sec:grundl}
-Ziel des Projektes ist es, eine Software zu entwickeln, die den File-IO von Anwendungen analysiert. Die Software soll sich dabei zwischen das zu analysierende Programm und das Betriebssystem schalten und s\"amtlichen File-IO abfangen. Der File-IO des Programms soll anschliessend gespeichert und graphisch aufbereitet werden. Die Software soll dabei interaktiv sein. Das bedeutet, es soll mit der Software m\"oglich sein, gezielt nach IO-Engp\"assen in einer Anwendung zu suchen.\newline\newline
-Ziel ist es dar\"uber hinaus, mit der Software ein Framework zur Analyse von File-IO zu schaffen. Dies bedeutet, dass es m\"oglich sein soll, die Software so zu erweitern, dass mit ihr nicht nur POSIX-IO und MPI-IO, sondern z.B. auch das parallele Dateisystem Lustre analysiert werden kann.\newline\newline
-Im ersten Schritt sollen dabei bestehende Softwarel\"osungen evaluiert werden. Im zweiten Schritt geht es dann darum, eine eigene Software zu entwickeln, welche die oben genannten Forderungen erf\"ullt. Die Entwicklung der Software soll dabei portabel mit CMake erfolgen. Die Software soll dar\"uber hinaus Thread-Sicherheit haben. Dies bedeutet, dass sie von mehreren Threads zugleich bedient werden kann. Die Visualisierung soll zudem portabel sein. Die generierten Daten \"uber den File-IO sollen also plattformunabh\"angig bspw. \"uber einen Webserver visualisiert werden k\"onnen.
+
+Ziel des Projektes ist es, eine Software zu entwickeln, die den File-IO von Anwendungen analysiert. Die Software soll sich dabei zwischen das zu analysierende Programm und das Betriebssystem schalten und sämtlichen File-IO abfangen. Der File-IO des Programms soll anschließend gespeichert und graphisch aufbereitet werden. Die Software soll dabei interaktiv sein. Das bedeutet, es soll mit der Software möglich sein, gezielt nach IO-Engpässen in einer Anwendung zu suchen.
+
+Ziel ist es darüber hinaus, mit der Software ein Framework zur Analyse von File-IO zu schaffen. Dies bedeutet, dass es möglich sein soll, die Software so zu erweitern, dass mit ihr nicht nur POSIX-IO und MPI-IO, sondern z.B. auch das parallele Dateisystem Lustre analysiert werden kann.
+
+Im ersten Schritt sollen dabei bestehende Softwarelösungen evaluiert werden. Im zweiten Schritt geht es dann darum, eine eigene Software zu entwickeln, welche die oben genannten Forderungen erfüllt. Die Entwicklung der Software soll dabei portabel mit CMake erfolgen. Die Software soll darüber hinaus mit parallelen Threads/Prozessen umgehen können. Dies bedeutet, dass sie mit zeitgleich erfolgendem File-IO aus verschiedenen Threads/Prozessen heraus zurecht kommen muss, ohne dass hierdurch beispielsweise Race-Conditions erzeugt werden. Die Visualisierung soll zudem portabel sein. Die generierten Daten über den File-IO sollen also plattformunabhängig bspw. über einen Webserver visualisiert werden können.
 
 \chapter{Stand der Technik}
 \label{sec:tech}
-Im Rahmen der Forschungsarbeit erfolgte zun\"achst eine Marktrecherche, welche Softwarel\"osungen zum Tracing von File-IO bereits auf dem Markt sind. Die L\"osungen, welche den Anforderungen dieses Projektes am ehesten entsprechen wurden dar\"uber hinaus bez\"uglicher ihrer Funktionalit\"at evaluiert. Als wichtigstes Kriterium gilt hierbei, dass es mit der Software sowohl m\"oglich ist POSIX-IO zu untersuchen, als auch MPI-IO. Dar\"uber hinaus soll die Analyse zur Laufzeit ohne Rekompilieren des Codes m\"oglich sein. Dies soll sowohl f\"ur statisch als auch f\"ur dynamisch gelinkte Programme der Fall sein.
+
+Im Rahmen der Forschungsarbeit erfolgte zunächst eine Marktrecherche, welche Softwarelösungen zum Tracing von File-IO bereits auf dem Markt sind. Die Lösungen, welche den Anforderungen dieses Projektes am ehesten entsprechen wurden darüber hinaus bezügliche ihrer Funktionalität evaluiert. Als wichtigstes Kriterium gilt hierbei, dass es mit der Software sowohl möglich ist POSIX-IO zu untersuchen, als auch MPI-IO. Darüber hinaus soll die Analyse zur Laufzeit ohne Rekompilieren des Codes möglich sein. Die Software muss also beispielsweise über dynamisch zur Laufzeit gelinkte Wrapper realisiert sein. Zusätzlich ist ein statisches Linken solcher Wrapper als weitere Option wünschenswert.
+
 \section{Darshan}
-Darshan ist ein Programm zur Analyse von POSIX-IO und MPI-IO. Mit Darshan kann ein PDF-Report des File-IOs von Anwendungen erstellt werden. Bei dynamisch gelinkten Programmen ist dies zur Laufzeit m\"oglich, bei statisch gelinkten Programmen ausschliesslich beim Bau des Programms.\newline
-Darshan besteht dabei aus zwei Programmen. Mit Darshan-Runtime werden die Informationen \"uber den File-IO eines Programms ermittelt und in einer Log-Datei gespeichert. Die Daten in der Log-Datei k\"onnen anschliessend mit Darshan-Util dargestellt und analysiert werden.
+\label{sec:darshan}
+
+Darshan ist ein Programm zur Analyse von POSIX-IO und MPI-IO. Mit Darshan kann ein PDF-Report des File-IOs von Anwendungen erstellt werden. Bei dynamisch gelinkten Programmen ist dies zur Laufzeit möglich, bei statisch gelinkten Programmen ausschließlich beim Bau des Programms.
+
+Darshan besteht dabei aus zwei Programmen. Mit Darshan-Runtime werden die Informationen über den File-IO eines Programms ermittelt und in einer Log-Datei gespeichert. Die Daten in der Log-Datei können anschließend mit Darshan-Util dargestellt und analysiert werden.
+
 \subsection{Funktionsweise}
-Das Sammeln von Informationen zur Laufzeit von Programmen geschieht \"uber die Systemvariable LD\_PRELOAD. Mit dieser ist es m\"oglich Features in ein Prorgamm einzuschleusen. Beim Laden von Shared Libraries wird dabei zun\"achst nicht die eigentliche Bibliothek geladen, sondern diese, welche unter LD\_PRELOAD angegeben wurde. Damit wird dann die Darshan-Bibliothek geladen, welche die IO-Befehle speichert und diese anschliessend an die eigentlichen Bibliotheken weitergibt. Die Funktionsweise von Darshan f\"ur dynamisch gelinkte Programme ist in Abbildung \ref{fig:darshan} dargestellt. Die Bibliothek libdarshan.so wird dabei vom zu untersuchenden Programm \"uber LD\_PRELOAD geladen. Diese speichert alle MPI-IO- und POSIX-IO-Befehle in Log-Dateien. Diese Log-Dateien k\"onnen anschliessend mit Darshan-Util ausgewertet werden. Dabei wird entweder ein PDF-Report kreiert in welchem in Diagrammen u.a. dargestellt wird, wieviele File-IO-Operationen jeweils durchgef\"uhrt wurden und welche Datenmengen dabei verarbeitet wurden. Alternativ k\"onnen die Informationen in eine Textdatei geschrieben und \"uber die Kommandozeile ausgegeben werden.
+\label{subsec:funktionsweise}
+
+Das Sammeln von Informationen zur Laufzeit von Programmen geschieht über die Systemvariable LD\-\-\_\-PRE\-LOAD. Mit dieser ist es möglich Features in ein Prorgamm einzuschleusen. Beim Laden von Shared Libraries wird dabei zunächst nicht die eigentliche Bibliothek geladen, sondern diejenige, welche unter LD\-\_\-PRE\-LOAD angegeben wurde. Damit wird dann die Darshan-Bibliothek geladen, welche die IO-Befehle speichert und diese anschließend an die eigentlichen Bibliotheken weitergibt. Die Funktionsweise von Darshan für dynamisch gelinkte Programme ist in Abbildung \ref{fig:darshan} dargestellt. Die Bibliothek libdarshan.so wird dabei vom zu untersuchenden Programm über LD\-\_\-PRE\-LOAD geladen. Diese speichert alle MPI-IO- und POSIX-IO-Befehle in Log-Dateien. Diese Log-Dateien können anschließend mit Darshan-Util ausgewertet werden. Dabei wird entweder ein PDF-Report kreiert in welchem in Diagrammen u.a. dargestellt wird, wieviele File-IO-Operationen jeweils durchgeführt wurden und welche Datenmengen dabei verarbeitet wurden. Alternativ können die Informationen in eine Textdatei geschrieben und über die Kommandozeile ausgegeben werden.
 
 \begin{figure}[h]
 	\centering
@@ -22,30 +33,50 @@ Das Sammeln von Informationen zur Laufzeit von Programmen geschieht \"uber die S
 	\label{fig:darshan}
 \end{figure}
 
-Das Analysieren von statisch gelinkten Programmen funktioniert \"ahnlich zu VampirTrace mit Compiler-Wrappern. Diese werden beim Bau anstatt der eigentlichen Compiler aufgerufen. Die Wrapper rufen dabei die eigentlichen Compiler auf, erweitern jedoch das zu kompilierende Programm so, dass es mit Darshan analysiert werden kann. \cite{ArgonneNationalLaboratory.22.01.2019}\cite{ArgonneNationalLaboratory.19.01.2019}
+Das Analysieren von statisch gelinkten Programmen funktioniert ähnlich zu VampirTrace mit Compiler-Wrappern. Diese werden beim Bau anstatt der eigentlichen Compiler aufgerufen. Die Wrapper rufen dabei die eigentlichen Compiler auf, erweitern jedoch das zu kompilierende Programm so, dass es mit Darshan analysiert werden kann. \cite{ArgonneNationalLaboratory.22.01.2019, ArgonneNationalLaboratory.19.01.2019}
+
 \subsection{Fazit}
-Darshan ist ein hervorragendes Programm zur Analyse des IO von dynamisch gelinkten Programmen. Der Nachteil liegt dabei jedoch darin, dass der graphische Output nicht interaktiv ist. Es wird zwar ein PDF-Report kreiert, es ist jedoch nicht m\"oglich interaktiv gezielt nach Schwachstellen im Programm zu suchen. Dar\"uber hinaus k\"onnen statisch gelinkte Programme mit Darshan nicht zur Laufzeit ohne erneuten Bau untersucht werden, was ebenfalls einen gravierenden Nachteil darstellt. 
+\label{subsec:fazit}
+
+Darshan ist ein hervorragendes Programm zur Analyse des IO von dynamisch gelinkten Programmen. Der Nachteil liegt dabei jedoch darin, dass der graphische Output nicht interaktiv ist. Es wird zwar ein PDF-Report kreiert, es ist jedoch nicht möglich interaktiv gezielt nach Schwachstellen im Programm zu suchen. Darüber hinaus können statisch gelinkte Programme mit Darshan nicht zur Laufzeit ohne erneuten Bau untersucht werden, was ebenfalls einen gravierenden Nachteil darstellt.
+
 \section{VampirTrace}
-VampirTrace ist ein Programm, welches von der Universit\"at Dresden urspr\"unglich zur Analyse von MPI-Programmen entwickelt wurde. Mittlerweile ist es ein Tool-Set zur Analyse von parallelen Programmen im HPC-Bereich. Mit VampirTrace k\"onnen sowohl MPI-IO als auch POSIX-IO untersucht werden. F\"ur die Analyse von Programmen ist es notwendig, diese mithilfe von VampirTrace-Compiler-Wrappern neu zu bauen. Im Makefile m\"ussen dabei die Compiler durch die Compiler-Wrapper von VampirTrace ersetzt werden. Diese rufen dann wiederum die eigentlichen Compiler auf. Die gebauten Programme k\"onnen anschliessend zur Laufzeit mit VampirTrace analysiert werden. Eine Untersuchung zur Laufzeit ohne erneuten Bau ist nicht ohne weiteres m\"oglich.\newline\newline
-Die gewonnenen Daten werden von VampirTrace in einer Log-Datei im Open-Trace-Format (OTF) gespeichert. Diese Log-Dateien k\"onnen anschliessend mit Tools, die den Umgang mit OTF beherrschen, visualisiert werden. Am besten eignet sich hierzu das Tool Vampir, welches ebenfalls von der Universit\"at Dresden zu diesem Zweck entwickelt wurde. Mit diesem Tool ist es m\"oglich Daten im OTF-Format interaktiv zu visualisieren und damit gezielt nach Schwachstellen zu suchen.
-\cite{TUDresden.2016}\cite{Mendez.23.06.2016}
+\label{sec:vampirtrace}
+
+VampirTrace ist ein Programm, welches von der Universität Dresden ursprünglich zur Analyse von MPI-Programmen entwickelt wurde. Mittlerweile ist es ein Tool-Set zur Analyse von parallelen Programmen im HPC-Bereich. Mit VampirTrace können sowohl MPI-IO als auch POSIX-IO untersucht werden. Für die Analyse von Programmen ist es notwendig, diese mithilfe von VampirTrace-Compiler-Wrappern neu zu bauen. Im Makefile müssen dabei die Compiler durch die Compiler-Wrapper von VampirTrace ersetzt werden. Diese rufen dann wiederum die eigentlichen Compiler auf. Die gebauten Programme können anschließend zur Laufzeit mit VampirTrace analysiert werden. Eine Untersuchung zur Laufzeit ohne erneuten Bau ist nicht ohne weiteres möglich.
+
+Die gewonnenen Daten werden von VampirTrace in einer Log-Datei im Open-Trace-Format (OTF) gespeichert. Diese Log-Dateien können anschließend mit Tools, die den Umgang mit OTF beherrschen, visualisiert werden. Am besten eignet sich hierzu das Tool Vampir, welches ebenfalls von der Universität Dresden zu diesem Zweck entwickelt wurde. Mit diesem Tool ist es möglich Daten im OTF-Format interaktiv zu visualisieren und damit gezielt nach Schwachstellen zu suchen.
+\cite{TUDresden.2016, Mendez.23.06.2016}
+
 \section{Score-P}
-Score-P ist eine Software, die als Nachfolger von VampirTrace entwickelt wurde. In der Funktionsweise ist Score-P VampirTrace dabei recht \"ahnlich. Die Daten werden ebenfalls im OTF-Format gespeichert und k\"onnen mit VampirTrace visualisiert werden. Alternativ k\"onnen die Daten jedoch auch im TAU-Format gespeichert und mit der Software TAU analysiert werden, welche im n\"achsten Abschnitt erl\"autert wird. F\"ur die Analyse von File-IO ist VampirTrace aber nach wie vor die bessere Alternative.\cite{Kunke.2014}\cite{VirtualInstituteHighProductivitySupercomputing.2018}
+\label{sec:score_p}
+
+Score-P ist eine Software, die als Nachfolger von VampirTrace entwickelt wurde. In der Funktionsweise ist Score-P VampirTrace dabei recht ähnlich. Die Daten werden ebenfalls im OTF-Format gespeichert und können mit VampirTrace visualisiert werden. Alternativ können die Daten jedoch auch im TAU-Format gespeichert und mit der Software TAU analysiert werden, welche im nächsten Abschnitt erläutert wird. Für die Analyse von File-IO ist VampirTrace aber nach wie vor die bessere Alternative.\cite{Kunke.2014, VirtualInstituteHighProductivitySupercomputing.2018}
+
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=12cm]{fig/Score-P.JPG}
 	\caption{Score-P \cite{VirtualInstituteHighProductivitySupercomputing.2018}}
 	\label{fig:score-p}
 \end{figure}
+
 \section{Ludalo}
-Mit Ludalo ist es m\"oglich, Lustre-Metadaten-Operationen zu analysieren. Dies kann in diesem Projekt im weiteren Verlauf erforderlich sein, wenn die Funktionalit\"at der entwickelten Software f\"ur Lustre erweitert werden soll. Lustre ist dabei ein paralleles Dateisystem, welches haupts\"achlich im HPC-Bereich eingesetzt wird.
+\label{sec:ludalo}
+
+Mit Ludalo ist es möglich, Lustre-Metadaten-Operationen zu analysieren. Dies kann in diesem Projekt im weiteren Verlauf erforderlich sein, wenn die Funktionalität der entwickelten Software für Lustre erweitert werden soll. Lustre ist ein paralleles Dateisystem, welches hauptsächlich im HPC-Bereich eingesetzt wird.
 \cite{Berger.30.07.2014}
+
 \section{TAU}
-Tau ist eine Software, entwickelt von der University of Oregon, zur Analyse von parallelen Applikationen. Eine File-IO-Analyse ist dabei sowohl f\"ur POSIX-IO, als auch f\"ur MPI-IO m\"oglich. Die von TAU generierten Daten k\"onnen im OTF-Format gespeichert und anschliessend mit Vampir visualisiert werden. Damit \"Ã¤hnelt TAU stark VampirTrace, wo die Daten ebenfalls mit Vampir visualisiert werden k\"onnen. Die Analyse der Programme erfolgt entweder durch das Recompilieren des Quelltextes oder durch das Laden einer Bibliothek mit LD\_PRELOAD, was jedoch nur bei dynamisch gelinkten Programmen m\"oglich ist. Dies stellt auch den entscheidenden Vorteil von TAU gegen\"uber VampirTrace dar. Die Visualisierung ist bei beiden Tools identisch, allerdings k\"onnen mit TAU dynamisch gelinkte Programme ohne Rekompilieren analysiert werden.
-\cite{Shende.03.05.2017}\cite{Shende.2011}\cite{UniversityofOregon.2018}
+\label{sec:tau}
+
+Tau ist eine Software, entwickelt von der University of Oregon, zur Analyse von parallelen Applikationen. Eine File-IO-Analyse ist dabei sowohl für POSIX-IO, als auch für MPI-IO möglich. Die von TAU generierten Daten können im OTF-Format gespeichert und anschließend mit Vampir visualisiert werden. Damit ähnelt TAU stark VampirTrace, da die Daten ebenfalls mit Vampir visualisiert werden können. Die Analyse der Programme erfolgt entweder durch das Recompilieren des Quelltextes oder durch das Laden einer Bibliothek mit LD\-\_\-PRE\-LOAD, was jedoch nur bei dynamisch gelinkten Programmen möglich ist. Dies stellt auch den entscheidenden Vorteil von TAU gegenüber VampirTrace dar. Die Visualisierung ist bei beiden Tools identisch, allerdings können mit TAU dynamisch gelinkte Programme ohne Rekompilieren analysiert werden.
+\cite{Shende.03.05.2017, Shende.2011, UniversityofOregon.2018}
 
 \section{Fazit}
-Keines der untersuchten Programme enth\"alt alle Features, welche in diesem Projekt gew\"unscht sind. Diese sind in Tabelle \ref{tab:Recherche} vergleichend dargestellt.
+\label{sec:fazit}
+
+Keines der untersuchten Programme enthält alle Features, welche in diesem Projekt gewünscht sind. Diese sind in Tabelle \ref{tab:Recherche} vergleichend dargestellt.
+
 \begin{table}[h]
 	\centering
 	\begin{tabular}{l|l|l|l}
@@ -66,8 +97,8 @@ Keines der untersuchten Programme enth\"alt alle Features, welche in diesem Proj
 	\caption{Marktrecherche}
 	\label{tab:Recherche}
 \end{table}
-Die Analyse von POSIX-IO und MPI-IO ist mit allen untersuchten Produkten m\"oglich. Hinsichtlich der Visualisierung sind sich VampirTrace und TAU \"ahnlich. Bei beiden werden die Daten im OTF-Format gespeichert und k\"onnen mit Vampir untersucht werden, womit auch eine interaktive Bedienung m\"oglich ist. Mit Darshan k\"onnen zwar ebenfalls POSIX-IO und MPI-IO analysiert werden, allerdings kann die Visualisierung durch den PDF-Report oder eine Textdatei nicht interaktiv bedient werden. Der entscheidende Vorteil von Darshan gegen\"uber den anderen Tools ist jedoch, dass es ausschliesslich f\"ur die Analyse von File-IO entwickelt wurde und dadurch deutlich leichtgewichtiger ist.\newline
-Die Schwachstelle der Produkte liegt in der Analyse von statisch gelinkten Programmen. Dies ist zwar prinzipiell bei allen m\"oglich, jedoch nur durch das erneute Kompilieren des Quelltextes. Aus diesem Grund soll in diesem Projekt eine eigene Software entwickelt werden, bei welcher dies m\"oglich ist und welche eine interaktive Visualisierung beinhaltet.
+
+Die Analyse von POSIX-IO und MPI-IO ist mit allen untersuchten Produkten möglich. Hinsichtlich der Visualisierung sind sich VampirTrace und TAU ähnlich. Bei beiden werden die Daten im OTF-Format gespeichert und können mit Vampir untersucht werden, womit auch eine interaktive Bedienung möglich ist. Mit Darshan kann zwar ebenfalls POSIX-IO und MPI-IO analysiert werden, allerdings kann die Visualisierung durch den PDF-Report oder eine Textdatei nicht interaktiv bedient werden. Der entscheidende Vorteil von Darshan gegenüber den anderen Tools ist jedoch, dass es ausschließlich für die Analyse von File-IO entwickelt wurde und dadurch deutlich leichtgewichtiger ist.
 
 \chapter{Entwicklung einer eigenen Software}
 
@@ -392,11 +423,11 @@ Die folgenden Vorgehensweisen setzen voraus, dass die glibc genutzt wird. Dies i
 \paragraph{Dynamische gelinkt:}
 \label{par:dynamisch_gelinkt}
 
-Unter Linux existiert die Umgebungsvariable ,,LD\_PRELOAD``. Diese kann zur Angabe eines Pfades zu einer shared library genutzt werden. Die entsprechend über diesen Pfad angegebene Bibliothek wird dann vor allen anderen Bibliotheken geladen. Werden in dieser Bibliothek Funktionen der glibc-Bibliothek (C-Interface zu Systemfunktionen unter Linux)\cite{man.syscalls2} überschrieben, so werden anstelle der glibc-Funktionen die überschriebenen Funktionen ausgeführt.
+Unter Linux existiert die Umgebungsvariable ,,LD\-\_\-PRE\-LOAD``. Diese kann zur Angabe eines Pfades zu einer shared library genutzt werden. Die entsprechend über diesen Pfad angegebene Bibliothek wird dann vor allen anderen Bibliotheken geladen. Werden in dieser Bibliothek Funktionen der glibc-Bibliothek (C-Interface zu Systemfunktionen unter Linux)\cite{man.syscalls2} überschrieben, so werden anstelle der glibc-Funktionen die überschriebenen Funktionen ausgeführt.
 
 Um innerhalb der überschriebenen Funktionen die ursprünglich gerufene Funktion aus der glibc-Bibliothek aufzurufen, kann nicht direkt der Funktionsname genutzt werden, da dies zu einem Namenskonflikt mit der überschriebenen Funktion führt. Anstelle eines Aufrufs über den Namen kann allerdings mit der Funktion dlsym\cite{man.dlsym3} die Adresse der gewünschten Funktion ermittelt werden. Über diese Adresse kann dann die Funktion in glibc ausgeführt werden.
 
-Die Funktion dlsym muss mit der Konstante ,,RTLD\_NEXT`` (findet erste Routine innerhalb der geladenen Module) aufgerufen werden. Aus Performancegründen muss dabei über einen Init Hook (Linker -init) sichergestellt sein, dass einmalig nach dem Laden von glibc der jeweilige Funktionspointer ermittelt wird.
+Die Funktion dlsym muss mit der Konstante ,,RTLD\-\_\-NEXT`` (findet erste Routine innerhalb der geladenen Module) aufgerufen werden. Aus Performancegründen muss dabei über einen Init Hook (Linker -init) sichergestellt sein, dass einmalig nach dem Laden von glibc der jeweilige Funktionspointer ermittelt wird.
 
 Ein Beispiel für einen dynamischen Wrapper kann dem Anhang entnommen werden \verw{sec:dynamischer_wrapper_mit_zentraler_buffer}.
 
@@ -477,9 +508,9 @@ Da die Funktionalität zum Überprüfen, ob der Buffer noch ausreichend leeren Plat
 \end{figure}
 
 Je nach Art der Parallelisierung unter Linux kann das Starten und das Stoppen eines nebenläufigen Vorgangs unterschiedlich abgefangen werden. Bei einem Vorgehen über fork() und exit() werden separate Prozesse (heavy-weight process) gestartet. Geschieht dies über die entsprechenden Funktionen in der glibc, so kann es über Wrapper abgefangen werden. Zusätzlich müssen noch alle nicht mittels fork() sondern über einen Befehl zum Ausführen einer Datei gestarteten Prozesse abgefangen werden. Dies betrifft die Funktionen execl(), execlp(), execv() und execvp().
-Wird anstelle von fork() die Funktion clone() genutzt, so wird kein Prozess, sondern ein Thread (light-weight process) gestartet. Daher muss diese Funktion ebenfalls abgefangen werden. In diesem Fall gibt es keinen exit() für die einzelnen Threads. Stattdessen kann ein waitpid() mit der Prozess-ID des Threads genutzt werden, um das Ende des Threads zu erkennen. In diesem Fall ist der Speicher des Threads allerdings bereits freigegeben und nicht mehr sicher nutzbar. Das finale Schreiben des Buffers in eine Datei kann also auf diesem Weg nicht ermöglicht werden. Das gleiche gilt für exit\_group(). Über diese Funktion werden mehrere laufende Prozesse/Threads in einer Prozess-Gruppe gemeinsam beendet. Auch hierbei kann nicht sichergestellt werden, ob der Speicher eines Threads bereits freigegeben wurde.
+Wird anstelle von fork() die Funktion clone() genutzt, so wird kein Prozess, sondern ein Thread (light-weight process) gestartet. Daher muss diese Funktion ebenfalls abgefangen werden. In diesem Fall gibt es keinen exit() für die einzelnen Threads. Stattdessen kann ein waitpid() mit der Prozess-ID des Threads genutzt werden, um das Ende des Threads zu erkennen. In diesem Fall ist der Speicher des Threads allerdings bereits freigegeben und nicht mehr sicher nutzbar. Das finale Schreiben des Buffers in eine Datei kann also auf diesem Weg nicht ermöglicht werden. Das gleiche gilt für exit\-\_\-group(). Über diese Funktion werden mehrere laufende Prozesse/Threads in einer Prozess-Gruppe gemeinsam beendet. Auch hierbei kann nicht sichergestellt werden, ob der Speicher eines Threads bereits freigegeben wurde.
 
-Wurde alternativ über die POSIX-Threads in der glibc parallelisiert, so kann über das Makro pthread\_cleanup\_push() eine weitere Funktion zum finalen Cleanup übergeben werden. Da dieses Makro allerdings immer mit einem weiteren Makro (pthread\_cleanup\_pop()) innerhalb der gleichen umschließenden Klammern kombiniert werden muss, lässt sich dieser Ansatz bei einer event-orientierten Vorgehensweise nicht nutzen. Zudem funktioniert dieses Vorgehen nur bei Threads, die mit den entsprechenden Funktionen der glibc erstellt wurden. Somit lassen sich beispielsweise über openMP parallelisierte Programme so nicht instrumentieren.
+Wurde alternativ über die POSIX-Threads in der glibc parallelisiert, so kann über das Makro pthread\-\_\-clean\-up\-\_\-push() eine weitere Funktion zum finalen Cleanup übergeben werden. Da dieses Makro allerdings immer mit einem weiteren Makro (pthread\-\_\-clean\-up\-\_\-pop()) innerhalb der gleichen umschließenden Klammern kombiniert werden muss, lässt sich dieser Ansatz bei einer event-orientierten Vorgehensweise nicht nutzen. Zudem funktioniert dieses Vorgehen nur bei Threads, die mit den entsprechenden Funktionen der glibc erstellt wurden. Somit lassen sich beispielsweise über openMP parallelisierte Programme so nicht instrumentieren.
 
 Bei dieser Architektur muss also zwischen unterschiedlichen Parallelisierungsarten unterschieden werden. Zudem gibt es Vorgehensweisen, die nicht über die glibc-Funktionen gehen. So nutzen manche Programmme direkt die Funktionen des Kernels und reduziert auf diese Weise den Overhead der Parallelisierung auf ein Minimum. Leider gibt es bei diesen Programmen somit keine Funktionen in der glibc oder einer anderen Bibliothek, die durch einen Wrapper abgefangen werden können.
 
@@ -653,16 +684,16 @@ Für jeden Wrapper wird zunächst ein Eintrag in einer zugehörigen Header-Datei be
 
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_h.txt}
 
-Die Makros REAL\_TYPE, REAL() und REAL\_INIT definieren die Signatur der Funktion. Für statisches Linken wird dabei lediglich der Funktionsnamen um den Prefix \_\_real\_ ergänzt. Dies ist notwendig, um beim Linken die Namenskonventionen der Option -wrap des Linkers zu erfüllen. Für dynamisches Linken wird anstelle einer einfachen Funktionsdeklaration ein statischer Funktionspointer erstellt und mit NULL initialisert. Die unterschiedliche Auflösung der Makros für statisches beziehungsweise dynamisches Linken geschieht anhand des per CMake gesetzten Makros IO\_LIB\_STATIC.
+Die Makros REAL\-\_\-TYPE, REAL() und REAL\-\_\-INIT definieren die Signatur der Funktion. Für statisches Linken wird dabei lediglich der Funktionsnamen um den Prefix \_\_real\_ ergänzt. Dies ist notwendig, um beim Linken die Namenskonventionen der Option -wrap des Linkers zu erfüllen. Für dynamisches Linken wird anstelle einer einfachen Funktionsdeklaration ein statischer Funktionspointer erstellt und mit NULL initialisert. Die unterschiedliche Auflösung der Makros für statisches beziehungsweise dynamisches Linken geschieht anhand des per CMake gesetzten Makros IO\-\_\-LIB\-\_\-STATIC.
 
-Für den Funktionspointer zum dynamischen Linken zur Laufzeit wird noch zusätzlich die Startadresse der zu wrappenden Funktion ermittelt. Dies geschieht abhängig davon, ob das Makro IO\_LIB\_STATIC nicht gesetzt ist. Nur in diesem Fall wird dynamisch gelinkt und somit der Pointer zur Laufzeit benötigt. Das Ermitteln der Adresse geschieht über eine eigene im Header definierte Funktion welche mittels des Makros ATTRIBUTE\_CONSTRUCTOR zunächst nur deklariert wird. Dieses Makro stellt, abhängig vom jeweiligen Compiler, ein Attribut zur Verfügung welches die Funktion einmalig beim Start des Programms ausführt. Somit wird der Pointer einmal ermittelt und dann für spätere Aufrufe der gewrappten Funktion bereitgehalten. Auf die Deklaration folgt die Definition. In dieser wird die Adresse mittels des Makros DLSYM ermittelt. Wenn in einer Header-Datei mehrere Wrapper deklariert werden sollen, so müssen hierfür nicht mehrere Funktionen zum Ermitteln der Adressen geschaffen werden. Es kann für alle Wrapper die gleiche Funktion genutzt werden, indem mehrere Aufrufe des Makros DLSYM in ihr eingefügt werden.
+Für den Funktionspointer zum dynamischen Linken zur Laufzeit wird noch zusätzlich die Startadresse der zu wrappenden Funktion ermittelt. Dies geschieht abhängig davon, ob das Makro IO\-\_\-LIB\-\_\-STATIC nicht gesetzt ist. Nur in diesem Fall wird dynamisch gelinkt und somit der Pointer zur Laufzeit benötigt. Das Ermitteln der Adresse geschieht über eine eigene im Header definierte Funktion welche mittels des Makros AT\-TRIBUTE\-\_\-CON\-STRUC\-TOR zunächst nur deklariert wird. Dieses Makro stellt, abhängig vom jeweiligen Compiler, ein Attribut zur Verfügung welches die Funktion einmalig beim Start des Programms ausführt. Somit wird der Pointer einmal ermittelt und dann für spätere Aufrufe der gewrappten Funktion bereitgehalten. Auf die Deklaration folgt die Definition. In dieser wird die Adresse mittels des Makros DLSYM ermittelt. Wenn in einer Header-Datei mehrere Wrapper deklariert werden sollen, so müssen hierfür nicht mehrere Funktionen zum Ermitteln der Adressen geschaffen werden. Es kann für alle Wrapper die gleiche Funktion genutzt werden, indem mehrere Aufrufe des Makros DLSYM in ihr eingefügt werden.
 
 Beispiel für aufgelöste Makros zum statischen Linken:
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_h_macro_static.txt}
 Beispiel für aufgelöste Makros zum dynamischen Linken:
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_h_macro_dynamic.txt}
 
-Alle Makros für die Header-Dateien der Wrapper sind in wrapper\_defines.h definiert. Einzig IO\_LIB\_STATIC muss zusätzlich vor dem Kompilieren außerhalb der Source-Dateien gesetzt werden, wenn eine Wrapper-Bibliothek für das statische Linken erstellt werden soll. Dies kann zum Beispiel über CMake erfolgen.
+Alle Makros für die Header-Dateien der Wrapper sind in wrap\-per\-\_\-de\-fines.h definiert. Einzig IO\-\_\-LIB\-\_\-STATIC muss zusätzlich vor dem Kompilieren außerhalb der Source-Dateien gesetzt werden, wenn eine Wrapper-Bibliothek für das statische Linken erstellt werden soll. Dies kann zum Beispiel über CMake erfolgen.
 
 \subsubsection{Wrapper-Makros und -Funktionen}
 \label{subsubsec:wrapper_makros_und_Funktionen}
@@ -679,55 +710,55 @@ Beispiel für aufgelöstes Makro WRAP für statisches Linken:
 Beispiel für aufgelöstes Makro WRAP für dynamisches Linken:
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_c_macro_dynamic.txt}
 
-Innerhalb des Wrappers werden zunächst die im Wrapper benötigten lokalen Variablen und Datenstrukturen definiert. Hierzu gehört insbesondere eine Variable zur Speicherung des Rückgabewertes der gewrappten Funktion (im Beispiel Variable mit der Bezeichnung ret) und Strukturen für die zu protokollierenden Daten. Damit die Strukturen automatisch in interne Buffer des Frameworks übernommen und in JSON-Strings serialisiert werden können, müssen sie über speizelle Makros erstellt worden sein \verw{subsubsec:struktur_makros}. Für die Grundlegende Funktion des Frameworks wird die Struktur basic zwingend benötigt. In ihr werden Hostname, Prozess-ID, Thread-ID, Funktionsname der gewrappten Funktion, Start- und Endezeitpunkt des Aufrufs der gewrappten Funktion, Fehlerstatus (im Fehlerfall mit genauer Beschreibung des Fehlers), Art des Dateizugriffs (Descriptor, Stream oder Memory) mit ID des Zugriffs und weitere Funktionsspezifische Strukturen gespeichert. Sofern das Framework künftig Wrapper ohne diese grundlegenden Daten unterstützen soll, müssen die Makros CALL\_\-REAL\_\-FUNCTION, CALL\_\-REAL\_\-FUNCTION\_\-RET und WRAP\_\-END angepasst bzw. durch alternative Makros mit weniger Funktionalität ersetzt/ergänzt werden, da in diesen aktuell die Struktur basic befüllt wird.
+Innerhalb des Wrappers werden zunächst die im Wrapper benötigten lokalen Variablen und Datenstrukturen definiert. Hierzu gehört insbesondere eine Variable zur Speicherung des Rückgabewertes der gewrappten Funktion (im Beispiel Variable mit der Bezeichnung ret) und Strukturen für die zu protokollierenden Daten. Damit die Strukturen automatisch in interne Buffer des Frameworks übernommen und in JSON-Strings serialisiert werden können, müssen sie über speizelle Makros erstellt worden sein \verw{subsubsec:struktur_makros}. Für die Grundlegende Funktion des Frameworks wird die Struktur basic zwingend benötigt. In ihr werden Hostname, Prozess-ID, Thread-ID, Funktionsname der gewrappten Funktion, Start- und Endezeitpunkt des Aufrufs der gewrappten Funktion, Fehlerstatus (im Fehlerfall mit genauer Beschreibung des Fehlers), Art des Dateizugriffs (Descriptor, Stream oder Memory) mit ID des Zugriffs und weitere Funktionsspezifische Strukturen gespeichert. Sofern das Framework künftig Wrapper ohne diese grundlegenden Daten unterstützen soll, müssen die Makros CALL\-\_\-RE\-AL\-\_\-FUNC\-TION, CALL\-\_\-RE\-AL\-\_\-FUNC\-TION\-\_\-RET und WRAP\-\_\-END angepasst bzw. durch alternative Makros mit weniger Funktionalität ersetzt/ergänzt werden, da in diesen aktuell die Struktur basic befüllt wird.
 
-Nach den lokal benötigten Variablen/Strukturen muss als erstes das Makro WRAP\_START aufgerufen werden. Dieses Makro bekommt als Parameter den Namen der Struktur basic übergeben und dient zur Initialisierung der Wrapperfunktionalität. Aktuell wird hierbei nur eine Variable zur Sicherung des Inhaltes von errno angelegt und mit dem aktuellen Wert aus errno befüllt. Dies ist notwendig, damit der ursprünglich im überwachten Programm gesetzte Wert beim Aufruf der gewrappten Funktion wieder hergestellt werden kann (siehe Makros CALL\_\-REAL\_\-FUNCTION und CALL\_\-REAL\_\-FUNCTION\_\-RET). Sollte eine gewrappte Funktion den im überwachten Programm gesetzten Wert aus errno überprüfen/verarbeiten, so wird diese Logik nicht durch den Wrapper und dessen Funktionsaufrufe beeinträchtigt. Dieses Verhalten wird für Funktionen aus der glibc nicht benötigt, könnte aber bei künftigen Einsatzgebieten des Frameworks notwendig sein (wenn beispielsweise Funktionen zum Fehlerhandling in einem Programm gewrappt und überwacht werden sollen). Durch die Übergabe der Struktur basic kann das Makro WRAP\_START künftig um weiter Funktionen erweiter werden. Hierzu kann beispielsweise das Protokollieren des Zeitaufwands der Wrapperfunktion gehören.
+Nach den lokal benötigten Variablen/Strukturen muss als erstes das Makro WRAP\-\_\-START aufgerufen werden. Dieses Makro bekommt als Parameter den Namen der Struktur basic übergeben und dient zur Initialisierung der Wrapperfunktionalität. Aktuell wird hierbei nur eine Variable zur Sicherung des Inhaltes von errno angelegt und mit dem aktuellen Wert aus errno befüllt. Dies ist notwendig, damit der ursprünglich im überwachten Programm gesetzte Wert beim Aufruf der gewrappten Funktion wieder hergestellt werden kann (siehe Makros CALL\-\_\-RE\-AL\-\_\-FUNC\-TION und CALL\-\_\-RE\-AL\-\_\-FUNC\-TION\-\_\-RET). Sollte eine gewrappte Funktion den im überwachten Programm gesetzten Wert aus errno überprüfen/verarbeiten, so wird diese Logik nicht durch den Wrapper und dessen Funktionsaufrufe beeinträchtigt. Dieses Verhalten wird für Funktionen aus der glibc nicht benötigt, könnte aber bei künftigen Einsatzgebieten des Frameworks notwendig sein (wenn beispielsweise Funktionen zum Fehlerhandling in einem Programm gewrappt und überwacht werden sollen). Durch die Übergabe der Struktur basic kann das Makro WRAP\-\_\-START künftig um weiter Funktionen erweiter werden. Hierzu kann beispielsweise das Protokollieren des Zeitaufwands der Wrapperfunktion gehören.
 
-Nach dem Aufruf von WRAP\_START werden die Datenstrukturen initial befüllt. Hierfür werden alle Daten, welche vor dem Aufruf der gewrappten Funktion verfügbar sind in die Datenstrukturen übernommen. Die Funktion get\_basic() wird hierfür vom Framework bereitgestellt, um den Hostnamen, die Prozess-ID und die Thread-ID zur ermitteln. Sie greift dabei auf zentral vom Framework pro Prozess und pro Thread angelegten Speicher zurück, um die benötigten Werte nur je einmal über Systemfunktionen zu ermitteln und in diesem Speicher für weitere Zugriffe zu hinterlegen. Für das Einbinden von Strukturen in andere Strukturen kann beim Erstellen einer Struktur das Makro JSON\_\-STRUCT\_\-VOID\_\-P\_\-START genutzt werden \verw{subsubsec:struktur_makros}. Dieses erstellt einen Pointer, welcher auf verschiedene Strukturen zeigen kann. Zusätzlich wird eine Enumeration erstellt, die angibt, welche Struktur tatsächlich im Pointer hinterlegt ist. Für die korrektet Verarbeitung durch das Framework muss die Enumeration immer passend zur im Pointer hinterlegten Struktur gesetzt sein. Dafür stellt das Framework zwei Makros zur Verfügung. Mittels JSON\_\-STRUCT\_\-SET\_\-VOID\_\-P\_\-NULL kann der Pointer mit NULL befüllt werden. Dementsprechend wird keine Struktur in interne Buffer übernommen und kein entsprechendes Element im JSON erzeugt. Im Beispiel ist dies für das Feld function\_data in der Struktur basic der Fall. Mit JSON\_\-STRUCT\_\-SET\_\-VOID\_\-P kann dagegen eine Struktur zusammen mit dem passenden Eintrag in der Enumeration erzeugt werden. Dies ist im Beispiel für das Feld file\_type in der Struktur basic der Fall. Hier wird die Struktur file\_descriptor\_data vom Typ file\_descriptor dem Pointer zugewiesen. Als weiteres Makro steht mit POSIX\_\-IO\_\-SET\_\-FUNCTION\_\-NAME eine Funktionalität zum Ermitteln des Funktionsnamens der gewrappten Funktion zur Verfügung. Als Parameter bekommt dieses Makro den Speicherplatz übergeben, an den der Funktionsname kopiert wird.
+Nach dem Aufruf von WRAP\-\_\-START werden die Datenstrukturen initial befüllt. Hierfür werden alle Daten, welche vor dem Aufruf der gewrappten Funktion verfügbar sind in die Datenstrukturen übernommen. Die Funktion get\-\_\-ba\-sic() wird hierfür vom Framework bereitgestellt, um den Hostnamen, die Prozess-ID und die Thread-ID zur ermitteln. Sie greift dabei auf zentral vom Framework pro Prozess und pro Thread angelegten Speicher zurück, um die benötigten Werte nur je einmal über Systemfunktionen zu ermitteln und in diesem Speicher für weitere Zugriffe zu hinterlegen. Für das Einbinden von Strukturen in andere Strukturen kann beim Erstellen einer Struktur das Makro JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-START genutzt werden \verw{subsubsec:struktur_makros}. Dieses erstellt einen Pointer, welcher auf verschiedene Strukturen zeigen kann. Zusätzlich wird eine Enumeration erstellt, die angibt, welche Struktur tatsächlich im Pointer hinterlegt ist. Für die korrektet Verarbeitung durch das Framework muss die Enumeration immer passend zur im Pointer hinterlegten Struktur gesetzt sein. Dafür stellt das Framework zwei Makros zur Verfügung. Mittels JSON\-\_\-STRUCT\-\_\-SET\-\_\-VOID\-\_\-P\-\_\-NULL kann der Pointer mit NULL befüllt werden. Dementsprechend wird keine Struktur in interne Buffer übernommen und kein entsprechendes Element im JSON erzeugt. Im Beispiel ist dies für das Feld func\-tion\-\_\-da\-ta in der Struktur basic der Fall. Mit JSON\-\_\-STRUCT\-\_\-SET\-\_\-VOID\-\_\-P kann dagegen eine Struktur zusammen mit dem passenden Eintrag in der Enumeration erzeugt werden. Dies ist im Beispiel für das Feld file\-\_\-type in der Struktur basic der Fall. Hier wird die Struktur file\-\_\-de\-scrip\-tor\-\_\-da\-ta vom Typ file\-\_\-de\-scrip\-tor dem Pointer zugewiesen. Als weiteres Makro steht mit POSIX\-\_\-IO\-\_\-SET\-\_\-FUNC\-TION\-\_\-NAME eine Funktionalität zum Ermitteln des Funktionsnamens der gewrappten Funktion zur Verfügung. Als Parameter bekommt dieses Makro den Speicherplatz übergeben, an den der Funktionsname kopiert wird.
 
-Nachdem die Strukturen initial befüllt sind, wird die gewrappte Funktion aufgerufen. Dies geschieht mit dem Makro CALL\_\-REAL\_\-FUNCTION\_\-RET oder dem Makro CALL\_\-REAL\_\-FUNCTION. Diese beiden Makros unterscheiden sich lediglich darin, dass CALL\_\-REAL\_\-FUNCTION\_\-RET den Rückgabewert der aufgerufenen Funktion zurückgibt und CALL\_\-REAL\_\-FUNCTION dies nicht tut. Als Parameter erwarten die Makros als ersten Wert den Namen der Struktur basic. Dieser wird für die Protokollierung des Start- und Endezeitpunktes des Funktionsaufrufes genutzt. Darauf folgt für CALL\_\-REAL\_\-FUNCTION\_\-RET der Name der Variable in die der Rückgabewert geschrieben wird. Darauf folgt der Name der Funktion und die Parameter der Funktion in der von der Funktion erwarteten Reihenfolge. Die beiden Makros sorgen zusätzlich zur Protokollierung der Zeit auch noch für das Rücksichern des im Makro WRAP\_START gesicherten Wertes von errno vor dem Funktionsaufruf und das Sichern desselben nach dem Funktionsaufruf.
+Nachdem die Strukturen initial befüllt sind, wird die gewrappte Funktion aufgerufen. Dies geschieht mit dem Makro CALL\-\_\-RE\-AL\-\_\-FUNC\-TION\-\_\-RET oder dem Makro CALL\-\_\-RE\-AL\-\_\-FUNC\-TION. Diese beiden Makros unterscheiden sich lediglich darin, dass CALL\-\_\-RE\-AL\-\_\-FUNC\-TION\-\_\-RET den Rückgabewert der aufgerufenen Funktion zurückgibt und CALL\-\_\-RE\-AL\-\_\-FUNC\-TION dies nicht tut. Als Parameter erwarten die Makros als ersten Wert den Namen der Struktur basic. Dieser wird für die Protokollierung des Start- und Endezeitpunktes des Funktionsaufrufes genutzt. Darauf folgt für CALL\-\_\-RE\-AL\-\_\-FUNC\-TION\-\_\-RET der Name der Variable in die der Rückgabewert geschrieben wird. Darauf folgt der Name der Funktion und die Parameter der Funktion in der von der Funktion erwarteten Reihenfolge. Die beiden Makros sorgen zusätzlich zur Protokollierung der Zeit auch noch für das Rücksichern des im Makro WRAP\-\_\-START gesicherten Wertes von errno vor dem Funktionsaufruf und das Sichern desselben nach dem Funktionsaufruf.
 
 Auf den Funktionsaufruf folgt das Sichern aller jetzt verfügbaren Werte, wie zum Beispiel des Rückgabewertes, in die Datenstrukturen.
 
-Darauf folgt ein Aufruf des Makros WRAP\_END. Dieses prüft anhand des Feldes file\_type aus der Struktur basic, ob der Funktionsaufruf tatsächlich protokolliert werden soll. Dies geschieht, um Eingaben über den Standard Input-Kanal (stdin) und Ausgaben über den Standard Output-Kanal (stdout) und über den Standard Error-Kanal (stderr) nicht zu protokollieren. Soll der Aufruf protokolliert werden, so wird im Makro die Funktion writeData() aufgerufen. An diese wird die Struktur basic übergeben. Durch diese Übergabe erfolgt das Kopieren der Struktur (inklusive aller über Pointer in ihr referenzierten Strukturen) in einen frameworkinternen Buffer. Die im Wrapper genutzten Strukturen können dementsprechend nach dem Aufruf von WRAP\_END geändert oder gelöscht werden, ohne das dies Auswirkungen auf die Protokollierung hat. Die Prüfung, ob protokolliert werden soll, ist spezifisch für die Datenstruktur basic und damit für das Wrappen von File-IO-Funktionen. Sollen mit dem Framework andere Funktionen gewrappt werden, so muss das Makro WRAP\_END entsprechend angepasst oder durch ein Makro mit weniger Funktionalität ersetzt werden. Am Ende des Makros WRAP\_END wird der beim Aufruf der gewrappten Funktion im Makro CALL\_\-REAL\_\-FUNCTION bzw. im Makro CALL\_\-REAL\_\-FUNCTION\_\-RET gesicherte Wert von errno wieder hergestellt. Daher darf nach Aufruf von WRAP\_END keine Funktion aufgerufen werden, die errno erneut verändern kann, bevor ein Return aus dem Wrapper erfolgt.
+Darauf folgt ein Aufruf des Makros WRAP\-\_\-END. Dieses prüft anhand des Feldes file\-\_\-type aus der Struktur basic, ob der Funktionsaufruf tatsächlich protokolliert werden soll. Dies geschieht, um Eingaben über den Standard Input-Kanal (stdin) und Ausgaben über den Standard Output-Kanal (stdout) und über den Standard Error-Kanal (stderr) nicht zu protokollieren. Soll der Aufruf protokolliert werden, so wird im Makro die Funktion writeData() aufgerufen. An diese wird die Struktur basic übergeben. Durch diese Übergabe erfolgt das Kopieren der Struktur (inklusive aller über Pointer in ihr referenzierten Strukturen) in einen frameworkinternen Buffer. Die im Wrapper genutzten Strukturen können dementsprechend nach dem Aufruf von WRAP\-\_\-END geändert oder gelöscht werden, ohne das dies Auswirkungen auf die Protokollierung hat. Die Prüfung, ob protokolliert werden soll, ist spezifisch für die Datenstruktur basic und damit für das Wrappen von File-IO-Funktionen. Sollen mit dem Framework andere Funktionen gewrappt werden, so muss das Makro WRAP\-\_\-END entsprechend angepasst oder durch ein Makro mit weniger Funktionalität ersetzt werden. Am Ende des Makros WRAP\-\_\-END wird der beim Aufruf der gewrappten Funktion im Makro CALL\-\_\-RE\-AL\-\_\-FUNC\-TION bzw. im Makro CALL\-\_\-RE\-AL\-\_\-FUNC\-TION\-\_\-RET gesicherte Wert von errno wieder hergestellt. Daher darf nach Aufruf von WRAP\-\_\-END keine Funktion aufgerufen werden, die errno erneut verändern kann, bevor ein Return aus dem Wrapper erfolgt.
 
 Am Ende des Wrappers erfolgt ein Return mit einem eventuell zuvor gesicherten Rückgabewerte an das überwachte Programm.
 
-Die Makros für die Wrapper in den C-Dateien stammen aus wrapper\_defines.h. Die Funktionen sind in event.h definiert. Für die zum Protokollieren genutzten Datenstrukturen muss zudem die Datei json\_include\_struct.h eingebunden werden \verw{subsubsec:struktur_makros}.
+Die Makros für die Wrapper in den C-Dateien stammen aus wrap\-per\-\_\-de\-fines.h. Die Funktionen sind in event.h definiert. Für die zum Protokollieren genutzten Datenstrukturen muss zudem die Datei json\-\_\-in\-clude\-\_\-struct.h eingebunden werden \verw{subsubsec:struktur_makros}.
 
 \subsubsection{Struktur-Makros}
 \label{subsubsec:struktur_makros}
 
-Strukturen, welche im Framework durch die Wrapper zum Protokollieren von Daten genutzt werden, müssen über spezielle Makros definiert sein \verw{subsubsec:wrapper_makros_und_Funktionen}. Diese Makros werden vom Framework in der Datei json\_defines.h bereitgestellt. Je nachdem wie diese Datei inkludiert wird, erstellen die Makros unterschiedlichen Source-Code. Wird vor einem Include das Makro JSON\_STRUCT passend gesetzt, so werden in json\_defines.h die gleichen Makros unterschiedlich definiert:
+Strukturen, welche im Framework durch die Wrapper zum Protokollieren von Daten genutzt werden, müssen über spezielle Makros definiert sein \verw{subsubsec:wrapper_makros_und_Funktionen}. Diese Makros werden vom Framework in der Datei json\-\_\-de\-fines.h bereitgestellt. Je nachdem wie diese Datei inkludiert wird, erstellen die Makros unterschiedlichen Source-Code. Wird vor einem Include das Makro JSON\-\_\-STRUCT passend gesetzt, so werden in json\-\_\-de\-fines.h die gleichen Makros unterschiedlich definiert:
 
 \begin{itemize}
-  \item JSON\_STRUCT undefiniert: stellt die Makros JSON\_\-STRUCT\_\-DATA\_\-TYPE, JSON\_\-STRUCT\_\-PRINT, JSON\_\-STRUCT\_\-BYTES\_\-COUNT, JSON\_\-STRUCT\_\-SIZEOF und JSON\_\-STRUCT\_\-COPY zur Verfügung
-  \item \#define JSON\_STRUCT JSON\_\-STRUCT\_\-DATA\_\-TYPE: Makros erstellen Strukturen
-  \item \#define JSON\_STRUCT JSON\_\-STRUCT\_\-PRINT: Makros erstellen je Struktur eine Funktion zum Serialisieren der Struktur in einen JSON-String
-  \item \#define JSON\_STRUCT JSON\_\-STRUCT\_\-BYTES\_\-COUNT: Makros erstellen je Struktur eine Funktion zum Ermitteln der maximalen Länge des JSON-Strings der Struktur
-  \item \#define JSON\_STRUCT JSON\_\-STRUCT\_\-SIZEOF: Makros erstellen je Struktur eine Funktion zum Ermitteln der in der Struktur tatsächlich genutzten Bytes (ungenutzte Bytes in C-Strings werden nicht mitgezählt; über Pointer eingebundene Strukturen werden mitgezählt)
-  \item \#define JSON\_STRUCT JSON\_\-STRUCT\_\-COPY: Makros erstellen je Struktur eine Funktion zum Kopieren der genutzten Bytes einer Struktur (siehe JSON\_\-STRUCT\_\-SIZEOF)
+  \item JSON\-\_\-STRUCT undefiniert: stellt die Makros JSON\-\_\-STRUCT\-\_\-DA\-TA\-\_\-TYPE, JSON\-\_\-STRUCT\-\_\-PRINT, JSON\-\_\-STRUCT\-\_\-BYTES\-\_\-COUNT, JSON\-\_\-STRUCT\-\_\-SIZE\-OF und JSON\-\_\-STRUCT\-\_\-COPY zur Verfügung
+  \item \#define JSON\-\_\-STRUCT JSON\-\_\-STRUCT\-\_\-DA\-TA\-\_\-TYPE: Makros erstellen Strukturen
+  \item \#define JSON\-\_\-STRUCT JSON\-\_\-STRUCT\-\_\-PRINT: Makros erstellen je Struktur eine Funktion zum Serialisieren der Struktur in einen JSON-String
+  \item \#define JSON\-\_\-STRUCT JSON\-\_\-STRUCT\-\_\-BYTES\-\_\-COUNT: Makros erstellen je Struktur eine Funktion zum Ermitteln der maximalen Länge des JSON-Strings der Struktur
+  \item \#define JSON\-\_\-STRUCT JSON\-\_\-STRUCT\-\_\-SIZE\-OF: Makros erstellen je Struktur eine Funktion zum Ermitteln der in der Struktur tatsächlich genutzten Bytes (ungenutzte Bytes in C-Strings werden nicht mitgezählt; über Pointer eingebundene Strukturen werden mitgezählt)
+  \item \#define JSON\-\_\-STRUCT JSON\-\_\-STRUCT\-\_\-COPY: Makros erstellen je Struktur eine Funktion zum Kopieren der genutzten Bytes einer Struktur (siehe JSON\-\_\-STRUCT\-\_\-SIZE\-OF)
 \end{itemize}
 
-Die Makros aus json\_defines.h werden in json\_structs.h genutzt um alle benötigten Datenstrukturen zu definieren. In json\_include\_struct.h wird json\_structs.h einmal mit JSON\_STRUCT definiert als JSON\_STRUCT JSON\_\-STRUCT\_\-DATA\_\-TYPE inkludiert. Somit stehen in json\_include\_struct.h die benötigten Datenstrukturen zur Verfügung. In json\_include\_function.h wird json\_structs.h viermal inkludiert. Bei jedem Inkludieren wird das Makro JSON\_STRUCT anders gesetzt, so dass anschließend in json\_include\_function.h alle Funktionen zum Verarbeiten der Strukturen verfügbar sind. \verwb{fig:include_hierarchie_datenstrukturen}
+Die Makros aus json\-\_\-de\-fines.h werden in json\-\_\-structs.h genutzt um alle benötigten Datenstrukturen zu definieren. In json\-\_\-in\-clude\-\_\-struct.h wird json\-\_\-structs.h einmal mit JSON\-\_\-STRUCT definiert als JSON\-\_\-STRUCT JSON\-\_\-STRUCT\-\_\-DA\-TA\-\_\-TYPE inkludiert. Somit stehen in json\-\_\-in\-clude\-\_\-struct.h die benötigten Datenstrukturen zur Verfügung. In json\-\_\-in\-clude\-\_\-func\-tion.h wird json\-\_\-structs.h viermal inkludiert. Bei jedem Inkludieren wird das Makro JSON\-\_\-STRUCT anders gesetzt, so dass anschließend in json\-\_\-in\-clude\-\_\-func\-tion.h alle Funktionen zum Verarbeiten der Strukturen verfügbar sind. \verwb{fig:include_hierarchie_datenstrukturen}
 
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[>=latex, node distance=0.5cm, scale=0.75, every node/.style={scale=0.75}]
-  \node (defines) {json\_defines.h};
-  \node (JSON_STRUCT_DATA_TYPE) [draw, blue, below=of defines] {JSON\_STRUCT\_DATA\_TYPE};
-  \node (JSON_STRUCT_PRINT) [draw, blue, below=of JSON_STRUCT_DATA_TYPE] {JSON\_STRUCT\_PRINT};
-  \node (JSON_STRUCT_BYTES_COUNT) [draw, blue, below=of JSON_STRUCT_PRINT] {JSON\_STRUCT\_BYTES\_COUNT};
-  \node (JSON_STRUCT_SIZEOF) [draw, blue, below=of JSON_STRUCT_BYTES_COUNT] {JSON\_STRUCT\_SIZEOF};
-  \node (JSON_STRUCT_COPY) [draw, blue, below=of JSON_STRUCT_SIZEOF] {JSON\_STRUCT\_COPY};
+  \node (defines) {json\-\_\-de\-fines.h};
+  \node (JSON_STRUCT_DATA_TYPE) [draw, blue, below=of defines] {JSON\-\_\-STRUCT\-\_\-DATA\-\_\-TYPE};
+  \node (JSON_STRUCT_PRINT) [draw, blue, below=of JSON_STRUCT_DATA_TYPE] {JSON\-\_\-STRUCT\-\_\-PRINT};
+  \node (JSON_STRUCT_BYTES_COUNT) [draw, blue, below=of JSON_STRUCT_PRINT] {JSON\-\_\-STRUCT\-\_\-BYTES\-\_\-COUNT};
+  \node (JSON_STRUCT_SIZEOF) [draw, blue, below=of JSON_STRUCT_BYTES_COUNT] {JSON\-\_\-STRUCT\-\_\-SIZE\-OF};
+  \node (JSON_STRUCT_COPY) [draw, blue, below=of JSON_STRUCT_SIZEOF] {JSON\-\_\-STRUCT\-\_\-COPY};
   
   \node[fit=(defines)(JSON_STRUCT_DATA_TYPE)(JSON_STRUCT_PRINT)(JSON_STRUCT_BYTES_COUNT)(JSON_STRUCT_SIZEOF)(JSON_STRUCT_COPY), draw, scale=1.3](json_defines){};
   
-  \node (structs) [left=of defines, xshift=-2cm] {json\_structs.h};
+  \node (structs) [left=of defines, xshift=-2cm] {json\-\_\-structs.h};
   \draw (-7,0.4) rectangle (-4.1,-6.9);
   
-  \node (struct) [draw, left=of JSON_STRUCT_DATA_TYPE, xshift=-4cm] {json\_include\_struct.h};
-  \node (function) [draw, below=of struct] {json\_include\_function.h};
+  \node (struct) [draw, left=of JSON_STRUCT_DATA_TYPE, xshift=-4cm] {json\-\_\-in\-clude\-\_\-struct.h};
+  \node (function) [draw, below=of struct] {json\-\_\-in\-clude\-\_\-func\-tion.h};
   
   \draw [->] (JSON_STRUCT_DATA_TYPE) edge (struct);
   \draw [->] (JSON_STRUCT_PRINT) edge (function);
@@ -742,7 +773,7 @@ Die Makros aus json\_defines.h werden in json\_structs.h genutzt um alle benötig
 \paragraph{Struktur}
 \label{par:struktur}
 
-Die Definition einer Struktur erfolgt über die Makros JSON\_\-STRUCT\_\-START und JSON\_\-STRUCT\_\-END. Nach JSON\_\-STRUCT\_\-START folgt in Klammern eingeschlossen ein Bezeichner. Dieser heißt im Schaubild ,,name`` \verwb{fig:syntax_struktur}. Er muss den Konventionen der Programmiersprache C für einen Strukturnamen entsprechen. Die generierte Struktur bekommt diesen Bezeichner als Namen. Der Bezeichner steht nach dem Inkludieren von json\_include\_struct.h dementsprechend als Typnamen zur Deklaration lokaler Strukturen bereit. Zwischen den beiden Makros können beliebig viele, über weitere Makros definierte, Elemente stehen. Es ist insbesondere auch möglich eine Struktur ohne Elemente zu definieren.
+Die Definition einer Struktur erfolgt über die Makros JSON\-\_\-STRUCT\-\_\-START und JSON\-\_\-STRUCT\-\_\-END. Nach JSON\-\_\-STRUCT\-\_\-START folgt in Klammern eingeschlossen ein Bezeichner. Dieser heißt im Schaubild ,,name`` \verwb{fig:syntax_struktur}. Er muss den Konventionen der Programmiersprache C für einen Strukturnamen entsprechen. Die generierte Struktur bekommt diesen Bezeichner als Namen. Der Bezeichner steht nach dem Inkludieren von json\-\_\-in\-clude\-\_\-struct.h dementsprechend als Typnamen zur Deklaration lokaler Strukturen bereit. Zwischen den beiden Makros können beliebig viele, über weitere Makros definierte, Elemente stehen. Es ist insbesondere auch möglich eine Struktur ohne Elemente zu definieren.
 
 \begin{figure}[H]
 \centering
@@ -761,9 +792,9 @@ Die Definition einer Struktur erfolgt über die Makros JSON\_\-STRUCT\_\-START un
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p1 -- p2 -> "Struct-Element"[nonterminal] -- p3 -- p4 -- p5;
+    / -> "JSON\-\_\-STRUCT\-\_\-START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p1 -- p2 -> "Struct-Element"[nonterminal] -- p3 -- p4 -- p5;
 
-    p6[yshift=-5mm] -> "JSON\_STRUCT\_END"[terminal, yshift=-5mm] -> p7[yshift=-5mm];
+    p6[yshift=-5mm] -> "JSON\-\_\-STRUCT\-\_\-END"[terminal, yshift=-5mm] -> p7[yshift=-5mm];
 
     p5 --[skip loop=-7mm] p6;
     p1 ->[skip loop=5mm] p4;
@@ -777,19 +808,19 @@ Die Definition einer Struktur erfolgt über die Makros JSON\_\-STRUCT\_\-START un
 \paragraph{Struct-Element}
 \label{par:struct_element}
 
-Die unterschiedlichen Makros zur Definition verschiedener Elemente einer Struktur können in beliebiger Folge zwischen den Makros JSON\_\-STRUCT\_\-START und JSON\_\-STRUCT\_\-END genutzt werden \verwb{fig:syntax_struktur}. Die Makros der Elemente unterteilen sich in verschiedene Gruppen \verwb{fig:syntax_struct_element}.
+Die unterschiedlichen Makros zur Definition verschiedener Elemente einer Struktur können in beliebiger Folge zwischen den Makros JSON\-\_\-STRUCT\-\_\-START und JSON\-\_\-STRUCT\-\_\-END genutzt werden \verwb{fig:syntax_struktur}. Die Makros der Elemente unterteilen sich in verschiedene Gruppen \verwb{fig:syntax_struct_element}.
 
-Die erste Gruppe fügt zuvor über separate Makros erstellte Datentypen als Elemente in eine neue Struktur ein. Zu dieser Gruppe gehören die Makros JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD, JSON\_\-STRUCT\_\-ENUM, JSON\_\-STRUCT\_\-STRUCT und JSON\_\-STRUCT\_\-STRUCT\_\-P. Sie erstellen als Element ein Bitfield, eine Enumeration, eine Struktur oder einen Pointer auf eine andere Struktur. Jedes Makro dieser Gruppe bekommt zwei Parameter übergeben. Der erste ist der Name des über andere Makros erstellten Datentyps. Darauf folgt der Name, den das Datenelement in der neuen Struktur bekommt. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt.
+Die erste Gruppe fügt zuvor über separate Makros erstellte Datentypen als Elemente in eine neue Struktur ein. Zu dieser Gruppe gehören die Makros JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD, JSON\-\_\-STRUCT\-\_\-ENUM, JSON\-\_\-STRUCT\-\_\-STRUCT und JSON\-\_\-STRUCT\-\_\-STRUCT\-\_\-P. Sie erstellen als Element ein Bitfield, eine Enumeration, eine Struktur oder einen Pointer auf eine andere Struktur. Jedes Makro dieser Gruppe bekommt zwei Parameter übergeben. Der erste ist der Name des über andere Makros erstellten Datentyps. Darauf folgt der Name, den das Datenelement in der neuen Struktur bekommt. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt.
 
-Die größte Gruppe stellen die primitiven Datentypen dar. Zu jedem verfügbaren primitiven Datentyp existiert ein separates Makro. Dies sind JSON\_\-STRUCT\_\-CLOCK\_\-T, JSON\_\-STRUCT\_\-FD\_\-SET\_\-P, JSON\_\-STRUCT\_\-FILE\_\-P, JSON\_\-STRUCT\_\-INT, JSON\_\-STRUCT\_\-LONG\_\-INT, JSON\_\-STRUCT\_\-OFF\_\-T, JSON\_\-STRUCT\_\-PID\_\-T, JSON\_\-STRUCT\_\-SIZE\_\-T, JSON\_\-STRUCT\_\-SSIZE\_\-T, JSON\_\-STRUCT\_\-U\_\-INT64\_\-T und JSON\_\-STRUCT\_\-VOID\_\-P. Jedes Makro dieser Gruppe bekommt einen Parameter übergeben. Dieser ist der Name des Datenelements in der Struktur. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt.
+Die größte Gruppe stellen die primitiven Datentypen dar. Zu jedem verfügbaren primitiven Datentyp existiert ein separates Makro. Dies sind JSON\-\_\-STRUCT\-\_\-CLOCK\-\_\-T, JSON\-\_\-STRUCT\-\_\-FD\-\_\-SET\-\_\-P, JSON\-\_\-STRUCT\-\_\-FILE\-\_\-P, JSON\-\_\-STRUCT\-\_\-INT, JSON\-\_\-STRUCT\-\_\-LONG\-\_\-INT, JSON\-\_\-STRUCT\-\_\-OFF\-\_\-T, JSON\-\_\-STRUCT\-\_\-PID\-\_\-T, JSON\-\_\-STRUCT\-\_\-SIZE\-\_\-T, JSON\-\_\-STRUCT\-\_\-SSIZE\-\_\-T, JSON\-\_\-STRUCT\-\_\-U\-\_\-INT64\-\_\-T und JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P. Jedes Makro dieser Gruppe bekommt einen Parameter übergeben. Dieser ist der Name des Datenelements in der Struktur. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt.
 
-Eine weitere Gruppe sind Arrays von primitiven Datentypen. Zu dieser Gruppe gehört aktuell nur das Makro JSON\_\-STRUCT\_\-CSTRING für Arrays des Datentyp char. Makros dieser Gruppe bekommen zwei Parameter übergeben. Der erste Parameter ist der Name des Datenelements in der Struktur. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt. Der zweiter Parameter ist die Länge des Arrays (für JSON\_\-STRUCT\_\-CSTRING inklusive des Endekennzeichens '\textbackslash{}0').
+Eine weitere Gruppe sind Arrays von primitiven Datentypen. Zu dieser Gruppe gehört aktuell nur das Makro JSON\-\_\-STRUCT\-\_\-CSTRING für Arrays des Datentyp char. Makros dieser Gruppe bekommen zwei Parameter übergeben. Der erste Parameter ist der Name des Datenelements in der Struktur. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt. Der zweiter Parameter ist die Länge des Arrays (für JSON\-\_\-STRUCT\-\_\-CSTRING inklusive des Endekennzeichens '\textbackslash{}0').
 
-Eine weitere Gruppe sind Pointer auf Arrays primitiver Datentypen variabler Länge. Makros dieser Gruppe benötigen ein Endekennzeichen, welches anstelle eines Array-Elements stehen kann und ein Ende vor der maximalen Länge des Arrays anzeigt. Zu dieser Gruppe gehören aktuell nur die Makros JSON\_\-STRUCT\_\-CSTRING\_\-P und JSON\_\-STRUCT\_\-CSTRING\_\-P\_\-CONST (beide basieren auf dem Endekennzeichen für CStrings: '\textbackslash{}0'). Makros dieser Gruppe bekommen zwei Parameter übergeben. Wie bei einfachen Arrays (s.o.) ist der erste Parameter der Name des Elements in der Struktur. Der zweite gibt die maximale Länge des Arrays an.
+Eine weitere Gruppe sind Pointer auf Arrays primitiver Datentypen variabler Länge. Makros dieser Gruppe benötigen ein Endekennzeichen, welches anstelle eines Array-Elements stehen kann und ein Ende vor der maximalen Länge des Arrays anzeigt. Zu dieser Gruppe gehören aktuell nur die Makros JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P und JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P\-\_\-CONST (beide basieren auf dem Endekennzeichen für CStrings: '\textbackslash{}0'). Makros dieser Gruppe bekommen zwei Parameter übergeben. Wie bei einfachen Arrays (s.o.) ist der erste Parameter der Name des Elements in der Struktur. Der zweite gibt die maximale Länge des Arrays an.
 
 Die letzte Gruppe ist für Unions. Sie enthält aktuell nur eine Union für Strukturen. Eine Union besteht aus mehreren Makros. Der genaue Aufbau wird in einem separaten Abschnitt erklärt \verw{par:struct_union}.
 
-Beim Serialisieren als JSON-String werden Null-Pointer unterschiedlich behandelt. Bei den Makros JSON\_\-STRUCT\_\-VOID\_\-P und JSON\_\-STRUCT\_\-FILE\_\-P wird entsprechend der Konventionen der Funktion printf() ein String mit Inhalt ,,null`` erzeugt. Bei den Makros JSON\_\-STRUCT\_\-CSTRING\_\-P und JSON\_\-STRUCT\_\-CSTRING\_\-P\_\-CONST wird ein leerer String (,,``) erzeugt. Die Makros JSON\_\-STRUCT\_\-FD\_\-SET\_\-P, JSON\_\-STRUCT\_\-VOID\_\-P\_\-START \verw{par:struct_union} und JSON\_\-STRUCT\_\-STRUCT\_\-P erzeugen optionale JSON-Elemente, die bei einem Null-Pointer im JSON-String komplett entfallen.
+Beim Serialisieren als JSON-String werden Null-Pointer unterschiedlich behandelt. Bei den Makros JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P und JSON\-\_\-STRUCT\-\_\-FILE\-\_\-P wird entsprechend der Konventionen der Funktion printf() ein String mit Inhalt ,,null`` erzeugt. Bei den Makros JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P und JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P\-\_\-CONST wird ein leerer String (\lstinline[language=C,numbers=left,numberstyle=\tiny]!""!) erzeugt. Die Makros JSON\-\_\-STRUCT\-\_\-FD\-\_\-SET\-\_\-P, JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-START \verw{par:struct_union} und JSON\-\_\-STRUCT\-\_\-STRUCT\-\_\-P erzeugen optionale JSON-Elemente, die bei einem Null-Pointer im JSON-String komplett entfallen.
 
 \begin{figure}[H]
 \centering
@@ -811,41 +842,41 @@ Beim Serialisieren als JSON-String werden Null-Pointer unterschiedlich behandelt
     / -- p1 ->[vh path]
     {[nodes={yshift=7mm}]
       {[nodes={yshift=7mm}]
-        "JSON\_STRUCT\_ARRAY\_BITFIELD"[terminal],
-        "JSON\_STRUCT\_ENUM"[terminal],
-        "JSON\_STRUCT\_STRUCT"[terminal],
-        "JSON\_STRUCT\_STRUCT\_P"[terminal]
+        "JSON\-\_\-STRUCT\-\_\-AR\-RAY\_BIT\-FIELD"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-ENUM"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-STRUCT"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-STRUCT\-\_\-P"[terminal]
       } -> [hv path]
       p2 -> "("[terminal] -> "type"[nonterminal] -> ","[terminal] -> "name"[nonterminal] -> ")"[terminal],
       {[nodes={yshift=7mm}]
-        "JSON\_STRUCT\_CLOCK\_T"[terminal],
-        "JSON\_STRUCT\_FD\_SET\_P"[terminal],
-        "JSON\_STRUCT\_FILE\_P"[terminal],
-        "JSON\_STRUCT\_INT"[terminal],
-        "JSON\_STRUCT\_LONG\_INT"[terminal],
-        "JSON\_STRUCT\_OFF\_T"[terminal],
-        "JSON\_STRUCT\_PID\_T"[terminal],
-        "JSON\_STRUCT\_SIZE\_T"[terminal],
-        "JSON\_STRUCT\_SSIZE\_T"[terminal],
-        "JSON\_STRUCT\_U\_INT64\_T"[terminal],
-        "JSON\_STRUCT\_VOID\_P"[terminal]
+        "JSON\-\_\-STRUCT\-\_\-CLOCK\-\_\-T"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-FD\-\_\-SET\-\_\-P"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-FILE\-\_\-P"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-INT"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-LONG\-\_\-INT"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-OFF\-\_\-T"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-PID\-\_\-T"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-SIZE\-\_\-T"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-SSIZE\-\_\-T"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-U\-\_\-INT64\-\_\-T"[terminal],
+        "JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P"[terminal]
       } -> [hv path]
       p3 -> { [fresh nodes] "("[terminal] -> "name"[nonterminal] -> ")"[terminal] },
-      "JSON\_STRUCT\_CSTRING"[terminal,yshift=7mm] -> { [fresh nodes] "("[terminal,yshift=7mm] -> "name"[nonterminal,yshift=7mm] -> ","[terminal,yshift=7mm] -> "length"[nonterminal,yshift=7mm] -> ")"[terminal,yshift=7mm] },
+      "JSON\-\_\-STRUCT\-\_\-CSTRING"[terminal,yshift=7mm] -> { [fresh nodes] "("[terminal,yshift=7mm] -> "name"[nonterminal,yshift=7mm] -> ","[terminal,yshift=7mm] -> "length"[nonterminal,yshift=7mm] -> ")"[terminal,yshift=7mm] },
       {[nodes={yshift=7mm}]
-      "JSON\_STRUCT\_CSTRING\_P"[terminal],
-      "JSON\_STRUCT\_CSTRING\_P\_CONST"[terminal]
+      "JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P"[terminal],
+      "JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P\-\_\-CONST"[terminal]
       } -> [hv path]
-      p4 -> { [fresh nodes] "("[terminal] -> "name"[nonterminal] -> ","[terminal] -> "max\_length"[nonterminal] -> ")"[terminal] },
+      p4 -> { [fresh nodes] "("[terminal] -> "name"[nonterminal] -> ","[terminal] -> "max\-\_\-length"[nonterminal] -> ")"[terminal] },
       "Struct-Union"[nonterminal,yshift=7mm]
     } -> [hv path]
     p5 ->/;
 
     % make these edges plain
-    p1 -> "JSON\_STRUCT\_STRUCT";
-    "JSON\_STRUCT\_ENUM" -- p2;
-    "JSON\_STRUCT\_FD\_SET\_P" -- p3;
-    "JSON\_STRUCT\_CSTRING\_P\_CONST" --p4;
+    p1 -> "JSON\-\_\-STRUCT\-\_\-STRUCT";
+    "JSON\-\_\-STRUCT\-\_\-ENUM" -- p2;
+    "JSON\-\_\-STRUCT\-\_\-FD\-\_\-SET\-\_\-P" -- p3;
+    "JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P\-\_\-CONST" --p4;
   };
 \end{tikzpicture}
 \caption{Syntax Struct-Element}
@@ -855,9 +886,9 @@ Beim Serialisieren als JSON-String werden Null-Pointer unterschiedlich behandelt
 \paragraph{Struct-Union}
 \label{par:struct_union}
 
-Wenn in einer Struktur ein Pointer wahlweise auf verschiedene Strukturen zeigen soll, so kann dies mit den beiden Makros JSON\_\-STRUCT\_\-VOID\_\-P\_\-START und JSON\_\-STRUCT\_\-VOID\_\-P\_\-END erreicht werden \verwb{fig:syntax_struct_union}. Beide Makros müssen immer zusammen in der richtigen Reihenfolge genutzt werden. Zwischen ihnen müssen über weitere Makros die möglichen Strukturen für den Pointer definiert werden \verw{par:struct_union_element}. Dabei muss mindestens eine Struktur angegeben werden. Die beiden Makros bekommen je einen Parameter übergeben. Dieser Parameter ist der Name des Datenelements in der Struktur. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt. Bei jeder zusammengehörenden Folge der beiden Makros muss der Parameter identisch sein.
+Wenn in einer Struktur ein Pointer wahlweise auf verschiedene Strukturen zeigen soll, so kann dies mit den beiden Makros JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-START und JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-END erreicht werden \verwb{fig:syntax_struct_union}. Beide Makros müssen immer zusammen in der richtigen Reihenfolge genutzt werden. Zwischen ihnen müssen über weitere Makros die möglichen Strukturen für den Pointer definiert werden \verw{par:struct_union_element}. Dabei muss mindestens eine Struktur angegeben werden. Die beiden Makros bekommen je einen Parameter übergeben. Dieser Parameter ist der Name des Datenelements in der Struktur. Dieser Name wird beim Serialisieren auch als Elementname im JSON-Objekt genutzt. Bei jeder zusammengehörenden Folge der beiden Makros muss der Parameter identisch sein.
 
-Beim Arbeiten mit einem über diese Makros erstellten Pointer müssen die Makros JSON\_\-STRUCT\_\-SET\_\-VOID\_\-P und JSON\_\-STRUCT\_\-SET\_\-VOID\_\-P\_\-NULL zum setzen des Pointers genutzt werden \verw{subsubsec:wrapper_makros_und_Funktionen}.
+Beim Arbeiten mit einem über diese Makros erstellten Pointer müssen die Makros JSON\-\_\-STRUCT\-\_\-SET\-\_\-VOID\-\_\-P und JSON\-\_\-STRUCT\-\_\-SET\-\_\-VOID\-\_\-P\-\_\-NULL zum setzen des Pointers genutzt werden \verw{subsubsec:wrapper_makros_und_Funktionen}.
 
 \begin{figure}[H]
 \centering
@@ -876,9 +907,9 @@ Beim Arbeiten mit einem über diese Makros erstellten Pointer müssen die Makros J
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_VOID\_P\_START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p2 -> "Struct-Union-Element"[nonterminal] -- p3 --p5;
+    / -> "JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p2 -> "Struct-Union-Element"[nonterminal] -- p3 --p5;
 
-    p6[yshift=-5mm] -> "JSON\_STRUCT\_VOID\_P\_END"[terminal,yshift=-5mm] -> { [fresh nodes] "("[terminal,yshift=-5mm] -> "name"[nonterminal,yshift=-5mm] -> ")"[terminal,yshift=-5mm] } -> p7[yshift=-5mm];
+    p6[yshift=-5mm] -> "JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-END"[terminal,yshift=-5mm] -> { [fresh nodes] "("[terminal,yshift=-5mm] -> "name"[nonterminal,yshift=-5mm] -> ")"[terminal,yshift=-5mm] } -> p7[yshift=-5mm];
 
     p5 --[skip loop=-7mm] p6;
     p3 ->[skip loop=5mm] p2;
@@ -891,7 +922,7 @@ Beim Arbeiten mit einem über diese Makros erstellten Pointer müssen die Makros J
 \paragraph{Struct-Union-Element}
 \label{par:struct_union_element}
 
-Das Makro zum Definieren von möglichen Strukturen für den Strukturpointer der Makros JSON\_\-STRUCT\_\-VOID\_\-P\_\-START und JSON\_\-STRUCT\_\-VOID\_\-P\_\-END \verw{par:struct_union} hießt JSON\_\-STRUCT\_\-VOID\_\-P\_\-ELEMENT. Es bekommt zwei Parameter übergeben. Der erste ist der gleiche Name wie bei den umschließenden Makros JSON\_\-STRUCT\_\-VOID\_\-P\_\-START und JSON\_\-STRUCT\_\-VOID\_\-P\_\-END. Der zweite ist der Datentyp einer Struktur, die dem Pointer zugewiesen werden kann.
+Das Makro zum Definieren von möglichen Strukturen für den Strukturpointer der Makros JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-START und JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-END \verw{par:struct_union} hießt JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-EL\-E\-MENT. Es bekommt zwei Parameter übergeben. Der erste ist der gleiche Name wie bei den umschließenden Makros JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-START und JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-END. Der zweite ist der Datentyp einer Struktur, die dem Pointer zugewiesen werden kann.
 
 \begin{figure}[H]
 \centering
@@ -910,7 +941,7 @@ Das Makro zum Definieren von möglichen Strukturen für den Strukturpointer der Ma
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_VOID\_P\_ELEMENT"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ","[terminal] -> "element"[nonterminal] -> ")"[terminal] -> /;
+    / -> "JSON\-\_\-STRUCT\-\_\-VOID\-\_\-P\-\_\-EL\-E\-MENT"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ","[terminal] -> "element"[nonterminal] -> ")"[terminal] -> /;
   };
 \end{tikzpicture}
 \caption{Syntax Struct-Union-Element}
@@ -920,7 +951,7 @@ Das Makro zum Definieren von möglichen Strukturen für den Strukturpointer der Ma
 \paragraph{Enumeration}
 \label{par:enumeration}
 
-Enumerations für die Verwendung mittels des Makros JSON\_\-STRUCT\_\-ENUM in Strukturen \verw{par:struct_element} müssen mit den folgenden drei Makros definiert sein \verwb{fig:syntax_enumeration}. Zu Beginn muss das Makro JSON\_\-STRUCT\_\-ENUM\_\-START stehen. Dieses bekommt als Parameter einen Namen für die Enumeration übergeben. Dieser Name steht dann als Datentyp zur Verfügung. Darauf folgt mindestens einmal das Makro JSON\_\-STRUCT\_\-ENUM\_\-ELEMENT \verw{par:enum_element} zur Definition einzelner Enum-Elemente und abschließend einmal das Makro JSON\_\-STRUCT\_\-ENUM\_\-END.
+Enumerations für die Verwendung mittels des Makros JSON\-\_\-STRUCT\-\_\-ENUM in Strukturen \verw{par:struct_element} müssen mit den folgenden drei Makros definiert sein \verwb{fig:syntax_enumeration}. Zu Beginn muss das Makro JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-START stehen. Dieses bekommt als Parameter einen Namen für die Enumeration übergeben. Dieser Name steht dann als Datentyp zur Verfügung. Darauf folgt mindestens einmal das Makro JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-EL\-E\-MENT \verw{par:enum_element} zur Definition einzelner Enum-Elemente und abschließend einmal das Makro JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-END.
 
 \begin{figure}[H]
 \centering
@@ -939,9 +970,9 @@ Enumerations für die Verwendung mittels des Makros JSON\_\-STRUCT\_\-ENUM in Str
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_ENUM\_START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p2 -> "Enum-Element"[nonterminal] -- p3 --p5;
+    / -> "JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p2 -> "Enum-Element"[nonterminal] -- p3 --p5;
 
-    p6[yshift=-5mm] -> "JSON\_STRUCT\_ENUM\_END"[terminal,yshift=-5mm] -> p7[yshift=-5mm];
+    p6[yshift=-5mm] -> "JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-END"[terminal,yshift=-5mm] -> p7[yshift=-5mm];
 
     p5 --[skip loop=-7mm] p6;
     p3 ->[skip loop=-5mm] p2;
@@ -954,7 +985,7 @@ Enumerations für die Verwendung mittels des Makros JSON\_\-STRUCT\_\-ENUM in Str
 \paragraph{Enum-Element}
 \label{par:enum_element}
 
-Einzelne Enum-Elemente werden über das Makro JSON\_\-STRUCT\_\-ENUM\_\-ELEMENT definiert. Dieses bekommt als Parameter den Namen des Elements übergeben.
+Einzelne Enum-Elemente werden über das Makro JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-EL\-E\-MENT definiert. Dieses bekommt als Parameter den Namen des Elements übergeben.
 
 \begin{figure}[H]
 \centering
@@ -973,7 +1004,7 @@ Einzelne Enum-Elemente werden über das Makro JSON\_\-STRUCT\_\-ENUM\_\-ELEMENT d
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_ENUM\_ELEMENT"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -> /;
+    / -> "JSON\-\_\-STRUCT\-\_\-ENUM\-\_\-EL\-E\-MENT"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -> /;
   };
 \end{tikzpicture}
 \caption{Syntax Enum-Element}
@@ -983,7 +1014,7 @@ Einzelne Enum-Elemente werden über das Makro JSON\_\-STRUCT\_\-ENUM\_\-ELEMENT d
 \paragraph{Bitfield}
 \label{par:bitfield}
 
-Bitfields für die Verwendung mittels des Makros JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD in Strukturen \verw{par:struct_element} müssen mit den folgenden drei Makros definiert sein \verwb{fig:syntax_bitfield}. Zu Beginn muss das Makro JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD\_\-START stehen. Dieses bekommt als Parameter einen Namen für das Bitfield übergeben. Dieser Name steht dann als Datentyp zur Verfügung. Darauf folgt beliebig oft das Makro JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD\_\-ELEMENT \verw{par:bitfield_element} zur Definition einzelner Bitfield-Elemente und abschließend einmal das Makro JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD\_\-END.
+Bitfields für die Verwendung mittels des Makros JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD in Strukturen \verw{par:struct_element} müssen mit den folgenden drei Makros definiert sein \verwb{fig:syntax_bitfield}. Zu Beginn muss das Makro JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\-\_\-START stehen. Dieses bekommt als Parameter einen Namen für das Bitfield übergeben. Dieser Name steht dann als Datentyp zur Verfügung. Darauf folgt beliebig oft das Makro JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\-\_\-EL\-E\-MENT \verw{par:bitfield_element} zur Definition einzelner Bitfield-Elemente und abschließend einmal das Makro JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\-\_\-END.
 
 \begin{figure}[H]
 \centering
@@ -1002,9 +1033,9 @@ Bitfields für die Verwendung mittels des Makros JSON\_\-STRUCT\_\-ARRAY\_\-BITFI
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_ARRAY\_BITFIELD\_START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p5;
+    / -> "JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\_START"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -- p5;
 
-    p6[yshift=-5mm]  -- p1[yshift=-5mm] -- p2[yshift=-5mm] -> "Bitfield-Element"[nonterminal,yshift=-5mm] -- p3[yshift=-5mm] -- p4[yshift=-5mm] -> "JSON\_STRUCT\_ARRAY\_BITFIELD\_END"[terminal,yshift=-5mm] -> p7[yshift=-5mm];
+    p6[yshift=-5mm]  -- p1[yshift=-5mm] -- p2[yshift=-5mm] -> "Bitfield-Element"[nonterminal,yshift=-5mm] -- p3[yshift=-5mm] -- p4[yshift=-5mm] -> "JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\_END"[terminal,yshift=-5mm] -> p7[yshift=-5mm];
 
     p5 --[skip loop=-5mm] p6;
     p1 ->[skip loop=5mm] p4;
@@ -1018,7 +1049,7 @@ Bitfields für die Verwendung mittels des Makros JSON\_\-STRUCT\_\-ARRAY\_\-BITFI
 \paragraph{Bitfield-Element}
 \label{par:bitfield_element}
 
-Einzelne Bitfield-Elemente werden über das Makro JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD\_\-ELEMENT definiert. Dieses bekommt als Parameter den Namen des Elements übergeben.
+Einzelne Bitfield-Elemente werden über das Makro JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\-\_\-EL\-E\-MENT definiert. Dieses bekommt als Parameter den Namen des Elements übergeben.
 
 \begin{figure}[H]
 \centering
@@ -1037,7 +1068,7 @@ Einzelne Bitfield-Elemente werden über das Makro JSON\_\-STRUCT\_\-ARRAY\_\-BITF
            shape = coordinate
           ]
   \graph [grow right sep, branch down=7mm, simple] {
-    / -> "JSON\_STRUCT\_ARRAY\_BITFIELD\_ELEMENT"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -> /;
+    / -> "JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD\-\_\-EL\-E\-MENT"[terminal] -> "("[terminal] -> "name"[nonterminal] -> ")"[terminal] -> /;
   };
 \end{tikzpicture}
 \caption{Syntax Bitfield-Element}
@@ -1047,11 +1078,11 @@ Einzelne Bitfield-Elemente werden über das Makro JSON\_\-STRUCT\_\-ARRAY\_\-BITF
 \subsubsection{neue Makros für primitive Datentypen}
 \label{subsubsec:neue_makros_fuer_primitive_datentypen}
 
-Um einen noch nicht verfügbaren primitiven Datentypen für die automatisierte Verarbeitung durch das Framework bereitzustellen, muss die Datei json\_defines.h angepasst werden. In ihr gibt es sechs Stellen, an denen eine Zeile für den neuen Datentyp aufgenommen werden muss. Alle entsprechenden Stellen sind mit dem Kommentar \lstinline[language=C,numbers=left,numberstyle=\tiny]!/* insert new line for new data-type here */! gekennzeichnet.
+Um einen noch nicht verfügbaren primitiven Datentypen für die automatisierte Verarbeitung durch das Framework bereitzustellen, muss die Datei json\-\_\-de\-fines.h angepasst werden. In ihr gibt es sechs Stellen, an denen eine Zeile für den neuen Datentyp aufgenommen werden muss. Alle entsprechenden Stellen sind mit dem Kommentar \lstinline[language=C,numbers=left,numberstyle=\tiny]!/* insert new line for new data-type here */! gekennzeichnet.
 
-Ist der primitive Datentyp ein Pointer, so ist besondere Vorsicht geboten. Soll die im Pointer enthaltene Adresse lediglich im JSON ausgegeben werden, so ist nichts weiter zu beachten. Verweist der Pointer dagegen auf Daten, die ebenfalls in den JSON-String übernommen werden sollen, so handelt es sich aus Sicht des Frameworks nicht um einen primitiven Datentypen. Die Makros können dann nicht wie hier dargestellt gestaltet werden. Stattdessen müssen sie ähnlich wie bei den Makros JSON\_\-STRUCT\_\-FD\_\-SET\_\-P, und JSON\_\-STRUCT\_\-CSTRING\_\-P oder gar wie in  JSON\_\-STRUCT\_\-ARRAY\_\-BITFIELD, JSON\_\-STRUCT\_\-ENUM, JSON\_\-STRUCT\_\-STRUCT und JSON\_\-STRUCT\_\-STRUCT\_\-P umgesetzt werden.
+Ist der primitive Datentyp ein Pointer, so ist besondere Vorsicht geboten. Soll die im Pointer enthaltene Adresse lediglich im JSON ausgegeben werden, so ist nichts weiter zu beachten. Verweist der Pointer dagegen auf Daten, die ebenfalls in den JSON-String übernommen werden sollen, so handelt es sich aus Sicht des Frameworks nicht um einen primitiven Datentypen. Die Makros können dann nicht wie hier dargestellt gestaltet werden. Stattdessen müssen sie ähnlich wie bei den Makros JSON\-\_\-STRUCT\-\_\-FD\-\_\-SET\-\_\-P, und JSON\-\_\-STRUCT\-\_\-CSTRING\-\_\-P oder gar wie in  JSON\-\_\-STRUCT\-\_\-AR\-RAY\-\_\-BIT\-FIELD, JSON\-\_\-STRUCT\-\_\-ENUM, JSON\-\_\-STRUCT\-\_\-STRUCT und JSON\-\_\-STRUCT\-\_\-STRUCT\-\_\-P umgesetzt werden.
 
-Folgend ein Beispiel für den primitiven Datentyp Integer. Im Beispiel sind nur die für Integer notwendigen Zeilen aus der json\_defines.h aufgeführt. Beim Einfügen neuer Datentypen in die json\_defines.h müssen diese sechs Zeilen jeweils vor dem entsprechenden Kommentar (s.o.) eingefügt werden. Nur wenn jede Zeile an der richtigen Position steht, ist die Funktionsweise der Makros gewährleistet \verw{subsubsec:struktur_makros}.
+Folgend ein Beispiel für den primitiven Datentyp Integer. Im Beispiel sind nur die für Integer notwendigen Zeilen aus der json\-\_\-de\-fines.h aufgeführt. Beim Einfügen neuer Datentypen in die json\-\_\-de\-fines.h müssen diese sechs Zeilen jeweils vor dem entsprechenden Kommentar (s.o.) eingefügt werden. Nur wenn jede Zeile an der richtigen Position steht, ist die Funktionsweise der Makros gewährleistet \verw{subsubsec:struktur_makros}.
 \begin{lstlisting}[language=C,numbers=left,numberstyle=\tiny]
 #undef JSON_STRUCT_INT
 #  define JSON_STRUCT_INT(name) int name;
@@ -1064,9 +1095,9 @@ Die erste Zeile ermöglicht das mehrfache Importieren des Makros mit unterschiedl
 
 Die zweite Zeile wird beim Generieren der Strukturen genutzt. Dementsprechend muss diese Zeile ein Makro zur Erstellung einer Variablen des gewünschten primitiven Datentyps enthalten. Der Name der Variablen muss über den Parameter des Makros gesetzt werden.
 
-Die dritte Zeile wird beim Serialisieren in einen JSON-String genutzt. Das Makro in dieser Zeile muss ein gültiges JSON-Element erzeugen. Bei primitiven Datentypen kann hierfür ein vom Framework bereitgestelltes Makro (JSON\_\-STRUCT\_\-ELEMENT) genutzt werden. Dieses bekommt als ersten Parameter den Namen des zu generierenden Elements. Dieser hat aus dem Parameter des Makros des primitiven Datentyps zu stammen. Somit wird ein JSON-Element mit gleichem Namen wie das Struktur-Element erzeugt. Als zweiten Parameter bekommt das Framework-Makro eine Formatangabe für den primitiven Datentypen. Hier sind alle Formatangaben möglich, die auch bei der Funktion printf() genutzt werden können. Entsprechend dieser Angabe wird aus dem als dritten Parameter übergebenen Wert ein String generiert. Wenn dieser String noch zusätzlich aufbereitet werden muss, um dem JSON-Format zu genügen, so muss eventuell ein zusätzliches Makro erstellt werden. Vor dem Erstellen eines solchen Makros sollte geprüft werden, ob eine Anpassung der Formatangabe ausreichend ist. Müssen beispielsweise lediglich Hochkommas um den generierten String ergänzt werden, so kann dies direkt als Formatangabe geschehen (z.B. \lstinline[language=C,numbers=left,numberstyle=\tiny]!"%p"!), wie es auch bei printf() möglich ist. Der als dritter Parameter übergebene Wert wird aus dem Pointer  json\_struct\_data durch Dereferenzieren und Verweisen auf das untergeordnete Element erzeugt. Das untergeordnete Element hat dabei den gleichen Namen wie der erste Parameter. Der Pointer json\_struct\_data wrid durch das Framework bereitgestellt.
+Die dritte Zeile wird beim Serialisieren in einen JSON-String genutzt. Das Makro in dieser Zeile muss ein gültiges JSON-Element erzeugen. Bei primitiven Datentypen kann hierfür ein vom Framework bereitgestelltes Makro (JSON\-\_\-STRUCT\-\_\-EL\-E\-MENT) genutzt werden. Dieses bekommt als ersten Parameter den Namen des zu generierenden Elements. Dieser hat aus dem Parameter des Makros des primitiven Datentyps zu stammen. Somit wird ein JSON-Element mit gleichem Namen wie das Struktur-Element erzeugt. Als zweiten Parameter bekommt das Framework-Makro eine Formatangabe für den primitiven Datentypen. Hier sind alle Formatangaben möglich, die auch bei der Funktion printf() genutzt werden können. Entsprechend dieser Angabe wird aus dem als dritten Parameter übergebenen Wert ein String generiert. Wenn dieser String noch zusätzlich aufbereitet werden muss, um dem JSON-Format zu genügen, so muss eventuell ein zusätzliches Makro erstellt werden. Vor dem Erstellen eines solchen Makros sollte geprüft werden, ob eine Anpassung der Formatangabe ausreichend ist. Müssen beispielsweise lediglich Hochkommas um den generierten String ergänzt werden, so kann dies direkt als Formatangabe geschehen (z.B. \lstinline[language=C,numbers=left,numberstyle=\tiny]!"%p"!), wie es auch bei printf() möglich ist. Der als dritter Parameter übergebene Wert wird aus dem Pointer  JSON\-\_\-STRUCT\_data durch Dereferenzieren und Verweisen auf das untergeordnete Element erzeugt. Das untergeordnete Element hat dabei den gleichen Namen wie der erste Parameter. Der Pointer JSON\-\_\-STRUCT\_data wrid durch das Framework bereitgestellt.
 
-Die vierte Zeile dient beim Serialisieren in einen JSON-String zum Ermitteln der maximal möglichen Länge des JSON-Strings. Für primitive Datentypen stellt das Framework hierfür das Makro JSON\_\-STRUCT\_\-ELEMENT\_\-SIZE zur Verfügung. Dieses Framework-Makro bekommt als ersten Parameter den Namen des Elements übergeben. Dieser muss aus dem Makro des primitiven Datentyps stammen. Nur so wird die Länge des Strings für den Elementnamen passend zum in der dritten Zeile generierten Elementnamen ermittelt. Als zweiten Parameter muss die größtmögliche Länge des Strings für den Wert des primitiven Datentyps übergeben werden. Diese Länge ergibt sich aus dem Wertebereich des Datentyps und dem Verhalten der Formatangabe. Dieses Verhalten ist identisch zu printf(). Dabei darf nie eine einfache Konstante angegeben werden, sofern sich der Wertebereich abhängig von der zugrundeliegenden Architektur (z.B. 32 oder 64 Bit) ändern kann. Für bestimmte Fälle stellt das Framework bereits Makros zur Ermittlung der maximalen Länge eines Variablenwertes. Für die Umwandlung in Dezimalzahlen ist dies JSON\_\-STRUCT\_\-TYPE\_\-SIZE\_\-DEC. Bei diesem Makro muss bei vorzeichenbehafteten Datentypen noch eine Eins für das Vorzeichen im String ergänzt werden. Für die Umwandlung in Hexadezimalzahlen kann das Makro JSON\_\-STRUCT\_\-TYPE\_\-SIZE\_\-HEX genutzt werden. Da hexadezimale Werte im JSON-Format in Hochkommas eingeschlossen werden müssen, muss hier noch der Wert Zwei ergänzt werden.
+Die vierte Zeile dient beim Serialisieren in einen JSON-String zum Ermitteln der maximal möglichen Länge des JSON-Strings. Für primitive Datentypen stellt das Framework hierfür das Makro JSON\-\_\-STRUCT\-\_\-EL\-E\-MENT\-\_\-SIZE zur Verfügung. Dieses Framework-Makro bekommt als ersten Parameter den Namen des Elements übergeben. Dieser muss aus dem Makro des primitiven Datentyps stammen. Nur so wird die Länge des Strings für den Elementnamen passend zum in der dritten Zeile generierten Elementnamen ermittelt. Als zweiten Parameter muss die größtmögliche Länge des Strings für den Wert des primitiven Datentyps übergeben werden. Diese Länge ergibt sich aus dem Wertebereich des Datentyps und dem Verhalten der Formatangabe. Dieses Verhalten ist identisch zu printf(). Dabei darf nie eine einfache Konstante angegeben werden, sofern sich der Wertebereich abhängig von der zugrundeliegenden Architektur (z.B. 32 oder 64 Bit) ändern kann. Für bestimmte Fälle stellt das Framework bereits Makros zur Ermittlung der maximalen Länge eines Variablenwertes. Für die Umwandlung in Dezimalzahlen ist dies JSON\-\_\-STRUCT\-\_\-TYPE\-\_\-SIZE\-\_\-DEC. Bei diesem Makro muss bei vorzeichenbehafteten Datentypen noch eine Eins für das Vorzeichen im String ergänzt werden. Für die Umwandlung in Hexadezimalzahlen kann das Makro JSON\-\_\-STRUCT\-\_\-TYPE\-\_\-SIZE\-\_\-HEX genutzt werden. Da hexadezimale Werte im JSON-Format in Hochkommas eingeschlossen werden müssen, muss hier noch der Wert Zwei ergänzt werden.
 
 Die fünfte Zeile dient zum Ermitteln der benötigten Bytes für ein Kopieren in einen frameworkinternen Buffer. Sofern in der sechsten Zeile kein besonderes Verhalten für das Kopieren definiert wird, muss hier für einen primitiven Datentyp kein vom Standard abweichendes Verhalten vorgesehen werden. Das Kopieren wird dann über das Kopieren der übergeordneten Struktur erledigt. Dementsprechend wird das Makro mit einem leeren Ersetzungstext in die fünfte Zeile aufgenommen.
 
@@ -1075,10 +1106,10 @@ Die sechste Zeile regelt das Kopieren der Daten in einen Buffer. Primitive Daten
 \subsubsection{Framework Nutzung}
 \label{subsubsec:framework_nutzung}
 
-Für das statische Linken muss beim Kompilieren des zu überwachenden Programms der Linker mit der Option -wrap aufgerufen werden und die statische Variante der Wrapper-Bibliothek (libiotrace\_static.a) eingebunden werden. Hierdurch werden alle Aufrufe der zu überwachenden Funktionen auf die Wrapper gelinkt. Zudem werden Aufrufe der überwachten Funktionen aus den Wrappern heraus an die überwachten Funktionen weiter gegeben. Das entwprechend gelinkte Programm kann dann ganz normal gestartet werden. Folgend ein Beispiel für die entsprechende Option des gcc-Compilers für die Funktion close:
+Für das statische Linken muss beim Kompilieren des zu überwachenden Programms der Linker mit der Option -wrap aufgerufen werden und die statische Variante der Wrapper-Bibliothek (libiotrace\-\_\-static.a) eingebunden werden. Hierdurch werden alle Aufrufe der zu überwachenden Funktionen auf die Wrapper gelinkt. Zudem werden Aufrufe der überwachten Funktionen aus den Wrappern heraus an die überwachten Funktionen weiter gegeben. Das entwprechend gelinkte Programm kann dann ganz normal gestartet werden. Folgend ein Beispiel für die entsprechende Option des gcc-Compilers für die Funktion close:
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_CMakeLists.txt}
 
-Für dynamisches Linken kann dagegen das zu überwachende Programm unverändert genutzt werden. Vor dem Starten des Programms muss lediglich die dynamische Variante der Wrapper-Bibliothek (libiotrace\_shared.so) über die Umgebungsvariable LD\_PRELOAD geladen sein. Heirdurch werden die Wrapper vor den überwachten Funktionen geladen. Folgend ein Beispiel für den Firefox als überwachtes Programm. In diesem Beispiel ist noch zusätzlich die Sandbox im Firefox über die Umgebungsvariable MOZ\_\-FAKE\_\-NO\_\-SANDBOX deaktiviert, da die aktivierte Sandbox das Ermitteln einer genauen Systemzeit über entsprechende Kernel-Funktionen verhindert, diese aber für das Loggen durch die Wrapper benötigt werden:
+Für dynamisches Linken kann dagegen das zu überwachende Programm unverändert genutzt werden. Vor dem Starten des Programms muss lediglich die dynamische Variante der Wrapper-Bibliothek (libiotrace\-\_\-shared.so) über die Umgebungsvariable LD\-\_\-PRE\-LOAD geladen sein. Heirdurch werden die Wrapper vor den überwachten Funktionen geladen. Folgend ein Beispiel für den Firefox als überwachtes Programm. In diesem Beispiel ist noch zusätzlich die Sandbox im Firefox über die Umgebungsvariable MOZ\-\_\-FAKE\-\_\-NO\-\_\-SAND\-BOX deaktiviert, da die aktivierte Sandbox das Ermitteln einer genauen Systemzeit über entsprechende Kernel-Funktionen verhindert, diese aber für das Loggen durch die Wrapper benötigt werden:
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_Aufruf.txt}
 
 \chapter{Aktueller Stand}
@@ -1089,7 +1120,7 @@ Für dynamisches Linken kann dagegen das zu überwachende Programm unverändert gen
 
 Alle nötigen Vorarbeiten für die Erstellung der Wrapper sind abgeschlossen \verw{subsec:umsetzung_wrapper}. Die Entwicklungsumgebung und ein CMake-Projekt sind eingerichtet. Zudem sind die grundlegenden architektonischen Entscheidungen getroffen \verw{subsec:architektur_wrapper}. Hierbei wurde auch die geplante Gesamtarchitektur für das ganze System inklusive Analyse und Visualisierung beachtet \verw{subsec:system}.
 
-Durch erste kleine Testprogramme wurde die Funktionsweise der Wrapper erfolgreich getestet. Hierfür wurde ein Programm erstellt, welches in mehreren parallelen Threads die gleichen Funktionen aus der glibc aufruft \verw{sec:testprogramm_openmp}. Dieses Programm wurde dann mit einem dynamischne Wrapper \verw{sec:dynamischer_wrapper_mit_zentraler_buffer} und einem statischen Wrapper \verw{sec:statischer_wrapper} erfolgreich überwacht. Für den dynamischen Wrapper war hierbei ein Laden des Wrappers über die Umgebungsvariable ,,LD\_PRELOAD`` \verw{par:dynamisch_gelinkt} und für den statischen Wrapper ein Linken über Optionen des Linkers \verw{par:statisch_gelinkt} notwendig. Ein Beispiel für das Linken ist im Anhang enthalten \verw{sec:linken_statischer_wrapper}.
+Durch erste kleine Testprogramme wurde die Funktionsweise der Wrapper erfolgreich getestet. Hierfür wurde ein Programm erstellt, welches in mehreren parallelen Threads die gleichen Funktionen aus der glibc aufruft \verw{sec:testprogramm_openmp}. Dieses Programm wurde dann mit einem dynamischne Wrapper \verw{sec:dynamischer_wrapper_mit_zentraler_buffer} und einem statischen Wrapper \verw{sec:statischer_wrapper} erfolgreich überwacht. Für den dynamischen Wrapper war hierbei ein Laden des Wrappers über die Umgebungsvariable ,,LD\-\_\-PRE\-LOAD`` \verw{par:dynamisch_gelinkt} und für den statischen Wrapper ein Linken über Optionen des Linkers \verw{par:statisch_gelinkt} notwendig. Ein Beispiel für das Linken ist im Anhang enthalten \verw{sec:linken_statischer_wrapper}.
 
 Mit der Implementierung der ersten Wrapper wurde bereits begonnen. Diese wird jetzt fortgesetzt. Dabei liegt der Fokus zunächst auf POSIX-IO und MPI-IO.
 

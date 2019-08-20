@@ -9,7 +9,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
-option (WITH_UNIT_TESTS "enable building unit tests" ON) 
+option (WITH_UNIT_TESTS "enable building unit tests" ON)
+option (WITH_AIO "build wrappers for asynchronous Posix-IO" OFF) 
 
 include(CheckIncludeFiles)
 include(WriteCompilerDetectionHeader)

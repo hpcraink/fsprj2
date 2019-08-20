@@ -32,6 +32,9 @@
 /* Define to 1 if system has <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
 
+/* Define to 1 if system has <aio.h> header file. */
+#cmakedefine HAVE_AIO_H 1
+
 /* Define to 1 if system supports open64(). */
 #cmakedefine HAVE_OPEN64 1
 
@@ -250,6 +253,33 @@
 
 /* Define to 1 if system supports fdatasync(). */
 #cmakedefine HAVE_FDATASYNC 1
+
+/* Define to 1 if system supports aio_read64(). */
+#cmakedefine HAVE_AIO_READ64 1
+
+/* Define to 1 if system supports aio_write64(). */
+#cmakedefine HAVE_AIO_WRITE64 1
+
+/* Define to 1 if system supports aio_init(). */
+#cmakedefine HAVE_AIO_INIT 1
+
+/* Define to 1 if system supports lio_listio64(). */
+#cmakedefine HAVE_AIO_LIO_LISTIO64 1
+
+/* Define to 1 if system supports aio_error64(). */
+#cmakedefine HAVE_AIO_ERROR64 1
+
+/* Define to 1 if system supports aio_return64(). */
+#cmakedefine HAVE_AIO_RETURN64 1
+
+/* Define to 1 if system supports aio_fsync64(). */
+#cmakedefine HAVE_AIO_FSYNC64 1
+
+/* Define to 1 if system supports aio_suspend64(). */
+#cmakedefine HAVE_AIO_SUSPEND64 1
+
+/* Define to 1 if system supports aio_cancel64(). */
+#cmakedefine HAVE_AIO_CANCEL64 1
 
 /* Define to 1 if system supports off64_t. */
 #cmakedefine HAVE_OFF64_T 1

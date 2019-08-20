@@ -43,15 +43,15 @@
 #  define __ERROR_FUNCTION(data) if (0 != strerror_r(errno_data.errno_value, tmp_errno_text, MAXERRORTEXT)) { \
                                      snprintf(tmp_errno_text, MAXERRORTEXT, "Unknown error %d", errno_data.errno_value); \
                                  } \
-								 errno_data.errno_text = tmp_errno_text;
+                                 errno_data.errno_text = tmp_errno_text;
 #else
 #  define __ERROR_FUNCTION(data) errno_data.errno_text = strerror_r(errno_data.errno_value, tmp_errno_text, MAXERRORTEXT);
 #endif
 
 #define GET_ERRNO(data) char tmp_errno_text[MAXERRORTEXT]; \
-                        if (ok != data.return_state && 0 != errno_data.errno_value) { \
-                        	ERROR_FUNCTION(data) \
-							data.return_state_detail = &errno_data; \
+                        if (error == data.return_state && 0 != errno_data.errno_value) { \
+                            ERROR_FUNCTION(data) \
+                            data.return_state_detail = &errno_data; \
                         } else { \
                             data.return_state_detail = NULL; \
                         }
@@ -68,13 +68,14 @@
 #define WRAP_START(data) struct errno_detail errno_data;\
                          errno_data.errno_value = errno;
 #define WRAP_END(data) if(data.file_type == NULL || \
-                          data.void_p_enum_file_type == file_memory || \
-                          (data.void_p_enum_file_type == file_descriptor \
+                          data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
+                          data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
+                          (data.void_p_enum_file_type == void_p_enum_file_type_file_descriptor \
                            && STDIN_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
                            && STDOUT_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
                            && STDERR_FILENO != ((struct file_descriptor *)data.file_type)->descriptor) \
                           || \
-                          (data.void_p_enum_file_type == file_stream \
+                          (data.void_p_enum_file_type == void_p_enum_file_type_file_stream \
                            && stdin != ((struct file_stream *)data.file_type)->stream \
                            && stdout != ((struct file_stream *)data.file_type)->stream \
                            && stderr != ((struct file_stream *)data.file_type)->stream)) { \

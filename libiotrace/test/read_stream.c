@@ -1,3 +1,5 @@
+#include "libiotrace_config.h"
+
 #include <stdio.h>
 #include <stdio_ext.h>
 #include <stdlib.h>
@@ -48,8 +50,9 @@ int main(void) {
 	free(tmpLine);
 
 	fclose(file);
-
+#ifdef HAVE_FCLOSEALL
 	fcloseall();
+#endif
 
 	file = fopen("/etc/passwd", "w");
 	//assert(NULL != file);

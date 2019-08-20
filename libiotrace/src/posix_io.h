@@ -10,7 +10,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
-#include <aio.h>
 #include "wrapper_defines.h"
 
 /* Function pointers for glibc functions */
@@ -123,7 +122,6 @@ REAL_TYPE int REAL(fsync)(int fd) REAL_INIT;
 #ifdef HAVE_FDATASYNC
 REAL_TYPE int REAL(fdatasync)(int fd) REAL_INIT;
 #endif
-//REAL_TYPE int REAL(aio_read)(struct aiocb *aiocbp) REAL_INIT;
 //ToDo: pselect
 //ToDo: poll
 //ToDo: int posix_fadvise(int fd, off_t offset, off_t len, int advice);
@@ -133,11 +131,11 @@ REAL_TYPE int REAL(fdatasync)(int fd) REAL_INIT;
 //ToDo: int sync_file_range(int fd, off64_t offset, off64_t nbytes, unsigned int flags);
 //ToDo: int unlink(const char *pathname); and int unlinkat(int dirfd, const char *pathname, int flags); ????
 //ToDo: struct dirent *readdir(DIR *dirp); ???? Dir-functions?
-//ToDo: int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
 //ToDo: int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
 //ToDo: int fallocate(int fd, int mode, off_t offset, off_t len); and posix_fallocate
 //ToDo: ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 //ToDo: ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out, size_t len, unsigned int flags);
+//ToDo: fstat
 
 /* POSIX and GNU extension stream */
 REAL_TYPE FILE * REAL(fopen)(const char *filename, const char *opentype) REAL_INIT;

@@ -9,6 +9,7 @@ check_include_files("sys/stat.h" HAVE_SYS_STAT_H)
 check_include_files("sys/syscall.h" HAVE_SYS_SYSCALL_H)
 check_include_files("unistd.h" HAVE_UNISTD_H)
 check_include_files("pthread.h" HAVE_PTHREAD_H)
+check_include_files("aio.h" HAVE_AIO_H)
 
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64)
 check_symbol_exists(open64 "fcntl.h" HAVE_OPEN64)
@@ -84,6 +85,18 @@ check_symbol_exists(sync "unistd.h" HAVE_SYNC)
 check_symbol_exists(syncfs "unistd.h" HAVE_SYNCFS)
 check_symbol_exists(fsync "unistd.h" HAVE_FSYNC)
 check_symbol_exists(fdatasync "unistd.h" HAVE_FDATASYNC)
+
+list(APPEND CMAKE_REQUIRED_LIBRARIES "-lrt")
+check_symbol_exists(aio_read64 "aio.h" HAVE_AIO_READ64)
+check_symbol_exists(aio_write64 "aio.h" HAVE_AIO_WRITE64)
+check_symbol_exists(aio_init "aio.h" HAVE_AIO_INIT)
+check_symbol_exists(lio_listio64 "aio.h" HAVE_AIO_LIO_LISTIO64)
+check_symbol_exists(aio_error64 "aio.h" HAVE_AIO_ERROR64)
+check_symbol_exists(aio_return64 "aio.h" HAVE_AIO_RETURN64)
+check_symbol_exists(aio_fsync64 "aio.h" HAVE_AIO_FSYNC64)
+check_symbol_exists(aio_suspend64 "aio.h" HAVE_AIO_SUSPEND64)
+check_symbol_exists(aio_cancel64 "aio.h" HAVE_AIO_CANCEL64)
+
 #ToDo: right place to search for off64_t?
 check_symbol_exists(off64_t "stdio.h,sys/types.h" HAVE_OFF64_T)
 check_symbol_exists(O_CLOEXEC "fcntl.h" HAVE_O_CLOEXEC)
@@ -137,6 +150,15 @@ set(SOURCE
     os.c
     posix_io.c
 )
+
+#compile using cmake -DWITH_AIO for asynchronous Posix-IO
+if(WITH_AIO)
+    if(HAVE_AIO_H)
+        list(APPEND SOURCE posix_aio.c)
+    else()
+        message(SEND_ERROR "Missing aio.h for asynchronous Posix-IO.")
+    endif()
+endif()
 
 add_library(iotrace_shared SHARED ${SOURCE})
 

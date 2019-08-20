@@ -21,6 +21,10 @@ JSON_STRUCT_START(file_memory)
   JSON_STRUCT_SIZE_T(length)
 JSON_STRUCT_END
 
+JSON_STRUCT_START(file_async)
+  JSON_STRUCT_VOID_P_CONST(async)
+JSON_STRUCT_END
+
 JSON_STRUCT_START(errno_detail)
   JSON_STRUCT_INT(errno_value)
   JSON_STRUCT_CSTRING_P(errno_text, MAXERRORTEXT)
@@ -273,6 +277,38 @@ JSON_STRUCT_ENUM_START(posix_madvice_advice)
   JSON_STRUCT_ENUM_ELEMENT(unknown_posix_madvice_advice)
 JSON_STRUCT_ENUM_END
 
+JSON_STRUCT_ENUM_START(listio_opcode)
+  JSON_STRUCT_ENUM_ELEMENT(lio_read)  //LIO_READ
+  JSON_STRUCT_ENUM_ELEMENT(lio_write) //LIO_WRITE
+  JSON_STRUCT_ENUM_ELEMENT(unknown_listio_opcode)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_ENUM_START(listio_mode)
+  JSON_STRUCT_ENUM_ELEMENT(lio_wait)   //LIO_WAIT
+  JSON_STRUCT_ENUM_ELEMENT(lio_nowait) //LIO_NOWAIT
+  JSON_STRUCT_ENUM_ELEMENT(unknown_listio_mode)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_ENUM_START(async_state)
+  JSON_STRUCT_ENUM_ELEMENT(inprogress) //EINPROGRESS
+  JSON_STRUCT_ENUM_ELEMENT(canceled)   //ECANCELED
+  JSON_STRUCT_ENUM_ELEMENT(completed)  //0
+  JSON_STRUCT_ENUM_ELEMENT(failed)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_ENUM_START(async_sync_mode)
+  JSON_STRUCT_ENUM_ELEMENT(like_fdatasync) //O_DSYNC
+  JSON_STRUCT_ENUM_ELEMENT(like_fsync)     //O_SYNC
+  JSON_STRUCT_ENUM_ELEMENT(unknown_async_sync_mode)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_ENUM_START(async_cancel_state)
+  JSON_STRUCT_ENUM_ELEMENT(is_canceled)     //AIO_CANCELED
+  JSON_STRUCT_ENUM_ELEMENT(not_canceled) //AIO_NOTCANCELED
+  JSON_STRUCT_ENUM_ELEMENT(allready_done)     //AIO_ALLDONE
+  JSON_STRUCT_ENUM_ELEMENT(unknown_async_cancel_state)
+JSON_STRUCT_ENUM_END
+
 JSON_STRUCT_ENUM_START(boolean)
   JSON_STRUCT_ENUM_ELEMENT(true)
   JSON_STRUCT_ENUM_ELEMENT(false)
@@ -282,6 +318,12 @@ JSON_STRUCT_ENUM_END
 JSON_STRUCT_START(json_timeval)
   JSON_STRUCT_LONG_INT(sec)
   JSON_STRUCT_LONG_INT(micro_sec)
+JSON_STRUCT_END
+
+/* struct for timespec */
+JSON_STRUCT_START(json_timespec)
+  JSON_STRUCT_LONG_INT(sec)
+  JSON_STRUCT_LONG_INT(nano_sec)
 JSON_STRUCT_END
 
 /* struct for file open */
@@ -430,11 +472,13 @@ JSON_STRUCT_START(memory_sync_function)
 JSON_STRUCT_END
 
 /* struct for memory remap */
+#ifdef HAVE_MREMAP
 JSON_STRUCT_START(memory_remap_function)
   JSON_STRUCT_VOID_P(new_address)
   JSON_STRUCT_SIZE_T(new_length)
   JSON_STRUCT_ARRAY_BITFIELD(memory_remap_flags, remap_flags)
 JSON_STRUCT_END
+#endif
 
 /* struct for memory madvise */
 JSON_STRUCT_START(memory_madvise_function)
@@ -459,8 +503,61 @@ JSON_STRUCT_END
 
 /* struct for file asynchronous read */
 JSON_STRUCT_START(asynchronous_read_function)
+  JSON_STRUCT_VOID_P(async)
   JSON_STRUCT_SIZE_T(bytes_to_read)
   JSON_STRUCT_OFF_T(position)
+  JSON_STRUCT_INT(lower_prio)
+JSON_STRUCT_END
+
+/* struct for file asynchronous write */
+JSON_STRUCT_START(asynchronous_write_function)
+  JSON_STRUCT_VOID_P(async)
+  JSON_STRUCT_SIZE_T(bytes_to_write)
+  JSON_STRUCT_OFF_T(position)
+  JSON_STRUCT_INT(lower_prio)
+JSON_STRUCT_END
+
+/* struct for file asynchronous listio */
+JSON_STRUCT_START(asynchronous_listio_function)
+  JSON_STRUCT_ENUM(listio_mode, mode)
+  JSON_STRUCT_ENUM(listio_opcode, opcode)
+  JSON_STRUCT_VOID_P_START(request_data)
+    JSON_STRUCT_VOID_P_ELEMENT(request_data, asynchronous_read_function)
+    JSON_STRUCT_VOID_P_ELEMENT(request_data, asynchronous_write_function)
+  JSON_STRUCT_VOID_P_END(request_data)
+JSON_STRUCT_END
+
+/* struct for file asynchronous error */
+JSON_STRUCT_START(asynchronous_error_function)
+  JSON_STRUCT_ENUM(async_state, state)
+JSON_STRUCT_END
+
+/* struct for file asynchronous return */
+JSON_STRUCT_START(asynchronous_return_function)
+  JSON_STRUCT_SSIZE_T(return_value)
+JSON_STRUCT_END
+
+/* struct for file asynchronous sync */
+JSON_STRUCT_START(asynchronous_sync_function)
+  JSON_STRUCT_ENUM(async_sync_mode, sync_mode)
+JSON_STRUCT_END
+
+/* struct for file asynchronous suspend */
+JSON_STRUCT_START(asynchronous_suspend_function)
+  JSON_STRUCT_STRUCT(json_timespec, timeout)
+JSON_STRUCT_END
+
+/* struct for file asynchronous cancel */
+JSON_STRUCT_START(asynchronous_cancel_function)
+  JSON_STRUCT_VOID_P_CONST(async)
+  JSON_STRUCT_ENUM(async_cancel_state, state)
+JSON_STRUCT_END
+
+/* struct for file asynchronous init */
+JSON_STRUCT_START(asynchronous_init_function)
+  JSON_STRUCT_INT(max_threads)
+  JSON_STRUCT_INT(max_simultaneous_requests)
+  JSON_STRUCT_INT(seconds_idle_before_terminate)
 JSON_STRUCT_END
 
 /* basic struct for every call */
@@ -478,8 +575,10 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_descriptor)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_memory)
+    JSON_STRUCT_VOID_P_ELEMENT(file_type, file_async)
   JSON_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position is changed (e.g. copy_file_range don't change file position)
+  // or corrupted (e.g. async functions)
   JSON_STRUCT_VOID_P_START(function_data)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, open_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, openat_function)
@@ -503,11 +602,21 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, bufsize_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_map_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_sync_function)
+#ifdef HAVE_MREMAP
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_remap_function)
+#endif
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_madvise_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, select_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_posix_madvise_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_read_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_write_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_listio_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_error_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_return_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_sync_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_suspend_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_cancel_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_init_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

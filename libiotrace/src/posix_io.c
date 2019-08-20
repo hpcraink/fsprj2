@@ -770,10 +770,10 @@ ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, pread64, filedes, buffer, size, offset)
 
-	if (ret == -1) {
+	if (-1 == ret) {
 		data.return_state = error;
 		pread_data.read_bytes = 0;
-	} else if (ret == 0 && size != 0) {
+	} else if (0 == ret && 0 != size) {
 		data.return_state = eof;
 		pread_data.read_bytes = 0;
 	} else {
@@ -1743,35 +1743,6 @@ int WRAP(fdatasync)(int fd) {
 	return ret;
 }
 #endif
-
-//int WRAP(aio_read)(struct aiocb *aiocbp) {
-//	int ret;
-//	struct basic data;
-//	struct asynchronous_read_function asynchronous_read_function_data;
-//	struct file_descriptor file_descriptor_data;
-//	WRAP_START(data)
-//
-//	get_basic(&data);
-//	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_read_function,
-//			asynchronous_read_function_data)
-//	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-//	file_descriptor_data.descriptor = aiocbp->aio_fildes;
-//	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-//			file_descriptor_data)
-//	asynchronous_read_function_data.bytes_to_read = aiocbp->aio_nbytes;
-//	asynchronous_read_function_data.position = aiocbp->aio_offset;
-//
-//	CALL_REAL_FUNCTION_RET(data, ret, aio_read, aiocbp)
-//
-//	if (-1 == file) {
-//		data.return_state = error;
-//	} else {
-//		data.return_state = ok;
-//	}
-//
-//	WRAP_END(data)
-//	return ret;
-//}
 
 FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 	FILE * file;

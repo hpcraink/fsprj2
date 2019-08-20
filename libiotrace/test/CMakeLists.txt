@@ -43,6 +43,22 @@ set(LINK_OPTIONS_STATIC
     "-Wl,-wrap=fsync"
     "-Wl,-wrap=fdatasync"
     "-Wl,-wrap=aio_read"
+    "-Wl,-wrap=aio_read64"
+    "-Wl,-wrap=aio_write"
+    "-Wl,-wrap=aio_write64"
+    "-Wl,-wrap=lio_listio"
+    "-Wl,-wrap=lio_listio64"
+    "-Wl,-wrap=aio_error"
+    "-Wl,-wrap=aio_error64"
+    "-Wl,-wrap=aio_return"
+    "-Wl,-wrap=aio_return64"
+    "-Wl,-wrap=aio_fsync"
+    "-Wl,-wrap=aio_fsync64"
+    "-Wl,-wrap=aio_suspend"
+    "-Wl,-wrap=aio_suspend64"
+    "-Wl,-wrap=aio_cancel"
+    "-Wl,-wrap=aio_cancel64"
+    "-Wl,-wrap=aio_init"
     "-Wl,-wrap=fopen"
     "-Wl,-wrap=fopen64"
     "-Wl,-wrap=freopen"
@@ -134,10 +150,12 @@ set(LINK_OPTIONS_STATIC
 )
 
 set(LINK_OPTIONS
-    # needed for aio-functions
-    "-lrt"
     "-lpthread"
 )
+
+if(WITH_AIO)
+    list(APPEND LINK_OPTIONS "-lrt")
+endif()
 
 ##########################################################################################################
 
@@ -155,6 +173,22 @@ add_executable(read_byte_static
 )
 target_link_libraries(read_byte_static ${LINK_OPTIONS_STATIC})
 target_link_libraries(read_byte_static ${LINK_OPTIONS})
+
+##########################################################################################################
+
+# test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte
+add_executable(read_async_byte_shared read_async_byte.c)
+target_link_libraries(read_async_byte_shared ${LINK_OPTIONS})
+
+add_library(read_async_byte_object OBJECT read_async_byte.c)
+
+# test with: ./read_async_byte_static
+add_executable(read_async_byte_static
+    $<TARGET_OBJECTS:read_async_byte_object>
+    $<TARGET_OBJECTS:iotrace_object>
+)
+target_link_libraries(read_async_byte_static ${LINK_OPTIONS_STATIC})
+target_link_libraries(read_async_byte_static ${LINK_OPTIONS})
 
 ##########################################################################################################
 

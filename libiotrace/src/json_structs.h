@@ -25,6 +25,14 @@ JSON_STRUCT_START(file_async)
   JSON_STRUCT_VOID_P_CONST(async)
 JSON_STRUCT_END
 
+JSON_STRUCT_START(file_mpi)
+  JSON_STRUCT_VOID_P_CONST(mpi_file)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(shared_library)
+  JSON_STRUCT_VOID_P_CONST(dl_handle)
+JSON_STRUCT_END
+
 JSON_STRUCT_START(errno_detail)
   JSON_STRUCT_INT(errno_value)
   JSON_STRUCT_CSTRING_P(errno_text, MAXERRORTEXT)
@@ -72,11 +80,15 @@ JSON_STRUCT_ARRAY_BITFIELD_START(status_flags)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(largefile)
 #endif
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(append)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(initial_append)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(async)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(dsync)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(nonblock)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(ndelay)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(sync)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(delete_on_close)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(unique_open)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(sequential)
 JSON_STRUCT_ARRAY_BITFIELD_END
 
 JSON_STRUCT_ARRAY_BITFIELD_START(mode_flags)
@@ -170,6 +182,16 @@ JSON_STRUCT_ARRAY_BITFIELD_START(memory_remap_flags)
   JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(fixed)   //MREMAP_FIXED
 JSON_STRUCT_ARRAY_BITFIELD_END
 #endif
+
+JSON_STRUCT_ARRAY_BITFIELD_START(dlopen_flags)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(lazy_binding) //RTLD_LAZY
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(bind_now)     //RTLD_NOW
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(global)       //RTLD_GLOBAL
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(local)        //RTLD_LOCAL
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(no_delete)    //RTLD_NODELETE
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(no_load)      //RTLD_NOLOAD
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(deep_bind)    //RTLD_DEEPBIND
+JSON_STRUCT_ARRAY_BITFIELD_END
 
 JSON_STRUCT_ENUM_START(open_relative_to)
   JSON_STRUCT_ENUM_ELEMENT(file)
@@ -560,6 +582,40 @@ JSON_STRUCT_START(asynchronous_init_function)
   JSON_STRUCT_INT(seconds_idle_before_terminate)
 JSON_STRUCT_END
 
+/* struct for file dlopen */
+JSON_STRUCT_START(dlopen_function)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_ARRAY_BITFIELD(dlopen_flags, dl_flags)
+JSON_STRUCT_END
+
+#ifdef HAVE_DLMOPEN
+JSON_STRUCT_START(so_namespace_id)
+  JSON_STRUCT_LMID_T(id)
+JSON_STRUCT_END
+#endif
+
+JSON_STRUCT_ENUM_START(so_namespace_mode_enum)
+  JSON_STRUCT_ENUM_ELEMENT(initial_namespace) //LM_ID_BASE
+  JSON_STRUCT_ENUM_ELEMENT(new_namespace)     //LM_ID_NEWLM
+  JSON_STRUCT_ENUM_ELEMENT(unknown_so_namespace_mode)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_START(so_namespace_mode)
+  JSON_STRUCT_ENUM(so_namespace_mode_enum, mode)
+JSON_STRUCT_END
+
+/* struct for file dlmopen */
+#ifdef HAVE_DLMOPEN
+JSON_STRUCT_START(dlmopen_function)
+  JSON_STRUCT_VOID_P_START(so_namespace)
+    JSON_STRUCT_VOID_P_ELEMENT(so_namespace, so_namespace_id)
+    JSON_STRUCT_VOID_P_ELEMENT(so_namespace, so_namespace_mode)
+  JSON_STRUCT_VOID_P_END(so_namespace)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_ARRAY_BITFIELD(dlopen_flags, dl_flags)
+JSON_STRUCT_END
+#endif
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -576,6 +632,8 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_descriptor)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_memory)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_async)
+    JSON_STRUCT_VOID_P_ELEMENT(file_type, file_mpi)
+    JSON_STRUCT_VOID_P_ELEMENT(file_type, shared_library)
   JSON_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position is changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)
@@ -617,6 +675,10 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_suspend_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_cancel_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_init_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, dlopen_function)
+#ifdef HAVE_DLMOPEN
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, dlmopen_function)
+#endif
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

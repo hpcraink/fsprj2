@@ -44,9 +44,16 @@ int main(void) {
 	fgetc(file);
 	c = getc(file);
 	ungetc(c, file);
+
 	tmpLine = NULL;
 	tmpSize = 0;
 	getline(&tmpLine, &tmpSize, file);
+	free(tmpLine);
+
+	tmpLine = (char*) malloc(50);
+	assert (NULL != tmpLine);
+	tmpSize = 50;
+	getdelim(&tmpLine, &tmpSize, '\n', file);
 	free(tmpLine);
 
 	fclose(file);

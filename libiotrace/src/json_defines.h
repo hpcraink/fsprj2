@@ -82,6 +82,9 @@
 #undef JSON_STRUCT_VOID_P
 #undef JSON_STRUCT_VOID_P_CONST
 #undef JSON_STRUCT_FD_SET_P
+#ifdef HAVE_DLMOPEN
+#  undef JSON_STRUCT_LMID_T
+#endif
 /* insert new line for new data-type here */
 
 #if JSON_STRUCT == JSON_STRUCT_DATA_TYPE
@@ -124,6 +127,9 @@
 #  define JSON_STRUCT_VOID_P(name) void *name;
 #  define JSON_STRUCT_VOID_P_CONST(name) const void *name;
 #  define JSON_STRUCT_FD_SET_P(name) fd_set *name;
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name) Lmid_t name;
+#  endif
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_PRINT
@@ -362,6 +368,9 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                        } \
                                        JSON_STRUCT_WRITE("],") \
                                      }
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name) JSON_STRUCT_ELEMENT(name, %ld, json_struct_data->name)
+#  endif
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_BYTES_COUNT
@@ -461,6 +470,10 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                                      * FD_SETSIZE) \
                                                                     - 1  /* for last comma */ \
                                                                     + 2) /* for brackets [] */
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(Lmid_t) \
+                                                                    + 1) /* for sign (-) */
+#  endif
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_SIZEOF
@@ -512,6 +525,9 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_FD_SET_P(name) if (NULL != json_struct_data->name) { \
                                        json_struct_size += sizeof(fd_set); \
                                      }
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name)
+#  endif
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_COPY
@@ -591,6 +607,9 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
                                        json_struct_copy->name = (fd_set *)json_struct_buf; \
                                        json_struct_buf += sizeof(fd_set); \
                                      }
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name)
+#  endif
 /* insert new line for new data-type here */
 
 #else

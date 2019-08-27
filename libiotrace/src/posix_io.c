@@ -247,6 +247,10 @@ void get_status_flags(const int flags, struct status_flags *sf) {
 	sf->nonblock = flags & O_NONBLOCK ? 1 : 0;
 	sf->ndelay = flags & O_NDELAY ? 1 : 0;
 	sf->sync = flags & O_SYNC ? 1 : 0;
+	sf->initial_append = 0;
+	sf->delete_on_close = 0;
+	sf->unique_open = 0;
+	sf->sequential = 0;
 }
 
 void get_rwf_flags(const int flags, struct rwf_flags *rf) {
@@ -371,6 +375,9 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 	sf->nonblock = 0;
 	sf->ndelay = 0;
 	sf->sync = 0;
+	sf->delete_on_close = 0;
+	sf->unique_open = 0;
+	sf->sequential = 0;
 
 	// ToDo: c
 	// ToDo: m

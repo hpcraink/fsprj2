@@ -26,10 +26,9 @@
 /* Buffer */
 #define BUFFER_SIZE 1048576 // 1 MB
 static char data_buffer[BUFFER_SIZE];
-static char* endpos;
-static char* pos;
-static int count_basic;
-
+static char* endpos = data_buffer + BUFFER_SIZE;
+static char* pos = data_buffer;
+static int count_basic = 0;
 
 // Todo: multiple definition of host_name_max in libiotrace_config.h and here?
 #if !defined (HAVE_HOST_NAME_MAX)
@@ -46,24 +45,26 @@ static char hostname[HOST_NAME_MAX];
 // once per thread
 static __thread pid_t tid = 0;
 
-// ToDo: use macro ATTRIBUTE_CONSTRUCTOR
-static void init()__attribute__((constructor));
-// ToDo: test for destructor in cmake
+// ToDo: test for destructor in cmake and macro ATTRIBUTE_CONSTRUCTOR
 static void cleanup()__attribute__((destructor));
 
-static void init() {
-	endpos = data_buffer + BUFFER_SIZE;
-	pos = data_buffer;
-	count_basic = 0;
+void init() {
+	if (!init_done) {
+		//endpos = data_buffer + BUFFER_SIZE;
+		//pos = data_buffer;
+		//count_basic = 0;
 
 #if !defined(HAVE_HOST_NAME_MAX)
-        host_name_max = sysconf(POSIX_HOST_NAME_MAX);
+		host_name_max = sysconf(POSIX_HOST_NAME_MAX);
 #endif
 
-	pid = getpid();
-	gethostname(hostname, HOST_NAME_MAX);
+		pid = getpid();
+		gethostname(hostname, HOST_NAME_MAX);
 
-	pthread_mutex_init(&lock, NULL);
+		pthread_mutex_init(&lock, NULL);
+	}
+
+	init_done = 1;
 }
 
 void get_basic(struct basic *data) {
@@ -71,6 +72,7 @@ void get_basic(struct basic *data) {
 		// ToDo: caching pid can be source of bugs, see man getpid()
 		tid = iotrace_gettid();
 	}
+
 	// ToDo: are namespaces relevant (same pid for different processes in different namespaces)?
 	data->process_id = pid;
 	data->thread_id = tid;

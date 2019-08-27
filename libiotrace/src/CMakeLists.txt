@@ -12,6 +12,7 @@ check_include_files("pthread.h" HAVE_PTHREAD_H)
 check_include_files("aio.h" HAVE_AIO_H)
 
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64)
+
 check_symbol_exists(open64 "fcntl.h" HAVE_OPEN64)
 check_symbol_exists(openat "fcntl.h" HAVE_OPENAT)
 check_symbol_exists(creat64 "fcntl.h" HAVE_CREAT64)
@@ -97,6 +98,9 @@ check_symbol_exists(aio_fsync64 "aio.h" HAVE_AIO_FSYNC64)
 check_symbol_exists(aio_suspend64 "aio.h" HAVE_AIO_SUSPEND64)
 check_symbol_exists(aio_cancel64 "aio.h" HAVE_AIO_CANCEL64)
 
+list(APPEND CMAKE_REQUIRED_LIBRARIES "-ldl")
+check_symbol_exists(dlmopen "dlfcn.h" HAVE_DLMOPEN)
+
 #ToDo: right place to search for off64_t?
 check_symbol_exists(off64_t "stdio.h,sys/types.h" HAVE_OFF64_T)
 check_symbol_exists(O_CLOEXEC "fcntl.h" HAVE_O_CLOEXEC)
@@ -148,16 +152,30 @@ set(SOURCE
     event.c
     init.c
     os.c
-    posix_io.c
 )
 
-#compile using cmake -DWITH_AIO for asynchronous Posix-IO
-if(WITH_AIO)
+#compile using cmake -DWITH_POSIX_IO for Posix-IO
+if(WITH_POSIX_IO)
+    list(APPEND SOURCE posix_io.c)
+endif()
+
+#compile using cmake -DWITH_POSIX_AIO for asynchronous Posix-IO
+if(WITH_POSIX_AIO)
     if(HAVE_AIO_H)
         list(APPEND SOURCE posix_aio.c)
     else()
         message(SEND_ERROR "Missing aio.h for asynchronous Posix-IO.")
     endif()
+endif()
+
+#compile using cmake -DWITH_MPI_IO for MPI-IO
+if(WITH_MPI_IO)
+    list(APPEND SOURCE mpi_io.c)
+endif()
+
+#compile using cmake -DWITH_DL_IO for dlopen()
+if(WITH_DL_IO)
+    list(APPEND SOURCE dl_io.c)
 endif()
 
 add_library(iotrace_shared SHARED ${SOURCE})

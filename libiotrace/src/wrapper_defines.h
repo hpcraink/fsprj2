@@ -7,8 +7,10 @@
 
 #ifdef _GNU_SOURCE
 #  define DLSYM(function_macro) __DLSYM(function_macro)
-#  define __DLSYM(function) do { __real_##function = dlsym(RTLD_NEXT, #function); \
-                                 assert(NULL != __real_##function); \
+#  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
+                                 __real_##function = dlsym(RTLD_NEXT, #function); \
+                                 char * dlsym_dlerror_##function = dlerror(); \
+                                 assert(NULL == dlsym_dlerror_##function); \
                                } while (0)
 #else
 #  error "Function dlsym without macro _GNU_SOURCE not usable!"
@@ -55,21 +57,46 @@
                         } else { \
                             data.return_state_detail = NULL; \
                         }
-#define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
-                                                                  errno = errno_data.errno_value; \
-                                                                  return_value = CALL_REAL(function)(__VA_ARGS__); \
-                                                                  errno_data.errno_value = errno; \
-                                                                  data.time_end = gettime();
-#define CALL_REAL_FUNCTION(data, function, ...) data.time_start = gettime(); \
-                                                errno = errno_data.errno_value; \
-                                                CALL_REAL(function)(__VA_ARGS__); \
-                                                errno_data.errno_value = errno; \
-                                                data.time_end = gettime();
-#define WRAP_START(data) struct errno_detail errno_data;\
-                         errno_data.errno_value = errno;
+#ifdef IO_LIB_STATIC
+#  define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET(data, return_value, function, __VA_ARGS__)
+#  define CALL_REAL_FUNCTION(data, function, ...) __CALL_REAL_FUNCTION(data, function, __VA_ARGS__)
+#else
+#  define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) if (!DLSYM_INIT_DONE) { \
+                                                                        DLSYM_INIT_FUNCTION(); \
+                                                                    } \
+                                                                    __CALL_REAL_FUNCTION_RET(data, return_value, function, __VA_ARGS__)
+#  define CALL_REAL_FUNCTION(data, function, ...) if (!DLSYM_INIT_DONE) { \
+                                                      DLSYM_INIT_FUNCTION(); \
+                                                  } \
+                                                  __CALL_REAL_FUNCTION(data, function, __VA_ARGS__)
+#endif
+#define __CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
+                                                                    errno = errno_data.errno_value; \
+                                                                    return_value = CALL_REAL(function)(__VA_ARGS__); \
+                                                                    errno_data.errno_value = errno; \
+                                                                    data.time_end = gettime();
+#define __CALL_REAL_FUNCTION(data, function, ...) data.time_start = gettime(); \
+                                                  errno = errno_data.errno_value; \
+                                                  CALL_REAL(function)(__VA_ARGS__); \
+                                                  errno_data.errno_value = errno; \
+                                                  data.time_end = gettime();
+#define CALL_REAL_MPI_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
+                                                                      errno = errno_data.errno_value; \
+                                                                      return_value = P##function(__VA_ARGS__); \
+                                                                      errno_data.errno_value = errno; \
+                                                                      data.time_end = gettime();
+#define WRAP_START(data) struct errno_detail errno_data; \
+                         errno_data.errno_value = errno; \
+                         if (!init_done) { \
+                             init(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                     /* init() must be called */ \
+                         }
+//ToDo: check for which file_type should not be written instead of which should be written
 #define WRAP_END(data) if(data.file_type == NULL || \
                           data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
                           data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
+                          data.void_p_enum_file_type == void_p_enum_file_type_file_mpi || \
+                          data.void_p_enum_file_type == void_p_enum_file_type_shared_library || \
                           (data.void_p_enum_file_type == void_p_enum_file_type_file_descriptor \
                            && STDIN_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
                            && STDOUT_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \

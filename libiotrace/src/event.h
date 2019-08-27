@@ -11,6 +11,10 @@
 #include "json_include_struct.h"
 
 
+static char init_done = 0;
+// ToDo: use macro ATTRIBUTE_CONSTRUCTOR
+void init()__attribute__((constructor));
+
 void get_basic(struct basic *data);
 
 // ToDo: as macro with return value?

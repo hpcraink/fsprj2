@@ -283,20 +283,27 @@ REAL_TYPE size_t REAL(fwrite)(const void *data, size_t size, size_t count, FILE 
 #ifdef HAVE_FWRITE_UNLOCKED
 REAL_TYPE size_t REAL(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #endif
-REAL_TYPE int REAL(fprintf)(FILE *stream, const char *template, ...) REAL_INIT;
+REAL_TYPE int REAL(fprintf)
+(FILE *stream, const char *template, ...) REAL_INIT;
 #ifdef HAVE_FWPRINTF
-REAL_TYPE int REAL(fwprintf)(FILE *stream, const wchar_t *template, ...) REAL_INIT;
+REAL_TYPE int REAL(fwprintf)
+(FILE *stream, const wchar_t *template, ...) REAL_INIT;
 #endif
-REAL_TYPE int REAL(vfprintf)(FILE *stream, const char *template, va_list ap) REAL_INIT;
+REAL_TYPE int REAL(vfprintf)
+(FILE *stream, const char *template, va_list ap) REAL_INIT;
 #ifdef HAVE_VFWPRINTF
-REAL_TYPE int REAL(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap) REAL_INIT;
+REAL_TYPE int REAL(vfwprintf)
+(FILE *stream, const wchar_t *template, va_list ap) REAL_INIT;
 #endif
-REAL_TYPE int REAL(fscanf)(FILE *stream, const char *template, ...) REAL_INIT;
+REAL_TYPE int REAL(fscanf)
+(FILE *stream, const char *template, ...) REAL_INIT;
 #ifdef HAVE_FWSCANF
-REAL_TYPE int REAL(fwscanf)(FILE *stream, const wchar_t *template, ...) REAL_INIT;
+REAL_TYPE int REAL(fwscanf)
+(FILE *stream, const wchar_t *template, ...) REAL_INIT;
 #endif
 #ifdef HAVE_VFSCANF
-REAL_TYPE int REAL(vfscanf)(FILE *stream, const char *template, va_list ap) REAL_INIT;
+REAL_TYPE int REAL(vfscanf)
+(FILE *stream, const char *template, va_list ap) REAL_INIT;
 #endif
 #ifdef HAVE_VFWSCANF
 REAL_TYPE int REAL(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) REAL_INIT;
@@ -364,282 +371,291 @@ REAL_TYPE size_t REAL(__fbufsize)(FILE *stream) REAL_INIT;
 REAL_TYPE size_t REAL(__fpending)(FILE *stream) REAL_INIT;
 
 #ifndef IO_LIB_STATIC
-static void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
+#undef DLSYM_INIT_DONE
+#undef DLSYM_INIT_FUNCTION
+#define DLSYM_INIT_DONE posix_io_init_done
+#define DLSYM_INIT_FUNCTION posix_io_init
+static char DLSYM_INIT_DONE = 0;
+static void DLSYM_INIT_FUNCTION() ATTRIBUTE_CONSTRUCTOR;
 /* Initialize pointers for glibc functions.
  * This has to be in the header file because other files use the "__real_" functions
  * instead of the normal posix functions (e.g. see event.c or json_defines.h). */
-static void posix_io_init() {
-	DLSYM(open);
+static void DLSYM_INIT_FUNCTION() {
+	if (!DLSYM_INIT_DONE) {
+
+		DLSYM(open);
 #ifdef HAVE_OPEN64
-	DLSYM(open64);
+		DLSYM(open64);
 #endif
 #ifdef HAVE_OPENAT
-	DLSYM(openat);
+		DLSYM(openat);
 #endif
-	DLSYM(creat);
+		DLSYM(creat);
 #ifdef HAVE_CREAT64
-	DLSYM(creat64);
+		DLSYM(creat64);
 #endif
-	DLSYM(close);
-	DLSYM(read);
+		DLSYM(close);
+		DLSYM(read);
 #ifdef HAVE_PREAD
-	DLSYM(pread);
+		DLSYM(pread);
 #endif
 #ifdef HAVE_PREAD64
-	DLSYM(pread64);
+		DLSYM(pread64);
 #endif
-	DLSYM(write);
+		DLSYM(write);
 #ifdef HAVE_PWRITE
-	DLSYM(pwrite);
+		DLSYM(pwrite);
 #endif
 #ifdef HAVE_PWRITE64
-	DLSYM(pwrite64);
+		DLSYM(pwrite64);
 #endif
-	DLSYM(lseek);
+		DLSYM(lseek);
 #ifdef HAVE_LSEEK64
-	DLSYM(lseek64);
+		DLSYM(lseek64);
 #endif
 #ifdef HAVE_READV
-	DLSYM(readv);
+		DLSYM(readv);
 #endif
 #ifdef HAVE_WRITEV
-	DLSYM(writev);
+		DLSYM(writev);
 #endif
 #ifdef HAVE_PREADV
-	DLSYM(preadv);
+		DLSYM(preadv);
 #endif
 #ifdef HAVE_PREADV64
-	DLSYM(preadv64);
+		DLSYM(preadv64);
 #endif
 #ifdef HAVE_PWRITEV
-	DLSYM(pwritev);
+		DLSYM(pwritev);
 #endif
 #ifdef HAVE_PWRITEV64
-	DLSYM(pwritev64);
+		DLSYM(pwritev64);
 #endif
 #ifdef HAVE_PREADV2
-	DLSYM(preadv2);
+		DLSYM(preadv2);
 #endif
 #ifdef HAVE_PREADV64V2
-	DLSYM(preadv64v2);
+		DLSYM(preadv64v2);
 #endif
 #ifdef HAVE_PWRITEV2
-	DLSYM(pwritev2);
+		DLSYM(pwritev2);
 #endif
 #ifdef HAVE_PWRITEV64V2
-	DLSYM(pwritev64v2);
+		DLSYM(pwritev64v2);
 #endif
 #ifdef HAVE_COPY_FILE_RANGE
-	DLSYM(copy_file_range);
+		DLSYM(copy_file_range);
 #endif
 #ifdef HAVE_MMAP
-	DLSYM(mmap);
+		DLSYM(mmap);
 #endif
 #ifdef HAVE_MMAP64
-	DLSYM(mmap64);
+		DLSYM(mmap64);
 #endif
 #ifdef HAVE_MUNMAP
-	DLSYM(munmap);
+		DLSYM(munmap);
 #endif
 #ifdef HAVE_MSYNC
-	DLSYM(msync);
+		DLSYM(msync);
 #endif
 #ifdef HAVE_MREMAP
-	DLSYM(mremap);
+		DLSYM(mremap);
 #endif
 #ifdef HAVE_MADVISE
-	DLSYM(madvise);
+		DLSYM(madvise);
 #endif
 #ifdef HAVE_POSIX_MADVISE
-	DLSYM(posix_madvise);
+		DLSYM(posix_madvise);
 #endif
-	DLSYM(select);
+		DLSYM(select);
 #ifdef HAVE_SYNC
-	DLSYM(sync);
+		DLSYM(sync);
 #endif
 #ifdef HAVE_SYNCFS
-	DLSYM(syncfs);
+		DLSYM(syncfs);
 #endif
 #ifdef HAVE_FSYNC
-	DLSYM(fsync);
+		DLSYM(fsync);
 #endif
 #ifdef HAVE_FDATASYNC
-	DLSYM(fdatasync);
+		DLSYM(fdatasync);
 #endif
-	//DLSYM(aio_read);
-	DLSYM(fopen);
+		DLSYM(fopen);
 #ifdef HAVE_FOPEN64
-	DLSYM(fopen64);
+		DLSYM(fopen64);
 #endif
-	DLSYM(freopen);
+		DLSYM(freopen);
 #ifdef HAVE_FREOPEN64
-	DLSYM(freopen64);
+		DLSYM(freopen64);
 #endif
 #ifdef HAVE_FDOPEN
-	DLSYM(fdopen);
+		DLSYM(fdopen);
 #endif
-	DLSYM(fclose);
+		DLSYM(fclose);
 #ifdef HAVE_FCLOSEALL
-	DLSYM(fcloseall);
+		DLSYM(fcloseall);
 #endif
 #ifdef HAVE_FLOCKFILE
-	DLSYM(flockfile);
+		DLSYM(flockfile);
 #endif
 #ifdef HAVE_FTRYLOCKFILE
-	DLSYM(ftrylockfile);
+		DLSYM(ftrylockfile);
 #endif
 #ifdef HAVE_FUNLOCKFILE
-	DLSYM(funlockfile);
+		DLSYM(funlockfile);
 #endif
 #ifdef HAVE_FWIDE
-	DLSYM(fwide);
+		DLSYM(fwide);
 #endif
-	DLSYM(fputc);
-	DLSYM(fputwc);
+		DLSYM(fputc);
+		DLSYM(fputwc);
 #ifdef HAVE_FPUTC_UNLOCKED
-	DLSYM(fputc_unlocked);
+		DLSYM(fputc_unlocked);
 #endif
 #ifdef HAVE_FPUTWC_UNLOCKED
-	DLSYM(fputwc_unlocked);
+		DLSYM(fputwc_unlocked);
 #endif
-	DLSYM(putc_MACRO);
-	DLSYM(putwc_MACRO);
+		DLSYM(putc_MACRO);
+		DLSYM(putwc_MACRO);
 #ifdef HAVE_PUTC_UNLOCKED
-	DLSYM(putc_unlocked_MACRO);
+		DLSYM(putc_unlocked_MACRO);
 #endif
 #ifdef HAVE_PUTWC_UNLOCKED
-	DLSYM(putwc_unlocked_MACRO);
+		DLSYM(putwc_unlocked_MACRO);
 #endif
-	DLSYM(fputs);
-	DLSYM(fputws);
+		DLSYM(fputs);
+		DLSYM(fputws);
 #ifdef HAVE_FPUTS_UNLOCKED
-	DLSYM(fputs_unlocked);
+		DLSYM(fputs_unlocked);
 #endif
 #ifdef HAVE_FPUTWS_UNLOCKED
-	DLSYM(fputws_unlocked);
+		DLSYM(fputws_unlocked);
 #endif
 #ifdef HAVE_PUTW
-	DLSYM(putw);
+		DLSYM(putw);
 #endif
-	DLSYM(fgetc);
-	DLSYM(fgetwc);
+		DLSYM(fgetc);
+		DLSYM(fgetwc);
 #ifdef HAVE_FGETC_UNLOCKED
-	DLSYM(fgetc_unlocked);
+		DLSYM(fgetc_unlocked);
 #endif
 #ifdef HAVE_FGETWC_UNLOCKED
-	DLSYM(fgetwc_unlocked);
+		DLSYM(fgetwc_unlocked);
 #endif
-	DLSYM(getc_MACRO);
-	DLSYM(getwc_MACRO);
+		DLSYM(getc_MACRO);
+		DLSYM(getwc_MACRO);
 #ifdef HAVE_GETC_UNLOCKED
-	DLSYM(getc_unlocked_MACRO);
+		DLSYM(getc_unlocked_MACRO);
 #endif
 #ifdef HAVE_GETWC_UNLOCKED
-	DLSYM(getwc_unlocked_MACRO);
+		DLSYM(getwc_unlocked_MACRO);
 #endif
 #ifdef HAVE_GETW
-	DLSYM(getw);
+		DLSYM(getw);
 #endif
 #ifdef HAVE_GETLINE
-	DLSYM(getline);
+		DLSYM(getline);
 #endif
 #ifdef HAVE_GETDELIM
-	DLSYM(getdelim);
+		DLSYM(getdelim);
 #endif
-	DLSYM(fgets);
-	DLSYM(fgetws);
+		DLSYM(fgets);
+		DLSYM(fgetws);
 #ifdef HAVE_FGETS_UNLOCKED
-	DLSYM(fgets_unlocked);
+		DLSYM(fgets_unlocked);
 #endif
 #ifdef HAVE_FGETWS_UNLOCKED
-	DLSYM(fgetws_unlocked);
+		DLSYM(fgetws_unlocked);
 #endif
-	DLSYM(ungetc);
-	DLSYM(ungetwc);
-	DLSYM(fread);
+		DLSYM(ungetc);
+		DLSYM(ungetwc);
+		DLSYM(fread);
 #ifdef HAVE_FREAD_UNLOCKED
-	DLSYM(fread_unlocked);
+		DLSYM(fread_unlocked);
 #endif
-	DLSYM(fwrite);
+		DLSYM(fwrite);
 #ifdef HAVE_FWRITE_UNLOCKED
-	DLSYM(fwrite_unlocked);
+		DLSYM(fwrite_unlocked);
 #endif
-	DLSYM(fprintf);
+		DLSYM(fprintf);
 #ifdef HAVE_FWPRINTF
-	DLSYM(fwprintf);
+		DLSYM(fwprintf);
 #endif
-	DLSYM(vfprintf);
+		DLSYM(vfprintf);
 #ifdef HAVE_VFWPRINTF
-	DLSYM(vfwprintf);
+		DLSYM(vfwprintf);
 #endif
-	DLSYM(fscanf);
+		DLSYM(fscanf);
 #ifdef HAVE_FWSCANF
-	DLSYM(fwscanf);
+		DLSYM(fwscanf);
 #endif
 #ifdef HAVE_VFSCANF
-	DLSYM(vfscanf);
+		DLSYM(vfscanf);
 #endif
 #ifdef HAVE_VFWSCANF
-	DLSYM(vfwscanf);
+		DLSYM(vfwscanf);
 #endif
-	DLSYM(feof);
+		DLSYM(feof);
 #ifdef HAVE_FEOF_UNLOCKED
-	DLSYM(feof_unlocked);
+		DLSYM(feof_unlocked);
 #endif
-	DLSYM(ferror);
+		DLSYM(ferror);
 #ifdef HAVE_FERROR_UNLOCKED
-	DLSYM(ferror_unlocked);
+		DLSYM(ferror_unlocked);
 #endif
-	DLSYM(clearerr);
+		DLSYM(clearerr);
 #ifdef HAVE_CLEARERR_UNLOCKED
-	DLSYM(clearerr_unlocked);
+		DLSYM(clearerr_unlocked);
 #endif
-	DLSYM(ftell);
+		DLSYM(ftell);
 #ifdef HAVE_FTELLO
-	DLSYM(ftello);
+		DLSYM(ftello);
 #endif
 #ifdef HAVE_FTELLO64
-	DLSYM(ftello64);
+		DLSYM(ftello64);
 #endif
-	DLSYM(fseek);
+		DLSYM(fseek);
 #ifdef HAVE_FSEEKO
-	DLSYM(fseeko);
+		DLSYM(fseeko);
 #endif
 #ifdef HAVE_FSEEKO64
-	DLSYM(fseeko64);
+		DLSYM(fseeko64);
 #endif
-	DLSYM(rewind);
-	DLSYM(fgetpos);
+		DLSYM(rewind);
+		DLSYM(fgetpos);
 #ifdef HAVE_FGETPOS64
-	DLSYM(fgetpos64);
+		DLSYM(fgetpos64);
 #endif
-	DLSYM(fsetpos);
+		DLSYM(fsetpos);
 #ifdef HAVE_FSETPOS64
-	DLSYM(fsetpos64);
+		DLSYM(fsetpos64);
 #endif
-	DLSYM(fflush);
+		DLSYM(fflush);
 #ifdef HAVE_FFLUSH_UNLOCKED
-	DLSYM(fflush_unlocked);
+		DLSYM(fflush_unlocked);
 #endif
-	DLSYM(setvbuf);
-	DLSYM(setbuf);
+		DLSYM(setvbuf);
+		DLSYM(setbuf);
 #ifdef HAVE_SETBUFFER
-	DLSYM(setbuffer);
+		DLSYM(setbuffer);
 #endif
 #ifdef HAVE_SETLINEBUF
-	DLSYM(setlinebuf);
+		DLSYM(setlinebuf);
 #endif
 
-	DLSYM(__freadable);
-	DLSYM(__fwritable);
-	DLSYM(__freading);
-	DLSYM(__fwriting);
-	DLSYM(__fsetlocking);
-	DLSYM(_flushlbf);
-	DLSYM(__fpurge);
-	DLSYM(__flbf);
-	DLSYM(__fbufsize);
-	DLSYM(__fpending);
+		DLSYM(__freadable);
+		DLSYM(__fwritable);
+		DLSYM(__freading);
+		DLSYM(__fwriting);
+		DLSYM(__fsetlocking);
+		DLSYM(_flushlbf);
+		DLSYM(__fpurge);
+		DLSYM(__flbf);
+		DLSYM(__fbufsize);
+		DLSYM(__fpending);
+
+		DLSYM_INIT_DONE = 1;
+	}
 }
 #endif
 

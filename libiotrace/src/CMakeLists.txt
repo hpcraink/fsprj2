@@ -86,6 +86,7 @@ check_symbol_exists(sync "unistd.h" HAVE_SYNC)
 check_symbol_exists(syncfs "unistd.h" HAVE_SYNCFS)
 check_symbol_exists(fsync "unistd.h" HAVE_FSYNC)
 check_symbol_exists(fdatasync "unistd.h" HAVE_FDATASYNC)
+check_symbol_exists(fileno "stdio.h" HAVE_FILENO)
 
 list(APPEND CMAKE_REQUIRED_LIBRARIES "-lrt")
 check_symbol_exists(aio_read64 "aio.h" HAVE_AIO_READ64)

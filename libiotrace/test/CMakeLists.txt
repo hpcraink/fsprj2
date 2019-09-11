@@ -121,6 +121,7 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=setbuf"
         "-Wl,-wrap=setbuffer"
         "-Wl,-wrap=setlinebuf"
+        "-Wl,-wrap=fileno"
         "-Wl,-wrap=__freadable"
         "-Wl,-wrap=__fwritable"
         "-Wl,-wrap=__freading"

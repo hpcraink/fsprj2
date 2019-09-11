@@ -3800,6 +3800,33 @@ void WRAP(setlinebuf)(FILE *stream) {
 }
 #endif
 
+#ifdef HAVE_FILENO
+int WRAP(fileno)(FILE *stream) {
+	int ret;
+	struct basic data;
+	struct file_stream file_stream_data;
+	struct fileno_function fileno_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, fileno_function, fileno_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_stream_data.stream = stream;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, fileno, stream)
+
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
 int WRAP(__freadable)(FILE *stream) {
 	int ret;
 	struct basic data;

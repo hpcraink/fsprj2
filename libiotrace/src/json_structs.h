@@ -474,6 +474,11 @@ JSON_STRUCT_START(buffer_function)
   JSON_STRUCT_SIZE_T(buffer_size)
 JSON_STRUCT_END
 
+/* struct for fileno */
+JSON_STRUCT_START(fileno_function)
+  JSON_STRUCT_INT(file_descriptor)
+JSON_STRUCT_END
+
 /* struct for file bufsize */
 JSON_STRUCT_START(bufsize_function)
   JSON_STRUCT_SIZE_T(buffer_size)
@@ -657,6 +662,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, positioning_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, lpositioning_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, buffer_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, fileno_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, bufsize_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_map_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, memory_sync_function)

@@ -254,6 +254,9 @@
 /* Define to 1 if system supports fdatasync(). */
 #cmakedefine HAVE_FDATASYNC 1
 
+/* Define to 1 if system supports fileno(). */
+#cmakedefine HAVE_FILENO 1
+
 /* Define to 1 if system supports aio_read64(). */
 #cmakedefine HAVE_AIO_READ64 1
 

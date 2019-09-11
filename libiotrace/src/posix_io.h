@@ -316,7 +316,6 @@ REAL_TYPE int REAL(ferror)(FILE *stream) REAL_INIT;
 #ifdef HAVE_FERROR_UNLOCKED
 REAL_TYPE int REAL(ferror_unlocked)(FILE *stream) REAL_INIT;
 #endif
-//Todo: int fileno(FILE *stream);
 REAL_TYPE void REAL(clearerr)(FILE *stream) REAL_INIT;
 #ifdef HAVE_CLEARERR_UNLOCKED
 REAL_TYPE void REAL(clearerr_unlocked)(FILE *stream) REAL_INIT;
@@ -355,6 +354,9 @@ REAL_TYPE void REAL(setbuffer)(FILE *stream, char *buf, size_t size) REAL_INIT;
 #endif
 #ifdef HAVE_SETLINEBUF
 REAL_TYPE void REAL(setlinebuf)(FILE *stream) REAL_INIT;
+#endif
+#ifdef HAVE_FILENO
+REAL_TYPE int REAL(fileno)(FILE *stream) REAL_INIT;
 #endif
 //ToDo: purge !!!
 
@@ -641,6 +643,9 @@ static void DLSYM_INIT_FUNCTION() {
 #endif
 #ifdef HAVE_SETLINEBUF
 		DLSYM(setlinebuf);
+#endif
+#ifdef HAVE_FILENO
+		DLSYM(fileno);
 #endif
 
 		DLSYM(__freadable);

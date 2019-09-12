@@ -621,6 +621,17 @@ JSON_STRUCT_START(dlmopen_function)
 JSON_STRUCT_END
 #endif
 
+/* struct for dup */
+JSON_STRUCT_START(dup_function)
+  JSON_STRUCT_INT(new_descriptor)
+JSON_STRUCT_END
+
+/* struct for dup3 */
+JSON_STRUCT_START(dup3_function)
+  JSON_STRUCT_INT(new_descriptor)
+  JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
+JSON_STRUCT_END
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -685,6 +696,8 @@ JSON_STRUCT_START(basic)
 #ifdef HAVE_DLMOPEN
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dlmopen_function)
 #endif
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, dup_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, dup3_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

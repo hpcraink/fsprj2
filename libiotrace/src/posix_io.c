@@ -1561,7 +1561,8 @@ int WRAP(posix_madvise)(void *addr, size_t len, int advice) {
 			memory_posix_madvise_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
-	memory_posix_madvise_function_data.advice = get_posix_madvice_advice(advice);
+	memory_posix_madvise_function_data.advice = get_posix_madvice_advice(
+			advice);
 	file_memory_data.length = len;
 	file_memory_data.address = addr;
 
@@ -1741,6 +1742,90 @@ int WRAP(fdatasync)(int fd) {
 	CALL_REAL_FUNCTION_RET(data, ret, fdatasync, fd)
 
 	if (-1 == file) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+int WRAP(dup)(int oldfd) {
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	struct dup_function dup_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, dup_function, dup_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = oldfd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, dup, oldfd)
+
+	dup_data.new_descriptor = ret;
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+int WRAP(dup2)(int oldfd, int newfd) {
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	struct dup_function dup_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, dup_function, dup_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = oldfd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, dup2, oldfd, newfd)
+
+	dup_data.new_descriptor = ret;
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+#ifdef HAVE_DUP3
+int WRAP(dup3)(int oldfd, int newfd, int flags) {
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	struct dup3_function dup3_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, dup3_function, dup3_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = oldfd;
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+	get_creation_flags(flags, &dup3_data.creation);
+
+	CALL_REAL_FUNCTION_RET(data, ret, dup3, oldfd, newfd, flags)
+
+	dup3_data.new_descriptor = ret;
+	if (-1 == ret) {
 		data.return_state = error;
 	} else {
 		data.return_state = ok;

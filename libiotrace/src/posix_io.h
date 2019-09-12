@@ -122,11 +122,15 @@ REAL_TYPE int REAL(fsync)(int fd) REAL_INIT;
 #ifdef HAVE_FDATASYNC
 REAL_TYPE int REAL(fdatasync)(int fd) REAL_INIT;
 #endif
-//ToDo: pselect
-//ToDo: poll
+REAL_TYPE int REAL(dup)(int oldfd) REAL_INIT;
+REAL_TYPE int REAL(dup2)(int oldfd, int newfd) REAL_INIT;
+#ifdef HAVE_DUP3
+REAL_TYPE int REAL(dup3)(int oldfd, int newfd, int flags) REAL_INIT;
+#endif
+//ToDo: poll and ppoll
 //ToDo: int posix_fadvise(int fd, off_t offset, off_t len, int advice);
 //ToDo: dprintf(), vdprintf() + feature test
-//ToDo: dup
+//ToDo: dup, dup2, dup3
 //ToDo: int fcntl(int fd, int cmd, ... /* arg */ );
 //ToDo: int sync_file_range(int fd, off64_t offset, off64_t nbytes, unsigned int flags);
 //ToDo: int unlink(const char *pathname); and int unlinkat(int dirfd, const char *pathname, int flags); ????
@@ -482,6 +486,12 @@ static void DLSYM_INIT_FUNCTION() {
 #ifdef HAVE_FDATASYNC
 		DLSYM(fdatasync);
 #endif
+		DLSYM(dup);
+		DLSYM(dup2);
+#ifdef HAVE_DUP3
+		DLSYM(dup3);
+#endif
+
 		DLSYM(fopen);
 #ifdef HAVE_FOPEN64
 		DLSYM(fopen64);

@@ -5,6 +5,12 @@
 #include <dlfcn.h>
 #include "json_include_struct.h"
 
+#ifdef WITH_POSIX_IO
+#  define CALL_REAL_POSIX(function) CALL_REAL(function)
+#else
+#  define CALL_REAL_POSIX(function) function
+#endif
+
 #ifdef _GNU_SOURCE
 #  define DLSYM(function_macro) __DLSYM(function_macro)
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
@@ -25,10 +31,13 @@
 #  define __REAL(function_name) __real_##function_name
 #  define REAL_INIT
 #else
-#  define REAL_TYPE static
+#  define REAL_TYPE extern
 #  define __REAL(function_name) (*__real_##function_name)
-#  define REAL_INIT = NULL
+#  define REAL_INIT
 #endif
+#define REAL_DEFINITION_TYPE
+#define REAL_DEFINITION REAL
+#define REAL_DEFINITION_INIT = NULL;
 
 #define WRAP(function_macro) __WRAP(function_macro)
 #ifdef IO_LIB_STATIC
@@ -39,6 +48,7 @@
 #  define __WRAP(function_name) function_name
 #  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__, MAXFUNCTIONNAME)
 #endif
+#define POSIX_IO_SET_FUNCTION_NAME_STRING(data, string) strncpy(data, string, MAXFUNCTIONNAME)
 
 #define ERROR_FUNCTION(data) __ERROR_FUNCTION(data)
 #if (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE
@@ -59,22 +69,26 @@
                         }
 #ifdef IO_LIB_STATIC
 #  define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET(data, return_value, function, __VA_ARGS__)
+#  define CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, __VA_ARGS__)
 #  define CALL_REAL_FUNCTION(data, function, ...) __CALL_REAL_FUNCTION(data, function, __VA_ARGS__)
 #else
-#  define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) if (!DLSYM_INIT_DONE) { \
-                                                                        DLSYM_INIT_FUNCTION(); \
-                                                                    } \
-                                                                    __CALL_REAL_FUNCTION_RET(data, return_value, function, __VA_ARGS__)
-#  define CALL_REAL_FUNCTION(data, function, ...) if (!DLSYM_INIT_DONE) { \
-                                                      DLSYM_INIT_FUNCTION(); \
-                                                  } \
-                                                  __CALL_REAL_FUNCTION(data, function, __VA_ARGS__)
+#  define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET(data, return_value, function, __VA_ARGS__)
+#  define CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, __VA_ARGS__)
+#  define CALL_REAL_FUNCTION(data, function, ...) __CALL_REAL_FUNCTION(data, function, __VA_ARGS__)
 #endif
+
 #define __CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
                                                                     errno = errno_data.errno_value; \
                                                                     return_value = CALL_REAL(function)(__VA_ARGS__); \
                                                                     errno_data.errno_value = errno; \
                                                                     data.time_end = gettime();
+#define __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) data.time_start = gettime(); \
+                                                                              data.time_end = gettime(); \
+                                                                              WRAP_END(data) \
+                                                                              cleanup(); \
+                                                                              errno = errno_data.errno_value; \
+                                                                              return_value = CALL_REAL(function)(__VA_ARGS__); \
+                                                                              errno_data.errno_value = errno;
 #define __CALL_REAL_FUNCTION(data, function, ...) data.time_start = gettime(); \
                                                   errno = errno_data.errno_value; \
                                                   CALL_REAL(function)(__VA_ARGS__); \
@@ -88,8 +102,8 @@
 #define WRAP_START(data) struct errno_detail errno_data; \
                          errno_data.errno_value = errno; \
                          if (!init_done) { \
-                             init(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-                                     /* init() must be called */ \
+                             init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                           /* init_basic() must be called first */ \
                          }
 //ToDo: check for which file_type should not be written instead of which should be written
 #define WRAP_END(data) if(data.file_type == NULL || \

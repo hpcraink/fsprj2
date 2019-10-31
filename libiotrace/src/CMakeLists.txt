@@ -88,6 +88,21 @@ check_symbol_exists(fsync "unistd.h" HAVE_FSYNC)
 check_symbol_exists(fdatasync "unistd.h" HAVE_FDATASYNC)
 check_symbol_exists(fileno "stdio.h" HAVE_FILENO)
 check_symbol_exists(dup3 "unistd.h" HAVE_DUP3)
+check_symbol_exists(accept4 "sys/socket.h" HAVE_ACCEPT4)
+check_symbol_exists(pipe2 "unistd.h" HAVE_PIPE2)
+check_symbol_exists(tmpfile64 "stdio.h" HAVE_TMPFILE64)
+check_symbol_exists(epoll_create "sys/epoll.h" HAVE_EPOLL_CREATE)
+check_symbol_exists(epoll_create1 "sys/epoll.h" HAVE_EPOLL_CREATE1)
+check_symbol_exists(mkstemp "stdlib.h" HAVE_MKSTEMP)
+check_symbol_exists(mkostemp "stdlib.h" HAVE_MKOSTEMP)
+check_symbol_exists(mkstemps "stdlib.h" HAVE_MKSTEMPS)
+check_symbol_exists(mkostemps "stdlib.h" HAVE_MKOSTEMPS)
+check_symbol_exists(eventfd "sys/eventfd.h" HAVE_EVENTFD)
+check_symbol_exists(inotify_init "sys/inotify.h" HAVE_INOTIFY_INIT)
+check_symbol_exists(inotify_init1 "sys/inotify.h" HAVE_INOTIFY_INIT1)
+check_symbol_exists(vfork "unistd.h" HAVE_VFORK)
+check_symbol_exists(dirfd "dirent.h" HAVE_DIRFD)
+check_symbol_exists(execvpe "unistd.h" HAVE_EXECVPE)
 
 list(APPEND CMAKE_REQUIRED_LIBRARIES "-lrt")
 check_symbol_exists(aio_read64 "aio.h" HAVE_AIO_READ64)
@@ -156,15 +171,22 @@ set(SOURCE
     os.c
 )
 
+# needed for the RTLD_NEXT macro and other GNU functions
+set(OPTIONS
+    -D_GNU_SOURCE
+)
+
 #compile using cmake -DWITH_POSIX_IO for Posix-IO
 if(WITH_POSIX_IO)
     list(APPEND SOURCE posix_io.c)
+    list(APPEND OPTIONS -DWITH_POSIX_IO)
 endif()
 
 #compile using cmake -DWITH_POSIX_AIO for asynchronous Posix-IO
 if(WITH_POSIX_AIO)
     if(HAVE_AIO_H)
         list(APPEND SOURCE posix_aio.c)
+        list(APPEND OPTIONS -DWITH_POSIX_AIO)
     else()
         message(SEND_ERROR "Missing aio.h for asynchronous Posix-IO.")
     endif()
@@ -173,11 +195,13 @@ endif()
 #compile using cmake -DWITH_MPI_IO for MPI-IO
 if(WITH_MPI_IO)
     list(APPEND SOURCE mpi_io.c)
+    list(APPEND OPTIONS -DWITH_MPI_IO)
 endif()
 
 #compile using cmake -DWITH_DL_IO for dlopen()
 if(WITH_DL_IO)
     list(APPEND SOURCE dl_io.c)
+    list(APPEND OPTIONS -DWITH_DL_IO)
 endif()
 
 add_library(iotrace_shared SHARED ${SOURCE})
@@ -186,13 +210,13 @@ add_library(iotrace_static STATIC ${SOURCE})
 
 add_library(iotrace_object OBJECT ${SOURCE})
 
-# needed for dlsym-function
-target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS})
+# ${CMAKE_DL_LIBS} needed for dlsym-function
+# "-lpthread" needed for pthread_atfork()
+target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} "-lpthread")
 
-# needed for the RTLD_NEXT macro and other GNU functions
-target_compile_options(iotrace_shared PRIVATE -D_GNU_SOURCE)
-target_compile_options(iotrace_static PRIVATE -D_GNU_SOURCE)
-target_compile_options(iotrace_object PRIVATE -D_GNU_SOURCE)
+target_compile_options(iotrace_shared PRIVATE ${OPTIONS})
+target_compile_options(iotrace_static PRIVATE ${OPTIONS})
+target_compile_options(iotrace_object PRIVATE ${OPTIONS})
 
 # object for static linking needs
 target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)

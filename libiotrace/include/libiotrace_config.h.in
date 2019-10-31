@@ -260,6 +260,51 @@
 /* Define to 1 if system supports dup3(). */
 #cmakedefine HAVE_DUP3 1
 
+/* Define to 1 if system supports accept4(). */
+#cmakedefine HAVE_ACCEPT4 1
+
+/* Define to 1 if system supports pipe2(). */
+#cmakedefine HAVE_PIPE2 1
+
+/* Define to 1 if system supports tmpfile64(). */
+#cmakedefine HAVE_TMPFILE64 1
+
+/* Define to 1 if system supports epoll_create(). */
+#cmakedefine HAVE_EPOLL_CREATE 1
+
+/* Define to 1 if system supports epoll_create1(). */
+#cmakedefine HAVE_EPOLL_CREATE1 1
+
+/* Define to 1 if system supports mkstemp(). */
+#cmakedefine HAVE_MKSTEMP 1
+
+/* Define to 1 if system supports mkostemp(). */
+#cmakedefine HAVE_MKOSTEMP 1
+
+/* Define to 1 if system supports mkstemps(). */
+#cmakedefine HAVE_MKSTEMPS 1
+
+/* Define to 1 if system supports mkostemps(). */
+#cmakedefine HAVE_MKOSTEMPS 1
+
+/* Define to 1 if system supports eventfd(). */
+#cmakedefine HAVE_EVENTFD 1
+
+/* Define to 1 if system supports inotify_init(). */
+#cmakedefine HAVE_INOTIFY_INIT 1
+
+/* Define to 1 if system supports inotify_init1(). */
+#cmakedefine HAVE_INOTIFY_INIT1 1
+
+/* Define to 1 if system supports vfork(). */
+#cmakedefine HAVE_VFORK 1
+
+/* Define to 1 if system supports execvpe(). */
+#cmakedefine HAVE_EXECVPE 1
+
+/* Define to 1 if system supports dirfd(). */
+#cmakedefine HAVE_DIRFD 1
+
 /* Define to 1 if system supports aio_read64(). */
 #cmakedefine HAVE_AIO_READ64 1
 

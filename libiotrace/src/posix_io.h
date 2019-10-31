@@ -8,8 +8,10 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
+#include <dirent.h>
 #include "wrapper_defines.h"
 
 /* Function pointers for glibc functions */
@@ -127,19 +129,79 @@ REAL_TYPE int REAL(dup2)(int oldfd, int newfd) REAL_INIT;
 #ifdef HAVE_DUP3
 REAL_TYPE int REAL(dup3)(int oldfd, int newfd, int flags) REAL_INIT;
 #endif
+//ToDo: HAVE_OPEN_ELLIPSES
+REAL_TYPE int REAL(fcntl)(int fd, int cmd, ...) REAL_INIT;
+REAL_TYPE int REAL(socket)(int domain, int type, int protocol) REAL_INIT;
+REAL_TYPE int REAL(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen) REAL_INIT;
+#ifdef HAVE_ACCEPT4
+REAL_TYPE int REAL(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) REAL_INIT;
+#endif
+REAL_TYPE int REAL(socketpair)(int domain, int type, int protocol, int sv[2]) REAL_INIT;
+REAL_TYPE int REAL(pipe)(int pipefd[2]) REAL_INIT;
+#ifdef HAVE_PIPE2
+REAL_TYPE int REAL(pipe2)(int pipefd[2], int flags) REAL_INIT;
+#endif
+REAL_TYPE int REAL(memfd_create)(const char *name, unsigned int flags) REAL_INIT;
+#ifdef HAVE_EPOLL_CREATE
+REAL_TYPE int REAL(epoll_create)(int size) REAL_INIT;
+#endif
+#ifdef HAVE_EPOLL_CREATE1
+REAL_TYPE int REAL(epoll_create1)(int flags) REAL_INIT;
+#endif
+#ifdef HAVE_MKSTEMP
+REAL_TYPE int REAL(mkstemp)(char *template) REAL_INIT;
+#endif
+#ifdef HAVE_MKOSTEMP
+REAL_TYPE int REAL(mkostemp)(char *template, int flags) REAL_INIT;
+#endif
+#ifdef HAVE_MKSTEMPS
+REAL_TYPE int REAL(mkstemps)(char *template, int suffixlen) REAL_INIT;
+#endif
+#ifdef HAVE_MKOSTEMPS
+REAL_TYPE int REAL(mkostemps)(char *template, int suffixlen, int flags) REAL_INIT;
+#endif
+#ifdef HAVE_EVENTFD
+REAL_TYPE int REAL(eventfd)(unsigned int initval, int flags) REAL_INIT;
+#endif
+#ifdef HAVE_INOTIFY_INIT
+REAL_TYPE int REAL(inotify_init)(void) REAL_INIT;
+#endif
+#ifdef HAVE_INOTIFY_INIT1
+REAL_TYPE int REAL(inotify_init1)(int flags) REAL_INIT;
+#endif
+REAL_TYPE struct dirent *REAL(readdir)(DIR *dirp) REAL_INIT;
+#ifdef HAVE_DIRFD
+REAL_TYPE int REAL(dirfd)(DIR *dirp) REAL_INIT;
+#endif
+//inotify_add_watch
+//inotify_rm_watch
+//int getpt ( void )
+//int openpty ( int *amaster, int *aslave, char *name, const struct termios *termp, const struct winsize *winp )
+//int forkpty ( int *amaster, char *name, const struct termios *termp, const struct winsize *winp )
+//ToDo: fcntl64
+//ToDo: readlink, readlinkat
+//ToDo: ioctl
+//ToDo: stat, stat64, fstat, fstat64, lstat, lstat64, statfs
+//ToDo: chown, fchown
+//ToDo: umask, getumask
+//ToDo: access, faccessat
+//ToDo: ssize_t readahead(int fd, off64_t offset, size_t count);
 //ToDo: poll and ppoll
 //ToDo: int posix_fadvise(int fd, off_t offset, off_t len, int advice);
-//ToDo: dprintf(), vdprintf() + feature test
-//ToDo: dup, dup2, dup3
-//ToDo: int fcntl(int fd, int cmd, ... /* arg */ );
+//fadvise64
+//ToDo: dprintf() (change call in event.c !!!), vdprintf() + feature test
 //ToDo: int sync_file_range(int fd, off64_t offset, off64_t nbytes, unsigned int flags);
 //ToDo: int unlink(const char *pathname); and int unlinkat(int dirfd, const char *pathname, int flags); ????
-//ToDo: struct dirent *readdir(DIR *dirp); ???? Dir-functions?
+//ToDo: Dir-functions?
 //ToDo: int pselect(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, const struct timespec *timeout, const sigset_t *sigmask);
 //ToDo: int fallocate(int fd, int mode, off_t offset, off_t len); and posix_fallocate
 //ToDo: ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 //ToDo: ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out, size_t len, unsigned int flags);
-//ToDo: fstat
+//ToDo: fstat, stat, lstat, fstatat, fstatfs
+//ToDo: truncate, ftruncate
+//ToDo: mknod, mkdir, link, symlink, rename, unlink, rmdir
+//ToDo: chown, chmod, utime, utimensat
+//ToDo: flock
 
 /* POSIX and GNU extension stream */
 REAL_TYPE FILE * REAL(fopen)(const char *filename, const char *opentype) REAL_INIT;
@@ -362,7 +424,14 @@ REAL_TYPE void REAL(setlinebuf)(FILE *stream) REAL_INIT;
 #ifdef HAVE_FILENO
 REAL_TYPE int REAL(fileno)(FILE *stream) REAL_INIT;
 #endif
+REAL_TYPE FILE * REAL(tmpfile)(void) REAL_INIT;
+#ifdef HAVE_TMPFILE64
+REAL_TYPE FILE * REAL(tmpfile64)(void) REAL_INIT;
+#endif
+REAL_TYPE FILE *REAL(popen)(const char *command, const char *type) REAL_INIT;
 //ToDo: purge !!!
+//int fileno_unlocked(FILE *stream);
+//
 
 /* Solaris extensions for POSIX stream */
 REAL_TYPE int REAL(__freadable)(FILE *stream) REAL_INIT;
@@ -376,302 +445,19 @@ REAL_TYPE int REAL(__flbf)(FILE *stream) REAL_INIT;
 REAL_TYPE size_t REAL(__fbufsize)(FILE *stream) REAL_INIT;
 REAL_TYPE size_t REAL(__fpending)(FILE *stream) REAL_INIT;
 
+/* other functions, needed for tracking file descriptors and memory mappings */
+REAL_TYPE pid_t REAL(fork)(void) REAL_INIT;
+#ifdef HAVE_VFORK
+REAL_TYPE pid_t REAL(vfork)(void) REAL_INIT;
+#endif
+//ToDo: int unshare(int flags); see clone, for thread not sharing fd's with process
+//ToDo: int daemon(int nochdir, int noclose); makes a fork ???
+//ToDo: int execve(const char *filename, char *const argv[], char *const envp[]); remove all mmap's and fd's ???
+//ToDo: int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ... /* pid_t *ptid, void *newtls, pid_t *ctid */ );
+//pthread_create ???
+
 #ifndef IO_LIB_STATIC
-#undef DLSYM_INIT_DONE
-#undef DLSYM_INIT_FUNCTION
-#define DLSYM_INIT_DONE posix_io_init_done
-#define DLSYM_INIT_FUNCTION posix_io_init
-static char DLSYM_INIT_DONE = 0;
-static void DLSYM_INIT_FUNCTION() ATTRIBUTE_CONSTRUCTOR;
-/* Initialize pointers for glibc functions.
- * This has to be in the header file because other files use the "__real_" functions
- * instead of the normal posix functions (e.g. see event.c or json_defines.h). */
-static void DLSYM_INIT_FUNCTION() {
-	if (!DLSYM_INIT_DONE) {
-
-		DLSYM(open);
-#ifdef HAVE_OPEN64
-		DLSYM(open64);
-#endif
-#ifdef HAVE_OPENAT
-		DLSYM(openat);
-#endif
-		DLSYM(creat);
-#ifdef HAVE_CREAT64
-		DLSYM(creat64);
-#endif
-		DLSYM(close);
-		DLSYM(read);
-#ifdef HAVE_PREAD
-		DLSYM(pread);
-#endif
-#ifdef HAVE_PREAD64
-		DLSYM(pread64);
-#endif
-		DLSYM(write);
-#ifdef HAVE_PWRITE
-		DLSYM(pwrite);
-#endif
-#ifdef HAVE_PWRITE64
-		DLSYM(pwrite64);
-#endif
-		DLSYM(lseek);
-#ifdef HAVE_LSEEK64
-		DLSYM(lseek64);
-#endif
-#ifdef HAVE_READV
-		DLSYM(readv);
-#endif
-#ifdef HAVE_WRITEV
-		DLSYM(writev);
-#endif
-#ifdef HAVE_PREADV
-		DLSYM(preadv);
-#endif
-#ifdef HAVE_PREADV64
-		DLSYM(preadv64);
-#endif
-#ifdef HAVE_PWRITEV
-		DLSYM(pwritev);
-#endif
-#ifdef HAVE_PWRITEV64
-		DLSYM(pwritev64);
-#endif
-#ifdef HAVE_PREADV2
-		DLSYM(preadv2);
-#endif
-#ifdef HAVE_PREADV64V2
-		DLSYM(preadv64v2);
-#endif
-#ifdef HAVE_PWRITEV2
-		DLSYM(pwritev2);
-#endif
-#ifdef HAVE_PWRITEV64V2
-		DLSYM(pwritev64v2);
-#endif
-#ifdef HAVE_COPY_FILE_RANGE
-		DLSYM(copy_file_range);
-#endif
-#ifdef HAVE_MMAP
-		DLSYM(mmap);
-#endif
-#ifdef HAVE_MMAP64
-		DLSYM(mmap64);
-#endif
-#ifdef HAVE_MUNMAP
-		DLSYM(munmap);
-#endif
-#ifdef HAVE_MSYNC
-		DLSYM(msync);
-#endif
-#ifdef HAVE_MREMAP
-		DLSYM(mremap);
-#endif
-#ifdef HAVE_MADVISE
-		DLSYM(madvise);
-#endif
-#ifdef HAVE_POSIX_MADVISE
-		DLSYM(posix_madvise);
-#endif
-		DLSYM(select);
-#ifdef HAVE_SYNC
-		DLSYM(sync);
-#endif
-#ifdef HAVE_SYNCFS
-		DLSYM(syncfs);
-#endif
-#ifdef HAVE_FSYNC
-		DLSYM(fsync);
-#endif
-#ifdef HAVE_FDATASYNC
-		DLSYM(fdatasync);
-#endif
-		DLSYM(dup);
-		DLSYM(dup2);
-#ifdef HAVE_DUP3
-		DLSYM(dup3);
-#endif
-
-		DLSYM(fopen);
-#ifdef HAVE_FOPEN64
-		DLSYM(fopen64);
-#endif
-		DLSYM(freopen);
-#ifdef HAVE_FREOPEN64
-		DLSYM(freopen64);
-#endif
-#ifdef HAVE_FDOPEN
-		DLSYM(fdopen);
-#endif
-		DLSYM(fclose);
-#ifdef HAVE_FCLOSEALL
-		DLSYM(fcloseall);
-#endif
-#ifdef HAVE_FLOCKFILE
-		DLSYM(flockfile);
-#endif
-#ifdef HAVE_FTRYLOCKFILE
-		DLSYM(ftrylockfile);
-#endif
-#ifdef HAVE_FUNLOCKFILE
-		DLSYM(funlockfile);
-#endif
-#ifdef HAVE_FWIDE
-		DLSYM(fwide);
-#endif
-		DLSYM(fputc);
-		DLSYM(fputwc);
-#ifdef HAVE_FPUTC_UNLOCKED
-		DLSYM(fputc_unlocked);
-#endif
-#ifdef HAVE_FPUTWC_UNLOCKED
-		DLSYM(fputwc_unlocked);
-#endif
-		DLSYM(putc_MACRO);
-		DLSYM(putwc_MACRO);
-#ifdef HAVE_PUTC_UNLOCKED
-		DLSYM(putc_unlocked_MACRO);
-#endif
-#ifdef HAVE_PUTWC_UNLOCKED
-		DLSYM(putwc_unlocked_MACRO);
-#endif
-		DLSYM(fputs);
-		DLSYM(fputws);
-#ifdef HAVE_FPUTS_UNLOCKED
-		DLSYM(fputs_unlocked);
-#endif
-#ifdef HAVE_FPUTWS_UNLOCKED
-		DLSYM(fputws_unlocked);
-#endif
-#ifdef HAVE_PUTW
-		DLSYM(putw);
-#endif
-		DLSYM(fgetc);
-		DLSYM(fgetwc);
-#ifdef HAVE_FGETC_UNLOCKED
-		DLSYM(fgetc_unlocked);
-#endif
-#ifdef HAVE_FGETWC_UNLOCKED
-		DLSYM(fgetwc_unlocked);
-#endif
-		DLSYM(getc_MACRO);
-		DLSYM(getwc_MACRO);
-#ifdef HAVE_GETC_UNLOCKED
-		DLSYM(getc_unlocked_MACRO);
-#endif
-#ifdef HAVE_GETWC_UNLOCKED
-		DLSYM(getwc_unlocked_MACRO);
-#endif
-#ifdef HAVE_GETW
-		DLSYM(getw);
-#endif
-#ifdef HAVE_GETLINE
-		DLSYM(getline);
-#endif
-#ifdef HAVE_GETDELIM
-		DLSYM(getdelim);
-#endif
-		DLSYM(fgets);
-		DLSYM(fgetws);
-#ifdef HAVE_FGETS_UNLOCKED
-		DLSYM(fgets_unlocked);
-#endif
-#ifdef HAVE_FGETWS_UNLOCKED
-		DLSYM(fgetws_unlocked);
-#endif
-		DLSYM(ungetc);
-		DLSYM(ungetwc);
-		DLSYM(fread);
-#ifdef HAVE_FREAD_UNLOCKED
-		DLSYM(fread_unlocked);
-#endif
-		DLSYM(fwrite);
-#ifdef HAVE_FWRITE_UNLOCKED
-		DLSYM(fwrite_unlocked);
-#endif
-		DLSYM(fprintf);
-#ifdef HAVE_FWPRINTF
-		DLSYM(fwprintf);
-#endif
-		DLSYM(vfprintf);
-#ifdef HAVE_VFWPRINTF
-		DLSYM(vfwprintf);
-#endif
-		DLSYM(fscanf);
-#ifdef HAVE_FWSCANF
-		DLSYM(fwscanf);
-#endif
-#ifdef HAVE_VFSCANF
-		DLSYM(vfscanf);
-#endif
-#ifdef HAVE_VFWSCANF
-		DLSYM(vfwscanf);
-#endif
-		DLSYM(feof);
-#ifdef HAVE_FEOF_UNLOCKED
-		DLSYM(feof_unlocked);
-#endif
-		DLSYM(ferror);
-#ifdef HAVE_FERROR_UNLOCKED
-		DLSYM(ferror_unlocked);
-#endif
-		DLSYM(clearerr);
-#ifdef HAVE_CLEARERR_UNLOCKED
-		DLSYM(clearerr_unlocked);
-#endif
-		DLSYM(ftell);
-#ifdef HAVE_FTELLO
-		DLSYM(ftello);
-#endif
-#ifdef HAVE_FTELLO64
-		DLSYM(ftello64);
-#endif
-		DLSYM(fseek);
-#ifdef HAVE_FSEEKO
-		DLSYM(fseeko);
-#endif
-#ifdef HAVE_FSEEKO64
-		DLSYM(fseeko64);
-#endif
-		DLSYM(rewind);
-		DLSYM(fgetpos);
-#ifdef HAVE_FGETPOS64
-		DLSYM(fgetpos64);
-#endif
-		DLSYM(fsetpos);
-#ifdef HAVE_FSETPOS64
-		DLSYM(fsetpos64);
-#endif
-		DLSYM(fflush);
-#ifdef HAVE_FFLUSH_UNLOCKED
-		DLSYM(fflush_unlocked);
-#endif
-		DLSYM(setvbuf);
-		DLSYM(setbuf);
-#ifdef HAVE_SETBUFFER
-		DLSYM(setbuffer);
-#endif
-#ifdef HAVE_SETLINEBUF
-		DLSYM(setlinebuf);
-#endif
-#ifdef HAVE_FILENO
-		DLSYM(fileno);
-#endif
-
-		DLSYM(__freadable);
-		DLSYM(__fwritable);
-		DLSYM(__freading);
-		DLSYM(__fwriting);
-		DLSYM(__fsetlocking);
-		DLSYM(_flushlbf);
-		DLSYM(__fpurge);
-		DLSYM(__flbf);
-		DLSYM(__fbufsize);
-		DLSYM(__fpending);
-
-		DLSYM_INIT_DONE = 1;
-	}
-}
+void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
 
 #endif /* LIBIOTRACE_POSIX_IO_H */

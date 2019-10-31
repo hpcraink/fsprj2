@@ -46,6 +46,25 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=dup"
         "-Wl,-wrap=dup2"
         "-Wl,-wrap=dup3"
+        "-Wl,-wrap=fcntl"
+        "-Wl,-wrap=socket"
+        "-Wl,-wrap=accept"
+        "-Wl,-wrap=accept4"
+        "-Wl,-wrap=socketpair"
+        "-Wl,-wrap=pipe"
+        "-Wl,-wrap=pipe2"
+        "-Wl,-wrap=memfd_create"
+        "-Wl,-wrap=epoll_create"
+        "-Wl,-wrap=epoll_create1"
+        "-Wl,-wrap=mkstemp"
+        "-Wl,-wrap=mkostemp"
+        "-Wl,-wrap=mkstemps"
+        "-Wl,-wrap=mkostemps"
+        "-Wl,-wrap=eventfd"
+        "-Wl,-wrap=inotify_init"
+        "-Wl,-wrap=inotify_init1"
+        "-Wl,-wrap=readdir"
+        "-Wl,-wrap=dirfd"
         "-Wl,-wrap=fopen"
         "-Wl,-wrap=fopen64"
         "-Wl,-wrap=freopen"
@@ -125,6 +144,9 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=setbuffer"
         "-Wl,-wrap=setlinebuf"
         "-Wl,-wrap=fileno"
+        "-Wl,-wrap=tmpfile"
+        "-Wl,-wrap=tmpfile64"
+        "-Wl,-wrap=popen"
         "-Wl,-wrap=__freadable"
         "-Wl,-wrap=__fwritable"
         "-Wl,-wrap=__freading"
@@ -135,6 +157,15 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=__flbf"
         "-Wl,-wrap=__fbufsize"
         "-Wl,-wrap=__fpending"
+        "-Wl,-wrap=fork"
+        "-Wl,-wrap=vfork"
+        "-Wl,-wrap=execve"
+        "-Wl,-wrap=execv"
+        "-Wl,-wrap=execl"
+        "-Wl,-wrap=execvp"
+        "-Wl,-wrap=execlp"
+        "-Wl,-wrap=execvpe"
+        "-Wl,-wrap=execle"
     )
 endif()
 
@@ -158,6 +189,7 @@ if(WITH_POSIX_AIO)
         "-Wl,-wrap=aio_cancel"
         "-Wl,-wrap=aio_cancel64"
         "-Wl,-wrap=aio_init"
+        "-Wl,-wrap=shm_open"
     )
 endif()
 
@@ -183,14 +215,14 @@ list(APPEND LINK_OPTIONS
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
-    # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte
+    # test with: IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared
     add_executable(read_byte_shared read_byte.c)
     target_link_libraries(read_byte_shared ${LINK_OPTIONS})
     #add_test ("Read" read_byte)
 
     add_library(read_byte_object OBJECT read_byte.c)
 
-    # test with: ./read_byte_static
+    # test with: IOTRACE_LOG_NAME=read_byte_static_test1 ./read_byte_static
     add_executable(read_byte_static
         $<TARGET_OBJECTS:read_byte_object>
         $<TARGET_OBJECTS:iotrace_object>
@@ -202,7 +234,7 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
-    # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_stream
+    # test with: IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared
     add_executable(read_stream_shared read_stream.c)
     target_compile_options(read_stream_shared PRIVATE -D_GNU_SOURCE)
     target_link_libraries(read_stream_shared ${LINK_OPTIONS})
@@ -210,7 +242,7 @@ if(WITH_POSIX_IO)
     add_library(read_stream_object OBJECT read_stream.c)
     target_compile_options(read_stream_object PRIVATE -D_GNU_SOURCE)
 
-    # test with: ./read_stream_static
+    # test with: IOTRACE_LOG_NAME=read_stream_static_test1 ./read_stream_static
     add_executable(read_stream_static
         $<TARGET_OBJECTS:read_stream_object>
         $<TARGET_OBJECTS:iotrace_object>
@@ -222,13 +254,13 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
-    # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
+    # test with: IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
     add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
     target_link_libraries(read_byte_and_stream_shared ${LINK_OPTIONS})
 
     add_library(read_byte_and_stream_object OBJECT read_byte_and_stream.c)
 
-    # test with: ./read_byte_and_stream_static
+    # test with: IOTRACE_LOG_NAME=read_byte_and_stream_static_test1 ./read_byte_and_stream_static
     add_executable(read_byte_and_stream_static
         $<TARGET_OBJECTS:read_byte_and_stream_object>
         $<TARGET_OBJECTS:iotrace_object>
@@ -240,13 +272,13 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
-    # test with: LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared
+    # test with: IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared
     add_executable(write_stream_shared write_stream.c)
     target_link_libraries(write_stream_shared ${LINK_OPTIONS})
 
     add_library(write_stream_object OBJECT write_stream.c)
 
-    # test with: ./write_stream_static
+    # test with: IOTRACE_LOG_NAME=write_stream_static_test1 ./write_stream_static
     add_executable(write_stream_static
         $<TARGET_OBJECTS:write_stream_object>
         $<TARGET_OBJECTS:iotrace_object>
@@ -258,7 +290,7 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
-    #test with: LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
+    #test with: IOTRACE_LOG_NAME=read_stream_openmp_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
     add_executable(read_stream_openmp_shared read_stream_openmp.c)
 
     find_package(OpenMP)
@@ -270,13 +302,13 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_AIO)
-    # test with: LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte
+    # test with: IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared
     add_executable(read_async_byte_shared read_async_byte.c)
     target_link_libraries(read_async_byte_shared ${LINK_OPTIONS})
 
     add_library(read_async_byte_object OBJECT read_async_byte.c)
 
-    # test with: ./read_async_byte_static
+    # test with: IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_async_byte_static
     add_executable(read_async_byte_static
         $<TARGET_OBJECTS:read_async_byte_object>
         $<TARGET_OBJECTS:iotrace_object>
@@ -288,7 +320,7 @@ endif()
 ##########################################################################################################
 
 if(WITH_MPI_IO)
-    # test with: mpirun -np 4 -x LD_PRELOAD=../src/libiotrace_shared.so ./read_MPI
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=read_MPI_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./read_MPI
     add_executable(read_MPI read_MPI.c)
     target_link_libraries(read_MPI PRIVATE ${LINK_OPTIONS})
 endif()

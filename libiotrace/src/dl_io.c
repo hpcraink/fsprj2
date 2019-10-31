@@ -10,6 +10,29 @@
 #include "wrapper_defines.h"
 #include "dl_io.h"
 
+#ifndef IO_LIB_STATIC
+REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlopen)(const char *filename, int flags) REAL_DEFINITION_INIT;
+#ifdef HAVE_DLMOPEN
+REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlmopen)(Lmid_t lmid, const char *filename, int flags) REAL_DEFINITION_INIT;
+#endif
+#endif
+
+#ifndef IO_LIB_STATIC
+char dl_io_init_done = 0;
+/* Initialize pointers for dl functions. */
+void dl_io_init() {
+	if (!dl_io_init_done) {
+
+		DLSYM(dlopen);
+#ifdef HAVE_DLMOPEN
+		DLSYM(dlmopen);
+#endif
+
+		dl_io_init_done = 1;
+	}
+}
+#endif
+
 void get_dlopen_flags(const int flags, struct dlopen_flags *dlf) {
 	dlf->lazy_binding = flags & RTLD_LAZY ? 1 : 0;
 	dlf->bind_now = flags & RTLD_NOW ? 1 : 0;

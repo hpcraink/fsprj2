@@ -14,24 +14,7 @@ REAL_TYPE void * REAL(dlmopen)(Lmid_t lmid, const char *filename, int flags) REA
 #endif
 
 #ifndef IO_LIB_STATIC
-#undef DLSYM_INIT_DONE
-#undef DLSYM_INIT_FUNCTION
-#define DLSYM_INIT_DONE ld_io_init_done
-#define DLSYM_INIT_FUNCTION ld_io_init
-static char DLSYM_INIT_DONE = 0;
-static void DLSYM_INIT_FUNCTION() ATTRIBUTE_CONSTRUCTOR;
-/* Initialize pointers for dl functions. */
-static void DLSYM_INIT_FUNCTION() {
-	if (!DLSYM_INIT_DONE) {
-
-		DLSYM(dlopen);
-#ifdef HAVE_DLMOPEN
-		DLSYM(dlmopen);
-#endif
-
-		DLSYM_INIT_DONE = 1;
-	}
-}
+void dl_io_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
 
 #endif /* LIBIOTRACE_LD_IO_H */

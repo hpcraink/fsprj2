@@ -28,5 +28,6 @@ int main(void) {
     printf ("Read %ld Bytes\n", statbuf.st_size);
  
     ret = close (fd);
+
     return ret;
 }

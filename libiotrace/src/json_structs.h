@@ -12,6 +12,10 @@ JSON_STRUCT_START(file_stream)
   JSON_STRUCT_FILE_P(stream)
 JSON_STRUCT_END
 
+JSON_STRUCT_START(file_dir)
+  JSON_STRUCT_VOID_P(directory_stream)
+JSON_STRUCT_END
+
 JSON_STRUCT_START(file_descriptor)
   JSON_STRUCT_INT(descriptor)
 JSON_STRUCT_END
@@ -632,6 +636,177 @@ JSON_STRUCT_START(dup3_function)
   JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
 JSON_STRUCT_END
 
+JSON_STRUCT_ENUM_START(fcntl_cmd)
+  JSON_STRUCT_ENUM_ELEMENT(dupfd)            //F_DUPFD
+  JSON_STRUCT_ENUM_ELEMENT(dupfd_cloexec)    //F_DUPFD_CLOEXEC
+  JSON_STRUCT_ENUM_ELEMENT(getfd)            //F_GETFD
+  JSON_STRUCT_ENUM_ELEMENT(setfd)            //F_SETFD
+  JSON_STRUCT_ENUM_ELEMENT(getfl)            //F_GETFL
+  JSON_STRUCT_ENUM_ELEMENT(setfl)            //F_SETFL
+  JSON_STRUCT_ENUM_ELEMENT(setlk)            //F_SETLK
+  JSON_STRUCT_ENUM_ELEMENT(setlkw)           //F_SETLKW
+  JSON_STRUCT_ENUM_ELEMENT(getlk)            //F_GETLK
+  JSON_STRUCT_ENUM_ELEMENT(ofd_setlk)        //F_OFD_SETLK
+  JSON_STRUCT_ENUM_ELEMENT(ofd_setlkw)       //F_OFD_SETLKW
+  JSON_STRUCT_ENUM_ELEMENT(ofd_getlk)        //F_OFD_GETLK
+  JSON_STRUCT_ENUM_ELEMENT(getown)           //F_GETOWN
+  JSON_STRUCT_ENUM_ELEMENT(setown)           //F_SETOWN
+  JSON_STRUCT_ENUM_ELEMENT(getown_ex)        //F_GETOWN_EX
+  JSON_STRUCT_ENUM_ELEMENT(setown_ex)        //F_SETOWN_EX
+  JSON_STRUCT_ENUM_ELEMENT(getsig)           //F_GETSIG
+  JSON_STRUCT_ENUM_ELEMENT(setsig)           //F_SETSIG
+  JSON_STRUCT_ENUM_ELEMENT(setlease)         //F_SETLEASE
+  JSON_STRUCT_ENUM_ELEMENT(getlease)         //F_GETLEASE
+  JSON_STRUCT_ENUM_ELEMENT(notify)           //F_NOTIFY
+  JSON_STRUCT_ENUM_ELEMENT(setpipe_sz)       //F_SETPIPE_SZ
+  JSON_STRUCT_ENUM_ELEMENT(getpipe_sz)       //F_GETPIPE_SZ
+  JSON_STRUCT_ENUM_ELEMENT(add_seals)        //F_ADD_SEALS
+  JSON_STRUCT_ENUM_ELEMENT(get_seals)        //F_GET_SEALS
+  JSON_STRUCT_ENUM_ELEMENT(get_rw_hint)      //F_GET_RW_HINT
+  JSON_STRUCT_ENUM_ELEMENT(set_rw_hint)      //F_SET_RW_HINT
+  JSON_STRUCT_ENUM_ELEMENT(get_file_rw_hint) //F_GET_FILE_RW_HINT
+  JSON_STRUCT_ENUM_ELEMENT(set_file_rw_hint) //F_SET_FILE_RW_HINT
+  JSON_STRUCT_ENUM_ELEMENT(unknown_fcntl_cmd)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_ARRAY_BITFIELD_START(file_descriptor_flags)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(cloexec) //FD_CLOEXEC
+JSON_STRUCT_ARRAY_BITFIELD_END
+
+JSON_STRUCT_START(fcntl_fd_function)
+  JSON_STRUCT_ARRAY_BITFIELD(file_descriptor_flags, fd_flags)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(fcntl_fl_function)
+  JSON_STRUCT_ENUM(access_mode, mode)
+  JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
+  JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
+JSON_STRUCT_END
+
+JSON_STRUCT_ENUM_START(lock_type)
+  JSON_STRUCT_ENUM_ELEMENT(read_lock)  //F_RDLCK
+  JSON_STRUCT_ENUM_ELEMENT(write_lock) //F_WRLCK
+  JSON_STRUCT_ENUM_ELEMENT(unlock)     //F_UNLCK
+  JSON_STRUCT_ENUM_ELEMENT(unknown_lock_type)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_START(fcntl_flock)
+  JSON_STRUCT_ENUM(lock_type, type)
+  JSON_STRUCT_ENUM(seek_where, relative_to)
+  JSON_STRUCT_OFF_T(start)
+  JSON_STRUCT_OFF_T(len)
+  JSON_STRUCT_PID_T(pid)
+JSON_STRUCT_END
+
+JSON_STRUCT_ENUM_START(owner_type)
+  JSON_STRUCT_ENUM_ELEMENT(owner_thread)        //F_OWNER_TID
+  JSON_STRUCT_ENUM_ELEMENT(owner_process)       //F_OWNER_PID
+  JSON_STRUCT_ENUM_ELEMENT(owner_process_group) //F_OWNER_PGRP
+  JSON_STRUCT_ENUM_ELEMENT(unknown_owner_type)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_START(fcntl_own)
+  JSON_STRUCT_ENUM(owner_type, type)
+  JSON_STRUCT_PID_T(id)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(fcntl_sig)
+  JSON_STRUCT_INT(signal)
+JSON_STRUCT_END
+
+JSON_STRUCT_ENUM_START(lease_type)
+  JSON_STRUCT_ENUM_ELEMENT(read_lease)   //F_RDLCK
+  JSON_STRUCT_ENUM_ELEMENT(write_lease)  //F_WRLCK
+  JSON_STRUCT_ENUM_ELEMENT(unlock_lease) //F_UNLCK
+  JSON_STRUCT_ENUM_ELEMENT(unknown_lease_type)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_START(fcntl_lease)
+  JSON_STRUCT_ENUM(lease_type, type)
+JSON_STRUCT_END
+
+JSON_STRUCT_ARRAY_BITFIELD_START(directory_notify_flags)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_access)    //DN_ACCESS
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_modify)    //DN_MODIFY
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_create)    //DN_CREATE
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_delete)    //DN_DELETE
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_rename)    //DN_RENAME
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_attribute) //DN_ATTRIB
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(directory_multishot) //DN_MULTISHOT
+JSON_STRUCT_ARRAY_BITFIELD_END
+
+JSON_STRUCT_START(fcntl_dnotify)
+  JSON_STRUCT_ARRAY_BITFIELD(directory_notify_flags, flags)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(fcntl_pipe_size)
+  JSON_STRUCT_INT(bytes)
+JSON_STRUCT_END
+
+JSON_STRUCT_ARRAY_BITFIELD_START(seal_flags)
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(seal_seal)   //F_SEAL_SEAL
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(seal_shrink) //F_SEAL_SHRINK
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(seal_grow)   //F_SEAL_GROW
+  JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(seal_write)  //F_SEAL_WRITE
+JSON_STRUCT_ARRAY_BITFIELD_END
+
+JSON_STRUCT_START(fcntl_seal)
+  JSON_STRUCT_ARRAY_BITFIELD(seal_flags, flags)
+JSON_STRUCT_END
+
+JSON_STRUCT_ENUM_START(hint_write_life)
+  JSON_STRUCT_ENUM_ELEMENT(hint_write_life_not_set) //RWH_WRITE_LIFE_NOT_SET
+  JSON_STRUCT_ENUM_ELEMENT(hint_write_life_none)    //RWH_WRITE_LIFE_NONE
+  JSON_STRUCT_ENUM_ELEMENT(hint_write_life_short)   //RWH_WRITE_LIFE_SHORT
+  JSON_STRUCT_ENUM_ELEMENT(hint_write_life_medium)  //RWH_WRITE_LIFE_MEDIUM
+  JSON_STRUCT_ENUM_ELEMENT(hint_write_life_long)    //RWH_WRITE_LIFE_LONG
+  JSON_STRUCT_ENUM_ELEMENT(hint_write_life_extreme) //RWH_WRITE_LIFE_EXTREME
+  JSON_STRUCT_ENUM_ELEMENT(unknown_hint_write_life)
+JSON_STRUCT_ENUM_END
+
+JSON_STRUCT_START(fcntl_hint)
+  JSON_STRUCT_ENUM(hint_write_life, hint)
+JSON_STRUCT_END
+
+/* struct for fcntl */
+JSON_STRUCT_START(fcntl_function)
+  JSON_STRUCT_ENUM(fcntl_cmd, cmd)
+  JSON_STRUCT_VOID_P_START(cmd_data)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, dup_function)
+	JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_fd_function)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_fl_function)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_flock)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_own)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_sig)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_lease)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_dnotify)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_pipe_size)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_seal)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_hint)
+  JSON_STRUCT_VOID_P_END(cmd_data)
+JSON_STRUCT_END
+
+/* struct for file-pair functions (socketpair, pipe, pipe2) */
+JSON_STRUCT_START(file_pair)
+  JSON_STRUCT_INT(descriptor1)
+  JSON_STRUCT_INT(descriptor2)
+JSON_STRUCT_END
+
+/* struct for fork */
+JSON_STRUCT_START(fork_function)
+  JSON_STRUCT_PID_T(pid)
+JSON_STRUCT_END
+
+/* struct for readdir */
+JSON_STRUCT_START(readdir_function)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+JSON_STRUCT_END
+
+/* struct for dirfd */
+JSON_STRUCT_START(dirfd_function)
+  JSON_STRUCT_INT(descriptor)
+JSON_STRUCT_END
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -645,6 +820,7 @@ JSON_STRUCT_START(basic)
   JSON_STRUCT_STRUCT_P(errno_detail, return_state_detail)
   JSON_STRUCT_VOID_P_START(file_type)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
+	JSON_STRUCT_VOID_P_ELEMENT(file_type, file_dir)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_descriptor)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_memory)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_async)
@@ -654,6 +830,7 @@ JSON_STRUCT_START(basic)
   // ToDo: new field for boolean which shows if file position is changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)
   JSON_STRUCT_VOID_P_START(function_data)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, fork_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, open_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, openat_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, fdopen_function)
@@ -698,7 +875,28 @@ JSON_STRUCT_START(basic)
 #endif
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dup_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dup3_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, fcntl_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, file_pair)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, readdir_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, dirfd_function)
   JSON_STRUCT_VOID_P_END(function_data)
+JSON_STRUCT_END
+
+/* filesystem description */
+JSON_STRUCT_START(filesystem)
+  JSON_STRUCT_CSTRING_P(name, MAXFILENAME)
+  JSON_STRUCT_CSTRING_P(path_prefix, MAXFILENAME)
+  JSON_STRUCT_CSTRING_P(mount_type, MAXFILENAME)
+  JSON_STRUCT_CSTRING_P(mount_options, MAXFILENAME)
+  JSON_STRUCT_INT(dump_frequency_in_days)
+  JSON_STRUCT_INT(pass_number_on_parallel_fsck)
+JSON_STRUCT_END
+
+/* working dir */
+JSON_STRUCT_START(working_dir)
+  JSON_STRUCT_U_INT64_T(time)
+  JSON_STRUCT_PID_T(process_id)
+  JSON_STRUCT_CSTRING_P(dir, MAXFILENAME)
 JSON_STRUCT_END
 
 #endif

@@ -25,11 +25,11 @@
 /* #defines for error handling */
 #ifndef JSON_STRUCT_ERROR
 #  define JSON_STRUCT_ERROR
-#  define JSON_STRUCT_ENUM_ERROR(value) CALL_REAL(fprintf)(stderr, "Unknown value \"%d\" of enum in function %s.\n", value, __func__); \
+#  define JSON_STRUCT_ENUM_ERROR(value) CALL_REAL_POSIX(fprintf)(stderr, "Unknown value \"%d\" of enum in function %s.\n", value, __func__); \
                                         /* ToDo: __func__ dependencies (like in posix_io.c) */ \
                                         assert(0);
 #  define JSON_STRUCT_SIZE_ERROR(ret, size) if (ret >= size) { \
-                                                CALL_REAL(fprintf)(stderr, "Output buffer in function %s not big enough.\n", __func__); \
+                                                CALL_REAL_POSIX(fprintf)(stderr, "Output buffer in function %s not big enough.\n", __func__); \
                                                 assert(0); \
                                             }
 #endif
@@ -85,6 +85,7 @@
 #ifdef HAVE_DLMOPEN
 #  undef JSON_STRUCT_LMID_T
 #endif
+#undef JSON_STRUCT_SHORT
 /* insert new line for new data-type here */
 
 #if JSON_STRUCT == JSON_STRUCT_DATA_TYPE
@@ -130,6 +131,7 @@
 #  ifdef HAVE_DLMOPEN
 #    define JSON_STRUCT_LMID_T(name) Lmid_t name;
 #  endif
+#  define JSON_STRUCT_SHORT(name) short name;
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_PRINT
@@ -371,6 +373,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  ifdef HAVE_DLMOPEN
 #    define JSON_STRUCT_LMID_T(name) JSON_STRUCT_ELEMENT(name, %ld, json_struct_data->name)
 #  endif
+#  define JSON_STRUCT_SHORT(name) JSON_STRUCT_ELEMENT(name, %d, json_struct_data->name)
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_BYTES_COUNT
@@ -474,6 +477,8 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #    define JSON_STRUCT_LMID_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(Lmid_t) \
                                                                     + 1) /* for sign (-) */
 #  endif
+#  define JSON_STRUCT_SHORT(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(short) \
+                                                                 + 1) /* for sign (-) */
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_SIZEOF
@@ -528,6 +533,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  ifdef HAVE_DLMOPEN
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
+#  define JSON_STRUCT_SHORT(name)
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_COPY
@@ -610,6 +616,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  ifdef HAVE_DLMOPEN
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
+#  define JSON_STRUCT_SHORT(name)
 /* insert new line for new data-type here */
 
 #else

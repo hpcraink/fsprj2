@@ -2,9 +2,7 @@
  * @file Implementation of Posix-IO functions.
  */
 #include "libiotrace_config.h"
-#ifdef HAVE_STDLIB_H
-//#  include <stdlib.h>
-#endif
+
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
@@ -15,7 +13,9 @@
 #include <stdio_ext.h>
 #include <bits/stdint-uintn.h>
 #include <fcntl.h>
-#include <sys/types.h>
+#ifdef HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif
 #include <sys/uio.h>
 #include <sys/mman.h>
 
@@ -26,9 +26,6 @@
 #include "event.h"
 #include "wrapper_defines.h"
 #include "posix_io.h"
-
-// ToDo: wrap open, socket, accept, connectx(mac) (for logging)
-//       or use a function like lsof to get type of files
 
 #ifndef IO_LIB_STATIC
 #define HAVE_OPEN_ELLIPSES
@@ -44,7 +41,8 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(open64)(const char *filename, int flags
 #endif
 #endif
 #ifdef HAVE_OPENAT
-REAL_DEFINITION_TYPE int REAL_DEFINITION(openat)(int dirfd, const char *pathname, int flags, ...) REAL_DEFINITION_INIT; //ToDo: test HAVE_OPEN_ELLIPSE
+REAL_DEFINITION_TYPE int REAL_DEFINITION(openat)(int dirfd, const char *pathname, int flags, ...) REAL_DEFINITION_INIT;
+//ToDo: test HAVE_OPEN_ELLIPSE
 #endif
 REAL_DEFINITION_TYPE int REAL_DEFINITION(creat)(const char *filename, mode_t mode) REAL_DEFINITION_INIT;
 #ifdef HAVE_CREAT64
@@ -183,6 +181,14 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(inotify_init1)(int flags) REAL_DEFINITI
 REAL_DEFINITION_TYPE struct dirent *REAL_DEFINITION(readdir)(DIR *dirp) REAL_DEFINITION_INIT;
 #ifdef HAVE_DIRFD
 REAL_DEFINITION_TYPE int REAL_DEFINITION(dirfd)(DIR *dirp) REAL_DEFINITION_INIT;
+#endif
+REAL_DEFINITION_TYPE ssize_t REAL_DEFINITION(sendmsg)(int sockfd, const struct msghdr *msg, int flags) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE ssize_t REAL_DEFINITION(recvmsg)(int sockfd, struct msghdr *msg, int flags) REAL_DEFINITION_INIT;
+#ifdef HAVE_SENDMMSG
+REAL_DEFINITION_TYPE int REAL_DEFINITION(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE_RECVMMSG
+REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_DEFINITION_INIT;
 #endif
 
 /* POSIX and GNU extension stream */
@@ -331,27 +337,20 @@ REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite)(const void *data, size_t siz
 #ifdef HAVE_FWRITE_UNLOCKED
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
-REAL_DEFINITION_TYPE int REAL_DEFINITION(fprintf)
-(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(fprintf)(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
 #ifdef HAVE_FWPRINTF
-REAL_DEFINITION_TYPE int REAL_DEFINITION(fwprintf)
-(FILE *stream, const wchar_t *template, ...) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(fwprintf)(FILE *stream, const wchar_t *template, ...) REAL_DEFINITION_INIT;
 #endif
-REAL_DEFINITION_TYPE int REAL_DEFINITION(vfprintf)
-(FILE *stream, const char *template, va_list ap) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(vfprintf)(FILE *stream, const char *template, va_list ap) REAL_DEFINITION_INIT;
 #ifdef HAVE_VFWPRINTF
-REAL_DEFINITION_TYPE int REAL_DEFINITION(vfwprintf)
-(FILE *stream, const wchar_t *template, va_list ap) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap) REAL_DEFINITION_INIT;
 #endif
-REAL_DEFINITION_TYPE int REAL_DEFINITION(fscanf)
-(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(fscanf)(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
 #ifdef HAVE_FWSCANF
-REAL_DEFINITION_TYPE int REAL_DEFINITION(fwscanf)
-(FILE *stream, const wchar_t *template, ...) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(fwscanf)(FILE *stream, const wchar_t *template, ...) REAL_DEFINITION_INIT;
 #endif
 #ifdef HAVE_VFSCANF
-REAL_DEFINITION_TYPE int REAL_DEFINITION(vfscanf)
-(FILE *stream, const char *template, va_list ap) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(vfscanf)(FILE *stream, const char *template, va_list ap) REAL_DEFINITION_INIT;
 #endif
 #ifdef HAVE_VFWSCANF
 REAL_DEFINITION_TYPE int REAL_DEFINITION(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap) REAL_DEFINITION_INIT;
@@ -581,6 +580,14 @@ void posix_io_init() {
 		DLSYM(readdir);
 #ifdef HAVE_DIRFD
 		DLSYM(dirfd);
+#endif
+		DLSYM(sendmsg);
+		DLSYM(recvmsg);
+#ifdef HAVE_SENDMMSG
+		DLSYM(sendmmsg);
+#endif
+#ifdef HAVE_RECVMMSG
+		DLSYM(recvmmsg);
 #endif
 
 		DLSYM(fopen);
@@ -1332,6 +1339,7 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	int WRAP(open)(const char *filename, int flags, mode_t mode) {
 #endif
 	int ret;
+	char expanded_symlinks[MAXFILENAME];
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
 	struct open_function open_data;
@@ -1371,6 +1379,7 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	}
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
@@ -1424,6 +1433,7 @@ int WRAP(open64)(const char *filename, int flags, ...) {
 	}
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
@@ -1484,6 +1494,7 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, ...) {
 	}
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(openat_data.id));
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
@@ -1518,6 +1529,7 @@ int WRAP(creat)(const char *filename, mode_t mode) {
 	}
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
@@ -1552,6 +1564,7 @@ int WRAP(creat64)(const char *filename, mode_t mode) {
 	}
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
@@ -2986,7 +2999,8 @@ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 }
 
 #ifdef HAVE_ACCEPT4
-int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) {
+int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
+		int flags) {
 	int ret;
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
@@ -3185,13 +3199,14 @@ int WRAP(mkstemp)(char *template) {
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
 	get_status_flags(tmpflags, &open_data.status);
-	get_mode_flags(0600, &open_data.file_mode);
+	get_mode_flags(S_IRUSR | S_IWUSR, &open_data.file_mode);
 
 	CALL_REAL_FUNCTION_RET(data, ret, mkstemp, template)
 
 	open_data.file_name = template;
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {
@@ -3220,13 +3235,14 @@ int WRAP(mkostemp)(char *template, int flags) {
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
 	get_status_flags(tmpflags, &open_data.status);
-	get_mode_flags(0600, &open_data.file_mode);
+	get_mode_flags(S_IRUSR | S_IWUSR, &open_data.file_mode);
 
 	CALL_REAL_FUNCTION_RET(data, ret, mkostemp, template, flags)
 
 	open_data.file_name = template;
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {
@@ -3255,13 +3271,14 @@ int WRAP(mkstemps)(char *template, int suffixlen) {
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
 	get_status_flags(tmpflags, &open_data.status);
-	get_mode_flags(0600, &open_data.file_mode);
+	get_mode_flags(S_IRUSR | S_IWUSR, &open_data.file_mode);
 
 	CALL_REAL_FUNCTION_RET(data, ret, mkstemps, template, suffixlen)
 
 	open_data.file_name = template;
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {
@@ -3290,13 +3307,14 @@ int WRAP(mkostemps)(char *template, int suffixlen, int flags) {
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
 	get_status_flags(tmpflags, &open_data.status);
-	get_mode_flags(0600, &open_data.file_mode);
+	get_mode_flags(S_IRUSR | S_IWUSR, &open_data.file_mode);
 
 	CALL_REAL_FUNCTION_RET(data, ret, mkostemps, template, suffixlen, flags)
 
 	open_data.file_name = template;
 
 	file_descriptor_data.descriptor = ret;
+	get_file_id(ret, &(open_data.id));
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {
@@ -3426,7 +3444,8 @@ int WRAP(dirfd)(DIR *dirp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dirfd_function, dirfd_function_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, dirfd_function,
+			dirfd_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_dir, file_dir_data)
 	file_dir_data.directory_stream = dirp;
@@ -3441,6 +3460,165 @@ int WRAP(dirfd)(DIR *dirp) {
 	}
 
 	WRAP_END(data)
+	return ret;
+}
+#endif
+
+int get_fd_from_msg(const struct msghdr *pmsg) {
+	struct msghdr *msg = (struct msghdr *) ((void *) pmsg);
+	struct cmsghdr *cmsg = NULL;
+
+	for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+			cmsg = CMSG_NXTHDR(msg, cmsg)) {
+		if ((cmsg->cmsg_level == SOL_SOCKET)
+				&& (cmsg->cmsg_type == SCM_RIGHTS)) {
+			return *((int *) CMSG_DATA(cmsg));
+		}
+	}
+
+	return -1;
+}
+
+ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
+	ssize_t ret;
+	int fd;
+	struct basic data;
+	struct msg_function msg_function_data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, sendmsg, sockfd, msg, flags)
+
+	if (-1 != ret) {
+		fd = get_fd_from_msg(msg);
+		if (-1 != fd) {
+			msg_function_data.descriptor = fd;
+
+			get_basic(&data);
+			JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
+					msg_function_data)
+			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+			JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+					file_descriptor_data)
+			file_descriptor_data.descriptor = sockfd;
+			data.return_state = ok;
+
+			WRAP_END(data)
+			return ret;
+		}
+	}
+
+	WRAP_END_WITHOUT_WRITE(data)
+	return ret;
+}
+
+ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
+	ssize_t ret;
+	int fd;
+	struct basic data;
+	struct msg_function msg_function_data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, recvmsg, sockfd, msg, flags)
+
+	if (-1 != ret) {
+		fd = get_fd_from_msg(msg);
+		if (-1 != fd) {
+			msg_function_data.descriptor = fd;
+
+			get_basic(&data);
+			JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
+					msg_function_data)
+			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+			JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+					file_descriptor_data)
+			file_descriptor_data.descriptor = sockfd;
+			data.return_state = ok;
+
+			WRAP_END(data)
+			return ret;
+		}
+	}
+
+	WRAP_END_WITHOUT_WRITE(data)
+	return ret;
+}
+
+#ifdef HAVE_SENDMMSG
+int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags) {
+	int ret;
+	int fd;
+	struct msghdr *msg;
+	struct basic data;
+	struct msg_function msg_function_data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, sendmmsg, sockfd, msgvec, vlen, flags)
+
+	if (-1 != ret) {
+		for (int i=0; i < vlen; i++) {
+			msg = &((msgvec+i)->msg_hdr);
+			fd = get_fd_from_msg(msg);
+			if (-1 != fd) {
+				msg_function_data.descriptor = fd;
+
+				get_basic(&data);
+				JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
+						msg_function_data)
+				POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+				JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+						file_descriptor_data)
+				file_descriptor_data.descriptor = sockfd;
+				data.return_state = ok;
+
+				WRAP_END(data)
+				return ret;
+			}
+		}
+	}
+
+	WRAP_END_WITHOUT_WRITE(data)
+	return ret;
+}
+#endif
+
+#ifdef HAVE_RECVMMSG
+int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) {
+	int ret;
+	int fd;
+	struct msghdr *msg;
+	struct basic data;
+	struct msg_function msg_function_data;
+	struct file_descriptor file_descriptor_data;
+	WRAP_START(data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, recvmmsg, sockfd, msgvec, vlen, flags, timeout)
+
+	if (-1 != ret) {
+		for (int i=0; i < vlen; i++) {
+			msg = &((msgvec+i)->msg_hdr);
+			fd = get_fd_from_msg(msg);
+			if (-1 != fd) {
+				msg_function_data.descriptor = fd;
+
+				get_basic(&data);
+				JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
+						msg_function_data)
+				POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+				JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+						file_descriptor_data)
+				file_descriptor_data.descriptor = sockfd;
+				data.return_state = ok;
+
+				WRAP_END(data)
+				return ret;
+			}
+		}
+	}
+
+	WRAP_END_WITHOUT_WRITE(data)
 	return ret;
 }
 #endif
@@ -3465,8 +3643,11 @@ FILE * WRAP(fopen)(const char *filename, const char *opentype) {
 
 	if (NULL == file) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id(CALL_REAL_POSIX_SYNC(fileno)(file), &(open_data.id));
 	}
 
 	file_stream_data.stream = file;
@@ -3497,8 +3678,11 @@ FILE * WRAP(fopen64)(const char *filename, const char *opentype) {
 
 	if (NULL == file) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id(CALL_REAL_POSIX_SYNC(fileno)(file), &(open_data.id));
 	}
 
 	file_stream_data.stream = file;
@@ -3529,8 +3713,11 @@ FILE * WRAP(freopen)(const char *filename, const char *opentype, FILE *stream) {
 
 	if (NULL == file) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id(CALL_REAL_POSIX_SYNC(fileno)(file), &(open_data.id));
 	}
 
 	file_stream_data.stream = file;
@@ -3561,8 +3748,11 @@ FILE * WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 
 	if (NULL == file) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id(CALL_REAL_POSIX_SYNC(fileno)(file), &(open_data.id));
 	}
 
 	file_stream_data.stream = file;
@@ -5553,8 +5743,11 @@ FILE * WRAP(tmpfile)(void) {
 
 	if (NULL == file) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id(CALL_REAL_POSIX_SYNC(fileno)(file), &(open_data.id));
 	}
 
 	file_stream_data.stream = file;
@@ -5576,8 +5769,7 @@ FILE * WRAP(tmpfile64)(void) {
 	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = "";
-	open_data.mode = check_mode("w+b", &open_data.creation,
-			&open_data.status);
+	open_data.mode = check_mode("w+b", &open_data.creation, &open_data.status);
 	get_mode_flags(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH,
 			&open_data.file_mode);
 
@@ -5585,8 +5777,11 @@ FILE * WRAP(tmpfile64)(void) {
 
 	if (NULL == file) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id(CALL_REAL_POSIX_SYNC(fileno)(file), &(open_data.id));
 	}
 
 	file_stream_data.stream = file;

@@ -20,12 +20,15 @@
 
 #include "json_include_struct.h"
 
+BEGIN_C_DECLS
 
 extern char init_done;
-// ToDo: use macro ATTRIBUTE_CONSTRUCTOR
-void init_basic()__attribute__((constructor));
+void init_basic() ATTRIBUTE_CONSTRUCTOR;
 
 void get_basic(struct basic *data);
+
+void get_file_id(int fd, struct file_id *data);
+void get_file_id_by_path(const char *filename, struct file_id *data);
 
 // ToDo: as macro with return value?
 u_int64_t gettime(void);
@@ -45,5 +48,17 @@ REAL_TYPE int REAL(execlp)(const char *file, const char *arg, ... /* (char  *) N
 REAL_TYPE int REAL(execvpe)(const char *file, char *const argv[], char *const envp[]) REAL_INIT;
 #endif
 REAL_TYPE int REAL(execle)(const char *path, const char *arg, ... /*, (char *) NULL, char * const envp[] */) REAL_INIT;
+
+/* __attribute__((destructor)) functions are not every time called before _exit is called.
+ * So the following wrappers are necessary. */
+REAL_TYPE void REAL(_exit)(int status) REAL_INIT;
+#ifdef HAVE_EXIT
+REAL_TYPE void REAL(_Exit)(int status) REAL_INIT;
+#endif
+#ifdef HAVE_EXIT_GROUP
+REAL_TYPE void REAL(exit_group)(int status) REAL_INIT;
+#endif
+
+END_C_DECLS
 
 #endif /* LIBIOTRACE_EVENT_H */

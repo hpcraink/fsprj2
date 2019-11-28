@@ -302,8 +302,20 @@
 /* Define to 1 if system supports execvpe(). */
 #cmakedefine HAVE_EXECVPE 1
 
+/* Define to 1 if system supports _Exit(). */
+#cmakedefine HAVE_EXIT 1
+
+/* Define to 1 if system supports exit_group(). */
+#cmakedefine HAVE_EXIT_GROUP 1
+
 /* Define to 1 if system supports dirfd(). */
 #cmakedefine HAVE_DIRFD 1
+
+/* Define to 1 if system supports sendmmsg(). */
+#cmakedefine HAVE_SENDMMSG 1
+
+/* Define to 1 if system supports recvmmsg(). */
+#cmakedefine HAVE_RECVMMSG 1
 
 /* Define to 1 if system supports aio_read64(). */
 #cmakedefine HAVE_AIO_READ64 1
@@ -334,6 +346,9 @@
 
 /* Define to 1 if system supports dlmopen(). */
 #cmakedefine HAVE_DLMOPEN 1
+
+/* Define to 1 if system supports getmntent_r(). */
+#cmakedefine HAVE_GETMNTENT_R 1
 
 /* Define to 1 if system supports Lmid_t. */
 #cmakedefine HAVE_LMID_T 1
@@ -471,6 +486,15 @@
 /* Define to 1 if compiler supports attribute constructor. */
 #cmakedefine HAVE_ATTRIBUTE_CONSTRUCTOR 1
 
+/* Define to 1 if compiler supports attribute destructor. */
+#cmakedefine HAVE_ATTRIBUTE_DESTRUCTOR 1
+
+/* Define to 1 if compiler supports __declspec(thread). */
+#cmakedefine HAVE_DECLSPEC_THREAD 1
+
+/* Define to 1 if compiler supports attribute __thread. */
+#cmakedefine HAVE_ATTRIBUTE_THREAD 1
+
 /*  Define to 1 if limits.h has HOST_NAME_MAX. */
 #cmakedefine HAVE_HOST_NAME_MAX 1
 
@@ -495,6 +519,26 @@
 #  define ATTRIBUTE_CONSTRUCTOR    __attribute__((constructor))
 #else
 #  define ATTRIBUTE_CONSTRUCTOR
+#endif
+
+#ifdef HAVE_ATTRIBUTE_DESTRUCTOR
+#  define ATTRIBUTE_DESTRUCTOR     __attribute__((destructor))
+#else
+#  define ATTRIBUTE_DESTRUCTOR
+#endif
+
+#if defined(WIN32) || defined(_WIN32)
+#  if defined(HAVE_DECLSPEC_THREAD)
+#    define ATTRIBUTE_THREAD       __declspec(thread)
+#  else
+#    define ATTRIBUTE_THREAD
+#  endif
+#else
+#  ifdef HAVE_ATTRIBUTE_THREAD
+#    define ATTRIBUTE_THREAD       __thread
+#  else
+#    define ATTRIBUTE_THREAD
+#  endif
 #endif
 
 #if !defined(HAVE_HOST_NAME_MAX)

@@ -7,16 +7,20 @@
 #endif
 #include <wchar.h>
 #include <stdio.h>
-#include <sys/types.h>
+#ifdef HAVE_SYS_TYPES_H
+#  include <sys/types.h>
+#endif
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
 #include <dirent.h>
 #include "wrapper_defines.h"
 
+BEGIN_C_DECLS
+
 /* Function pointers for glibc functions */
 
-/* POSIX and GNU extension byte */
+/* POSIX (and GNU extension) byte based IO functions */
 // ToDo: set HAVE_OPEN_ELLIPSES or check in wrapper if optional argument is needed/provided (like in mremap): test it!!!!
 #define HAVE_OPEN_ELLIPSES
 #ifdef HAVE_OPEN_ELLIPSES
@@ -173,6 +177,15 @@ REAL_TYPE struct dirent *REAL(readdir)(DIR *dirp) REAL_INIT;
 #ifdef HAVE_DIRFD
 REAL_TYPE int REAL(dirfd)(DIR *dirp) REAL_INIT;
 #endif
+REAL_TYPE ssize_t REAL(sendmsg)(int sockfd, const struct msghdr *msg, int flags) REAL_INIT;
+REAL_TYPE ssize_t REAL(recvmsg)(int sockfd, struct msghdr *msg, int flags) REAL_INIT;
+#ifdef HAVE_SENDMMSG
+REAL_TYPE int REAL(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags) REAL_INIT;
+#endif
+#ifdef HAVE_RECVMMSG
+REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_INIT;
+#endif
+
 //inotify_add_watch
 //inotify_rm_watch
 //int getpt ( void )
@@ -182,6 +195,7 @@ REAL_TYPE int REAL(dirfd)(DIR *dirp) REAL_INIT;
 //ToDo: readlink, readlinkat
 //ToDo: ioctl
 //ToDo: stat, stat64, fstat, fstat64, lstat, lstat64, statfs
+//ToDo: statvfs, fstatvfs
 //ToDo: chown, fchown
 //ToDo: umask, getumask
 //ToDo: access, faccessat
@@ -203,7 +217,7 @@ REAL_TYPE int REAL(dirfd)(DIR *dirp) REAL_INIT;
 //ToDo: chown, chmod, utime, utimensat
 //ToDo: flock
 
-/* POSIX and GNU extension stream */
+/* POSIX (and GNU extension) stream based IO functions */
 REAL_TYPE FILE * REAL(fopen)(const char *filename, const char *opentype) REAL_INIT;
 #ifdef HAVE_FOPEN64
 REAL_TYPE FILE * REAL(fopen64)(const char *filename, const char *opentype) REAL_INIT;
@@ -459,5 +473,7 @@ REAL_TYPE pid_t REAL(vfork)(void) REAL_INIT;
 #ifndef IO_LIB_STATIC
 void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
+
+END_C_DECLS
 
 #endif /* LIBIOTRACE_POSIX_IO_H */

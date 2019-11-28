@@ -5,7 +5,7 @@
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #else
-#error NOT DEFINED
+#  error HAVE_UNISTD_H not defined
 #endif
 
 #ifdef HAVE_STDLIB_H
@@ -13,6 +13,7 @@
 #endif
 
 #include <sys/syscall.h>
+#include <sys/stat.h>
 
 #ifdef HAVE_PTHREAD_H
 #  include <pthread.h>
@@ -52,7 +53,6 @@ static const char * env_log_name = "IOTRACE_LOG_NAME";
 static const char * env_ld_preload = "LD_PRELOAD";
 #endif
 
-// ToDo: dependencies of __thread?
 // once per process
 static pid_t pid;
 static char hostname[HOST_NAME_MAX];
@@ -61,9 +61,10 @@ static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
+static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
 #endif
 // once per thread
-static __thread pid_t tid = -1;
+static ATTRIBUTE_THREAD pid_t tid = -1;
 
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(execve)(const char *filename, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
@@ -75,6 +76,14 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(execlp)(const char *file, const char *a
 REAL_DEFINITION_TYPE int REAL_DEFINITION(execvpe)(const char *file, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE int REAL_DEFINITION(execle)(const char *path, const char *arg, ... /*, (char *) NULL, char * const envp[] */) REAL_DEFINITION_INIT;
+
+REAL_DEFINITION_TYPE void REAL_DEFINITION(_exit)(int status) REAL_DEFINITION_INIT;
+#ifdef HAVE_EXIT
+REAL_DEFINITION_TYPE void REAL_DEFINITION(_Exit)(int status) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE_EXIT_GROUP
+REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITION_INIT;
+#endif
 #endif
 
 #ifndef IO_LIB_STATIC
@@ -92,6 +101,14 @@ void event_init() {
 		DLSYM(execvpe);
 #endif
 		DLSYM(execle);
+
+		DLSYM(_exit);
+#ifdef HAVE_EXIT
+		DLSYM(_Exit);
+#endif
+#ifdef HAVE_EXIT_GROUP
+		DLSYM(exit_group);
+#endif
 
 		event_init_done = 1;
 	}
@@ -114,53 +131,77 @@ void init_wrapper() {
 }
 #endif
 
-// ToDo: test for destructor in cmake and macro ATTRIBUTE_CONSTRUCTOR
-void cleanup()__attribute__((destructor));
+void cleanup() ATTRIBUTE_DESTRUCTOR;
 
 void get_filesystem() {
 	FILE * file;
+#ifdef HAVE_GETMNTENT_R
 	struct mntent filesystem_entry;
 	char buf[4 * MAXFILENAME];
+#endif
+	struct mntent *filesystem_entry_ptr;
 	char buf_filesystem[json_struct_max_size_filesystem() + 1]; /* +1 for trailing null character */
 	struct filesystem filesystem_data;
+	struct stat stat_data;
+	char mount_point[MAXFILENAME];
 	int fd;
 	int ret;
 
-	fd = CALL_REAL_POSIX(open)(filesystem_log_name, O_WRONLY | O_CREAT | O_EXCL,
+	fd = CALL_REAL_POSIX_SYNC(open)(filesystem_log_name,
+	O_WRONLY | O_CREAT | O_EXCL,
 	S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd) {
 		if (errno == EEXIST) {
 			return;
 		} else {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: open() returned %d.\n", __func__, fd);
 			assert(0);
 		}
 	}
 
-	//file = setmntent("/etc/fstab", "r"); ///etc/mtab ???
 	file = setmntent("/proc/mounts", "r");
 	if (NULL == file) {
-		CALL_REAL_POSIX(fprintf)(stderr,
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 				"In function %s: setmntent() returned NULL with errno=%d.\n",
 				__func__, errno);
 		assert(0);
 	}
 
-	//TODO: is _r existent? loop !
+#ifdef HAVE_GETMNTENT_R
 	while (getmntent_r(file, &filesystem_entry, buf, sizeof(buf))) {
-		filesystem_data.name = filesystem_entry.mnt_fsname;
-		filesystem_data.path_prefix = filesystem_entry.mnt_dir;
-		filesystem_data.mount_type = filesystem_entry.mnt_type;
-		filesystem_data.mount_options = filesystem_entry.mnt_opts;
-		filesystem_data.dump_frequency_in_days = filesystem_entry.mnt_freq;
+		filesystem_entry_ptr = &filesystem_entry;
+#else
+		while (filesystem_entry_ptr = getmntent(file)) {
+#endif
+		ret = strlen(filesystem_entry_ptr->mnt_dir);
+		if (MAXFILENAME < ret + 4) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: getmntent() returned mnt_dir too long (%d bytes) for buffer.\n",
+					__func__, ret);
+			assert(0);
+		}
+		strcpy(mount_point, filesystem_entry_ptr->mnt_dir);
+		// get mounted directory, not the mount point in parent filesystem
+		strcpy(mount_point + ret, "/./");
+		ret = stat(mount_point, &stat_data);
+		if (-1 == ret) {
+			filesystem_data.device_id = 0;
+		} else {
+			filesystem_data.device_id = stat_data.st_dev;
+		}
+		filesystem_data.name = filesystem_entry_ptr->mnt_fsname;
+		filesystem_data.path_prefix = filesystem_entry_ptr->mnt_dir;
+		filesystem_data.mount_type = filesystem_entry_ptr->mnt_type;
+		filesystem_data.mount_options = filesystem_entry_ptr->mnt_opts;
+		filesystem_data.dump_frequency_in_days = filesystem_entry_ptr->mnt_freq;
 		filesystem_data.pass_number_on_parallel_fsck =
-				filesystem_entry.mnt_passno;
+				filesystem_entry_ptr->mnt_passno;
 		json_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
 				&filesystem_data);
-		ret = dprintf(fd, "%s\n", buf_filesystem); //TODO: CALL_REAL_POSIX(dprintf)
+		ret = dprintf(fd, "%s\n", buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 		if (0 > ret) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: dprintf() returned %d with errno=%d.\n",
 					__func__, ret, errno);
 			assert(0);
@@ -169,7 +210,44 @@ void get_filesystem() {
 
 	endmntent(file);
 
-	CALL_REAL_POSIX(close)(fd);
+	CALL_REAL_POSIX_SYNC(close)(fd);
+}
+
+void get_file_id(int fd, struct file_id *data) {
+	struct stat stat_data;
+	int ret;
+
+	if (0 > fd) {
+		data->device_id = 0;
+		data->inode_nr = 0;
+	} else {
+		ret = fstat(fd, &stat_data);
+		if (0 > ret) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: fstat() returned %d with errno=%d.\n",
+					__func__, ret, errno);
+			assert(0);
+		}
+
+		data->device_id = stat_data.st_dev;
+		data->inode_nr = stat_data.st_ino;
+	}
+}
+
+void get_file_id_by_path(const char *filename, struct file_id *data) {
+	struct stat stat_data;
+	int ret;
+
+	ret = stat(filename, &stat_data);
+	if (0 > ret) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: stat() returned %d with errno=%d.\n", __func__,
+				ret, errno);
+		assert(0);
+	}
+
+	data->device_id = stat_data.st_dev;
+	data->inode_nr = stat_data.st_ino;
 }
 
 void get_directories() {
@@ -182,7 +260,7 @@ void get_directories() {
 
 	ret = getcwd(cwd, sizeof(cwd));
 	if (NULL == ret) {
-		CALL_REAL_POSIX(fprintf)(stderr,
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 				"In function %s: getcwd() returned NULL with errno=%d.\n",
 				__func__, errno);
 		assert(0);
@@ -192,11 +270,11 @@ void get_directories() {
 	working_dir_data.process_id = pid;
 	working_dir_data.dir = cwd;
 
-	fd = CALL_REAL_POSIX(open)(working_dir_log_name,
+	fd = CALL_REAL_POSIX_SYNC(open)(working_dir_log_name,
 	O_WRONLY | O_CREAT | O_APPEND,
 	S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd) {
-		CALL_REAL_POSIX(fprintf)(stderr,
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 				"In function %s: open() of file %s returned %d.\n", __func__,
 				working_dir_log_name, fd);
 		assert(0);
@@ -204,20 +282,58 @@ void get_directories() {
 
 	json_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
 			&working_dir_data);
-	ret_int = dprintf(fd, "%s\n", buf_working_dir); //TODO: CALL_REAL_POSIX(dprintf)
+	ret_int = dprintf(fd, "%s\n", buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 	if (0 > ret_int) {
-		CALL_REAL_POSIX(fprintf)(stderr,
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 				"In function %s: dprintf() returned %d with errno=%d.\n",
 				__func__, ret_int, errno);
 		assert(0);
 	}
 
-	CALL_REAL_POSIX(close)(fd);
+	CALL_REAL_POSIX_SYNC(close)(fd);
 }
 
 void clear_init() {
 	init_done = 0;
 	tid = -1;
+}
+
+void open_std_fd(int fd) {
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+	file_descriptor_data.descriptor = fd;
+
+	data.time_start = gettime();
+	data.time_end = gettime();
+
+	data.return_state = ok;
+
+	writeData(&data);
+}
+
+void open_std_file(FILE * file) {
+	struct basic data;
+	struct file_stream file_stream_data;
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream,
+			file_stream_data)
+	file_stream_data.stream = file;
+
+	data.time_start = gettime();
+	data.time_end = gettime();
+
+	data.return_state = ok;
+
+	writeData(&data);
 }
 
 char init_done = 0;
@@ -238,12 +354,18 @@ void init_basic() {
 
 		log = getenv(env_log_name);
 		if (NULL == log) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: function getenv(\"%s\") returned NULL.\n",
 					__func__, env_log_name);
 			assert(0);
 		}
 		length = strlen(log);
+		if (MAXFILENAME < length + 17) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
+					__func__, env_log_name, length);
+			assert(0);
+		}
 		strcpy(log_name, log);
 		strcpy(filesystem_log_name, log);
 		strcpy(working_dir_log_name, log);
@@ -252,9 +374,13 @@ void init_basic() {
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 
 #ifndef IO_LIB_STATIC
+		strcpy(log_name_env, env_log_name);
+		strcpy(log_name_env + length, "=");
+		strcpy(log_name_env + length + 1, log);
+
 		log = getenv(env_ld_preload);
 		if (NULL == log) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: function getenv(\"%s\") returned NULL.\n",
 					__func__, env_ld_preload);
 			assert(0);
@@ -276,25 +402,33 @@ void init_basic() {
 		get_filesystem();
 		get_directories();
 
+#ifdef WITH_STD_IO
+		open_std_fd(STDIN_FILENO);
+		open_std_fd(STDOUT_FILENO);
+		open_std_fd(STDERR_FILENO);
+
+		open_std_file(stdin);
+		open_std_file(stdout);
+		open_std_file(stderr);
+#endif
+
 		init_done = 1;
 	}
 }
 
 void get_basic(struct basic *data) {
+	// lock write on tid
 	if (tid == -1) {
-		// ToDo: caching pid can be source of bugs, see man getpid()
 		tid = iotrace_gettid();
 	}
 
-// ToDo: are namespaces relevant (same pid for different processes in different namespaces)?
 	data->process_id = pid;
 	data->thread_id = tid;
 
-// ToDo: are hostnames relevant (multiple nodes)?
 	data->hostname = hostname;
 }
 
-u_int64_t gettime(void) {
+inline u_int64_t gettime(void) {
 	struct timespec t;
 	u_int64_t time;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
@@ -309,10 +443,10 @@ void printData() {
 	int fd;
 	pos = data_buffer;
 
-	fd = CALL_REAL_POSIX(open)(log_name, O_WRONLY | O_CREAT | O_APPEND,
+	fd = CALL_REAL_POSIX_SYNC(open)(log_name, O_WRONLY | O_CREAT | O_APPEND,
 	S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd) {
-		CALL_REAL_POSIX(fprintf)(stderr,
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 				"In function %s: open() of file %s returned %d.\n", __func__,
 				log_name, fd);
 		assert(0);
@@ -322,21 +456,18 @@ void printData() {
 		data = (struct basic *) ((void *) pos);
 
 		ret = json_struct_print_basic(buf, sizeof(buf), data);
-		//printf("%s\n", buf);
-		ret = dprintf(fd, "%s\n", buf); //TODO: CALL_REAL_POSIX(dprintf)
+		ret = dprintf(fd, "%s\n", buf); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 		if (0 > ret) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: dprintf() returned %d.\n", __func__, ret);
 			assert(0);
 		}
-		//printf("json-length:   %d\n", ret);
 		ret = json_struct_sizeof_basic(data);
-		//printf("buffer-length: %d\n", ret);
 
 		pos += ret;
 	}
 
-	CALL_REAL_POSIX(close)(fd);
+	CALL_REAL_POSIX_SYNC(close)(fd);
 
 	pos = data_buffer;
 	count_basic = 0;
@@ -353,7 +484,7 @@ void writeData(struct basic *data) {
 	}
 	if (pos + length > endpos) {
 		// ToDo: solve circular dependency
-		CALL_REAL_POSIX(fprintf)(stderr,
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 				"In function %s: buffer (%ld bytes) not big enough for even one struct basic (%d bytes).\n",
 				__func__, sizeof(data_buffer), length);
 		assert(0);
@@ -374,24 +505,43 @@ void cleanup() {
 }
 
 #ifndef IO_LIB_STATIC
-void check_ld_preload(char * const envp[], const char * func) {
-	int env_element = 0;
+void check_ld_preload(char * env[], char * const envp[], const char * func) {
+	int env_element;
 	char has_ld_preload = 0;
+	char envp_null = 0;
 
-	while (NULL != envp[env_element]) {
-		if (strcmp(ld_preload, envp[env_element]) == 0) {
-			has_ld_preload = 1;
+	for (env_element = 0; env_element < MAX_EXEC_ARRAY_LENGTH; env_element++) {
+		env[env_element] = envp[env_element];
+
+		if (NULL != envp[env_element]) {
+			if (strcmp(ld_preload, envp[env_element]) == 0) {
+				has_ld_preload = 1;
+			}
+		} else {
+			envp_null = 1;
 			break;
 		}
-		env_element++;
+	}
+
+	if (!envp_null) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: envp[] has more elements then buffer (%d).\n",
+				func,
+				MAX_EXEC_ARRAY_LENGTH);
+		assert(0);
 	}
 
 	if (!has_ld_preload) {
-		printf("pid:%d, don't has ld_preload\n", pid);
-		CALL_REAL_POSIX(fprintf)(stderr,
-				"In function %s: in envp[] %s was not set.\n", func,
-				ld_preload);
-		assert(0);
+		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 2) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: envp[] with added libiotrace-variables has more elements then buffer (%d).\n",
+					func,
+					MAX_EXEC_ARRAY_LENGTH);
+			assert(0);
+		}
+		env[env_element] = &ld_preload[0];
+		env[++env_element] = &log_name_env[0];
+		env[++env_element] = NULL;
 	}
 }
 #endif
@@ -401,17 +551,19 @@ int WRAP(execve)(const char *filename, char * const argv[], char * const envp[])
 	struct basic data;
 	WRAP_START(data)
 
-#ifndef IO_LIB_STATIC
-	check_ld_preload(envp, __func__);
-#endif
-
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
+#ifndef IO_LIB_STATIC
+	char * env[MAX_EXEC_ARRAY_LENGTH];
+	check_ld_preload(env, envp, __func__);
+	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, env)
+#else
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, envp)
+#endif
 
 	if (-1 == ret) {
 		data.return_state = error;
@@ -465,7 +617,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
 	element = (char *) ((void *) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: buffer (%d elements) not big enough for argument array.\n",
 					__func__, MAX_EXEC_ARRAY_LENGTH);
 			assert(0);
@@ -531,7 +683,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 	element = (char *) ((void *) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: buffer (%d elements) not big enough for argument array.\n",
 					__func__, MAX_EXEC_ARRAY_LENGTH);
 			assert(0);
@@ -556,14 +708,10 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 }
 
 #ifdef HAVE_EXECVPE
-int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[]) {
+int WRAP(execvpe)(const char *file, char * const argv[], char * const envp[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
-
-#ifndef IO_LIB_STATIC
-	check_ld_preload(envp, __func__);
-#endif
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -571,7 +719,13 @@ int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[]) {
 	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
+#ifndef IO_LIB_STATIC
+	char * env[MAX_EXEC_ARRAY_LENGTH];
+	check_ld_preload(env, envp, __func__);
+	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, env)
+#else
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, envp)
+#endif
 
 	if (-1 == ret) {
 		data.return_state = error;
@@ -587,7 +741,7 @@ int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[]) {
 int WRAP(execle)(const char *path, const char *arg,
 		... /*, (char *) NULL, char * const envp[] */) {
 #ifndef HAVE_EXECVPE
-	CALL_REAL_POSIX(fprintf)(stderr,
+	CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 			"In function %s: wrapper needs function execvpe() to work properly.\n",
 			__func__);
 	assert(0);
@@ -611,7 +765,7 @@ int WRAP(execle)(const char *path, const char *arg,
 	element = (char *) ((void *) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-			CALL_REAL_POSIX(fprintf)(stderr,
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: buffer (%d elements) not big enough for argument array.\n",
 					__func__, MAX_EXEC_ARRAY_LENGTH);
 			assert(0);
@@ -626,10 +780,12 @@ int WRAP(execle)(const char *path, const char *arg,
 	va_end(ap);
 
 #ifndef IO_LIB_STATIC
-	check_ld_preload(envp, __func__);
-#endif
-
+	char * env[MAX_EXEC_ARRAY_LENGTH];
+	check_ld_preload(env, envp, __func__);
+	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, env)
+#else
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, envp)
+#endif
 
 	if (-1 == ret) {
 		data.return_state = error;
@@ -640,3 +796,46 @@ int WRAP(execle)(const char *path, const char *arg,
 	WRAP_END(data)
 	return ret;
 }
+
+void WRAP(_exit)(int status) {
+	struct basic data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	data.return_state = ok;
+	CALL_REAL_FUNCTION_NO_RETURN(data, _exit, status)
+}
+
+#ifdef HAVE_EXIT
+void WRAP(_Exit)(int status) {
+	struct basic data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	data.return_state = ok;
+	CALL_REAL_FUNCTION_NO_RETURN(data, _Exit, status)
+}
+#endif
+
+#ifdef HAVE_EXIT_GROUP
+void WRAP(exit_group)(int status) {
+	struct basic data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	data.return_state = ok;
+	CALL_REAL_FUNCTION_NO_RETURN(data, exit_group, status)
+}
+#endif

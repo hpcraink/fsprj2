@@ -30,4 +30,29 @@ function (CheckCompilerAttributes)
         }
     "  HAVE_ATTRIBUTE_CONSTRUCTOR)
     # message ("HAVE_ATTRIBUTE_CONSTRUCTOR: ${HAVE_ATTRIBUTE_CONSTRUCTOR}")
+
+    check_c_source_compiles ("
+        static void exit(void) __attribute__((destructor));
+        static void exit(void) {}
+        int main(void) {
+            return 0;
+        }
+    "  HAVE_ATTRIBUTE_DESTRUCTOR)
+    # message ("HAVE_ATTRIBUTE_DESTRUCTOR: ${HAVE_ATTRIBUTE_DESTRUCTOR}")
+
+    check_c_source_compiles ("
+        static __thread int test = 0;
+        int main(void) {
+            return test;
+        }
+    "  HAVE_ATTRIBUTE_THREAD)
+    # message ("HAVE_ATTRIBUTE_THREAD: ${HAVE_ATTRIBUTE_THREAD}")
+
+    check_c_source_compiles ("
+        static __declspec(thread) int test = 0;
+        int main(void) {
+            return test;
+        }
+    "  HAVE_DECLSPEC_THREAD)
+    # message ("HAVE_DECLSPEC_THREAD: ${HAVE_DECLSPEC_THREAD}")
 endfunction ()

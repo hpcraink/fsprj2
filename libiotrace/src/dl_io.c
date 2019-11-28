@@ -46,11 +46,11 @@ void get_dlopen_flags(const int flags, struct dlopen_flags *dlf) {
 #ifdef HAVE_DLMOPEN
 enum so_namespace_mode_enum get_so_namespace_mode_enum(Lmid_t mode) {
 	switch (mode) {
-		case LM_ID_BASE:
+	case LM_ID_BASE:
 		return initial_namespace;
-		case LM_ID_NEWLM:
+	case LM_ID_NEWLM:
 		return new_namespace;
-		default:
+	default:
 		return unknown_so_namespace_mode;
 	}
 }
@@ -76,9 +76,12 @@ void * WRAP(dlopen)(const char *filename, int flags) {
 	if (NULL == ret) {
 		data.return_state = error;
 		shared_library_data.dl_handle = NULL;
+		dlopen_function_data.id.device_id = 0;
+		dlopen_function_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
 		shared_library_data.dl_handle = ret;
+		get_file_id_by_path(filename, &(dlopen_function_data.id));
 	}
 
 	WRAP_END(data)
@@ -118,9 +121,12 @@ void * WRAP(dlmopen)(Lmid_t lmid, const char *filename, int flags) {
 	if (NULL == ret) {
 		data.return_state = error;
 		shared_library_data.dl_handle = NULL;
+		dlmopen_function_data.id.device_id = 0;
+		dlmopen_function_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
 		shared_library_data.dl_handle = ret;
+		get_file_id_by_path(filename, &(dlmopen_function_data.id));
 	}
 
 	WRAP_END(data)

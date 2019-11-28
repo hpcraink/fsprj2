@@ -352,6 +352,12 @@ JSON_STRUCT_START(json_timespec)
   JSON_STRUCT_LONG_INT(nano_sec)
 JSON_STRUCT_END
 
+/* struct for file_id */
+JSON_STRUCT_START(file_id)
+  JOSN_STRUCT_DEV_T(device_id)
+  JOSN_STRUCT_INO_T(inode_nr)
+JSON_STRUCT_END
+
 /* struct for file open */
 JSON_STRUCT_START(open_function)
   JSON_STRUCT_ENUM(access_mode, mode)
@@ -359,6 +365,7 @@ JSON_STRUCT_START(open_function)
   JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
   JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
   JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 
 /* struct for file openat */
@@ -370,6 +377,7 @@ JSON_STRUCT_START(openat_function)
   JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
   JSON_STRUCT_ENUM(open_relative_to, relative_to)
   JSON_STRUCT_INT(file_descriptor)
+  JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 
 /* struct for file open descriptor as stream */
@@ -595,6 +603,7 @@ JSON_STRUCT_END
 JSON_STRUCT_START(dlopen_function)
   JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
   JSON_STRUCT_ARRAY_BITFIELD(dlopen_flags, dl_flags)
+  JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 
 #ifdef HAVE_DLMOPEN
@@ -622,6 +631,7 @@ JSON_STRUCT_START(dlmopen_function)
   JSON_STRUCT_VOID_P_END(so_namespace)
   JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
   JSON_STRUCT_ARRAY_BITFIELD(dlopen_flags, dl_flags)
+  JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 #endif
 
@@ -807,6 +817,11 @@ JSON_STRUCT_START(dirfd_function)
   JSON_STRUCT_INT(descriptor)
 JSON_STRUCT_END
 
+/* struct for sendmsg, recvmsg, sendmmsg and recvmmsg */
+JSON_STRUCT_START(msg_function)
+  JSON_STRUCT_INT(descriptor)
+JSON_STRUCT_END
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -879,11 +894,13 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, file_pair)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, readdir_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dirfd_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, msg_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 
 /* filesystem description */
 JSON_STRUCT_START(filesystem)
+  JOSN_STRUCT_DEV_T(device_id)
   JSON_STRUCT_CSTRING_P(name, MAXFILENAME)
   JSON_STRUCT_CSTRING_P(path_prefix, MAXFILENAME)
   JSON_STRUCT_CSTRING_P(mount_type, MAXFILENAME)

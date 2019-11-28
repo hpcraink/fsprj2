@@ -4,6 +4,19 @@ add_subdirectory(internal)
 
 # ToDo: generate file with set LINK_OPTIONS_STATIC and include it here
 
+list(APPEND LINK_OPTIONS_STATIC
+        "-Wl,-wrap=execve"
+        "-Wl,-wrap=execv"
+        "-Wl,-wrap=execl"
+        "-Wl,-wrap=execvp"
+        "-Wl,-wrap=execlp"
+        "-Wl,-wrap=execvpe"
+        "-Wl,-wrap=execle"
+        "-Wl,-wrap=_exit"
+        "-Wl,-wrap=_Exit"
+        "-Wl,-wrap=exit_group"
+)
+
 if(WITH_POSIX_IO)
     list(APPEND LINK_OPTIONS_STATIC
         "-Wl,-wrap=open"
@@ -65,6 +78,10 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=inotify_init1"
         "-Wl,-wrap=readdir"
         "-Wl,-wrap=dirfd"
+        "-Wl,-wrap=sendmsg"
+        "-Wl,-wrap=recvmsg"
+        "-Wl,-wrap=sendmmsg"
+        "-Wl,-wrap=recvmmsg"
         "-Wl,-wrap=fopen"
         "-Wl,-wrap=fopen64"
         "-Wl,-wrap=freopen"
@@ -159,13 +176,6 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=__fpending"
         "-Wl,-wrap=fork"
         "-Wl,-wrap=vfork"
-        "-Wl,-wrap=execve"
-        "-Wl,-wrap=execv"
-        "-Wl,-wrap=execl"
-        "-Wl,-wrap=execvp"
-        "-Wl,-wrap=execlp"
-        "-Wl,-wrap=execvpe"
-        "-Wl,-wrap=execle"
     )
 endif()
 

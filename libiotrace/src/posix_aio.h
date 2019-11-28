@@ -6,6 +6,8 @@
 #include <aio.h>
 #include "wrapper_defines.h"
 
+BEGIN_C_DECLS
+
 /* Function pointers for glibc functions */
 
 REAL_TYPE int REAL(aio_read)(struct aiocb *aiocbp) REAL_INIT;
@@ -49,5 +51,7 @@ REAL_TYPE int REAL(shm_open)(const char *name, int oflag, mode_t mode) REAL_INIT
 #ifndef IO_LIB_STATIC
 void posix_aio_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
+
+END_C_DECLS
 
 #endif /* LIBIOTRACE_POSIX_AIO_H */

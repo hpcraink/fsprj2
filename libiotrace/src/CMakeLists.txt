@@ -102,7 +102,12 @@ check_symbol_exists(inotify_init "sys/inotify.h" HAVE_INOTIFY_INIT)
 check_symbol_exists(inotify_init1 "sys/inotify.h" HAVE_INOTIFY_INIT1)
 check_symbol_exists(vfork "unistd.h" HAVE_VFORK)
 check_symbol_exists(dirfd "dirent.h" HAVE_DIRFD)
+check_symbol_exists(sendmmsg "sys/socket.h" HAVE_SENDMMSG)
+check_symbol_exists(recvmmsg "sys/socket.h" HAVE_RECVMMSG)
+
 check_symbol_exists(execvpe "unistd.h" HAVE_EXECVPE)
+#check_symbol_exists(_Exit "stdlib.h" HAVE_EXIT)
+#check_symbol_exists(exit_group "linux/unistd.h" HAVE_EXIT_GROUP)
 
 list(APPEND CMAKE_REQUIRED_LIBRARIES "-lrt")
 check_symbol_exists(aio_read64 "aio.h" HAVE_AIO_READ64)
@@ -117,6 +122,8 @@ check_symbol_exists(aio_cancel64 "aio.h" HAVE_AIO_CANCEL64)
 
 list(APPEND CMAKE_REQUIRED_LIBRARIES "-ldl")
 check_symbol_exists(dlmopen "dlfcn.h" HAVE_DLMOPEN)
+
+check_symbol_exists(getmntent_r "mntent.h" HAVE_GETMNTENT_R)
 
 #ToDo: right place to search for off64_t?
 check_symbol_exists(off64_t "stdio.h,sys/types.h" HAVE_OFF64_T)
@@ -175,6 +182,11 @@ set(SOURCE
 set(OPTIONS
     -D_GNU_SOURCE
 )
+
+#compile using cmake -DWITH_STD_IO for stdin, stdout and stderr
+if(WITH_STD_IO)
+    list(APPEND OPTIONS -DWITH_STD_IO)
+endif()
 
 #compile using cmake -DWITH_POSIX_IO for Posix-IO
 if(WITH_POSIX_IO)

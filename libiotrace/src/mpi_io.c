@@ -109,8 +109,11 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
 
 	if (-1 == ret) {
 		data.return_state = error;
+		open_data.id.device_id = 0;
+		open_data.id.inode_nr = 0;
 	} else {
 		data.return_state = ok;
+		get_file_id_by_path(filename, &(open_data.id));
 	}
 
 	file_mpi_data.mpi_file = fh;

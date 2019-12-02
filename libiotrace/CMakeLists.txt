@@ -10,11 +10,18 @@ set(CMAKE_BUILD_TYPE Debug)
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
 option (WITH_UNIT_TESTS "enable building unit tests" ON)
+option (LOGGING "write log (can be changed during execution with functions from libiotrace.h)" ON)
 option (WITH_STD_IO "log stdin, stdout and stderr IO" ON)
 option (WITH_POSIX_IO "build wrappers for Posix-IO" ON)
 option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
+
+set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
+
+set(STACKTRACE_DEPTH "0" CACHE STRING "stacktrace depth for logging")
+set(STACKTRACE_DEPTH_VALUES "0;1;2;3;4;5;6;7;8;9;10;11;12")
+set_property(CACHE STACKTRACE_DEPTH PROPERTY STRINGS ${STACKTRACE_DEPTH_VALUES})
 
 if(WITH_MPI_IO)
     find_package(MPI REQUIRED)

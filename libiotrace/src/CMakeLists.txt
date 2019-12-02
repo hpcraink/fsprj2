@@ -183,6 +183,14 @@ set(OPTIONS
     -D_GNU_SOURCE
 )
 
+#compile using cmake -DLOGGING for write log (can be changed during execution with functions from libiotrace.h)
+if(LOGGING)
+    list(APPEND OPTIONS -DLOGGING)
+endif()
+
+list(APPEND OPTIONS -DBUFFER_SIZE=${BUFFER_SIZE})
+list(APPEND OPTIONS -DSTACKTRACE_DEPTH=${STACKTRACE_DEPTH})
+
 #compile using cmake -DWITH_STD_IO for stdin, stdout and stderr
 if(WITH_STD_IO)
     list(APPEND OPTIONS -DWITH_STD_IO)
@@ -221,6 +229,8 @@ add_library(iotrace_shared SHARED ${SOURCE})
 add_library(iotrace_static STATIC ${SOURCE})
 
 add_library(iotrace_object OBJECT ${SOURCE})
+
+add_library(iotrace SHARED libiotrace.c)
 
 # ${CMAKE_DL_LIBS} needed for dlsym-function
 # "-lpthread" needed for pthread_atfork()

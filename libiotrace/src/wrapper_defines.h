@@ -44,9 +44,11 @@
 #  define __WRAP(function_name) __wrap_##function_name
 // ToDo: __func__ dependencies
 #  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__ + 7, MAXFUNCTIONNAME) /* +7 removes beginning __wrap_ from __func__ */
+#  define POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data) strncpy(data, __func__, MAXFUNCTIONNAME)
 #else
 #  define __WRAP(function_name) function_name
 #  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__, MAXFUNCTIONNAME)
+#  define POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data) POSIX_IO_SET_FUNCTION_NAME(data)
 #endif
 #define POSIX_IO_SET_FUNCTION_NAME_STRING(data, string) strncpy(data, string, MAXFUNCTIONNAME)
 

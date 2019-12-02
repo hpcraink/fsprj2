@@ -8,6 +8,9 @@
 #define MAXFUNCTIONNAME 40
 #define MAXERRORTEXT 1024
 
+#define MAX_STACKTRACE_DEPTH 50
+#define MAX_STACKTRACE_ENTRY_LENGTH 200
+
 JSON_STRUCT_START(file_stream)
   JSON_STRUCT_FILE_P(stream)
 JSON_STRUCT_END
@@ -354,8 +357,8 @@ JSON_STRUCT_END
 
 /* struct for file_id */
 JSON_STRUCT_START(file_id)
-  JOSN_STRUCT_DEV_T(device_id)
-  JOSN_STRUCT_INO_T(inode_nr)
+  JSON_STRUCT_DEV_T(device_id)
+  JSON_STRUCT_INO_T(inode_nr)
 JSON_STRUCT_END
 
 /* struct for file open */
@@ -833,6 +836,7 @@ JSON_STRUCT_START(basic)
   JSON_STRUCT_U_INT64_T(time_end)
   JSON_STRUCT_ENUM(read_write_state, return_state)
   JSON_STRUCT_STRUCT_P(errno_detail, return_state_detail)
+  JSON_STRUCT_MALLOC_STRING_ARRAY(stacktrace, MAX_STACKTRACE_DEPTH, MAX_STACKTRACE_ENTRY_LENGTH)
   JSON_STRUCT_VOID_P_START(file_type)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
 	JSON_STRUCT_VOID_P_ELEMENT(file_type, file_dir)
@@ -900,7 +904,7 @@ JSON_STRUCT_END
 
 /* filesystem description */
 JSON_STRUCT_START(filesystem)
-  JOSN_STRUCT_DEV_T(device_id)
+  JSON_STRUCT_DEV_T(device_id)
   JSON_STRUCT_CSTRING_P(name, MAXFILENAME)
   JSON_STRUCT_CSTRING_P(path_prefix, MAXFILENAME)
   JSON_STRUCT_CSTRING_P(mount_type, MAXFILENAME)

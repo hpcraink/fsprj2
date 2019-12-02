@@ -24,16 +24,33 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
+#include <execinfo.h>
+
 #include "os.h"
 #include "event.h"
 
+#include "libiotrace.h"
 #include "json_include_function.h"
 
 /* defines for exec-functions */
 #define MAX_EXEC_ARRAY_LENGTH 1000
 
+/* flags and values to control logging */
+#ifdef LOGGING
+static ATTRIBUTE_THREAD char no_logging = 0;
+#else
+static ATTRIBUTE_THREAD char no_logging = 1;
+#endif
+#ifdef STACKTRACE_DEPTH
+static ATTRIBUTE_THREAD int stacktrace_depth = STACKTRACE_DEPTH;
+#else
+static ATTRIBUTE_THREAD int stacktrace_depth = 4;
+#endif
+
 /* Buffer */
+#ifndef BUFFER_SIZE
 #define BUFFER_SIZE 1048576 // 1 MB
+#endif
 static char data_buffer[BUFFER_SIZE];
 static const char* endpos = data_buffer + BUFFER_SIZE;
 static char* pos;
@@ -65,6 +82,8 @@ static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
 #endif
 // once per thread
 static ATTRIBUTE_THREAD pid_t tid = -1;
+
+void cleanup() ATTRIBUTE_DESTRUCTOR;
 
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(execve)(const char *filename, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
@@ -131,7 +150,21 @@ void init_wrapper() {
 }
 #endif
 
-void cleanup() ATTRIBUTE_DESTRUCTOR;
+void libiotrace_start_log() {
+	no_logging = 0;
+}
+
+void libiotrace_end_log() {
+	no_logging = 1;
+}
+
+void libiotrace_log_stacktrace(int depth) {
+	stacktrace_depth = depth;
+}
+
+int libiotrace_get_stacktrace_depth() {
+	return stacktrace_depth;
+}
 
 void get_filesystem() {
 	FILE * file;
@@ -304,7 +337,7 @@ void open_std_fd(int fd) {
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	file_descriptor_data.descriptor = fd;
@@ -323,9 +356,8 @@ void open_std_file(FILE * file) {
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream,
-			file_stream_data)
+	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 	file_stream_data.stream = file;
 
 	data.time_start = gettime();
@@ -416,6 +448,43 @@ void init_basic() {
 	}
 }
 
+void get_stacktrace(struct basic *data) {
+	int size;
+	void * trace = malloc(sizeof(void *) * (stacktrace_depth + 3));
+	char ** messages = (char **) NULL;
+	char ** stacktrace;
+
+	if (NULL == trace) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: malloc() returned NULL.\n", __func__);
+		assert(0);
+	}
+
+	size = backtrace(trace, stacktrace_depth + 3);
+	messages = backtrace_symbols(trace, size);
+	if (NULL == messages) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: backtrace_symbols() returned NULL with errno=%d.\n",
+				__func__, errno);
+		assert(0);
+	}
+
+	stacktrace = malloc(sizeof(char *) * (size - 3));
+	if (NULL == stacktrace) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: malloc() returned NULL.\n", __func__);
+		assert(0);
+	}
+	for (int i = 3; i < size; ++i) {
+		stacktrace[i - 3] = messages[i]; // omit libiotrace intern function calls (get_stacktrace, get_basic and wrapper)
+	}
+	JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace, stacktrace,
+			size - 3)
+
+	free(trace);
+	free(messages);
+}
+
 void get_basic(struct basic *data) {
 	// lock write on tid
 	if (tid == -1) {
@@ -426,6 +495,12 @@ void get_basic(struct basic *data) {
 	data->thread_id = tid;
 
 	data->hostname = hostname;
+
+	if (0 < stacktrace_depth) {
+		get_stacktrace(data);
+	} else {
+		JSON_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace)
+	}
 }
 
 inline u_int64_t gettime(void) {
@@ -474,6 +549,10 @@ void printData() {
 }
 
 void writeData(struct basic *data) {
+	if (no_logging) {
+		return;
+	}
+
 	/* write (synchronized) */
 	pthread_mutex_lock(&lock);
 

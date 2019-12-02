@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <assert.h>
+#include "libiotrace.h"
 
 int main(void) {
     int fd;
@@ -14,6 +15,9 @@ int main(void) {
     char * p;
     long long toread;
     FILE * file;
+
+    libiotrace_start_log();
+    libiotrace_log_stacktrace(0);
 
     fd = open("/etc/passwd", O_RDONLY);
     assert (0 <= fd);
@@ -29,6 +33,16 @@ int main(void) {
 
     file = fdopen(fd, "r");
     assert (NULL != file);
- 
-    return fclose(file);
+
+    fclose(file);
+
+    libiotrace_end_log();
+
+    fd = open("/etc/passwd", O_RDONLY);
+    assert (0 <= fd);
+
+    libiotrace_start_log();
+    libiotrace_log_stacktrace(2);
+
+    close(fd);
 }

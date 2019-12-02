@@ -267,6 +267,7 @@ if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
     add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
     target_link_libraries(read_byte_and_stream_shared ${LINK_OPTIONS})
+    target_link_libraries(read_byte_and_stream_shared iotrace)
 
     add_library(read_byte_and_stream_object OBJECT read_byte_and_stream.c)
 

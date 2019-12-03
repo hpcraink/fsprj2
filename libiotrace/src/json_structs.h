@@ -825,6 +825,14 @@ JSON_STRUCT_START(msg_function)
   JSON_STRUCT_INT(descriptor)
 JSON_STRUCT_END
 
+/* struct for additional wrapper informations */
+#ifdef LOG_WRAPPER_TIME
+JSON_STRUCT_START(wrapper_data)
+  JSON_STRUCT_U_INT64_T(time_start)
+  JSON_STRUCT_U_INT64_T(time_end)
+JSON_STRUCT_END
+#endif
+
 /* basic struct for every call */
 JSON_STRUCT_START(basic)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
@@ -837,6 +845,9 @@ JSON_STRUCT_START(basic)
   JSON_STRUCT_ENUM(read_write_state, return_state)
   JSON_STRUCT_STRUCT_P(errno_detail, return_state_detail)
   JSON_STRUCT_MALLOC_STRING_ARRAY(stacktrace, MAX_STACKTRACE_DEPTH, MAX_STACKTRACE_ENTRY_LENGTH)
+#ifdef LOG_WRAPPER_TIME
+  JSON_STRUCT_STRUCT(wrapper_data, wrapper)
+#endif
   JSON_STRUCT_VOID_P_START(file_type)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
 	JSON_STRUCT_VOID_P_ELEMENT(file_type, file_dir)

@@ -344,6 +344,10 @@ void open_std_fd(int fd) {
 
 	data.time_start = gettime();
 	data.time_end = gettime();
+#ifdef LOG_WRAPPER_TIME
+	data.wrapper.time_start = data.time_start;
+	data.wrapper.time_end = data.time_end;
+#endif
 
 	data.return_state = ok;
 
@@ -362,6 +366,10 @@ void open_std_file(FILE * file) {
 
 	data.time_start = gettime();
 	data.time_end = gettime();
+#ifdef LOG_WRAPPER_TIME
+	data.wrapper.time_start = data.time_start;
+	data.wrapper.time_end = data.time_end;
+#endif
 
 	data.return_state = ok;
 

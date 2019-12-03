@@ -111,8 +111,16 @@
                                                                       return_value = P##function(__VA_ARGS__); \
                                                                       errno_data.errno_value = errno; \
                                                                       data.time_end = gettime();
+#ifdef LOG_WRAPPER_TIME
+#  define WRAPPER_TIME_START(data) data.wrapper.time_start = gettime();
+#  define WRAPPER_TIME_END(data) data.wrapper.time_end = gettime();
+#else
+#  define WRAPPER_TIME_START(data)
+#  define WRAPPER_TIME_END(data)
+#endif
 #define WRAP_START(data) struct errno_detail errno_data; \
                          errno_data.errno_value = errno; \
+                         WRAPPER_TIME_START(data) \
                          if (!init_done) { \
                              init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
                                            /* init_basic() must be called first */ \
@@ -136,11 +144,13 @@
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
                              GET_ERRNO(data) \
+                             WRAPPER_TIME_END(data) \
                              writeData(&data); \
                          } \
                          errno = errno_data.errno_value;
 #else
 #  define WRAP_END(data) GET_ERRNO(data) \
+                         WRAPPER_TIME_END(data) \
                          writeData(&data); \
                          errno = errno_data.errno_value;
 #endif

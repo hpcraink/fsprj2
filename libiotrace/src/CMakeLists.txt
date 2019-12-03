@@ -188,6 +188,11 @@ if(LOGGING)
     list(APPEND OPTIONS -DLOGGING)
 endif()
 
+#compile using cmake -DLOG_WRAPPER_TIME for logging start and end time of function wrappers
+if(LOG_WRAPPER_TIME)
+    list(APPEND OPTIONS -DLOG_WRAPPER_TIME)
+endif()
+
 list(APPEND OPTIONS -DBUFFER_SIZE=${BUFFER_SIZE})
 list(APPEND OPTIONS -DSTACKTRACE_DEPTH=${STACKTRACE_DEPTH})
 

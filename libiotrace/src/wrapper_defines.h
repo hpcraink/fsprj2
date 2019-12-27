@@ -129,7 +129,8 @@
 //kcmp() is linux-specific! But without kcmp() a duped descriptor will not be recognized! That will lead to problems by following analysis of written data!
 //ToDo: check for which file_type should not be written instead of which should be written
 #ifndef WITH_STD_IO
-#  define WRAP_END(data) if(data.file_type == NULL || \
+#  define WRAP_END(data) GET_ERRNO(data) \
+                         if(data.file_type == NULL || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_mpi || \
@@ -143,18 +144,20 @@
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
-                             GET_ERRNO(data) \
-                             WRAPPER_TIME_END(data) \
-                             writeData(&data); \
+                           writeData(&data); \
                          } \
+                         WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #else
 #  define WRAP_END(data) GET_ERRNO(data) \
-                         WRAPPER_TIME_END(data) \
                          writeData(&data); \
+                         WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
 
-#define WRAP_END_WITHOUT_WRITE(data) errno = errno_data.errno_value;
+#define WRAP_END_WITHOUT_WRITE(data) WRAP_FREE(&data) \
+                                     errno = errno_data.errno_value;
+
+#define WRAP_FREE(data) freeMemory(data);
 
 #endif /* LIBIOTRACE_WRAPPER_DEFINES_H */

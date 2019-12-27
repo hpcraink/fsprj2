@@ -23,7 +23,7 @@
 BEGIN_C_DECLS
 
 extern char init_done;
-void init_basic() ATTRIBUTE_CONSTRUCTOR;
+void init_basic();
 
 void get_basic(struct basic *data);
 
@@ -34,6 +34,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data);
 u_int64_t gettime(void);
 
 void writeData(struct basic *data);
+void freeMemory(struct basic *data);
 
 
 /* All exec-functions replace the current process image without calling __attribute__((destructor)).

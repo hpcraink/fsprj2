@@ -44,7 +44,7 @@ static ATTRIBUTE_THREAD char no_logging = 1;
 #ifdef STACKTRACE_DEPTH
 static ATTRIBUTE_THREAD int stacktrace_depth = STACKTRACE_DEPTH;
 #else
-static ATTRIBUTE_THREAD int stacktrace_depth = 4;
+static ATTRIBUTE_THREAD int stacktrace_depth = 0;
 #endif
 
 /* Buffer */
@@ -342,16 +342,17 @@ void open_std_fd(int fd) {
 			file_descriptor_data)
 	file_descriptor_data.descriptor = fd;
 
-	data.time_start = gettime();
-	data.time_end = gettime();
+	data.time_start = 0;
+	data.time_end = 0;
 #ifdef LOG_WRAPPER_TIME
-	data.wrapper.time_start = data.time_start;
-	data.wrapper.time_end = data.time_end;
+	data.wrapper.time_start = 0;
+	data.wrapper.time_end = 0;
 #endif
 
 	data.return_state = ok;
 
 	writeData(&data);
+	WRAP_FREE(&data)
 }
 
 void open_std_file(FILE * file) {
@@ -364,16 +365,47 @@ void open_std_file(FILE * file) {
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 	file_stream_data.stream = file;
 
-	data.time_start = gettime();
-	data.time_end = gettime();
+	data.time_start = 0;
+	data.time_end = 0;
 #ifdef LOG_WRAPPER_TIME
-	data.wrapper.time_start = data.time_start;
-	data.wrapper.time_end = data.time_end;
+	data.wrapper.time_start = 0;
+	data.wrapper.time_end = 0;
 #endif
 
 	data.return_state = ok;
 
 	writeData(&data);
+	WRAP_FREE(&data)
+}
+
+void init_on_load() ATTRIBUTE_CONSTRUCTOR;
+
+void init_on_load() {
+#ifdef LOG_WRAPPER_TIME
+	struct basic data;
+	data.time_start = 0;
+	data.time_end = 0;
+	data.return_state = ok;
+	data.return_state_detail = NULL;
+#endif
+
+	WRAPPER_TIME_START(data)
+
+	init_basic();
+
+#ifdef LOG_WRAPPER_TIME
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+#endif
+
+	WRAPPER_TIME_END(data);
+
+#ifdef LOG_WRAPPER_TIME
+	writeData(&data);
+	WRAP_FREE(&data)
+#endif
 }
 
 char init_done = 0;
@@ -460,7 +492,6 @@ void get_stacktrace(struct basic *data) {
 	int size;
 	void * trace = malloc(sizeof(void *) * (stacktrace_depth + 3));
 	char ** messages = (char **) NULL;
-	char ** stacktrace;
 
 	if (NULL == trace) {
 		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -469,6 +500,11 @@ void get_stacktrace(struct basic *data) {
 	}
 
 	size = backtrace(trace, stacktrace_depth + 3);
+	if (0 >= size) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: backtrace() returned %d.\n", __func__, size);
+		assert(0);
+	}
 	messages = backtrace_symbols(trace, size);
 	if (NULL == messages) {
 		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -477,20 +513,9 @@ void get_stacktrace(struct basic *data) {
 		assert(0);
 	}
 
-	stacktrace = malloc(sizeof(char *) * (size - 3));
-	if (NULL == stacktrace) {
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-				"In function %s: malloc() returned NULL.\n", __func__);
-		assert(0);
-	}
-	for (int i = 3; i < size; ++i) {
-		stacktrace[i - 3] = messages[i]; // omit libiotrace intern function calls (get_stacktrace, get_basic and wrapper)
-	}
-	JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace, stacktrace,
-			size - 3)
+	JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace, messages, 3, size)
 
 	free(trace);
-	free(messages);
 }
 
 void get_basic(struct basic *data) {
@@ -557,6 +582,10 @@ void printData() {
 }
 
 void writeData(struct basic *data) {
+#ifdef LOG_WRAPPER_TIME
+	static char *old_pos;
+#endif
+
 	if (no_logging) {
 		return;
 	}
@@ -577,16 +606,52 @@ void writeData(struct basic *data) {
 		assert(0);
 	}
 
+#ifdef LOG_WRAPPER_TIME
+	old_pos = pos;
+#endif
 	pos = (void*) json_struct_copy_basic((void*) pos, data);
 	count_basic++;
+	// insert end time for wrapper in buffer
+	WRAPPER_TIME_END((*((struct basic *)((void *)old_pos))))
 
 	pthread_mutex_unlock(&lock);
 }
 
+void freeMemory(struct basic *data) {
+	json_struct_free_basic(data);
+}
+
 void cleanup() {
+#ifdef LOG_WRAPPER_TIME
+	struct basic data;
+	data.time_start = 0;
+	data.time_end = 0;
+	data.return_state = ok;
+	data.return_state_detail = NULL;
+#endif
+
+	WRAPPER_TIME_START(data)
+
 	pthread_mutex_lock(&lock);
 	printData();
 	pthread_mutex_unlock(&lock);
+
+#ifdef LOG_WRAPPER_TIME
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+#endif
+
+	WRAPPER_TIME_END(data);
+
+#ifdef LOG_WRAPPER_TIME
+	writeData(&data);
+	pthread_mutex_lock(&lock);
+	printData();
+	pthread_mutex_unlock(&lock);
+	WRAP_FREE(&data)
+#endif
 
 	pthread_mutex_destroy(&lock);
 }

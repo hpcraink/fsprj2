@@ -46,6 +46,16 @@ static ATTRIBUTE_THREAD int stacktrace_depth = STACKTRACE_DEPTH;
 #else
 static ATTRIBUTE_THREAD int stacktrace_depth = 0;
 #endif
+#ifdef STACKTRACE_PTR
+static ATTRIBUTE_THREAD char stacktrace_ptr = STACKTRACE_PTR;
+#else
+static ATTRIBUTE_THREAD char stacktrace_ptr = 0;
+#endif
+#ifdef STACKTRACE_SYMBOL
+static ATTRIBUTE_THREAD char stacktrace_symbol = STACKTRACE_SYMBOL;
+#else
+static ATTRIBUTE_THREAD char stacktrace_symbol = 0;
+#endif
 
 /* Buffer */
 #ifndef BUFFER_SIZE
@@ -158,7 +168,23 @@ void libiotrace_end_log() {
 	no_logging = 1;
 }
 
-void libiotrace_log_stacktrace(int depth) {
+void libiotrace_start_stacktrace_ptr() {
+	stacktrace_ptr = 1;
+}
+
+void libiotrace_end_stacktrace_ptr() {
+	stacktrace_ptr = 0;
+}
+
+void libiotrace_start_stacktrace_symbol() {
+	stacktrace_symbol = 1;
+}
+
+void libiotrace_end_stacktrace_symbol() {
+	stacktrace_symbol = 0;
+}
+
+void libiotrace_set_stacktrace_depth(int depth) {
 	stacktrace_depth = depth;
 }
 
@@ -505,17 +531,32 @@ void get_stacktrace(struct basic *data) {
 				"In function %s: backtrace() returned %d.\n", __func__, size);
 		assert(0);
 	}
-	messages = backtrace_symbols(trace, size);
-	if (NULL == messages) {
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-				"In function %s: backtrace_symbols() returned NULL with errno=%d.\n",
-				__func__, errno);
-		assert(0);
+
+	if (stacktrace_ptr) {
+		JSON_STRUCT_SET_MALLOC_PTR_ARRAY((*data), stacktrace_pointer, trace, 3,
+				size)
+	} else {
+		JSON_STRUCT_SET_MALLOC_PTR_ARRAY_NULL((*data), stacktrace_pointer)
 	}
 
-	JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace, messages, 3, size)
+	if (stacktrace_symbol) {
+		messages = backtrace_symbols(trace, size);
+		if (NULL == messages) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: backtrace_symbols() returned NULL with errno=%d.\n",
+					__func__, errno);
+			assert(0);
+		}
 
-	free(trace);
+		JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace_symbols,
+				messages, 3, size)
+	} else {
+		JSON_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace_symbols)
+	}
+
+	if (!stacktrace_ptr) {
+		free(trace);
+	}
 }
 
 void get_basic(struct basic *data) {
@@ -529,10 +570,11 @@ void get_basic(struct basic *data) {
 
 	data->hostname = hostname;
 
-	if (0 < stacktrace_depth) {
+	if (0 < stacktrace_depth && (stacktrace_ptr || stacktrace_symbol)) {
 		get_stacktrace(data);
 	} else {
-		JSON_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace)
+		JSON_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace_symbols)
+		JSON_STRUCT_SET_MALLOC_PTR_ARRAY_NULL((*data), stacktrace_pointer)
 	}
 }
 

@@ -17,7 +17,9 @@ int main(void) {
     FILE * file;
 
     libiotrace_start_log();
-    libiotrace_log_stacktrace(0);
+    libiotrace_start_stacktrace_ptr();
+    libiotrace_start_stacktrace_symbol();
+    libiotrace_set_stacktrace_depth(0);
 
     fd = open("/etc/passwd", O_RDONLY);
     assert (0 <= fd);
@@ -42,7 +44,7 @@ int main(void) {
     assert (0 <= fd);
 
     libiotrace_start_log();
-    libiotrace_log_stacktrace(2);
+    libiotrace_set_stacktrace_depth(2);
 
     close(fd);
 }

@@ -196,6 +196,16 @@ endif()
 list(APPEND OPTIONS -DBUFFER_SIZE=${BUFFER_SIZE})
 list(APPEND OPTIONS -DSTACKTRACE_DEPTH=${STACKTRACE_DEPTH})
 
+#compile using cmake -DSTACKTRACE_PTR for writing stacktrace pointer to log
+if(STACKTRACE_PTR)
+    list(APPEND OPTIONS -DSTACKTRACE_PTR)
+endif()
+
+#compile using cmake -DSTACKTRACE_SYMBOL for writing stacktrace symbols to log
+if(STACKTRACE_SYMBOL)
+    list(APPEND OPTIONS -DSTACKTRACE_SYMBOL)
+endif()
+
 #compile using cmake -DWITH_STD_IO for stdin, stdout and stderr
 if(WITH_STD_IO)
     list(APPEND OPTIONS -DWITH_STD_IO)

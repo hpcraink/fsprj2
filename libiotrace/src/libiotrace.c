@@ -8,7 +8,23 @@ void libiotrace_end_log() {
 	return;
 }
 
-void libiotrace_log_stacktrace(int depth) {
+void libiotrace_start_stacktrace_ptr() {
+	return;
+}
+
+void libiotrace_end_stacktrace_ptr() {
+	return;
+}
+
+void libiotrace_start_stacktrace_symbol() {
+	return;
+}
+
+void libiotrace_end_stacktrace_symbol() {
+	return;
+}
+
+void libiotrace_set_stacktrace_depth(int depth) {
 	return;
 }
 

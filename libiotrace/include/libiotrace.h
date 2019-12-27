@@ -42,11 +42,33 @@ void libiotrace_start_log();
 void libiotrace_end_log();
 
 /**
- * Set stacktrace depth for logging.
+ * Start logging of stacktrace pointer in actual thread
+ * (if logging is active and stacktrace depth is greater than 0).
+ */
+void libiotrace_start_stacktrace_ptr();
+
+/**
+ * End logging of stacktrace pointer in actual thread.
+ */
+void libiotrace_end_stacktrace_ptr();
+
+/**
+ * Start logging of stacktrace symbols in actual thread
+ * (if logging is active and stacktrace depth is greater than 0).
+ */
+void libiotrace_start_stacktrace_symbol();
+
+/**
+ * End logging of stacktrace symbols in actual thread.
+ */
+void libiotrace_end_stacktrace_symbol();
+
+/**
+ * Set stacktrace depth for logging in actual thread.
  *
  * @param[in] depth           The stacktrace depth (if set to 0 no stacktrace is logged)
  */
-void libiotrace_log_stacktrace(int depth);
+void libiotrace_set_stacktrace_depth(int depth);
 
 
 /**

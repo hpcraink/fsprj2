@@ -1,11 +1,13 @@
 project(libiotrace)
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.3.2)
 
 enable_language(C)
 
 # XXX For production version, these should be deleted (it's a user-option)
 # set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_BUILD_TYPE Debug)
+
+set(CMAKE_C_STANDARD 99)
 
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS

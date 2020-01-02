@@ -11,7 +11,7 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <stdio_ext.h>
-#include <bits/stdint-uintn.h>
+#include <stdint.h>
 #include <fcntl.h>
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
@@ -1001,6 +1001,7 @@ enum posix_madvice_advice get_posix_madvice_advice(int advice) {
 	}
 }
 
+#if defined(F_GET_RW_HINT) || defined(F_SET_RW_HINT) || defined(F_GET_FILE_RW_HINT) || defined(F_SET_FILE_RW_HINT)
 enum hint_write_life get_hint_write_life(uint64_t hint) {
 	switch (hint) {
 	case RWF_WRITE_LIFE_NOT_SET: /* ToDo: RWF instead of RWH ??? */
@@ -1019,6 +1020,7 @@ enum hint_write_life get_hint_write_life(uint64_t hint) {
 		return unknown_hint_write_life;
 	}
 }
+#endif
 
 enum fcntl_cmd get_fcntl_cmd(int cmd) {
 	switch (cmd) {
@@ -1040,12 +1042,18 @@ enum fcntl_cmd get_fcntl_cmd(int cmd) {
 		return setlkw;
 	case F_GETLK:
 		return getlk;
+#ifdef F_OFD_SETLK
 	case F_OFD_SETLK:
 		return ofd_setlk;
+#endif
+#ifdef F_OFD_SETLKW
 	case F_OFD_SETLKW:
 		return ofd_setlkw;
+#endif
+#ifdef F_OFD_GETLK
 	case F_OFD_GETLK:
 		return ofd_getlk;
+#endif
 	case F_GETOWN:
 		return getown;
 	case F_SETOWN:
@@ -1068,18 +1076,30 @@ enum fcntl_cmd get_fcntl_cmd(int cmd) {
 		return setpipe_sz;
 	case F_GETPIPE_SZ:
 		return getpipe_sz;
+#ifdef F_ADD_SEALS
 	case F_ADD_SEALS:
 		return add_seals;
+#endif
+#ifdef F_GET_SEALS
 	case F_GET_SEALS:
 		return get_seals;
+#endif
+#ifdef F_GET_RW_HINT
 	case F_GET_RW_HINT:
 		return get_rw_hint;
+#endif
+#ifdef F_SET_RW_HINT
 	case F_SET_RW_HINT:
 		return set_rw_hint;
+#endif
+#ifdef F_GET_FILE_RW_HINT
 	case F_GET_FILE_RW_HINT:
 		return get_file_rw_hint;
+#endif
+#ifdef F_SET_FILE_RW_HINT
 	case F_SET_FILE_RW_HINT:
 		return set_file_rw_hint;
+#endif
 	default:
 		return unknown_fcntl_cmd;
 	}
@@ -1134,6 +1154,7 @@ void get_status_flags(const int flags, struct status_flags *sf) {
 	sf->sequential = 0;
 }
 
+#if defined(HAVE_PREADV2) || defined(HAVE_PREADV64V2) || defined(HAVE_PWRITEV2) || defined(HAVE_PWRITEV64V2)
 void get_rwf_flags(const int flags, struct rwf_flags *rf) {
 	rf->hipri = flags & RWF_HIPRI ? 1 : 0;
 	rf->dsync = flags & RWF_DSYNC ? 1 : 0;
@@ -1143,6 +1164,7 @@ void get_rwf_flags(const int flags, struct rwf_flags *rf) {
 	rf->append = flags & RWF_APPEND ? 1 : 0;
 #endif
 }
+#endif
 
 void get_mode_flags(mode_t mode, struct mode_flags *mf) {
 	mf->read_by_owner = mode & S_IRUSR ? 1 : 0;
@@ -1166,12 +1188,14 @@ void get_directory_notify_flags(int flags, struct directory_notify_flags *dnf) {
 	dnf->directory_multishot = flags & DN_MULTISHOT ? 1 : 0;
 }
 
+#if defined(F_ADD_SEALS) || defined(F_GET_SEALS)
 void get_seal_flags(int flags, struct seal_flags *sf) {
 	sf->seal_seal = flags & F_SEAL_SEAL ? 1 : 0;
 	sf->seal_shrink = flags & F_SEAL_SHRINK ? 1 : 0;
 	sf->seal_grow = flags & F_SEAL_GROW ? 1 : 0;
 	sf->seal_write = flags & F_SEAL_WRITE ? 1 : 0;
 }
+#endif
 
 void get_memory_protection_flags(int protect,
 		struct memory_protection_flags *mmf) {
@@ -2839,6 +2863,7 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_pipe_size,
 				fcntl_pipe_size_data)
 		break;
+#ifdef F_ADD_SEALS
 	case add_seals:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
@@ -2846,6 +2871,7 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
 				fcntl_seal_data)
 		break;
+#endif
 	case getfd:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		get_file_descriptor_flags(ret, &fcntl_fd_function_data.fd_flags);
@@ -2890,12 +2916,14 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_pipe_size,
 				fcntl_pipe_size_data)
 		break;
+#ifdef F_GET_SEALS
 	case get_seals:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		get_seal_flags(ret, &fcntl_seal_data.flags);
 		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
 				fcntl_seal_data)
 		break;
+#endif
 	case setlk:
 	case setlkw:
 	case getlk:
@@ -2929,11 +2957,13 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 	case set_rw_hint:
 	case get_file_rw_hint:
 	case set_file_rw_hint:
+#if defined(F_GET_RW_HINT) || defined(F_SET_RW_HINT) || defined(F_GET_FILE_RW_HINT) || defined(F_SET_FILE_RW_HINT)
 		arg_uint64_t = va_arg(ap, uint64_t *);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_uint64_t)
 		fcntl_hint_data.hint = get_hint_write_life(*arg_uint64_t);
 		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_hint,
 				fcntl_hint_data)
+#endif
 		break;
 	}
 	va_end(ap);

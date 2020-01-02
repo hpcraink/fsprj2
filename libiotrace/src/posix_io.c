@@ -188,7 +188,11 @@ REAL_DEFINITION_TYPE ssize_t REAL_DEFINITION(recvmsg)(int sockfd, struct msghdr 
 REAL_DEFINITION_TYPE int REAL_DEFINITION(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags) REAL_DEFINITION_INIT;
 #endif
 #ifdef HAVE_RECVMMSG
+#  ifdef HAVE_RECVMMSG_CONST_TIMESPEC
+REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, const struct timespec *timeout) REAL_DEFINITION_INIT;
+#  else
 REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_DEFINITION_INIT;
+#  endif
 #endif
 
 /* POSIX and GNU extension stream */
@@ -3615,7 +3619,11 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int fl
 #endif
 
 #ifdef HAVE_RECVMMSG
+#  ifdef HAVE_RECVMMSG_CONST_TIMESPEC
+int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, const struct timespec *timeout) {
+#  else
 int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) {
+#  endif
 	int ret;
 	int fd;
 	struct msghdr *msg;

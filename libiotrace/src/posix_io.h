@@ -183,7 +183,11 @@ REAL_TYPE ssize_t REAL(recvmsg)(int sockfd, struct msghdr *msg, int flags) REAL_
 REAL_TYPE int REAL(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags) REAL_INIT;
 #endif
 #ifdef HAVE_RECVMMSG
+#  ifdef HAVE_RECVMMSG_CONST_TIMESPEC
+REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, const struct timespec *timeout) REAL_INIT;
+#  else
 REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_INIT;
+#  endif
 #endif
 
 //inotify_add_watch

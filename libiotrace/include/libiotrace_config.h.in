@@ -495,6 +495,9 @@
 /* Define to 1 if compiler supports attribute __thread. */
 #cmakedefine HAVE_ATTRIBUTE_THREAD 1
 
+/* Define to 1 if parameter type timespec for function recvmmsg is const. */
+#cmakedefine HAVE_RECVMMSG_CONST_TIMESPEC 1
+
 /*  Define to 1 if limits.h has HOST_NAME_MAX. */
 #cmakedefine HAVE_HOST_NAME_MAX 1
 

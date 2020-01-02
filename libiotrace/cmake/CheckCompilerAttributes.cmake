@@ -55,4 +55,18 @@ function (CheckCompilerAttributes)
         }
     "  HAVE_DECLSPEC_THREAD)
     # message ("HAVE_DECLSPEC_THREAD: ${HAVE_DECLSPEC_THREAD}")
+
+    check_c_source_compiles ("
+        #define _GNU_SOURCE
+        #include <sys/socket.h>
+        
+        int recvmmsg (int __fd, struct mmsghdr *__vmessages,
+                     unsigned int __vlen, int __flags,
+                     const struct timespec *__tmo);
+        
+        int main(void) {
+            return 0;
+        }
+    "  HAVE_RECVMMSG_CONST_TIMESPEC)
+    # message ("HAVE_RECVMMSG_CONST_TIMESPEC: ${HAVE_RECVMMSG_CONST_TIMESPEC}")
 endfunction ()

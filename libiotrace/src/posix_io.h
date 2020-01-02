@@ -145,7 +145,9 @@ REAL_TYPE int REAL(pipe)(int pipefd[2]) REAL_INIT;
 #ifdef HAVE_PIPE2
 REAL_TYPE int REAL(pipe2)(int pipefd[2], int flags) REAL_INIT;
 #endif
+#ifdef HAVE_MEMFD_CREATE
 REAL_TYPE int REAL(memfd_create)(const char *name, unsigned int flags) REAL_INIT;
+#endif
 #ifdef HAVE_EPOLL_CREATE
 REAL_TYPE int REAL(epoll_create)(int size) REAL_INIT;
 #endif

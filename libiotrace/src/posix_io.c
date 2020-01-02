@@ -150,7 +150,9 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(pipe)(int pipefd[2]) REAL_DEFINITION_IN
 #ifdef HAVE_PIPE2
 REAL_DEFINITION_TYPE int REAL_DEFINITION(pipe2)(int pipefd[2], int flags) REAL_DEFINITION_INIT;
 #endif
+#ifdef HAVE_MEMFD_CREATE
 REAL_DEFINITION_TYPE int REAL_DEFINITION(memfd_create)(const char *name, unsigned int flags) REAL_DEFINITION_INIT;
+#endif
 #ifdef HAVE_EPOLL_CREATE
 REAL_DEFINITION_TYPE int REAL_DEFINITION(epoll_create)(int size) REAL_DEFINITION_INIT;
 #endif
@@ -553,7 +555,9 @@ void posix_io_init() {
 #ifdef HAVE_PIPE2
 		DLSYM(pipe2);
 #endif
+#ifdef HAVE_MEMFD_CREATE
 		DLSYM(memfd_create);
+#endif
 #ifdef HAVE_EPOLL_CREATE
 		DLSYM(epoll_create);
 #endif
@@ -3137,6 +3141,7 @@ int WRAP(pipe2)(int pipefd[2], int flags) {
 }
 #endif
 
+#ifdef HAVE_MEMFD_CREATE
 int WRAP(memfd_create)(const char *name, unsigned int flags) {
 	int ret;
 	struct basic data;
@@ -3161,6 +3166,7 @@ int WRAP(memfd_create)(const char *name, unsigned int flags) {
 	WRAP_END(data)
 	return ret;
 }
+#endif
 
 #ifdef HAVE_EPOLL_CREATE
 int WRAP(epoll_create)(int size) {

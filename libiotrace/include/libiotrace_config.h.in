@@ -266,6 +266,9 @@
 /* Define to 1 if system supports pipe2(). */
 #cmakedefine HAVE_PIPE2 1
 
+/* Define to 1 if system supports memfd_create(). */
+#cmakedefine HAVE_MEMFD_CREATE 1
+
 /* Define to 1 if system supports tmpfile64(). */
 #cmakedefine HAVE_TMPFILE64 1
 

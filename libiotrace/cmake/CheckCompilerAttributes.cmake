@@ -60,7 +60,7 @@ function (CheckCompilerAttributes)
         #define _GNU_SOURCE
         #include <sys/socket.h>
         
-        int recvmmsg (int __fd, struct mmsghdr *__vmessages,
+        extern int recvmmsg (int __fd, struct mmsghdr *__vmessages,
                      unsigned int __vlen, int __flags,
                      const struct timespec *__tmo);
         

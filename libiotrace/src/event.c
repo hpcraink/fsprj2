@@ -458,7 +458,7 @@ void init_basic() {
 			assert(0);
 		}
 		length = strlen(log);
-		if (MAXFILENAME < length + 17) {
+		if (MAXFILENAME < length + 17 + strlen(hostname)) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
 					__func__, env_log_name, length);
@@ -468,7 +468,9 @@ void init_basic() {
 		strcpy(filesystem_log_name, log);
 		strcpy(working_dir_log_name, log);
 		strcpy(log_name + length, "_iotrace.log");
-		strcpy(filesystem_log_name + length, "_filesystem.log");
+		strcpy(filesystem_log_name + length, "_filesystem_");
+		strcpy(filesystem_log_name + length + 12, hostname);
+		strcpy(filesystem_log_name + length + 12 + strlen(hostname), ".log");
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 
 #ifndef IO_LIB_STATIC

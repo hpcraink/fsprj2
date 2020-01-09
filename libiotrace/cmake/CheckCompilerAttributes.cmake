@@ -2,7 +2,7 @@ function (CheckCompilerAttributes)
     include (CheckCSourceCompiles)
 
     check_c_source_compiles ("
-        char * strcpy(char * dst, const char * src);
+        extern char * strcpy(char * dst, const char * src);
         void testFunc(char * var) __attribute__((nonnull(1)));
         void testFunc(char * var) { strcpy (var, \"Hello World\"); }
         int main(void) {

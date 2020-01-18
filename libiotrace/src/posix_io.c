@@ -1012,19 +1012,19 @@ enum posix_madvice_advice get_posix_madvice_advice(int advice) {
 #if defined(F_GET_RW_HINT) || defined(F_SET_RW_HINT) || defined(F_GET_FILE_RW_HINT) || defined(F_SET_FILE_RW_HINT)
 enum hint_write_life get_hint_write_life(uint64_t hint) {
 	switch (hint) {
-	case RWF_WRITE_LIFE_NOT_SET: /* ToDo: RWF instead of RWH ??? */
+		case RWF_WRITE_LIFE_NOT_SET: /* ToDo: RWF instead of RWH ??? */
 		return hint_write_life_not_set;
-	case RWH_WRITE_LIFE_NONE:
+		case RWH_WRITE_LIFE_NONE:
 		return hint_write_life_none;
-	case RWH_WRITE_LIFE_SHORT:
+		case RWH_WRITE_LIFE_SHORT:
 		return hint_write_life_short;
-	case RWH_WRITE_LIFE_MEDIUM:
+		case RWH_WRITE_LIFE_MEDIUM:
 		return hint_write_life_medium;
-	case RWH_WRITE_LIFE_LONG:
+		case RWH_WRITE_LIFE_LONG:
 		return hint_write_life_long;
-	case RWH_WRITE_LIFE_EXTREME:
+		case RWH_WRITE_LIFE_EXTREME:
 		return hint_write_life_extreme;
-	default:
+		default:
 		return unknown_hint_write_life;
 	}
 }
@@ -1051,15 +1051,15 @@ enum fcntl_cmd get_fcntl_cmd(int cmd) {
 	case F_GETLK:
 		return getlk;
 #ifdef F_OFD_SETLK
-	case F_OFD_SETLK:
+		case F_OFD_SETLK:
 		return ofd_setlk;
 #endif
 #ifdef F_OFD_SETLKW
-	case F_OFD_SETLKW:
+		case F_OFD_SETLKW:
 		return ofd_setlkw;
 #endif
 #ifdef F_OFD_GETLK
-	case F_OFD_GETLK:
+		case F_OFD_GETLK:
 		return ofd_getlk;
 #endif
 	case F_GETOWN:
@@ -1085,27 +1085,27 @@ enum fcntl_cmd get_fcntl_cmd(int cmd) {
 	case F_GETPIPE_SZ:
 		return getpipe_sz;
 #ifdef F_ADD_SEALS
-	case F_ADD_SEALS:
+		case F_ADD_SEALS:
 		return add_seals;
 #endif
 #ifdef F_GET_SEALS
-	case F_GET_SEALS:
+		case F_GET_SEALS:
 		return get_seals;
 #endif
 #ifdef F_GET_RW_HINT
-	case F_GET_RW_HINT:
+		case F_GET_RW_HINT:
 		return get_rw_hint;
 #endif
 #ifdef F_SET_RW_HINT
-	case F_SET_RW_HINT:
+		case F_SET_RW_HINT:
 		return set_rw_hint;
 #endif
 #ifdef F_GET_FILE_RW_HINT
-	case F_GET_FILE_RW_HINT:
+		case F_GET_FILE_RW_HINT:
 		return get_file_rw_hint;
 #endif
 #ifdef F_SET_FILE_RW_HINT
-	case F_SET_FILE_RW_HINT:
+		case F_SET_FILE_RW_HINT:
 		return set_file_rw_hint;
 #endif
 	default:
@@ -2872,7 +2872,7 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 				fcntl_pipe_size_data)
 		break;
 #ifdef F_ADD_SEALS
-	case add_seals:
+		case add_seals:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		get_seal_flags(arg_int, &fcntl_seal_data.flags);
@@ -2925,7 +2925,7 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 				fcntl_pipe_size_data)
 		break;
 #ifdef F_GET_SEALS
-	case get_seals:
+		case get_seals:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		get_seal_flags(ret, &fcntl_seal_data.flags);
 		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
@@ -3529,12 +3529,13 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, sendmsg, sockfd, msg, flags)
 
+	get_basic(&data);
+
 	if (-1 != ret) {
 		fd = get_fd_from_msg(msg);
 		if (-1 != fd) {
 			msg_function_data.descriptor = fd;
 
-			get_basic(&data);
 			JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
 					msg_function_data)
 			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -3562,12 +3563,13 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, recvmsg, sockfd, msg, flags)
 
+	get_basic(&data);
+
 	if (-1 != ret) {
 		fd = get_fd_from_msg(msg);
 		if (-1 != fd) {
 			msg_function_data.descriptor = fd;
 
-			get_basic(&data);
 			JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
 					msg_function_data)
 			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -3586,7 +3588,8 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
 }
 
 #ifdef HAVE_SENDMMSG
-int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags) {
+int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+		int flags) {
 	int ret;
 	int fd;
 	struct msghdr *msg;
@@ -3597,14 +3600,15 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int fl
 
 	CALL_REAL_FUNCTION_RET(data, ret, sendmmsg, sockfd, msgvec, vlen, flags)
 
+	get_basic(&data);
+
 	if (-1 != ret) {
-		for (int i=0; i < vlen; i++) {
-			msg = &((msgvec+i)->msg_hdr);
+		for (int i = 0; i < vlen; i++) {
+			msg = &((msgvec + i)->msg_hdr);
 			fd = get_fd_from_msg(msg);
 			if (-1 != fd) {
 				msg_function_data.descriptor = fd;
 
-				get_basic(&data);
 				JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
 						msg_function_data)
 				POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -3628,7 +3632,8 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int fl
 #  ifdef HAVE_RECVMMSG_CONST_TIMESPEC
 int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, const struct timespec *timeout) {
 #  else
-int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) {
+int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+		int flags, struct timespec *timeout) {
 #  endif
 	int ret;
 	int fd;
@@ -3638,16 +3643,18 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int fl
 	struct file_descriptor file_descriptor_data;
 	WRAP_START(data)
 
-	CALL_REAL_FUNCTION_RET(data, ret, recvmmsg, sockfd, msgvec, vlen, flags, timeout)
+	CALL_REAL_FUNCTION_RET(data, ret, recvmmsg, sockfd, msgvec, vlen, flags,
+			timeout)
+
+	get_basic(&data);
 
 	if (-1 != ret) {
-		for (int i=0; i < vlen; i++) {
-			msg = &((msgvec+i)->msg_hdr);
+		for (int i = 0; i < vlen; i++) {
+			msg = &((msgvec + i)->msg_hdr);
 			fd = get_fd_from_msg(msg);
 			if (-1 != fd) {
 				msg_function_data.descriptor = fd;
 
-				get_basic(&data);
 				JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
 						msg_function_data)
 				POSIX_IO_SET_FUNCTION_NAME(data.function_name);

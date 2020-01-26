@@ -326,6 +326,7 @@ void get_directories() {
 	}
 
 	working_dir_data.time = gettime();
+	working_dir_data.hostname = hostname;
 	working_dir_data.process_id = pid;
 	working_dir_data.dir = cwd;
 

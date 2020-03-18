@@ -58,7 +58,7 @@ if (WITH_UNIT_TESTS)
     #
     # XXX Bail out by just adding the cunit git as submodule
     # git rm --cached ext/cunit
-    # rm -f ext
+    # rm -rf ext
     # git submodule add https://gitlab.com/cunity/cunit.git ext/cunit
     add_subdirectory(ext/cunit)
 endif()

@@ -40,7 +40,11 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 	}
 
 	public FileTraceId receiveFileTraceId() {
-		return sendFileTraceId.getFirst();
+		return sendFileTraceId.removeFirst();
+	}
+
+	public boolean hasSendFileTraceId() {
+		return !sendFileTraceId.isEmpty();
 	}
 
 	public void addFileLock(FileLock fileLock) {
@@ -225,10 +229,16 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 	private Set<FunctionEvent> getOverlappingFileRange(FileRange fileRange) {
 		Set<FunctionEvent> events = new TreeSet<FunctionEvent>();
 
-		Collection<ArrayList<FunctionEvent>> eventsByStartPos = fileRangesByStartPos
-				.subMap(fileRange.getStartPos(), fileRange.getEndPos()).values();
-		Collection<ArrayList<FunctionEvent>> eventsByEndPos = fileRangesByEndPos
-				.subMap(fileRange.getStartPos(), fileRange.getEndPos()).values();
+		Collection<ArrayList<FunctionEvent>> eventsByStartPos = new LinkedList<ArrayList<FunctionEvent>>();
+		eventsByStartPos.addAll(fileRangesByStartPos.subMap(fileRange.getStartPos(), fileRange.getEndPos()).values());
+		if (fileRangesByStartPos.containsKey(fileRange.getEndPos())) {
+			eventsByStartPos.add(fileRangesByStartPos.get(fileRange.getEndPos()));
+		}
+		Collection<ArrayList<FunctionEvent>> eventsByEndPos = new LinkedList<ArrayList<FunctionEvent>>();
+		eventsByEndPos.addAll(fileRangesByEndPos.subMap(fileRange.getStartPos(), fileRange.getEndPos()).values());
+		if (fileRangesByEndPos.containsKey(fileRange.getEndPos())) {
+			eventsByEndPos.add(fileRangesByEndPos.get(fileRange.getEndPos()));
+		}
 		for (ArrayList<FunctionEvent> e : eventsByStartPos) {
 			events.addAll(e);
 		}
@@ -236,7 +246,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 			events.addAll(e);
 		}
 
-		if (events.size() > 1) {
+		if (!events.isEmpty()) {
 			return events;
 		} else {
 			return null;

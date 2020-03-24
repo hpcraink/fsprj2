@@ -678,7 +678,9 @@ public class Data {
 	 * @param id     id for caching the {@link FileTrace}
 	 */
 	public void openTrace(IdType idType, String id) {
-		FileTrace tmpFileTrace = openTrace(new FileId(tmpHostName, -1, -1));
+		FileTrace tmpFileTrace = openTrace(new FileId(tmpHostName, -1, -1)); // TODO: use real FileId for Sockets and
+																				// Pipes (DeviceID, FileNumber from
+																				// Wrapper)
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType, id, tmpFileTrace, null);
 
@@ -1334,28 +1336,56 @@ public class Data {
 		}
 	}
 
-	public void sendId(IdType idType, String id, IdType sendIdType, String sendId) {
+	public void sendId(IdType idType, String id, IdType sendIdType, LinkedList<String> sendIds) {
 		FileTraceId fileTraceId = tmpProcessTrace.getFileTraceId(idType, id);
-		FileTraceId sendFileTraceId = tmpProcessTrace.getFileTraceId(sendIdType, sendId);
+		Set<FileTraceId> fileTraces = new HashSet<>();
+
+		fileTraces.add(fileTraceId);
 
 		if (fileTraceId != null) {
-			fileTraceId.getFileTrace().sendFileTraceId(sendFileTraceId);
+			for (String sendId : sendIds) {
+				FileTraceId sendFileTraceId = tmpProcessTrace.getFileTraceId(sendIdType, sendId);
+
+				if (sendFileTraceId == null) {
+					noFileTrace++;
+					infoMap.put("without file-trace " + noFileTrace, tmpJson);
+				} else {
+					fileTraces.add(sendFileTraceId);
+					fileTraceId.getFileTrace().sendFileTraceId(sendFileTraceId);
+				}
+			}
 		}
 
-		addEvent(fileTraceId);
+		addEvent(fileTraces);
 	}
 
-	public void receiveId(IdType idType, String id, IdType receiveIdType, String receiveId) {
+	public void receiveId(IdType idType, String id, IdType receiveIdType, LinkedList<String> receiveIds) {
 		FileTraceId fileTraceId = tmpProcessTrace.getFileTraceId(idType, id);
+		Set<FileTraceId> fileTraces = new HashSet<>();
+
+		fileTraces.add(fileTraceId);
 
 		if (fileTraceId != null) {
-			FileTraceId originalfileTraceId = fileTraceId.getFileTrace().receiveFileTraceId();
-			FileTrace fileTrace = originalfileTraceId.getFileTrace();
-			FileOffset fileOffset = originalfileTraceId.getFileOffset();
-			tmpProcessTrace.setFileTraceId(receiveIdType, receiveId, fileTrace, fileOffset);
+			for (String sendId : receiveIds) {
+				if (fileTraceId.getFileTrace().hasSendFileTraceId()) {
+					FileTraceId originalfileTraceId = fileTraceId.getFileTrace().receiveFileTraceId();
+					FileTrace fileTrace = originalfileTraceId.getFileTrace();
+					FileOffset fileOffset = originalfileTraceId.getFileOffset();
+					FileTraceId newFileTraceID = tmpProcessTrace.setFileTraceId(receiveIdType, sendId, fileTrace,
+							fileOffset);
+					fileTraces.add(newFileTraceID);
+				} else {
+					// if no send FileTraceId is stored: ignore it
+					// (this can be if the sending process is from a other program or the connection
+					// between the sending and receiving socket is unknown: e.g. connection is build
+					// via call of bind or connect function)
+					noFileTrace++;
+					infoMap.put("without file-trace " + noFileTrace, tmpJson);
+				}
+			}
 		}
 
-		addEvent(fileTraceId);
+		addEvent(fileTraces);
 	}
 
 	// TODO: use cmd method from AnalyzeFunctionPool class

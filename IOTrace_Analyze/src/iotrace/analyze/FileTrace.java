@@ -383,7 +383,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 		String file = (String) fileNames.toArray()[0];
 		int index = file.lastIndexOf("/");
 		if (index > -1) {
-			file = file.substring(file.lastIndexOf("/"));
+			file = file.substring(index);
 		}
 		return file;
 	}

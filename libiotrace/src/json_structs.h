@@ -11,6 +11,8 @@
 #define MAX_STACKTRACE_DEPTH 50
 #define MAX_STACKTRACE_ENTRY_LENGTH 200
 
+#define MAX_MSG_FILE_DESCRIPTORS 200
+
 JSON_STRUCT_START(file_stream)
   JSON_STRUCT_FILE_P(stream)
 JSON_STRUCT_END
@@ -822,7 +824,7 @@ JSON_STRUCT_END
 
 /* struct for sendmsg, recvmsg, sendmmsg and recvmmsg */
 JSON_STRUCT_START(msg_function)
-  JSON_STRUCT_INT(descriptor)
+  JSON_STRUCT_INT_ARRAY(descriptors, MAX_MSG_FILE_DESCRIPTORS)
 JSON_STRUCT_END
 
 /* struct for additional wrapper informations */
@@ -858,7 +860,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_mpi)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, shared_library)
   JSON_STRUCT_VOID_P_END(file_type)
-  // ToDo: new field for boolean which shows if file position is changed (e.g. copy_file_range don't change file position)
+  // ToDo: new field for boolean which shows if file position has changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)
   JSON_STRUCT_VOID_P_START(function_data)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, fork_function)

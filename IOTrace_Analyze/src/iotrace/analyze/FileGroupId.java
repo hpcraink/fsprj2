@@ -2,14 +2,15 @@ package iotrace.analyze;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import iotrace.analyze.FileTrace.FileKind;
 
 public class FileGroupId implements Comparable<FileGroupId> {
 	private String[] files;
-	private HashSet<FileKind> kinds = new HashSet<>();
+	private Map<FileKind, String> kinds = new HashMap<>();
 
 	public FileGroupId(ArrayList<FunctionEvent> events) {
 		TreeSet<String> filesSort = new TreeSet<>();
@@ -17,11 +18,12 @@ public class FileGroupId implements Comparable<FileGroupId> {
 		for (FunctionEvent e : events) {
 			FileTrace fileTrace = e.getFileTrace();
 			if (fileTrace == null) {
-				filesSort.add("unknown file");
-				kinds.add(FileKind.UNKNOWN);
+				String tmp = "unknown file";
+				filesSort.add(tmp);
+				kinds.put(FileKind.UNKNOWN, tmp);
 			} else {
 				filesSort.add(fileTrace.toString());
-				kinds.add(fileTrace.getKind());
+				kinds.put(fileTrace.getKind(), fileTrace.getNameFromId(""));
 			}
 		}
 
@@ -31,11 +33,21 @@ public class FileGroupId implements Comparable<FileGroupId> {
 
 	public boolean isKind(ArrayList<FileKind> kinds) {
 		for (FileKind k : kinds) {
-			if (this.kinds.contains(k)) {
+			if (this.kinds.containsKey(k)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public String getFirstFileName(ArrayList<FileKind> kinds) {
+		for (FileKind k : kinds) {
+			if (this.kinds.containsKey(k)) {
+				return this.kinds.get(k);
+			}
+		}
+
+		return null;
 	}
 
 	@Override

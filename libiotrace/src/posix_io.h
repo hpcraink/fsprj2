@@ -199,7 +199,7 @@ REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vl
 //int forkpty ( int *amaster, char *name, const struct termios *termp, const struct winsize *winp )
 //ToDo: fcntl64
 //ToDo: readlink, readlinkat
-//ToDo: ioctl
+//ToDo: ioctl (I_SENDFD and I_RECVFD for sending/receiving file descriptor)
 //ToDo: stat, stat64, fstat, fstat64, lstat, lstat64, statfs
 //ToDo: statvfs, fstatvfs
 //ToDo: chown, fchown

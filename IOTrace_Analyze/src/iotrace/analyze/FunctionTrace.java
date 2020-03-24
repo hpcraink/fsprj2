@@ -117,7 +117,7 @@ public class FunctionTrace implements Traceable {
 
 	@Override
 	public long getCountSubTraces(ArrayList<FileKind> kinds) {
-		// ToDo: cache
+		// TODO: cache
 		return getSubTraces(kinds).size();
 	}
 
@@ -127,7 +127,7 @@ public class FunctionTrace implements Traceable {
 
 		for (Entry<FileGroupId, FileGroupTrace> e : functionEvents.entrySet()) {
 			if (e.getKey().isKind(kinds)) {
-				subTraces.put(e.getKey().toString(), e.getValue());
+				subTraces.put(e.getKey().getFirstFileName(kinds), e.getValue());
 			}
 		}
 

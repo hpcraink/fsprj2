@@ -119,15 +119,6 @@ public class PieChart {
 
 	private String getName(KeyValueTreeNode node) {
 		String name = node.getKey();
-		if (name.endsWith("]]")) {
-			int comma = name.indexOf(",");
-
-			if (comma > -1) {
-				name = name.substring(name.lastIndexOf("/", comma), comma);
-			} else {
-				name = name.substring(name.lastIndexOf("/"), name.length() - 2);
-			}
-		}
 
 		return name + " (" + format(node.getValue()) + ")";
 	}

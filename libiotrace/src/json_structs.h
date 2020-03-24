@@ -5,13 +5,22 @@
 #ifdef JSON_STRUCT
 
 #define MAXFILENAME PATH_MAX /* get length filename from limits.h */
-#define MAXFUNCTIONNAME 40
-#define MAXERRORTEXT 1024
+#ifndef MAX_ERROR_TEXT
+#  define MAX_ERROR_TEXT 1024
+#endif
+#ifndef MAX_FUNCTION_NAME
+#  define MAX_FUNCTION_NAME 40
+#endif
+#ifndef MAX_MSG_FILE_DESCRIPTORS
+#  define MAX_MSG_FILE_DESCRIPTORS 200
+#endif
 
-#define MAX_STACKTRACE_DEPTH 50
-#define MAX_STACKTRACE_ENTRY_LENGTH 200
-
-#define MAX_MSG_FILE_DESCRIPTORS 200
+#ifndef MAX_STACKTRACE_DEPTH
+#  define MAX_STACKTRACE_DEPTH 50
+#endif
+#ifndef MAX_STACKTRACE_ENTRY_LENGTH
+#  define MAX_STACKTRACE_ENTRY_LENGTH 200
+#endif
 
 JSON_STRUCT_START(file_stream)
   JSON_STRUCT_FILE_P(stream)
@@ -44,7 +53,7 @@ JSON_STRUCT_END
 
 JSON_STRUCT_START(errno_detail)
   JSON_STRUCT_INT(errno_value)
-  JSON_STRUCT_CSTRING_P(errno_text, MAXERRORTEXT)
+  JSON_STRUCT_CSTRING_P(errno_text, MAX_ERROR_TEXT)
 JSON_STRUCT_END
 
 JSON_STRUCT_ENUM_START(access_mode)
@@ -841,7 +850,7 @@ JSON_STRUCT_START(basic)
   JSON_STRUCT_PID_T(process_id)
   JSON_STRUCT_PID_T(thread_id)
   // ToDo: function_name as CSTRING_P ?
-  JSON_STRUCT_CSTRING(function_name, MAXFUNCTIONNAME)
+  JSON_STRUCT_CSTRING(function_name, MAX_FUNCTION_NAME)
   JSON_STRUCT_U_INT64_T(time_start)
   JSON_STRUCT_U_INT64_T(time_end)
   JSON_STRUCT_ENUM(read_write_state, return_state)

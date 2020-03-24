@@ -33,37 +33,39 @@
 #include "json_include_function.h"
 
 /* defines for exec-functions */
-#define MAX_EXEC_ARRAY_LENGTH 1000
+#ifndef MAX_EXEC_ARRAY_LENGTH
+#  define MAX_EXEC_ARRAY_LENGTH 1000
+#endif
 
 /* flags and values to control logging */
 #ifdef LOGGING
 static ATTRIBUTE_THREAD char no_logging = 0;
-#else
+#  else
 static ATTRIBUTE_THREAD char no_logging = 1;
 #endif
 #ifdef STACKTRACE_DEPTH
 static ATTRIBUTE_THREAD int stacktrace_depth = STACKTRACE_DEPTH;
-#else
+#  else
 static ATTRIBUTE_THREAD int stacktrace_depth = 0;
 #endif
 #ifdef STACKTRACE_PTR
 static ATTRIBUTE_THREAD char stacktrace_ptr = STACKTRACE_PTR;
-#else
+#  else
 static ATTRIBUTE_THREAD char stacktrace_ptr = 0;
 #endif
 #ifdef STACKTRACE_SYMBOL
 static ATTRIBUTE_THREAD char stacktrace_symbol = STACKTRACE_SYMBOL;
-#else
+#  else
 static ATTRIBUTE_THREAD char stacktrace_symbol = 0;
 #endif
 
 /* Buffer */
 #ifndef BUFFER_SIZE
-#define BUFFER_SIZE 1048576 // 1 MB
+#  define BUFFER_SIZE 1048576 // 1 MB
 #endif
 static char data_buffer[BUFFER_SIZE];
-static const char* endpos = data_buffer + BUFFER_SIZE;
-static char* pos;
+static const char *endpos = data_buffer + BUFFER_SIZE;
+static char *pos;
 static int count_basic;
 
 // Todo: multiple definition of host_name_max in libiotrace_config.h and here?
@@ -75,9 +77,9 @@ static int host_name_max;
 static pthread_mutex_t lock;
 
 /* environment variables */
-static const char * env_log_name = "IOTRACE_LOG_NAME";
+static const char *env_log_name = "IOTRACE_LOG_NAME";
 #ifndef IO_LIB_STATIC
-static const char * env_ld_preload = "LD_PRELOAD";
+static const char *env_ld_preload = "LD_PRELOAD";
 #endif
 
 // once per process
@@ -193,7 +195,7 @@ int libiotrace_get_stacktrace_depth() {
 }
 
 void get_filesystem() {
-	FILE * file;
+	FILE *file;
 #ifdef HAVE_GETMNTENT_R
 	struct mntent filesystem_entry;
 	char buf[4 * MAXFILENAME];
@@ -313,7 +315,7 @@ void get_directories() {
 	char buf_working_dir[json_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
 	struct working_dir working_dir_data;
 	char cwd[MAXFILENAME];
-	char * ret;
+	char *ret;
 	int fd;
 	int ret_int;
 
@@ -382,7 +384,7 @@ void open_std_fd(int fd) {
 	WRAP_FREE(&data)
 }
 
-void open_std_file(FILE * file) {
+void open_std_file(FILE *file) {
 	struct basic data;
 	struct file_stream file_stream_data;
 
@@ -437,7 +439,7 @@ void init_on_load() {
 
 char init_done = 0;
 void init_basic() {
-	char * log;
+	char *log;
 	int length;
 
 	if (!init_done) {
@@ -519,8 +521,8 @@ void init_basic() {
 
 void get_stacktrace(struct basic *data) {
 	int size;
-	void * trace = malloc(sizeof(void *) * (stacktrace_depth + 3));
-	char ** messages = (char **) NULL;
+	void *trace = malloc(sizeof(void*) * (stacktrace_depth + 3));
+	char **messages = (char**) NULL;
 
 	if (NULL == trace) {
 		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -606,7 +608,7 @@ void printData() {
 	}
 
 	for (int i = 0; i < count_basic; i++) {
-		data = (struct basic *) ((void *) pos);
+		data = (struct basic*) ((void*) pos);
 
 		ret = json_struct_print_basic(buf, sizeof(buf), data);
 		ret = dprintf(fd, "%s\n", buf); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
@@ -702,7 +704,7 @@ void cleanup() {
 }
 
 #ifndef IO_LIB_STATIC
-void check_ld_preload(char * env[], char * const envp[], const char * func) {
+void check_ld_preload(char *env[], char *const envp[], const char *func) {
 	int env_element;
 	char has_ld_preload = 0;
 	char envp_null = 0;
@@ -743,7 +745,7 @@ void check_ld_preload(char * env[], char * const envp[], const char * func) {
 }
 #endif
 
-int WRAP(execve)(const char *filename, char * const argv[], char * const envp[]) {
+int WRAP(execve)(const char *filename, char *const argv[], char *const envp[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
@@ -755,7 +757,7 @@ int WRAP(execve)(const char *filename, char * const argv[], char * const envp[])
 
 	data.return_state = ok;
 #ifndef IO_LIB_STATIC
-	char * env[MAX_EXEC_ARRAY_LENGTH];
+	char *env[MAX_EXEC_ARRAY_LENGTH];
 	check_ld_preload(env, envp, __func__);
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, env)
 #else
@@ -772,7 +774,7 @@ int WRAP(execve)(const char *filename, char * const argv[], char * const envp[])
 	return ret;
 }
 
-int WRAP(execv)(const char *path, char * const argv[]) {
+int WRAP(execv)(const char *path, char *const argv[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
@@ -798,9 +800,9 @@ int WRAP(execv)(const char *path, char * const argv[]) {
 int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
 	int ret;
 	struct basic data;
-	char * argv[MAX_EXEC_ARRAY_LENGTH];
+	char *argv[MAX_EXEC_ARRAY_LENGTH];
 	int count = 0;
-	char * element;
+	char *element;
 	va_list ap;
 	WRAP_START(data)
 
@@ -811,7 +813,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
 
 	data.return_state = ok;
 	va_start(ap, arg);
-	element = (char *) ((void *) arg);
+	element = (char*) ((void*) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -822,7 +824,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
 		argv[count] = element;
 		count++;
 
-		element = va_arg(ap, char *);
+		element = va_arg(ap, char*);
 	}
 	argv[count] = element;
 	va_end(ap);
@@ -838,7 +840,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
 	return ret;
 }
 
-int WRAP(execvp)(const char *file, char * const argv[]) {
+int WRAP(execvp)(const char *file, char *const argv[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
@@ -864,9 +866,9 @@ int WRAP(execvp)(const char *file, char * const argv[]) {
 int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 	int ret;
 	struct basic data;
-	char * argv[MAX_EXEC_ARRAY_LENGTH];
+	char *argv[MAX_EXEC_ARRAY_LENGTH];
 	int count = 0;
-	char * element;
+	char *element;
 	va_list ap;
 	WRAP_START(data)
 
@@ -877,7 +879,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 
 	data.return_state = ok;
 	va_start(ap, arg);
-	element = (char *) ((void *) arg);
+	element = (char*) ((void*) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -888,7 +890,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 		argv[count] = element;
 		count++;
 
-		element = va_arg(ap, char *);
+		element = va_arg(ap, char*);
 	}
 	argv[count] = element;
 	va_end(ap);
@@ -905,7 +907,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 }
 
 #ifdef HAVE_EXECVPE
-int WRAP(execvpe)(const char *file, char * const argv[], char * const envp[]) {
+int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
@@ -917,7 +919,7 @@ int WRAP(execvpe)(const char *file, char * const argv[], char * const envp[]) {
 
 	data.return_state = ok;
 #ifndef IO_LIB_STATIC
-	char * env[MAX_EXEC_ARRAY_LENGTH];
+	char *env[MAX_EXEC_ARRAY_LENGTH];
 	check_ld_preload(env, envp, __func__);
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, env)
 #else
@@ -945,10 +947,10 @@ int WRAP(execle)(const char *path, const char *arg,
 #endif
 	int ret;
 	struct basic data;
-	char * argv[MAX_EXEC_ARRAY_LENGTH];
+	char *argv[MAX_EXEC_ARRAY_LENGTH];
 	int count = 0;
-	char * element;
-	char ** envp;
+	char *element;
+	char **envp;
 	va_list ap;
 	WRAP_START(data)
 
@@ -959,7 +961,7 @@ int WRAP(execle)(const char *path, const char *arg,
 
 	data.return_state = ok;
 	va_start(ap, arg);
-	element = (char *) ((void *) arg);
+	element = (char*) ((void*) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -970,14 +972,14 @@ int WRAP(execle)(const char *path, const char *arg,
 		argv[count] = element;
 		count++;
 
-		element = va_arg(ap, char *);
+		element = va_arg(ap, char*);
 	}
 	argv[count] = element;
-	envp = va_arg(ap, char **);
+	envp = va_arg(ap, char**);
 	va_end(ap);
 
 #ifndef IO_LIB_STATIC
-	char * env[MAX_EXEC_ARRAY_LENGTH];
+	char *env[MAX_EXEC_ARRAY_LENGTH];
 	check_ld_preload(env, envp, __func__);
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, env)
 #else

@@ -43,26 +43,26 @@
 #ifdef IO_LIB_STATIC
 #  define __WRAP(function_name) __wrap_##function_name
 // ToDo: __func__ dependencies
-#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__ + 7, MAXFUNCTIONNAME) /* +7 removes beginning __wrap_ from __func__ */
-#  define POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data) strncpy(data, __func__, MAXFUNCTIONNAME)
+#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__ + 7, MAX_FUNCTION_NAME) /* +7 removes beginning __wrap_ from __func__ */
+#  define POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data) strncpy(data, __func__, MAX_FUNCTION_NAME)
 #else
 #  define __WRAP(function_name) function_name
-#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__, MAXFUNCTIONNAME)
+#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__, MAX_FUNCTION_NAME)
 #  define POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data) POSIX_IO_SET_FUNCTION_NAME(data)
 #endif
-#define POSIX_IO_SET_FUNCTION_NAME_STRING(data, string) strncpy(data, string, MAXFUNCTIONNAME)
+#define POSIX_IO_SET_FUNCTION_NAME_STRING(data, string) strncpy(data, string, MAX_FUNCTION_NAME)
 
 #define ERROR_FUNCTION(data) __ERROR_FUNCTION(data)
 #if (_POSIX_C_SOURCE >= 200112L) && !  _GNU_SOURCE
-#  define __ERROR_FUNCTION(data) if (0 != strerror_r(errno_data.errno_value, tmp_errno_text, MAXERRORTEXT)) { \
-                                     snprintf(tmp_errno_text, MAXERRORTEXT, "Unknown error %d", errno_data.errno_value); \
+#  define __ERROR_FUNCTION(data) if (0 != strerror_r(errno_data.errno_value, tmp_errno_text, MAX_ERROR_TEXT)) { \
+                                     snprintf(tmp_errno_text, MAX_ERROR_TEXT, "Unknown error %d", errno_data.errno_value); \
                                  } \
                                  errno_data.errno_text = tmp_errno_text;
 #else
-#  define __ERROR_FUNCTION(data) errno_data.errno_text = strerror_r(errno_data.errno_value, tmp_errno_text, MAXERRORTEXT);
+#  define __ERROR_FUNCTION(data) errno_data.errno_text = strerror_r(errno_data.errno_value, tmp_errno_text, MAX_ERROR_TEXT);
 #endif
 
-#define GET_ERRNO(data) {char tmp_errno_text[MAXERRORTEXT]; \
+#define GET_ERRNO(data) {char tmp_errno_text[MAX_ERROR_TEXT]; \
                          if (error == data.return_state && 0 != errno_data.errno_value) { \
                              ERROR_FUNCTION(data) \
                              data.return_state_detail = &errno_data; \

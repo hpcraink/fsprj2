@@ -59,8 +59,6 @@ import it.uniroma1.dis.wsngroup.gexf4j.core.impl.data.AttributeListImpl;
 
 import java.util.TreeMap;
 
-import com.itextpdf.awt.geom.misc.RenderingHints.Key;
-
 public class Data {
 	/**
 	 * Set of all methods needed to build {@link FileTrace}'s and

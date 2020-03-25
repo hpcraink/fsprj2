@@ -1,6 +1,8 @@
 package iotrace.analyze;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -10,6 +12,7 @@ public class KeyValueTreeNode implements Comparable<KeyValueTreeNode> {
 
 	private KeyValueTreeNode parent = null;
 	private SortedSet<KeyValueTreeNode> children = new TreeSet<>();
+	private Map<String, KeyValueTreeNode> childrenByKey = new HashMap<>();
 	private KeyValueTreeNode otherChild = null;
 
 	public KeyValueTreeNode(double value, String key) {
@@ -30,6 +33,12 @@ public class KeyValueTreeNode implements Comparable<KeyValueTreeNode> {
 		return parent;
 	}
 
+	public double changeValue(double value) {
+		double tmp = this.value;
+		this.value = value;
+		return tmp;
+	}
+
 	public SortedSet<KeyValueTreeNode> getChildren() {
 		SortedSet<KeyValueTreeNode> tmp = new TreeSet<>();
 		tmp.addAll(children);
@@ -39,15 +48,25 @@ public class KeyValueTreeNode implements Comparable<KeyValueTreeNode> {
 		return tmp;
 	}
 
+	public int countChildren() {
+		int tmp = children.size();
+		if (otherChild != null) {
+			tmp++;
+		}
+		return tmp;
+	}
+
 	public void addChild(KeyValueTreeNode child) {
 		child.parent = this;
 		children.add(child);
+		childrenByKey.put(child.getKey(), child);
 	}
 
 	public void addChildren(Collection<KeyValueTreeNode> children) {
 		for (KeyValueTreeNode child : children) {
 			child.parent = this;
 			this.children.add(child);
+			childrenByKey.put(child.getKey(), child);
 		}
 	}
 
@@ -79,6 +98,14 @@ public class KeyValueTreeNode implements Comparable<KeyValueTreeNode> {
 
 	public boolean hasRealChildren() {
 		return !children.isEmpty();
+	}
+
+	public boolean hasRealChildWithKey(String key) {
+		return childrenByKey.containsKey(key);
+	}
+
+	public KeyValueTreeNode getRealChild(String key) {
+		return childrenByKey.get(key);
 	}
 
 	@Override

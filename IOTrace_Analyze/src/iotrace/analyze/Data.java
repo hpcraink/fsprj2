@@ -59,6 +59,8 @@ import it.uniroma1.dis.wsngroup.gexf4j.core.impl.data.AttributeListImpl;
 
 import java.util.TreeMap;
 
+import com.itextpdf.awt.geom.misc.RenderingHints.Key;
+
 public class Data {
 	/**
 	 * Set of all methods needed to build {@link FileTrace}'s and
@@ -182,6 +184,8 @@ public class Data {
 	private Long maxTime;
 
 	private TreeMap<String, Json> infoMap = new TreeMap<>();
+	private KeyValueTreeNode fork = new KeyValueTreeNode(0, "fork");
+	private HashMap<String, HashMap<String, KeyValueTreeNode>> forkedProcesses = new HashMap<>();
 
 	/**
 	 * Creates a data structure of connected traces for file-IO.
@@ -273,6 +277,8 @@ public class Data {
 					titleSize);
 			data.printOverlappingAsPie(outputFolder + inputFile, percent, initialWidth, incrementWidth, border,
 					fontSize, titleSize);
+			data.printForkAsPie(outputFolder + inputFile, percent, initialWidth, incrementWidth, border, fontSize,
+					titleSize);
 		}
 
 		if (properties.getProperty("writeBarCharts", "false").equalsIgnoreCase("true")) {
@@ -558,6 +564,30 @@ public class Data {
 		ProcessTrace processTraceNew = processTraceOld.cloneWithIds(getFileName());
 
 		getOrSetProcessTrace(tmpHostName, processIdNew, processTraceNew);
+
+		KeyValueTreeNode hostNode;
+		HashMap<String, KeyValueTreeNode> host;
+		if (!fork.hasRealChildWithKey(tmpHostName)) {
+			hostNode = new KeyValueTreeNode(0, tmpHostName);
+			fork.addChild(hostNode);
+			host = new HashMap<>();
+			forkedProcesses.put(tmpHostName, host);
+		} else {
+			hostNode = fork.getRealChild(tmpHostName);
+			host = forkedProcesses.get(tmpHostName);
+		}
+
+		KeyValueTreeNode oldProcess;
+		if (!host.containsKey(processIdOld)) {
+			oldProcess = new KeyValueTreeNode(0, processIdOld);
+			host.put(processIdOld, oldProcess);
+			hostNode.addChild(oldProcess);
+		} else {
+			oldProcess = host.get(processIdOld);
+		}
+		KeyValueTreeNode newProcess = new KeyValueTreeNode(0, processIdNew);
+		host.put(processIdNew, newProcess);
+		oldProcess.addChild(newProcess);
 	}
 
 	/**
@@ -1350,7 +1380,7 @@ public class Data {
 					noFileTrace++;
 					infoMap.put("without file-trace " + noFileTrace, tmpJson);
 				} else {
-					fileTraces.add(sendFileTraceId);
+					// fileTraces.add(sendFileTraceId);
 					fileTraceId.getFileTrace().sendFileTraceId(sendFileTraceId);
 				}
 			}
@@ -1373,7 +1403,7 @@ public class Data {
 					FileOffset fileOffset = originalfileTraceId.getFileOffset();
 					FileTraceId newFileTraceID = tmpProcessTrace.setFileTraceId(receiveIdType, sendId, fileTrace,
 							fileOffset);
-					fileTraces.add(newFileTraceID);
+					// fileTraces.add(newFileTraceID);
 				} else {
 					// if no send FileTraceId is stored: ignore it
 					// (this can be if the sending process is from a other program or the connection
@@ -2348,6 +2378,23 @@ public class Data {
 		node = fileTraces.getKeyValueTree(kinds, ValueKind.OVERLAPPING_FUNCTIONS, 2, 6, percent);
 		new PieChart(node, "Overlapping function calls (only components with more than " + percent + "%)", filePrefix,
 				"_overlapping_function_pie", true, true, initialWidth, incrementWidth, border, fontSize, titleSize);
+	}
+
+	public void printForkAsPie(String filePrefix, double percent, int initialWidth, int incrementWidth, int border,
+			int fontSize, int titleSize) {
+		prepareForkTree(1, fork);
+
+		new PieChart(fork, "Process fork hierarchy", filePrefix, "_fork_hierarchy_pie", false, true, initialWidth,
+				incrementWidth, border, fontSize, titleSize);
+	}
+
+	private void prepareForkTree(int countNeighbours, KeyValueTreeNode node) {
+		node.changeValue(100.0 / countNeighbours);
+
+		int count = node.countChildren();
+		for (KeyValueTreeNode n : node.getChildren()) {
+			prepareForkTree(count, n);
+		}
 	}
 
 	public void printFileTraces(String filePrefix) {

@@ -12,7 +12,7 @@
 #  define MAX_FUNCTION_NAME 40
 #endif
 #ifndef MAX_MSG_FILE_DESCRIPTORS
-#  define MAX_MSG_FILE_DESCRIPTORS 200
+#  define MAX_MSG_FILE_DESCRIPTORS 200 // TODO: use SCM_MAX_FD instead
 #endif
 
 #ifndef MAX_STACKTRACE_DEPTH
@@ -21,6 +21,10 @@
 #ifndef MAX_STACKTRACE_ENTRY_LENGTH
 #  define MAX_STACKTRACE_ENTRY_LENGTH 200
 #endif
+
+#define MAX_SOCKADDR_LENGTH ((sizeof(struct sockaddr_storage) >= sizeof(struct sockaddr_un) ? \
+                              sizeof(struct sockaddr_storage) : sizeof(struct sockaddr_un)) \
+                             - sizeof(sa_family_t))
 
 JSON_STRUCT_START(file_stream)
   JSON_STRUCT_FILE_P(stream)
@@ -836,6 +840,12 @@ JSON_STRUCT_START(msg_function)
   JSON_STRUCT_INT_ARRAY(descriptors, MAX_MSG_FILE_DESCRIPTORS)
 JSON_STRUCT_END
 
+/* struct for bind and connect */
+JSON_STRUCT_START(sockaddr_function)
+  JSON_STRUCT_SA_FAMILY_T(family)
+  JSON_STRUCT_CSTRING_P(address, MAX_SOCKADDR_LENGTH * 2 + 1) // *2 for hex and +1 for terminating '\0'
+JSON_STRUCT_END
+
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
 JSON_STRUCT_START(wrapper_data)
@@ -922,6 +932,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, readdir_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dirfd_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, msg_function)
+	JSON_STRUCT_VOID_P_ELEMENT(function_data, sockaddr_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

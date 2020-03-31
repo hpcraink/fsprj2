@@ -11,11 +11,17 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <stdio_ext.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <fcntl.h>
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
+
+//ToDo: test for existance
+#include <sys/un.h> //<afunix.h> on Windows?
+//#include <netinet/in.h>
+//#include <linux/netlink.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
 
@@ -146,6 +152,8 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(accept)(int sockfd, struct sockaddr *ad
 REAL_DEFINITION_TYPE int REAL_DEFINITION(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE int REAL_DEFINITION(socketpair)(int domain, int type, int protocol, int sv[2]) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(pipe)(int pipefd[2]) REAL_DEFINITION_INIT;
 #ifdef HAVE_PIPE2
 REAL_DEFINITION_TYPE int REAL_DEFINITION(pipe2)(int pipefd[2], int flags) REAL_DEFINITION_INIT;
@@ -551,6 +559,8 @@ void posix_io_init() {
 		DLSYM(accept4);
 #endif
 		DLSYM(socketpair);
+		DLSYM(connect);
+		DLSYM(bind);
 		DLSYM(pipe);
 #ifdef HAVE_PIPE2
 		DLSYM(pipe2);
@@ -3077,8 +3087,127 @@ int WRAP(socketpair)(int domain, int type, int protocol, int sv[2]) {
 
 	CALL_REAL_FUNCTION_RET(data, ret, socketpair, domain, type, protocol, sv)
 
-	file_pair_data.descriptor1 = sv[0];
-	file_pair_data.descriptor2 = sv[1];
+	if (-1 == ret) {
+		data.return_state = error;
+		file_pair_data.descriptor1 = -1;
+		file_pair_data.descriptor2 = -1;
+	} else {
+		data.return_state = ok;
+		file_pair_data.descriptor1 = sv[0];
+		file_pair_data.descriptor2 = sv[1];
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+void cstring_to_hex(const char *cstring, char *hexstring, size_t length_cstring) {
+	const char *hex = "0123456789abcdef";
+
+	for (; length_cstring > 0; length_cstring--) {
+		*hexstring++ = hex[((unsigned char) *cstring >> 4)];
+		*hexstring++ = hex[(*cstring) & 0x0f];
+		cstring++;
+	}
+
+	*hexstring = '\0';
+}
+
+void get_sockaddr(const struct sockaddr *addr,
+		struct sockaddr_function *sockaddr_data, const socklen_t addrlen,
+		char *hex_addr) {
+	size_t len;
+
+	sockaddr_data->family = addr->sa_family;
+
+	if (sockaddr_data->family == AF_UNIX) {
+		if (sizeof(sa_family_t) >= addrlen) {
+			// unnamed socket
+			hex_addr[0] = '\0';
+		} else {
+			struct sockaddr_un *addr_un = (struct sockaddr_un*) addr;
+			if (addr_un->sun_path[0] == '\0') {
+				// abstract socket
+				cstring_to_hex(addr_un->sun_path, hex_addr,
+						(addrlen - offsetof(struct sockaddr_un, sun_path)));
+			} else {
+				// pathname socket
+				len = addrlen - offsetof(struct sockaddr_un, sun_path);
+				memcpy((void*) hex_addr, (void*) addr_un->sun_path, len);
+				hex_addr[len] = '\0';
+			}
+		}
+	} else {
+
+//		switch (sockaddr_data->family) {
+//		case AF_INET:
+//			//len = addrlen - offsetof(struct sockaddr, sa_data)
+//			len = sizeof(struct sockaddr_in) - sizeof(sa_family_t);
+//			break;
+//		case AF_INET6:
+//			len = sizeof(struct sockaddr_in6) - sizeof(sa_family_t);
+//			break;
+//		case AF_NETLINK:
+//			len = sizeof(struct sockaddr_nl) - sizeof(sa_family_t);
+//			break;
+//		default:
+		len = 0;
+//		}
+
+		cstring_to_hex(addr->sa_data, hex_addr, len);
+	}
+
+	sockaddr_data->address = hex_addr;
+}
+
+int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+	int ret;
+	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1];
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	struct sockaddr_function sockaddr_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, sockaddr_function,
+			sockaddr_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+	file_descriptor_data.descriptor = sockfd;
+	get_sockaddr(addr, &sockaddr_data, addrlen, hex_addr);
+
+	CALL_REAL_FUNCTION_RET(data, ret, connect, sockfd, addr, addrlen)
+
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+
+int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+	int ret;
+	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1];
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	struct sockaddr_function sockaddr_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, sockaddr_function,
+			sockaddr_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+			file_descriptor_data)
+	file_descriptor_data.descriptor = sockfd;
+	get_sockaddr(addr, &sockaddr_data, addrlen, hex_addr);
+
+	CALL_REAL_FUNCTION_RET(data, ret, bind, sockfd, addr, addrlen)
+
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {
@@ -3512,7 +3641,7 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
 	struct basic data;
 	struct msg_function msg_function_data;
 	struct file_descriptor file_descriptor_data;
-	struct msghdr *n_msg = (struct msghdr *) ((void *) msg);
+	struct msghdr *n_msg = (struct msghdr*) ((void*) msg);
 	WRAP_START(data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, sendmsg, sockfd, msg, flags)

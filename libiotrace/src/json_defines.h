@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <string.h>
 #include <limits.h>
 #include <assert.h>
@@ -109,6 +111,7 @@
 #undef JSON_STRUCT_MALLOC_STRING_ARRAY
 #undef JSON_STRUCT_MALLOC_PTR_ARRAY
 #undef JSON_STRUCT_INT_ARRAY
+#undef JSON_STRUCT_SA_FAMILY_T
 /* insert new line for new data-type here */
 
 #if JSON_STRUCT == JSON_STRUCT_DATA_TYPE
@@ -160,6 +163,7 @@
 #  define JSON_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) int start_##name; int size_##name; char ** name;
 #  define JSON_STRUCT_MALLOC_PTR_ARRAY(name, max_size) int start_##name; int size_##name; void ** name;
 #  define JSON_STRUCT_INT_ARRAY(name, max_size) int size_##name; int * name;
+#  define JSON_STRUCT_SA_FAMILY_T(name) sa_family_t name;
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_PRINT
@@ -454,6 +458,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                   } \
                                                   JSON_STRUCT_WRITE("],") \
                                                 }
+#  define JSON_STRUCT_SA_FAMILY_T(name) JSON_STRUCT_ELEMENT(name, %hu, json_struct_data->name)
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_BYTES_COUNT
@@ -579,6 +584,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                                                * max_size \
                                                                                - 1   /* for last comma */ \
                                                                                + 2)  /* for brackets [] */
+#  define JSON_STRUCT_SA_FAMILY_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(sa_family_t))
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_SIZEOF
@@ -655,6 +661,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_INT_ARRAY(name, max_size) if (NULL != json_struct_data->name) { \
                                                   json_struct_size += sizeof(int) * json_struct_data->size_##name; \
                                                 }
+#  define JSON_STRUCT_SA_FAMILY_T(name)
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_COPY
@@ -794,6 +801,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
                                                   json_struct_copy->name = (int *) json_struct_buf; \
                                                   json_struct_buf += sizeof(int) * json_struct_copy->size_##name; \
                                                 }
+#  define JSON_STRUCT_SA_FAMILY_T(name)
 /* insert new line for new data-type here */
 
 #elif JSON_STRUCT == JSON_STRUCT_FREE
@@ -852,6 +860,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
                                                          json_struct_data->name = NULL; \
                                                        }
 #  define JSON_STRUCT_INT_ARRAY(name, max_size)
+#  define JSON_STRUCT_SA_FAMILY_T(name)
 /* insert new line for new data-type here */
 
 #else

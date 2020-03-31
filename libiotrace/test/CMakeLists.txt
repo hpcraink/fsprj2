@@ -64,6 +64,8 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=accept"
         "-Wl,-wrap=accept4"
         "-Wl,-wrap=socketpair"
+        "-Wl,-wrap=connect"
+        "-Wl,-wrap=bind"
         "-Wl,-wrap=pipe"
         "-Wl,-wrap=pipe2"
         "-Wl,-wrap=memfd_create"

@@ -141,6 +141,8 @@ REAL_TYPE int REAL(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen
 REAL_TYPE int REAL(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) REAL_INIT;
 #endif
 REAL_TYPE int REAL(socketpair)(int domain, int type, int protocol, int sv[2]) REAL_INIT;
+REAL_TYPE int REAL(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) REAL_INIT;
+REAL_TYPE int REAL(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) REAL_INIT;
 REAL_TYPE int REAL(pipe)(int pipefd[2]) REAL_INIT;
 #ifdef HAVE_PIPE2
 REAL_TYPE int REAL(pipe2)(int pipefd[2], int flags) REAL_INIT;
@@ -217,6 +219,7 @@ REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vl
 //ToDo: int fallocate(int fd, int mode, off_t offset, off_t len); and posix_fallocate
 //ToDo: ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 //ToDo: ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out, size_t len, unsigned int flags);
+//ToDo: ssize_t tee(int fd_in, int fd_out, size_t len, unsigned int flags); ???
 //ToDo: fstat, stat, lstat, fstatat, fstatfs
 //ToDo: truncate, ftruncate
 //ToDo: mknod, mkdir, link, symlink, rename, unlink, rmdir
@@ -476,6 +479,7 @@ REAL_TYPE pid_t REAL(vfork)(void) REAL_INIT;
 //ToDo: int execve(const char *filename, char *const argv[], char *const envp[]); remove all mmap's and fd's ???
 //ToDo: int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ... /* pid_t *ptid, void *newtls, pid_t *ctid */ );
 //pthread_create ???
+//ToDo: int posix_spawn & int posix_spawnp
 
 #ifndef IO_LIB_STATIC
 void posix_io_init() ATTRIBUTE_CONSTRUCTOR;

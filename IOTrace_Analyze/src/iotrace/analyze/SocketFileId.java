@@ -4,6 +4,9 @@ public class SocketFileId implements FileComparable<SocketFileId> {
 	private String hostName;
 	private int sockaddrFamily;
 	private String sockaddrData;
+	
+	public final static int FAMILY_UNBOUND_SOCKET = -1;
+	public final static int FAMILY_UNNAMED_SOCKET = -2;
 
 	public SocketFileId(String hostName, int sockaddrFamily, String sockaddrData) {
 		super();

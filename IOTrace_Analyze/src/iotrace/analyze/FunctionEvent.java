@@ -337,7 +337,8 @@ public class FunctionEvent implements Comparable<FunctionEvent> {
 	}
 
 	public void setRange(RangeType rangeType, String bytes) {
-		if (fileTraceId != null && fileTraceId.getFileTrace().getKind() != FileKind.OTHER) {
+		if (fileTraceId != null && (fileTraceId.getFileTrace().getKind() == FileKind.FILE
+				|| fileTraceId.getFileTrace().getKind() == FileKind.TMPFILE)) {
 			long longBytes = Long.parseLong(bytes);
 
 			if (longBytes > 0) {
@@ -385,7 +386,8 @@ public class FunctionEvent implements Comparable<FunctionEvent> {
 
 	public void setRangeFromAddress(RangeType rangeType, String bytes, String address) {
 		// TODO: shared ???
-		if (fileTraceId.getFileTrace() != null && fileTraceId.getFileTrace().getKind() != FileKind.OTHER) {
+		if (fileTraceId.getFileTrace() != null && (fileTraceId.getFileTrace().getKind() == FileKind.FILE
+				|| fileTraceId.getFileTrace().getKind() == FileKind.TMPFILE)) {
 			long longAddress = Long.decode(address);
 
 			FunctionEvent event = this;

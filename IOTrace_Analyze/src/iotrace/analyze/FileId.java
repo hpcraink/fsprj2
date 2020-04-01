@@ -24,6 +24,7 @@ public class FileId implements FileComparable<FileId> {
 
 	@Override
 	public int hashCode() {
+		// TODO: include fileComparable.getClass().getName() in hash
 		return fileComparable.hashCode();
 	}
 

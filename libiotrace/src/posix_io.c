@@ -3025,17 +3025,19 @@ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 	int ret;
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
+	struct accept_function accept_function_data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function, accept_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, accept, sockfd, addr, addrlen)
 
-	file_descriptor_data.descriptor = ret;
+	accept_function_data.new_descriptor = ret;
+	file_descriptor_data.descriptor = sockfd;
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {
@@ -3052,17 +3054,19 @@ int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
 	int ret;
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
+	struct accept_function accept_function_data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function, accept_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, accept4, sockfd, addr, addrlen, flags)
 
-	file_descriptor_data.descriptor = ret;
+	accept_function_data.new_descriptor = ret;
+	file_descriptor_data.descriptor = sockfd;
 	if (-1 == ret) {
 		data.return_state = error;
 	} else {

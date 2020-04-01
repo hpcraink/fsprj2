@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 public class FileTrace implements Traceable, Comparable<FileTrace> {
 	public static enum FileKind {
-		FILE, TMPFILE, OTHER, UNKNOWN
+		FILE, TMPFILE, SOCKET, PIPE, MEMORY, OTHER, UNKNOWN
 	}
 
 	private FileId fileId;

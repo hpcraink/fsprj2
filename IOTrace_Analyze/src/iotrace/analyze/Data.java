@@ -91,6 +91,7 @@ public class Data {
 
 	private int countTmpFiles = 0;
 	private int countNotAFile = 0;
+	private int countUnnamedSockets = 0;
 	/**
 	 * All read in {@link Json}-objects representing a function call sorted by start
 	 * time of the function call. TreeMap for efficient sorting.
@@ -675,13 +676,22 @@ public class Data {
 	 * iotrace.analyze.Data.addEvent(FileTraceId fileTraceId, FileTraceId
 	 * fileTraceId2)}.
 	 * 
+	 * @param kind    FileKind of the new {@link FileTrace}
 	 * @param idType1 type of the id1 of the {@link FileTrace}
 	 * @param id1     id for caching the {@link FileTrace}
 	 * @param idType2 type of the id2 of the {@link FileTrace}
 	 * @param id2     id for caching the {@link FileTrace}
 	 */
-	public void openTrace(IdType idType1, String id1, IdType idType2, String id2) {
-		openTrace(new FileId(new RegularFileId(tmpHostName, -1, -1)), idType1, id1, idType2, id2);
+	public void openTrace(FileKind kind, IdType idType1, String id1, IdType idType2, String id2) {
+		switch (kind) {
+		case SOCKET:
+			countUnnamedSockets++;
+			openTrace(kind, new FileId(new SocketFileId(tmpHostName, SocketFileId.FAMILY_UNNAMED_SOCKET,
+					Integer.toString(countUnnamedSockets))), idType1, id1, idType2, id2);
+			break;
+		default:
+			openTrace(kind, new FileId(new RegularFileId(tmpHostName, -1, -1)), idType1, id1, idType2, id2);
+		}
 	}
 
 	/**
@@ -698,18 +708,53 @@ public class Data {
 	 * iotrace.analyze.Data.addEvent(FileTraceId fileTraceId, FileTraceId
 	 * fileTraceId2)}.
 	 * 
+	 * @param kind    FileKind of the new {@link FileTrace}
+	 * @param fileId  id (hostName, deviceId and fileId) of the file
 	 * @param idType1 type of the id1 of the {@link FileTrace}
 	 * @param id1     id for caching the {@link FileTrace}
 	 * @param idType2 type of the id2 of the {@link FileTrace}
 	 * @param id2     id for caching the {@link FileTrace}
 	 */
-	public void openTrace(FileId fileId, IdType idType1, String id1, IdType idType2, String id2) {
-		FileTrace tmpFileTrace = openTrace(fileId);
+	public void openTrace(FileKind kind, FileId fileId, IdType idType1, String id1, IdType idType2, String id2) {
+		FileTrace tmpFileTrace = openTrace(kind, fileId);
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType1, id1, tmpFileTrace, null);
 		FileTraceId fileTraceId2 = tmpProcessTrace.setFileTraceId(idType2, id2, tmpFileTrace, null);
 
 		addEvent(fileTraceId, fileTraceId2);
+	}
+
+	/**
+	 * Creates a new {@link FileTrace} with an unique file name. The trace isn't
+	 * registered as an currently open file in the current {@link ProcessTrace}. New
+	 * events for the current {@link Json} are added to the {@link ThreadTrace} and
+	 * {@link FileTrace}. The new trace is cached in the current
+	 * {@link ProcessTrace} with the parameter {@code id} as key. The
+	 * {@link FileOffset} for each cache entry is set to {@code null}.
+	 * 
+	 * New events are added to the {@link ThreadTrace} and {@link FileTrace}. This
+	 * is done via method {@link FunctionEvent
+	 * iotrace.analyze.Data.addEvent(FileTraceId fileTraceId)}.
+	 * 
+	 * @param kind   FileKind of the new {@link FileTrace}
+	 * @param fileId id (hostName, sockaddrFamily and sockaddrData) of the file
+	 * @param idType type of the id1 of the {@link FileTrace}
+	 * @param id     id for caching the {@link FileTrace}
+	 */
+	public void openTrace(FileKind kind, FileId fileId, IdType idType, String id) {
+		String fileTraceid = fileId.toString();
+		FileTrace tmpFileTrace;
+
+		if (!fileTraces.containsTrace(fileTraceid)) {
+			tmpFileTrace = new FileTrace(fileId, getUniqueFileName(), kind);
+			fileTraces.addTrace(fileTraceid, tmpFileTrace);
+		} else {
+			tmpFileTrace = fileTraces.getTrace(fileTraceid);
+		}
+
+		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType, id, tmpFileTrace, null);
+
+		addEvent(fileTraceId);
 	}
 
 	/**
@@ -725,13 +770,21 @@ public class Data {
 	 * is done via method {@link FunctionEvent
 	 * iotrace.analyze.Data.addEvent(FileTraceId fileTraceId)}.
 	 * 
+	 * @param kind   FileKind of the new {@link FileTrace}
 	 * @param idType type of the id of the {@link FileTrace}
 	 * @param id     id for caching the {@link FileTrace}
 	 */
-	public void openTrace(IdType idType, String id) {
-		FileTrace tmpFileTrace = openTrace(new FileId(new RegularFileId(tmpHostName, -1, -1)));
-		// TODO: use real FileId for Sockets and Pipes (DeviceID, FileNumber from
-		// Wrapper)
+	public void openTrace(FileKind kind, IdType idType, String id) {
+		FileTrace tmpFileTrace;
+
+		switch (kind) {
+		case SOCKET:
+			tmpFileTrace = openTrace(kind,
+					new FileId(new SocketFileId(tmpHostName, SocketFileId.FAMILY_UNBOUND_SOCKET, "")));
+			break;
+		default:
+			tmpFileTrace = openTrace(kind, new FileId(new RegularFileId(tmpHostName, -1, -1)));
+		}
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType, id, tmpFileTrace, null);
 
@@ -758,7 +811,7 @@ public class Data {
 	 * @param shared  {@code true} if memory is shared
 	 */
 	private void openTrace(String address, String length, boolean shared) {
-		FileTrace tmpFileTrace = openTrace(new FileId(new RegularFileId(tmpHostName, -1, -1)));
+		FileTrace tmpFileTrace = openTrace(FileKind.MEMORY, new FileId(new RegularFileId(tmpHostName, -1, -1)));
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceMemoryId(address, length, tmpFileTrace, null, shared);
 
@@ -771,18 +824,21 @@ public class Data {
 	 * currently open file. This method should only be called for wrapped functions
 	 * which open non standard files (e.g. sockets or pipes).
 	 * 
+	 * @param kind   FileKind of the new {@link FileTrace}
 	 * @param fileId id (hostName, deviceId and fileId) of the file
 	 * @return new created {@link FileTrace}
 	 */
-	private FileTrace openTrace(FileId fileId) {
-		countNotAFile++;
-		String fileName = "not a file no. " + countNotAFile;
-		FileKind kind = FileKind.OTHER;
-		FileTrace tmpFileTrace = openFileTrace(fileId, kind, fileName);
+	private FileTrace openTrace(FileKind kind, FileId fileId) {
+		FileTrace tmpFileTrace = openFileTrace(fileId, kind, getUniqueFileName());
 
 		closeFileTrace(tmpFileTrace);
 
 		return tmpFileTrace;
+	}
+
+	private String getUniqueFileName() {
+		countNotAFile++;
+		return "not a file no. " + countNotAFile;
 	}
 
 	/**
@@ -1453,10 +1509,15 @@ public class Data {
 		}
 	}
 
-	public FileId getFileId(String hostName, String deviceId, String fileId) {
+	public FileId getRegularFileId(String hostName, String deviceId, String fileId) {
 		long deviceId_long = Long.parseLong(deviceId);
 		long fileId_long = Long.parseLong(fileId);
 		return new FileId(new RegularFileId(hostName, deviceId_long, fileId_long));
+	}
+
+	public FileId getSocketFileId(String hostName, String sockaddrFamily, String sockaddrData) {
+		int sockaddrFamily_int = Integer.parseInt(sockaddrFamily);
+		return new FileId(new SocketFileId(hostName, sockaddrFamily_int, sockaddrData));
 	}
 
 	/**
@@ -1541,7 +1602,6 @@ public class Data {
 		ArrayList<FileKind> kinds = new ArrayList<>();
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
-		// kinds.add(FileKind.OTHER);
 
 		System.out.print(cluster.printSummary(kinds, 1, 6, 1.0));
 
@@ -1911,7 +1971,6 @@ public class Data {
 		ArrayList<FileKind> kinds = new ArrayList<>();
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
-		// kinds.add(FileKind.OTHER);
 
 		Calendar lastModified = Calendar.getInstance();
 		GexfGraph gexfGraph = new GexfGraph(lastModified.getTime(), "IOTrace_Analyze", "Network of file I/O",
@@ -1958,7 +2017,7 @@ public class Data {
 			boolean isWritten = false;
 
 			String label;
-			if (e.getValue().getKind() == FileKind.OTHER) {
+			if (e.getValue().getKind() != FileKind.FILE && e.getValue().getKind() != FileKind.TMPFILE) {
 				label = "socket, pipe, pseudo file system or memory";
 			} else {
 				label = (String) e.getValue().getFileNames().toArray()[0];
@@ -2030,7 +2089,7 @@ public class Data {
 
 			// add fileType read_only, write_only or read_and_write to file
 			String fileTypeValue;
-			if (e.getValue().getKind() == FileKind.OTHER) {
+			if (e.getValue().getKind() != FileKind.FILE && e.getValue().getKind() != FileKind.TMPFILE) {
 				fileTypeValue = "not a file";
 			} else if (isRead && isWritten) {
 				fileTypeValue = "file: read and write";
@@ -2309,7 +2368,6 @@ public class Data {
 		ArrayList<FileKind> kinds = new ArrayList<>();
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
-		// kinds.add(FileKind.OTHER);
 
 		KeyValueTreeNode node = cluster.getKeyValueTree(kinds, ValueKind.FUNCTION_TIME, 2, 6, percent);
 		new PieChart(node, "Time used for I/O (with components which use more than " + percent + "%)", filePrefix,
@@ -2333,7 +2391,6 @@ public class Data {
 		ArrayList<FileKind> kinds = new ArrayList<>();
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
-		// kinds.add(FileKind.OTHER);
 
 		List<String> legend = new LinkedList<>();
 		legend.add("sum bytes");
@@ -2389,7 +2446,6 @@ public class Data {
 		ArrayList<FileKind> kinds = new ArrayList<>();
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
-		// kinds.add(FileKind.OTHER);
 
 		KeyValueTreeNode node = fileTraces.getKeyValueTree(kinds, ValueKind.OVERLAPPING_FILE_RANGE, 2, 6, percent);
 		new PieChart(node, "Function calls to same range of file (only components with more than " + percent + "%)",
@@ -2422,7 +2478,6 @@ public class Data {
 		ArrayList<FileKind> kinds = new ArrayList<>();
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
-		// kinds.add(FileKind.OTHER);
 
 		for (Entry<String, FileTrace> e : fileTraces.getTraces().entrySet()) {
 			if (kinds.contains(e.getValue().getKind())) {

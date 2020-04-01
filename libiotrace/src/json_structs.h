@@ -846,6 +846,11 @@ JSON_STRUCT_START(sockaddr_function)
   JSON_STRUCT_CSTRING_P(address, MAX_SOCKADDR_LENGTH * 2 + 1) // *2 for hex and +1 for terminating '\0'
 JSON_STRUCT_END
 
+/* struct for accept */
+JSON_STRUCT_START(accept_function)
+  JSON_STRUCT_INT(new_descriptor)
+JSON_STRUCT_END
+
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
 JSON_STRUCT_START(wrapper_data)
@@ -933,6 +938,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dirfd_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, msg_function)
 	JSON_STRUCT_VOID_P_ELEMENT(function_data, sockaddr_function)
+	JSON_STRUCT_VOID_P_ELEMENT(function_data, accept_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

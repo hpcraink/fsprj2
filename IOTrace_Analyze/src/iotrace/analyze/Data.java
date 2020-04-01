@@ -681,7 +681,30 @@ public class Data {
 	 * @param id2     id for caching the {@link FileTrace}
 	 */
 	public void openTrace(IdType idType1, String id1, IdType idType2, String id2) {
-		FileTrace tmpFileTrace = openTrace(new FileId(tmpHostName, -1, -1));
+		openTrace(new FileId(new RegularFileId(tmpHostName, -1, -1)), idType1, id1, idType2, id2);
+	}
+
+	/**
+	 * Creates a new {@link FileTrace} via method {@link FileTrace
+	 * iotrace.analyze.Data.openTrace()}. The trace isn't registered as an currently
+	 * open file in the current {@link ProcessTrace}. New events for the current
+	 * {@link Json} are added to the {@link ThreadTrace} and {@link FileTrace}. The
+	 * new trace is cached in the current {@link ProcessTrace} with the parameter
+	 * {@code id1} as key and the parameter {@code id2} as key. The
+	 * {@link FileOffset} for each cache entry is set to {@code null}.
+	 * 
+	 * New events are added to the {@link ThreadTrace} and {@link FileTrace}. This
+	 * is done via method {@link FunctionEvent
+	 * iotrace.analyze.Data.addEvent(FileTraceId fileTraceId, FileTraceId
+	 * fileTraceId2)}.
+	 * 
+	 * @param idType1 type of the id1 of the {@link FileTrace}
+	 * @param id1     id for caching the {@link FileTrace}
+	 * @param idType2 type of the id2 of the {@link FileTrace}
+	 * @param id2     id for caching the {@link FileTrace}
+	 */
+	public void openTrace(FileId fileId, IdType idType1, String id1, IdType idType2, String id2) {
+		FileTrace tmpFileTrace = openTrace(fileId);
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType1, id1, tmpFileTrace, null);
 		FileTraceId fileTraceId2 = tmpProcessTrace.setFileTraceId(idType2, id2, tmpFileTrace, null);
@@ -706,9 +729,9 @@ public class Data {
 	 * @param id     id for caching the {@link FileTrace}
 	 */
 	public void openTrace(IdType idType, String id) {
-		FileTrace tmpFileTrace = openTrace(new FileId(tmpHostName, -1, -1)); // TODO: use real FileId for Sockets and
-																				// Pipes (DeviceID, FileNumber from
-																				// Wrapper)
+		FileTrace tmpFileTrace = openTrace(new FileId(new RegularFileId(tmpHostName, -1, -1)));
+		// TODO: use real FileId for Sockets and Pipes (DeviceID, FileNumber from
+		// Wrapper)
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType, id, tmpFileTrace, null);
 
@@ -735,7 +758,7 @@ public class Data {
 	 * @param shared  {@code true} if memory is shared
 	 */
 	private void openTrace(String address, String length, boolean shared) {
-		FileTrace tmpFileTrace = openTrace(new FileId(tmpHostName, -1, -1));
+		FileTrace tmpFileTrace = openTrace(new FileId(new RegularFileId(tmpHostName, -1, -1)));
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceMemoryId(address, length, tmpFileTrace, null, shared);
 
@@ -1433,7 +1456,7 @@ public class Data {
 	public FileId getFileId(String hostName, String deviceId, String fileId) {
 		long deviceId_long = Long.parseLong(deviceId);
 		long fileId_long = Long.parseLong(fileId);
-		return new FileId(hostName, deviceId_long, fileId_long);
+		return new FileId(new RegularFileId(hostName, deviceId_long, fileId_long));
 	}
 
 	/**
@@ -2405,7 +2428,7 @@ public class Data {
 			if (kinds.contains(e.getValue().getKind())) {
 				// bachelor-VirtualBox:23:5
 				FileId id = e.getValue().getFileId();
-				String fileName = id.getHostName() + "_" + id.getDeviceId() + "_" + id.getFileId();
+				String fileName = id.toFileName();
 				printFileTrace(new File(filePrefix + "_fileTrace_" + fileName + ".txt"), e.getValue());
 			}
 		}

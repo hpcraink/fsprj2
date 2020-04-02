@@ -9,10 +9,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.TreeMap;
 import java.util.UUID;
 
 public class Json {
+	private static final Logger logger = LogManager.getLogger(Json.class);
+
 	private UUID uuid = UUID.randomUUID();
 	// TODO: differ between strings and other value-types
 	private TreeMap<String, String> elements = new TreeMap<>();
@@ -450,7 +456,7 @@ public class Json {
 			int lineCount = 0;
 			int tmpLineCount = 0;
 
-			System.out.println("Start reading Json-Data:");
+			logger.debug("Start reading Json-Data:");
 
 			String line = br.readLine();
 			while (line != null) {
@@ -460,10 +466,10 @@ public class Json {
 				tmpJson = new Json(line);
 				fileTraceFunctions.addObject(tmpJson);
 				try {
-					time_start = (String) fileTraceFunctions.invoke("getStartTime");
+					time_start = (String) fileTraceFunctions.invoke(Data.JSON_GET_START_TIME);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException e) {
-					e.printStackTrace();
+					logger.error("Exception getting start time from json", e);
 					return data;
 				}
 				data.put(new UniqueStartTime(Long.parseLong(time_start)), tmpJson);
@@ -472,16 +478,16 @@ public class Json {
 				if (tmpLineCount == step) {
 					lineCount += tmpLineCount;
 					tmpLineCount = 0;
-					System.out.println("    " + lineCount + " lines read");
+					logger.debug("    {} lines read", lineCount);
 				}
 
 				line = br.readLine();
 			}
 
-			System.out.println("    " + (lineCount + tmpLineCount) + " lines read");
+			logger.debug("    {} lines read", lineCount + tmpLineCount);
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during read of json data", e);
 		}
 
 		return data;
@@ -507,7 +513,8 @@ public class Json {
 					time = (String) workingDirFunctions.invoke("getTime");
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException e) {
-					e.printStackTrace();
+					logger.error("Exception during invokation of method for creating working dir for json " + tmpJson,
+							e);
 					return data;
 				}
 
@@ -531,6 +538,7 @@ public class Json {
 			}
 
 		} catch (IOException e) {
+			logger.error("Exception during read from " + file.getName(), e);
 			e.printStackTrace();
 		}
 

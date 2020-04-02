@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryLabelPositions;
@@ -19,6 +21,7 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.data.category.DefaultCategoryDataset;
 
 public class BarChart {
+	private static final Logger logger = LogManager.getLogger(BarChart.class);
 
 	public BarChart(Map<String, List<Long>> values, List<String> legend, String title, String filePrefix,
 			String fileName, int tickLabelFontSize, int labelFontSize, int legendFontSize, int titleFontSize, int width,
@@ -56,6 +59,7 @@ public class BarChart {
 		try {
 			ImageIO.write(bufferedImage, "png", new File(filePrefix + fileName + ".png"));
 		} catch (IOException e) {
+			logger.error("Exception during write of png", e);
 			e.printStackTrace();
 		}
 	}

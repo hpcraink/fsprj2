@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -59,7 +60,34 @@ import it.uniroma1.dis.wsngroup.gexf4j.core.impl.data.AttributeListImpl;
 
 import java.util.TreeMap;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.Configurator;
+
 public class Data {
+	static {
+		String properties = "log4j2.properties";
+		try {
+			InputStream inputStream = new FileInputStream(properties);
+			File inputFile = new File(properties);
+			ConfigurationSource source = new ConfigurationSource(inputStream, inputFile);
+			Configurator.initialize(null, source);
+		} catch (IOException e) {
+			LogManager.getLogger(Data.class).error("Exception during load of " + properties, e);
+		}
+	}
+
+	private static final Logger logger = LogManager.getLogger(Data.class);
+
+	private static final String FILE_TRACE_PROPERTIES = "FileTrace.properties";
+	private static final String FILE_RANGE_PROPERTIES = "FileRange.properties";
+	private static final String FILE_LOCK_PROPERTIES = "FileLock.properties";
+	private static final String WORKING_DIR_PROPERTIES = "WorkingDir.properties";
+	private static final String IOTRACE_ANALYZE_PROPERTIES = "IOTrace_Analyze.properties";
+
+	public static final String JSON_GET_START_TIME = "getStartTime";
+
 	/**
 	 * Set of all methods needed to build {@link FileTrace}'s and
 	 * {@link ThreadTrace}'s. Each method is available over the function name from a
@@ -182,7 +210,6 @@ public class Data {
 	private Long minTime;
 	private Long maxTime;
 
-	private TreeMap<String, Json> infoMap = new TreeMap<>();
 	private KeyValueTreeNode fork = new KeyValueTreeNode(0, "fork");
 	private HashMap<String, HashMap<String, KeyValueTreeNode>> forkedProcesses = new HashMap<>();
 
@@ -219,21 +246,22 @@ public class Data {
 	}
 
 	public static void main(String[] args) {
+		logger.info("Starting ...");
+
 		Data data;
 		try {
-			data = new Data("FileTrace.properties", "FileRange.properties", "FileLock.properties",
-					"WorkingDir.properties");
+			data = new Data(FILE_TRACE_PROPERTIES, FILE_RANGE_PROPERTIES, FILE_LOCK_PROPERTIES, WORKING_DIR_PROPERTIES);
 		} catch (IOException | ClassNotFoundException | NoSuchMethodException | SecurityException
-				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e1) {
-			e1.printStackTrace();
+				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			logger.error("Exception during initialize", e);
 			return;
 		}
 
 		Properties properties = new Properties();
 		try {
-			properties.load(new FileInputStream("IOTrace_Analyze.properties"));
+			properties.load(new FileInputStream(IOTRACE_ANALYZE_PROPERTIES));
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during load of " + IOTRACE_ANALYZE_PROPERTIES, e);
 			return;
 		}
 
@@ -295,14 +323,13 @@ public class Data {
 			GephiVideo.generate(outputFolder, inputFile, properties);
 		}
 
-//		data.printStats();
+		data.printStats();
 
 		if (properties.getProperty("writeFileTraces", "false").equalsIgnoreCase("true")) {
 			data.printFileTraces(outputFolder + inputFile);
 		}
 
-		System.out.println();
-		System.out.println("Finished!");
+		logger.info("Finished!");
 	}
 
 	/**
@@ -342,7 +369,7 @@ public class Data {
 		int jsonCountTmp = 0;
 		int jsonCount = 0;
 
-		System.out.println("Start processing:");
+		logger.debug("Start processing:");
 		for (Entry<UniqueStartTime, Json> j : jsons.entrySet()) {
 
 			processJson(j.getValue());
@@ -359,7 +386,7 @@ public class Data {
 			if (jsonCountTmp > jsonCountOnePercent) {
 				jsonCount += jsonCountTmp;
 				jsonCountTmp = 0;
-				System.out.println("    " + jsonCount + " Function-Calls processed");
+				logger.debug("    {} Function-Calls processed", jsonCount);
 			}
 		}
 		if (hasWrapperInfo) {
@@ -369,13 +396,13 @@ public class Data {
 		}
 		String.valueOf(maxTime - minTime).length();
 
-		System.out.println("process Events ...");
+		logger.debug("process Events ...");
 
 		for (BasicTrace<BasicTrace<ThreadTrace>> host : cluster.getTraces().values()) {
 			for (BasicTrace<ThreadTrace> process : host.getTraces().values()) {
 				for (ThreadTrace thread : process.getTraces().values()) {
 					thread.processEvents(fileRangeFunctions, fileLockFunctions);
-					System.out.println("    " + thread);
+					logger.trace("    {}", thread);
 				}
 			}
 		}
@@ -384,7 +411,7 @@ public class Data {
 		// ThreadTrace and used in processEvents() of FileTrace
 		for (FileTrace file : fileTraces.getTraces().values()) {
 			file.processEvents();
-			System.out.println("    " + file);
+			logger.trace("    {}", file);
 		}
 	}
 
@@ -412,7 +439,7 @@ public class Data {
 			String hostName = (String) fileTraceFunctions.invoke("getHostName");
 			String processId = (String) fileTraceFunctions.invoke("getProcessId");
 			String threadId = (String) fileTraceFunctions.invoke("getThreadId");
-			String timeStart = (String) fileTraceFunctions.invoke("getStartTime");
+			String timeStart = (String) fileTraceFunctions.invoke(JSON_GET_START_TIME);
 			String timeEnd = (String) fileTraceFunctions.invoke("getEndTime");
 			tmpError = (Boolean) fileTraceFunctions.invoke("getError");
 			hasWrapperInfo = (Boolean) fileTraceFunctions.invoke("hasWrapperInfo");
@@ -465,12 +492,13 @@ public class Data {
 			} else {
 				// TODO: default/Warning
 				unknown++;
-				infoMap.put("unknown function-call " + unknown, tmpJson);
+				logger.debug("unknown function-call #{} in json {}", unknown, tmpJson);
 			}
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException e) {
-			e.printStackTrace();
+			logger.error("Exception during invokation of method for creating file trace for function " + tmpFunctionName
+					+ " for json " + tmpJson, e);
 			return;
 		}
 	}
@@ -506,7 +534,7 @@ public class Data {
 			dir = (String) workingDirFunctions.invoke("getDir");
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException e) {
-			e.printStackTrace();
+			logger.error("Exception during invokation of method for creating working dir", e);
 			return null;
 		}
 
@@ -992,7 +1020,7 @@ public class Data {
 			}
 		} else {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		}
 	}
 
@@ -1119,7 +1147,7 @@ public class Data {
 	public void addEvent(IdType idType, LinkedList<String> ids) {
 		if (ids.isEmpty()) {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		} else {
 			Set<FileTraceId> fileTraceIds = new HashSet<>();
 			for (String id : ids) {
@@ -1135,7 +1163,7 @@ public class Data {
 			addEvent(fileTraceIds);
 		} else {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		}
 	}
 
@@ -1160,7 +1188,7 @@ public class Data {
 			addEvent(fileTraceIds);
 		} else {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		}
 	}
 
@@ -1183,7 +1211,7 @@ public class Data {
 			}
 		} else {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		}
 	}
 
@@ -1198,7 +1226,7 @@ public class Data {
 			}
 		} else {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		}
 	}
 
@@ -1257,7 +1285,7 @@ public class Data {
 			fileTrace.addEvent(ret);
 		} else {
 			noFileTrace++;
-			infoMap.put("without file-trace " + noFileTrace, tmpJson);
+			logger.debug("without file-trace #{} in json {}", noFileTrace, tmpJson);
 		}
 
 		return call;
@@ -1359,7 +1387,7 @@ public class Data {
 	public void addId(IdType oldIdType, String oldId, IdType newIdType, String newId, boolean ignore) {
 		if (ignore) {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 			return;
 		}
 
@@ -1439,7 +1467,7 @@ public class Data {
 			addEvent(newMemoryId);
 		} else {
 			ignored++;
-			infoMap.put("ignored function-call " + ignored, tmpJson);
+			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
 		}
 	}
 
@@ -1455,7 +1483,7 @@ public class Data {
 
 				if (sendFileTraceId == null) {
 					noFileTrace++;
-					infoMap.put("without file-trace " + noFileTrace, tmpJson);
+					logger.debug("without file-trace #{} in json {}", noFileTrace, tmpJson);
 				} else {
 					// fileTraces.add(sendFileTraceId);
 					fileTraceId.getFileTrace().sendFileTraceId(sendFileTraceId);
@@ -1487,7 +1515,7 @@ public class Data {
 					// between the sending and receiving socket is unknown: e.g. connection is build
 					// via call of bind or connect function)
 					noFileTrace++;
-					infoMap.put("without file-trace " + noFileTrace, tmpJson);
+					logger.debug("without file-trace #{} in json {}", noFileTrace, tmpJson);
 				}
 			}
 		}
@@ -1505,7 +1533,7 @@ public class Data {
 		} else {
 			// TODO: default/Warning
 			unknown++;
-			infoMap.put("unknown function-call " + unknown, tmpJson);
+			logger.debug("unknown function-call #{} in json {}", unknown, tmpJson);
 		}
 	}
 
@@ -1589,29 +1617,31 @@ public class Data {
 	}
 
 	public void printStats() {
-		for (Entry<String, Json> e : infoMap.entrySet()) {
-			System.out.println(e.getKey() + " " + e.getValue());
+		if (ignored > 0) {
+			logger.warn("ignored functions-calls: {} (see more with log level debug)", ignored);
+		}
+		if (ignored > 0) {
+			logger.warn("unknown functions-calls: {} (see more with log level debug)", unknown);
+		}
+		if (ignored > 0) {
+			logger.warn("function-calls without file-trace: {} (see more with log level debug)", noFileTrace);
 		}
 
-		System.out.println("ignored functions-calls: " + ignored);
-		System.out.println("unknown functions-calls: " + unknown);
-		System.out.println("function-calls without file-trace: " + noFileTrace);
-
-		System.out.println();
-
-		ArrayList<FileKind> kinds = new ArrayList<>();
-		kinds.add(FileKind.FILE);
-		kinds.add(FileKind.TMPFILE);
-
-		System.out.print(cluster.printSummary(kinds, 1, 6, 1.0));
-
-		System.out.println();
-
-		System.out.print(fileTraces.printSummary(kinds, 1, 6, 1.0));
-
-		System.out.println();
-
-		searchConcurrency(kinds);
+//		System.out.println();
+//
+//		ArrayList<FileKind> kinds = new ArrayList<>();
+//		kinds.add(FileKind.FILE);
+//		kinds.add(FileKind.TMPFILE);
+//
+//		System.out.print(cluster.printSummary(kinds, 1, 6, 1.0));
+//
+//		System.out.println();
+//
+//		System.out.print(fileTraces.printSummary(kinds, 1, 6, 1.0));
+//
+//		System.out.println();
+//
+//		searchConcurrency(kinds);
 	}
 
 	private void searchConcurrency(ArrayList<FileKind> kinds) {
@@ -1684,7 +1714,7 @@ public class Data {
 
 			bufferedWriter.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during write of file trace to file", e);
 		}
 	}
 
@@ -1715,7 +1745,7 @@ public class Data {
 		try {
 			fileWriter = new FileWriter(file);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during write of dot file", e);
 			return;
 		}
 
@@ -1812,7 +1842,7 @@ public class Data {
 			bufferedWriter.close();
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during write of dot file", e);
 		}
 	}
 
@@ -1909,7 +1939,7 @@ public class Data {
 			out = new FileWriter(file, false);
 			graphWriter.writeToStream(gexf, out, "UTF-8");
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during write of gexf file", e);
 		}
 	}
 
@@ -2301,7 +2331,7 @@ public class Data {
 
 			bufferedWriter.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during write of csv file", e);
 		}
 	}
 

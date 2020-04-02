@@ -5,9 +5,14 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeSet;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import iotrace.analyze.FileTrace.FileKind;
 
 public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
+	private static final Logger logger = LogManager.getLogger(ThreadTrace.class);
+
 	private String hostName;
 	private String processId;
 	private String threadId;
@@ -82,11 +87,13 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 					fileRangeFunctions.invoke(functionName);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException e) {
-					System.out.println("by invoke of function " + functionName + " for event " + event.getJson());
-					e.printStackTrace();
+
+					logger.error("Exception during invokation of method for creating file range for function " + functionName
+							+ " for event " + event.getJson(), e);
 				}
 			} else {
-				// TODO: default/Warning
+				logger.trace("no method for creating file range for function " + functionName + " for event "
+						+ event.getJson());
 			}
 
 			if (fileLockFunctions.containsFunctionName(functionName)) {
@@ -96,8 +103,8 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 					fileLockFunctions.invoke(functionName);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("Exception during invokation of method for creating file lock for function " + functionName
+							+ " for event " + event.getJson(), e);
 				}
 			}
 
@@ -139,12 +146,12 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 	public long getCountSubTraces(ArrayList<FileKind> kinds) {
 		return thread.getCountSubTraces(kinds);
 	}
-	
+
 	@Override
 	public long getOverlappingRangeCount(ArrayList<FileKind> kinds) {
 		return thread.getOverlappingRangeCount(kinds);
 	}
-	
+
 	@Override
 	public long getOverlappingFunctionCount(ArrayList<FileKind> kinds) {
 		return thread.getOverlappingFunctionCount(kinds);

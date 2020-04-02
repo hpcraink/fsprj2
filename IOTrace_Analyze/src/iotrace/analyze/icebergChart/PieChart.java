@@ -11,12 +11,18 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import javax.imageio.ImageIO;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.frontangle.ichart.pie.MultiLevelPieChart;
 import com.frontangle.ichart.pie.Segment;
 
 import iotrace.analyze.KeyValueTreeNode;
 
 public class PieChart {
+	private static final Logger logger = LogManager.getLogger(PieChart.class);
+
 	private static List<Color> colors = new LinkedList<>();
 	static {
 		colors.add(new Color(0, 190, 0));
@@ -79,7 +85,7 @@ public class PieChart {
 		try {
 			ImageIO.write(bufferedImage, "png", new File(filePrefix + fileName + ".png"));
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Exception during write of png", e);
 		}
 	}
 

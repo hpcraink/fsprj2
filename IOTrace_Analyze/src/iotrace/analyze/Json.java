@@ -23,8 +23,8 @@ public class Json {
 	// TODO: differ between strings and other value-types
 	private TreeMap<String, String> elements = new TreeMap<>();
 	private TreeMap<String, Json> objects = new TreeMap<>();
-	// TODO: arrays and objects as array elements (e.g. see hasArrayValue)
 	private TreeMap<String, LinkedList<String>> arrays = new TreeMap<>();
+	private TreeMap<String, LinkedList<Json>> objectArrays = new TreeMap<>();
 
 	public Json(String json) {
 		super();
@@ -127,7 +127,7 @@ public class Json {
 					nameFound = false;
 					stringValueFound = false;
 				} else if (arrayValueFound) {
-					arrays.put(name, parseArray(value));
+					parseArray(name, value);
 					nameFound = false;
 					arrayValueFound = false;
 				} else if (objectValueFound) {
@@ -139,17 +139,25 @@ public class Json {
 		}
 	}
 
-	private LinkedList<String> parseArray(String jsonArray) {
+	private void parseArray(String name, String jsonArray) {
 		LinkedList<String> array = new LinkedList<>();
+		LinkedList<Json> objectArray = new LinkedList<>();
 
 		int endPos;
 		String value;
+		Json objectValue;
 		for (int i = 0; i < jsonArray.length(); i++) {
 			switch (jsonArray.charAt(i)) {
 			case '"':
 				endPos = endPosString(jsonArray, i);
 				value = jsonArray.substring(i + 1, endPos);
 				array.add(value);
+				i = endPos;
+				break;
+			case '{':
+				endPos = endPosObject(jsonArray, i);
+				objectValue = new Json(jsonArray.substring(i, endPos + 1));
+				objectArray.add(objectValue);
 				i = endPos;
 				break;
 			case ',':
@@ -169,7 +177,12 @@ public class Json {
 			}
 		}
 
-		return array;
+		if (!array.isEmpty()) {
+			arrays.put(name, array);
+		}
+		if (!objectArray.isEmpty()) {
+			objectArrays.put(name, objectArray);
+		}
 	}
 
 	private int endPosValue(String json, int startPos) {
@@ -252,8 +265,12 @@ public class Json {
 		return objects.containsKey(name);
 	}
 
-	public boolean containsArray(String name) {
+	public boolean containsValueArray(String name) {
 		return arrays.containsKey(name);
+	}
+
+	public boolean containsObjectArray(String name) {
+		return objectArrays.containsKey(name);
 	}
 
 	public String getElement(String name) {
@@ -264,8 +281,12 @@ public class Json {
 		return objects.get(name);
 	}
 
-	public LinkedList<String> getArray(String name) {
+	public LinkedList<String> getValueArray(String name) {
 		return arrays.get(name);
+	}
+
+	public LinkedList<Json> getObjectArray(String name) {
+		return objectArrays.get(name);
 	}
 
 	public String getValue(String path) {
@@ -315,7 +336,7 @@ public class Json {
 		return s1 + s2;
 	}
 
-	public LinkedList<String> getArrayFromPath(String path) {
+	public LinkedList<String> getValueArrayFromPath(String path) {
 		Json json;
 		String[] tokens = path.split("/");
 
@@ -333,15 +354,15 @@ public class Json {
 			return null;
 		}
 
-		if (json.containsArray(array)) {
-			return json.getArray(array);
+		if (json.containsValueArray(array)) {
+			return json.getValueArray(array);
 		}
 
 		return null;
 	}
 
 	public boolean hasArrayValue(String path, String value) {
-		LinkedList<String> tmpArray = getArrayFromPath(path);
+		LinkedList<String> tmpArray = getValueArrayFromPath(path);
 
 		if (tmpArray != null) {
 			return tmpArray.contains(value);
@@ -433,7 +454,31 @@ public class Json {
 				}
 				tmp += "\"" + a + "\"";
 			}
+			if (objectArrays.containsKey(e.getKey())) {
+				for (Json j : objectArrays.get(e.getKey())) {
+					if (!tmp.endsWith("[")) {
+						tmp += ",";
+					}
+					tmp += j;
+				}
+			}
 			tmp += "]";
+		}
+
+		for (Entry<String, LinkedList<Json>> e : objectArrays.entrySet()) {
+			if (!arrays.containsKey(e.getKey())) {
+				if (!tmp.endsWith("{")) {
+					tmp += ",";
+				}
+				tmp += "\"" + e.getKey() + "\":[";
+				for (Json j : e.getValue()) {
+					if (!tmp.endsWith("[")) {
+						tmp += ",";
+					}
+					tmp += j;
+				}
+				tmp += "]";
+			}
 		}
 
 		for (Entry<String, Json> e : objects.entrySet()) {

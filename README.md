@@ -111,4 +111,8 @@ The bar chart shows the efficiency of the used functions.
 A function that uses a lot of time to read or write a few bytes is less efficient than a function that reads or writes more bytes in the same or even less time.
 So this char shows some optimization potential.
 
-![alt text](https://github.com/hpcraink/fsprj2/IOTrace_Analyze/test/output/firefox_test221_function_summary.png "&lt;prefix-for-log-names&gt;_function_summary.png")
+![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_function_summary.png "&lt;prefix-for-log-names&gt;_function_summary.png")
+
+### &lt;prefix-for-log-names&gt;firefox_test221_time_pie.png
+
+![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;firefox_test221_time_pie.png")

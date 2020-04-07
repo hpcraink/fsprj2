@@ -64,7 +64,7 @@ Generating the animation is not possible on a headless system. The Gephi Toolkit
 
 ### Build IOTrace_Analyze
 
-1. get the source like described in [Build libiotrace](### Build libiotrace) step 1 and 2.
+1. get the source like described in [Build libiotrace](#Build-libiotrace) step 1 and 2.
 2. to get the jar you have two options
     * build a new jar with maven out of the directory &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze
     * use the provided snapshot IOTrace_Analyze-0.0.1-SNAPSHOT-jar-with-dependencies.jar in &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze/test/

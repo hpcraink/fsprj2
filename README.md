@@ -10,36 +10,36 @@ Steps to build libiotrace
 
 1. create a new folder <libiotrace-folder> for the source
 2. get the source
-	using git with terminal:
-		change dir to <libiotrace-folder>
-		use command `git clone https://github.com/hpcraink/fsprj2.git`
-	using “Clone or download”-Button on https://github.com/hpcraink/fsprj2
-		download zip
-		extract zip to <libiotrace-folder>
+	* using git with terminal:
+		1. change dir to <libiotrace-folder>
+		2. use command `git clone https://github.com/hpcraink/fsprj2.git`
+	* using “Clone or download”-Button on https://github.com/hpcraink/fsprj2
+		1. download zip
+		2. extract zip to <libiotrace-folder>
 3. build it
-	open terminal
-	go to <libiotrace-folder>
-	`cd fsprj2/libiotrace/`
-	`git rm --cached ext/cunit`
-	`rm -rf ext`
-	`git submodule add https://gitlab.com/cunity/cunit.git ext/cunit`
-	`mkdir build` (for out of source build)
-	`cd build/`
-	`ccmake ..`
-	press “c” and wait until configuration is done
-	press “c” again (this brings up the option “g” to generate)
-	press “g” and wait until ccmake exits
-	`make` (wait until build is done)
-	libiotrace is now available in folder <libiotrace-folder>/fsprj2/libiotrace/build/src
-		libiotrace_shared.so (for dynamically linked programs)
-		libiotrace_static.a (for linking against static linked programs)
+	1. open terminal
+	2. go to <libiotrace-folder>
+	3. `cd fsprj2/libiotrace/`
+	4. `git rm --cached ext/cunit`
+	5. `rm -rf ext`
+	6. `git submodule add https://gitlab.com/cunity/cunit.git ext/cunit`
+	7. `mkdir build` (for out of source build)
+	8. `cd build/`
+	9. `ccmake ..`
+	10. press “c” and wait until configuration is done
+	11. press “c” again (this brings up the option “g” to generate)
+	12. press “g” and wait until ccmake exits
+	13. `make` (wait until build is done)
+	14. libiotrace is now available in folder <libiotrace-folder>/fsprj2/libiotrace/build/src
+		* libiotrace_shared.so (for dynamically linked programs)
+		* libiotrace_static.a (for linking against static linked programs)
 
 ## Use libiotrace
 
-dynamically linked program
+* dynamically linked program
     to monitor the program <monitor-program> use the command
     `LD_PRELOAD=<path-to-libiotrace>/libiotrace_shared.so IOTRACE_LOG_NAME=<prefix-for-log-names> <monitor-program>`
-static linked program
+* static linked program
     link your program against libiotrace_static.a with ld linker option `-wrap` for each function you want to monitor (complete list of possible functions is available in <libiotrace-folder>/fsprj2/libiotrace/test/CMakeLists.txt)
 
 ## IOTrace_Analyze

@@ -4,21 +4,21 @@
 
 libiotrace is a tool for monitoring a running dynamically linked program without the need for changing it. During a monitored run detailed data for many File-I/O related function calls is collected. The collected data is written to log files.
 
-## Build libiotrace
+### Build libiotrace
 
 Steps to build libiotrace
 
-1. create a new folder <libiotrace-folder> for the source
+1. create a new folder &lt;libiotrace-folder&gt; for the source
 2. get the source
 	* using git with terminal:
-		1. change dir to <libiotrace-folder>
+		1. change dir to &lt;libiotrace-folder&gt;
 		2. use command `git clone https://github.com/hpcraink/fsprj2.git`
 	* using “Clone or download”-Button on https://github.com/hpcraink/fsprj2
 		1. download zip
-		2. extract zip to <libiotrace-folder>
+		2. extract zip to &lt;libiotrace-folder&gt;
 3. build it
 	1. open terminal
-	2. go to <libiotrace-folder>
+	2. go to &lt;libiotrace-folder&gt;
 	3. `cd fsprj2/libiotrace/`
 	4. `git rm --cached ext/cunit`
 	5. `rm -rf ext`
@@ -30,17 +30,17 @@ Steps to build libiotrace
 	11. press “c” again (this brings up the option “g” to generate)
 	12. press “g” and wait until ccmake exits
 	13. `make` (wait until build is done)
-	14. libiotrace is now available in folder <libiotrace-folder>/fsprj2/libiotrace/build/src
+	14. libiotrace is now available in folder &lt;libiotrace-folder&gt;/fsprj2/libiotrace/build/src
 		* libiotrace_shared.so (for dynamically linked programs)
 		* libiotrace_static.a (for linking against static linked programs)
 
-## Use libiotrace
+### Use libiotrace
 
 * dynamically linked program
-    to monitor the program <monitor-program> use the command
-    `LD_PRELOAD=<path-to-libiotrace>/libiotrace_shared.so IOTRACE_LOG_NAME=<prefix-for-log-names> <monitor-program>`
+    to monitor the program &lt;monitor-program&gt; use the command
+    `LD_PRELOAD=&lt;path-to-libiotrace&gt;/libiotrace_shared.so IOTRACE_LOG_NAME=&lt;prefix-for-log-names&gt; &lt;monitor-program&gt;`
 * static linked program
-    link your program against libiotrace_static.a with ld linker option `-wrap` for each function you want to monitor (complete list of possible functions is available in <libiotrace-folder>/fsprj2/libiotrace/test/CMakeLists.txt)
+    link your program against libiotrace_static.a with ld linker option `-wrap` for each function you want to monitor (complete list of possible functions is available in &lt;libiotrace-folder&gt;/fsprj2/libiotrace/test/CMakeLists.txt)
 
 ## IOTrace_Analyze
 

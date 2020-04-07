@@ -37,9 +37,11 @@ Steps to build libiotrace
 ### Use libiotrace
 
 * dynamically linked program
+
     to monitor the program &lt;monitor-program&gt; use the command
     `LD_PRELOAD=&lt;path-to-libiotrace&gt;/libiotrace_shared.so IOTRACE_LOG_NAME=&lt;prefix-for-log-names&gt; &lt;monitor-program&gt;`
 * static linked program
+
     link your program against libiotrace_static.a with ld linker option `-wrap` for each function you want to monitor (complete list of possible functions is available in &lt;libiotrace-folder&gt;/fsprj2/libiotrace/test/CMakeLists.txt)
 
 ## IOTrace_Analyze

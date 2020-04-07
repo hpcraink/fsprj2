@@ -70,7 +70,7 @@ The graphics, the animation and the output files enable improvements of the File
 ### Prerequisites
 
 To use IOTrace_Analyze a Java Runtime has to be installed.
-It's testet with java-11-openjdk-amd64 on Ubuntu and jre1.8.0_102 on windows.
+It's tested with java-11-openjdk-amd64 on Ubuntu and jre1.8.0_102 on windows.
 
 Generating the animation is not possible on a headless system.
 The Gephi Toolkit is used to animate the Graph.
@@ -113,6 +113,8 @@ So this char shows some optimization potential.
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_function_summary.png "&lt;prefix-for-log-names&gt;_function_summary.png")
 
-### &lt;prefix-for-log-names&gt;firefox_test221_time_pie.png
+#### &lt;prefix-for-log-names&gt;firefox_test221_time_pie.png
+
+&lt;prefix-for-log-names&gt;firefox_test221_time_pie.png 
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;firefox_test221_time_pie.png")

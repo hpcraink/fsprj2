@@ -50,6 +50,8 @@ Steps to build libiotrace
 
     link your program against libiotrace_static.a with ld linker option `-wrap` for each function you want to monitor (complete list of possible functions is available in &lt;libiotrace-folder&gt;/fsprj2/libiotrace/test/CMakeLists.txt)
 
+The output will be placed in the working direrctory of &lt;monitor-program&gt;. Every generated file has a name beginning with &lt;prefix-for-log-names&gt;.
+
 ## IOTrace_Analyze
 
 IOTrace_Analyze is used to prepare and analyze the output of libiotrace. This tool reconstructs the sequence of function calls for every thread and every file. It also evaluates the connection between a thread and a file, the time used and the amount of data transported for each function call. The results of this processing are stored in an optimized data model. On the basis of this data model, various graphics are generated. With these graphics, the efficiency of the constellations in the program can be determined. Furthermore, an animation is generated. This animation shows the function calls in a graph over time. The collected and processed data is provided as output files for further analysis. The graphics, the animation and the output files enable improvements of the File-I/O.
@@ -62,7 +64,15 @@ Generating the animation is not possible on a headless system. The Gephi Toolkit
 
 ### Build IOTrace_Analyze
 
-1. get the source like described in [Build libiotrace](#Build libiotrace) step 1 and 2.
+1. get the source like described in [Build libiotrace](### Build libiotrace) step 1 and 2.
 2. to get the jar you have two options
     * build a new jar with maven out of the directory &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze
-    * use the provided snapshot 
+    * use the provided snapshot IOTrace_Analyze-0.0.1-SNAPSHOT-jar-with-dependencies.jar in &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze/test/
+
+### Use IOTrace_Analyze
+
+1. put the libiotrace output, the IOTrace_Analyze-jar, some log4j2.properties and the IOTrace_Analyze.properties in the same directory. Examples for the properties can be found in &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze/test/.
+2. edit the IOTrace_Analyze.properties. At least the entry inputFile has to be changed to the value of &lt;prefix-for-log-names&gt; to find the libiotrace output. The other entrys define which output will be generated.
+3. run the jar with the command `java -jar <IOTrace_Analyze-jar>` (for big log files it's necessary to increase the maximum memory allocation pool for the JVM with an additional parameter like `-Xmx16g`)
+
+If the given properties are used, two new directorys are generated. One with the name logs which includes the file IOTrace_Analyze.log. And one with the name output which includes all generated diagrams, output files and animations.

@@ -197,7 +197,9 @@ Steps to build _libiotrace_:
     * ```c
       void libiotrace_set_stacktrace_depth(int depth);
       ```
-      Set stacktrace depth for logging in actual thread to _depth_. If _depth_ is 0 no stacktrace is logged.
+      Set stacktrace depth for logging in actual thread to _depth_.
+      If _depth_ is 0 no stacktrace is logged.
+      _depth_ must be less than or equal to _MAX_STACKTRACE_DEPTH_ (see [Build libiotrace](#Build-libiotrace) and _ccmake_).
       
     * ```c
       int libiotrace_get_stacktrace_depth();
@@ -209,7 +211,7 @@ Every generated file has a name beginning with &lt;prefix-for-log-names&gt;.
 
 ## IOTrace_Analyze
 
-IOTrace_Analyze is used to prepare and analyze the output of libiotrace.
+_IOTrace_Analyze_ is used to prepare and analyze the output of _libiotrace_.
 This tool reconstructs the sequence of function calls for every thread and every file.
 It also evaluates the connection between a thread and a file, the time used and the amount of data transported for each function call.
 The results of this processing are stored in an optimized data model. On the basis of this data model, various graphics are generated.
@@ -220,20 +222,20 @@ The graphics, the animation and the output files enable improvements of the File
 
 ### Prerequisites
 
-To use IOTrace_Analyze a Java Runtime has to be installed.
+To use _IOTrace_Analyze_ a Java Runtime has to be installed.
 It's tested with _java-11-openjdk-amd64_ on Ubuntu and _jre1.8.0_102_ on windows.
 
 Generating the animation is not possible on a headless system.
-The Gephi Toolkit is used to animate the Graph.
+The [_Gephi Toolkit_](https://github.com/gephi/gephi-toolkit) is used to animate the Graph.
 Using this toolkit on a headless system will throw a HeadlessException.
 If you want to run IOTrace_Analyze on a headless system omit the animation.
-To do this set in the _IOTrace_Analyze.properties_ the entry writeAnimations to false.
+To do this set the entry writeAnimations in the _IOTrace_Analyze.properties_ to false.
 
 ### Build IOTrace_Analyze
 
 1. get the source like described in [Build libiotrace](#Build-libiotrace) step 1 and 2.
 2. to get the jar you have two options
-    * build a new jar with maven out of the directory &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze
+    * build a new jar with maven out of the directory &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze with command `mvn clean install`
     * use the provided snapshot _IOTrace_Analyze-0.0.1-SNAPSHOT-jar-with-dependencies.jar_ in &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze/test/
 
 ### Use IOTrace_Analyze

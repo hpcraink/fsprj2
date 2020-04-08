@@ -2,20 +2,20 @@
 
 ## libiotrace
 
-libiotrace is a tool for monitoring a running dynamically linked program without the need for changing it.
+_libiotrace_ is a tool for monitoring a running dynamically linked program without the need for changing it.
 During a monitored run detailed data for many File-I/O related function calls is collected.
 The collected data is written to log files.
 
 ### Prerequisites
 
-libiotrace is currently only available for Linux-Systems.
+_libiotrace_ is currently only available for Linux-Systems.
 It's tested with _Red Hat Enterprise Linux Server release 7.7_, _KDE neon User Edition 5.18 release 18.04_ and _Ubuntu 18.04.3 LTS_.
 
-To build libiotrace on your system you need a C-Compiler, _make_, _cmake_ and _ccmake_.
+To build _libiotrace_ on your system you need a C-Compiler, _make_, _cmake_ and _ccmake_.
 
 ### Build libiotrace
 
-Steps to build libiotrace
+Steps to build _libiotrace_:
 
 1. create a new folder &lt;libiotrace-folder&gt; for the source
 2. to get the source you have two options
@@ -37,60 +37,94 @@ Steps to build libiotrace
     9. `ccmake ..`
     10. press “c” and wait until configuration is done
     11. optional: customize libiotrace (set/change _cmake_ options)
+    
         * _BUFFER_SIZE_:
+        
           libiotrace buffers output in one buffer per monitored process.
           This option sets the buffer size in bytes.
           A bigger buffer reduces the overhead of libiotrace.
           But a bigger buffer means also reduced available memory for the monitored program and the system.
+          
         * _LOGGING_:
+        
           If set to _ON_ detailed data is collected and written to output files.
           If set to _OFF_ nothing is collected.
           Setting this option to _OFF_ is only useful together with using the _libiotrace.h_ (see [Use libiotrace](#Use-libiotrace)).
+          
         * _LOG_WRAPPER_TIME_:
+        
           If set to _ON_ the time needed for collecting and writing the data is written to the output.
           In that case the overhead of _libiotrace_ can be included in further analysis.
+          
         * _MAX_ERROR_TEXT_:
+        
           For functions which use the lvalue errno to return error values libiotrace collects the error value and a corresponding error text.
           This option sets the maximum length of this text.
           Longer values are truncated.
+          
         * _MAX_EXEC_ARRAY_LENGTH_:
+        
           If the monitored program is dynamically linked and calls a exec-function the environment variable _LD_PRELOAD_ must be set for the new process (see [Use libiotrace](#Use-libiotrace) for _LD_PRELOAD_).
           To ensure this all in the parameters of the exec function given environment variables have to be inspected and in some cases changed.
           The maximum number of inspected variables is set with this option.
+          
         * _MAX_FUNCTION_NAME_:
+        
           Sets the maximum length of collected function names.
           Longer names get truncated.
+          
         * _MAX_MSG_FILE_DESCRIPTORS_:
-          If the monitored program uses _Unix Domain Sockets_ to send _File Descriptors_ from one process to another process this option gives the maximum count of collected _File Descriptors_ in a single send or receive operation.
+        
+          If the monitored program uses _Unix Domain Sockets_ to send _File Descriptors_ from one process to another process this option sets the maximum count of collected _File Descriptors_ in a single send or receive operation.
+          
         * _MAX_STACKTRACE_DEPTH_:
+        
           This option sets the maximum depth of an collected stack trace (the maximum number of inspected stack frames).
           A stack trace for each monitored function call is only collected if the option _STACKTRACE_DEPTH_ is set to a number greater than 0 and at least one of the options _STACKTRACE_PTR_ and _STACKTRACE_SYMBOL_ is set to _ON_ or a corresponding function from _libiotrace.h_ (see [Use libiotrace](#Use-libiotrace)) is used.
+          
         * _MAX_STACKTRACE_ENTRY_LENGTH_:
+        
           Sets maximum length of a single entry in a collected stack trace.
           Longer values are truncated.
+          
         * _STACKTRACE_DEPTH_:
+        
           Sets the maximum number of currently collected stack trace entries.
           If the current stack trace is deeper than _STACKTRACE_DEPTH_ entries will be omitted.
           The value of _STACKTRACE_DEPTH_ has to be less than or equal to the value of _MAX_STACKTRACE_DEPTH_.
           _STACKTRACE_DEPTH_ can be changed during the run of the monitored program if _libiotrace.h_ is used see [Use libiotrace](#Use-libiotrace).
+          
         * _STACKTRACE_PTR_:
-          If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the memory address of stack trace entries are collected.
+        
+          If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the memory address of stack trace entries is collected.
+          
         * _STACKTRACE_SYMBOL_:
-          If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the symbol names of stack trace entries are collected.
+        
+          If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the symbol name of stack trace entries is collected.
+          
         * _WITH_DL_IO_:
+        
           If set to _ON_ functions from _dlfcn.h_ are monitored (namely _dlopen_ and _dlmopen_).
+          
         * _WITH_MPI_IO_:
+        
           Don't change it, because it is not implemented.
           In the future this option enables the monitoring of MPI (e.g. OpenMPI) functions.
           This is the next step on our roadmap.
+          
         * _WITH_POSIX_AIO_:
+        
           If set to _ON_ functions from _aio.h_ (POSIX Asynchronous Input and Output) are monitored (namely _aio_read_, _aio_read64_, _aio_write_, _aio_write64_, _lio_listio_, _lio_listio64_, _aio_error_, _aio_error64_, _aio_return_, _aio_return64_, _aio_fsync_, _aio_fsync64_, _aio_suspend_, _aio_suspend64_, _aio_cancel_, _aio_cancel64_ and _aio_init_).
-          IOTrace_Analyze (see [IOTrace_Analyze](#IOTrace_Analyze)) doesn't analyze this functions. This will be implemented in the future.
+          IOTrace_Analyze (see [IOTrace_Analyze](#IOTrace_Analyze)) doesn't analyze these functions. This will be implemented in the future.
+          
         * _WITH_POSIX_IO_:
+        
           If set to _ON_ functions from _dirent.h_, _fcntl.h_, _stdio.h_, _stdio_ext.h_, _stdlib.h_, _sys/epoll.h_, _sys/eventfd.h_, _sys/inotify.h_, _sys/memfd.h_, _sys/mman.h_, _sys/select.h_, _sys/socket.h_, _sys/uio.h_, _unistd.h_ and _wchar.h_ are monitored (for a complete list of functions see &lt;libiotrace-folder&gt;/fsprj2/libiotrace/src/posix_io.h).
+          
         * _WITH_STD_IO_:
+        
           If set to _ON_ functions calls which work with a _File Descriptor_ equal to _STDIN_FILENO_, _STDOUT_FILENO_ or _STDERR_FILENO_ and functions which work with a _file stream_ equal to _stdin_, _stdout_ or _stderr_ will be monitored.
-          So if set to _OFF_ for such function calls no data will be collected.
+          So if set to _OFF_, for such function calls no data will be collected.
           This can be a problem in _IOTrace_Analyze_.
           If for example the _File Descriptor_ _STDOUT_FILENO_ is duplicated with an call to the _dup2_ function and the resulting duplicate is not equal to _STDIN_FILENO_ or _STDERR_FILENO_ the output analysis in _IOTrace_Analyze_ will be wrong.
           Thats the case because the original _File Descriptor_ and the call of the _dup2_ function are not collected but the new _File Descriptor_ and function calls with this new _File Descriptor_ are collected.
@@ -99,6 +133,7 @@ Steps to build libiotrace
           Which is probably wrong.
           So if you are not sure if the monitored program manipulates the standard (std) _file streams_ or _File Descriptors_ (e.g. with an redirect of standard _file streams_ during start of an new process) set this option to _ON_.
           In any other case you can omit a lot of overhead by setting it to _OFF_.
+          
     12. press “c” again (this brings up the option “g” to generate)
     13. press “g” and wait until _ccmake_ exits
     14. `make` (wait until build is done)
@@ -111,7 +146,7 @@ Steps to build libiotrace
 * dynamically linked program
 
     to monitor the program &lt;monitor-program&gt; use the command
-    `LD_PRELOAD=<path-to-libiotrace>/libiotrace_shared.so IOTRACE_LOG_NAME=<prefix-for-log-names> <monitor-program>`
+    `LD_PRELOAD=<libiotrace-folder>/fsprj2/libiotrace/build/src/libiotrace_shared.so IOTRACE_LOG_NAME=<prefix-for-log-names> <monitor-program>`
     
 * static linked program
 
@@ -121,7 +156,7 @@ Steps to build libiotrace
 
     to control and manipulate the behavior of _libiotrace_ during a run of the monitored program use the _libiotrace.h_ header.
     For that you have to change the monitored program.
-    Build against the &lt;libiotrace-folder&gt;/fsprj2/libiotrace/include/libiotrace.h and link against &lt;libiotrace-folder&gt;fsprj2/libiotrace/build/src/libiotrace.so.
+    Build against the &lt;libiotrace-folder&gt;/fsprj2/libiotrace/include/libiotrace.h and link against &lt;libiotrace-folder&gt;/fsprj2/libiotrace/build/src/libiotrace.so.
     Use the functions out of _libiotrace.h_ directly in the source of the monitored program.
     If the changed monitored program is started with _LD_PRELOAD_ set to a path pointing to _libiotrace_shared.so_ the functions out of _libiotrace.h_ will manipulate the behavior.
     Otherwise the functions have no effect.
@@ -138,6 +173,36 @@ Steps to build libiotrace
       void libiotrace_end_log();
       ```
       End logging in actual thread.
+      
+    * ```c
+      void libiotrace_start_stacktrace_ptr();
+      ```
+      Start logging of stacktrace pointer in actual thread (if logging is active and stacktrace depth is greater than 0).
+    
+    * ```c
+      void libiotrace_end_stacktrace_ptr();
+      ```
+      End logging of stacktrace pointer in actual thread.
+      
+    * ```c
+      void libiotrace_start_stacktrace_symbol();
+      ```
+      Start logging of stacktrace symbols in actual thread (if logging is active and stacktrace depth is greater than 0).
+      
+    * ```c
+      void libiotrace_end_stacktrace_symbol();
+      ```
+      End logging of stacktrace symbols in actual thread.
+      
+    * ```c
+      void libiotrace_set_stacktrace_depth(int depth);
+      ```
+      Set stacktrace depth for logging in actual thread to _depth_. If _depth_ is 0 no stacktrace is logged.
+      
+    * ```c
+      int libiotrace_get_stacktrace_depth();
+      ```
+      Get current stacktrace depth.
 
 The output will be placed in the working direrctory of &lt;monitor-program&gt;.
 Every generated file has a name beginning with &lt;prefix-for-log-names&gt;.

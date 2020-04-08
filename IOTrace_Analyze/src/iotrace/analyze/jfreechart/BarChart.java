@@ -1,5 +1,6 @@
 package iotrace.analyze.jfreechart;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -36,9 +37,12 @@ public class BarChart {
 		JFreeChart barChart = ChartFactory.createBarChart(title, "Category", "Score", dataset, PlotOrientation.VERTICAL,
 				true, false, false);
 
+		barChart.getPlot().setBackgroundPaint(Color.WHITE);
+		
 		final LogarithmicAxis rangeAxis = new LogarithmicAxis("scaled logarithmically");
 		rangeAxis.setStrictValuesFlag(false);
 		barChart.getCategoryPlot().setRangeAxis(rangeAxis);
+		barChart.getCategoryPlot().setRangeGridlinePaint(Color.BLACK);
 
 		barChart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 		((BarRenderer) barChart.getCategoryPlot().getRenderer()).setItemMargin(0);

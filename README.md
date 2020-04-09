@@ -15,7 +15,11 @@ To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ 
 
 ### License
 
+#### Tools needed to build _libiotrace_
+
 CMake and ccmake: OSI-approved BSD 3-clause License (see [CMake](https://cmake.org/))
+
+CUnit: GNU LIBRARY GENERAL PUBLIC LICENSE Version 2 (see [CUnit](https://gitlab.com/cunity/cunit))
 
 ### Build libiotrace
 
@@ -237,6 +241,12 @@ To do this set the entry writeAnimations in the _IOTrace_Analyze.properties_ to 
 
 ### License
 
+#### Tools needed to build _IOTrace_Analyze_
+
+Maven: Apache License, Version 2.0 (see [Maven](http://maven.apache.org/))
+
+#### _IOTrace_Analyze_ dependencies
+
 Gephi Toolkit: CDDL 1.0 and GNU General Public License v3 (see [Gephi Toolkit](https://github.com/gephi/gephi-toolkit))
 
 Iceberg Charts: Apache License, Version 2.0 (see [MVNrepository](https://mvnrepository.com/artifact/com.frontangle/iceberg-charts/1.2.0))
@@ -270,7 +280,7 @@ And one with the name _output_ which includes all generated diagrams, output fil
 
 #### &lt;prefix-for-log-names&gt;_function_summary.png
 
-_&lt;prefix-for-log-names&gt;_function_summary.png_ shows a bar chart with one entry for each monitored function.
+*&lt;prefix-for-log-names&gt;_function_summary.png* shows a bar chart with one entry for each monitored function.
 Multiple calls of the same function are summarized.
 For each function two to three bars are shown.
 One bar shows the read or written bytes.
@@ -292,12 +302,12 @@ So this char shows some optimization potential.
 
 #### &lt;prefix-for-log-names&gt;_bytes_pie.png
 
-_&lt;prefix-for-log-names&gt;_bytes_pie.png_
+*&lt;prefix-for-log-names&gt;_bytes_pie.png*
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_bytes_pie.png "&lt;prefix-for-log-names&gt;_bytes_pie.png")
 
 #### &lt;prefix-for-log-names&gt;_1.mp4
 
-_&lt;prefix-for-log-names&gt;_1.mp4_
+*&lt;prefix-for-log-names&gt;_1.mp4*
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_1.gif "&lt;prefix-for-log-names&gt;_1.mp4")

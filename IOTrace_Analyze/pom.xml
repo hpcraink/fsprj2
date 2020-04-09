@@ -50,11 +50,6 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>it.uniroma1.dis.wsngroup.gexf4j</groupId>
-			<artifactId>gexf4j</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>

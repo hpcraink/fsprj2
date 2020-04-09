@@ -286,7 +286,7 @@ So this char shows some optimization potential.
 
 #### &lt;prefix-for-log-names&gt;_time_pie.png
 
-_&lt;prefix-for-log-names&gt;_time_pie.png_
+*&lt;prefix-for-log-names&gt;_time_pie.png*
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;_time_pie.png")
 

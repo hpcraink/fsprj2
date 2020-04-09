@@ -11,7 +11,11 @@ The collected data is written to log files.
 _libiotrace_ is currently only available for Linux-Systems.
 It's tested with _Red Hat Enterprise Linux Server release 7.7_, _KDE neon User Edition 5.18 release 18.04_ and _Ubuntu 18.04.3 LTS_.
 
-To build _libiotrace_ on your system you need a C-Compiler, _make_, _cmake_ and _ccmake_.
+To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ and optional _ccmake_.
+
+### License
+
+CMake and ccmake: OSI-approved BSD 3-clause License (see [CMake](https://cmake.org/))
 
 ### Build libiotrace
 
@@ -230,6 +234,15 @@ The [_Gephi Toolkit_](https://github.com/gephi/gephi-toolkit) is used to animate
 Using this toolkit on a headless system will throw a HeadlessException.
 If you want to run IOTrace_Analyze on a headless system omit the animation.
 To do this set the entry writeAnimations in the _IOTrace_Analyze.properties_ to false.
+
+### License
+
+Gephi Toolkit: CDDL 1.0 and GNU General Public License v3 (see [Gephi Toolkit](https://github.com/gephi/gephi-toolkit))
+Iceberg Charts: Apache License, Version 2.0 (see [MVNrepository](https://mvnrepository.com/artifact/com.frontangle/iceberg-charts/1.2.0))
+JCodec: FreeBSD License (see [JCodec](http://jcodec.org/))
+JFreeChart: GNU Lesser General Public Licence (see [JFreeChart](http://www.jfree.org/jfreechart/))
+JUnit: Eclipse Public License 1.0 (see [MVNrepository](https://mvnrepository.com/artifact/junit/junit/4.12))
+Log4j: Apache License, Version 2.0 (see [CMake](https://logging.apache.org/log4j/2.x/))
 
 ### Build IOTrace_Analyze
 

@@ -284,8 +284,20 @@ So this char shows some optimization potential.
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_function_summary.png "&lt;prefix-for-log-names&gt;_function_summary.png")
 
-#### &lt;prefix-for-log-names&gt;firefox_test221_time_pie.png
+#### &lt;prefix-for-log-names&gt;_time_pie.png
 
-_&lt;prefix-for-log-names&gt;firefox_test221_time_pie.png_
+_&lt;prefix-for-log-names&gt;_time_pie.png_
 
-![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;firefox_test221_time_pie.png")
+![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;_time_pie.png")
+
+#### &lt;prefix-for-log-names&gt;_bytes_pie.png
+
+_&lt;prefix-for-log-names&gt;_bytes_pie.png_
+
+![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_bytes_pie.png "&lt;prefix-for-log-names&gt;_bytes_pie.png")
+
+#### &lt;prefix-for-log-names&gt;_1.mp4
+
+_&lt;prefix-for-log-names&gt;_1.mp4_
+
+![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_1.gif "&lt;prefix-for-log-names&gt;_1.mp4")

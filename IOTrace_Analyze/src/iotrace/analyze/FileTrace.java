@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -19,7 +20,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 	private FunctionEvent firstFunctionEvent = null;
 	private FunctionEvent lastFunctionEvent = null;
 	private TreeSet<FunctionEvent> events = new TreeSet<>();
-	private BasicTrace<BasicTrace<BasicTrace<BasicTrace<FunctionTrace>>>> file = new BasicTrace<>("file");
+	private BasicTrace<BasicTrace<BasicTrace<BasicTrace<FunctionTrace>>>> file;
 	private FileKind kind;
 	private LinkedList<FileTraceId> sendFileTraceId = new LinkedList<>();
 	private TreeMap<Long, ArrayList<FunctionEvent>> fileRangesByStartPos = new TreeMap<>();
@@ -28,11 +29,18 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 	private TreeMap<Long, ArrayList<FileLock>> fileLocksByStartPos = new TreeMap<>();
 	private TreeMap<Long, ArrayList<FileLock>> fileLocksByEndPos = new TreeMap<>();
 
-	public FileTrace(FileId fileId, String fileName, FileKind kind) {
+	private String directoryDelimiter;
+
+	private ResourceBundle legends;
+
+	public FileTrace(FileId fileId, String fileName, FileKind kind, String directoryDelimiter, ResourceBundle legends) {
 		super();
 		this.fileId = fileId;
 		fileNames.add(fileName);
 		this.kind = kind;
+		this.legends = legends;
+		this.directoryDelimiter = directoryDelimiter;
+		file = new BasicTrace<>(legends.getString("fileTraceFileTitle"));
 	}
 
 	public void sendFileTraceId(FileTraceId fileTraceId) {
@@ -156,7 +164,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 
 			BasicTrace<BasicTrace<BasicTrace<FunctionTrace>>> host;
 			if (!file.containsTrace(hostName)) {
-				host = new BasicTrace<>("host");
+				host = new BasicTrace<>(legends.getString("fileTraceHostTitle"));
 				file.addTrace(hostName, host);
 			} else {
 				host = file.getTrace(hostName);
@@ -164,7 +172,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 
 			BasicTrace<BasicTrace<FunctionTrace>> process;
 			if (!host.containsTrace(processId)) {
-				process = new BasicTrace<>("process");
+				process = new BasicTrace<>(legends.getString("fileTraceProcessTitle"));
 				host.addTrace(processId, process);
 			} else {
 				process = host.getTrace(processId);
@@ -172,7 +180,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 
 			BasicTrace<FunctionTrace> thread;
 			if (!process.containsTrace(threadId)) {
-				thread = new BasicTrace<>("thread");
+				thread = new BasicTrace<>(legends.getString("fileTraceThreadTitle"));
 				process.addTrace(threadId, thread);
 			} else {
 				thread = process.getTrace(threadId);
@@ -180,7 +188,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 
 			FunctionTrace function;
 			if (!thread.containsTrace(functionName)) {
-				function = new FunctionTrace();
+				function = new FunctionTrace(legends.getString("fileTraceFunctionTitle"));
 				thread.addTrace(functionName, function);
 			} else {
 				function = thread.getTrace(functionName);
@@ -381,7 +389,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 	@Override
 	public String getNameFromId(String id) {
 		String file = (String) fileNames.toArray()[0];
-		int index = file.lastIndexOf("/");
+		int index = file.lastIndexOf(directoryDelimiter);
 		if (index > -1) {
 			file = file.substring(index);
 		}

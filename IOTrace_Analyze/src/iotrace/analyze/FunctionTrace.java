@@ -9,9 +9,11 @@ import iotrace.analyze.FileTrace.FileKind;
 
 public class FunctionTrace implements Traceable {
 	private TreeMap<FileGroupId, FileGroupTrace> functionEvents = new TreeMap<>();
+	private String name;
 
-	public FunctionTrace() {
+	public FunctionTrace(String name) {
 		super();
+		this.name = name;
 	}
 
 	public void addFunctionEvent(FunctionEvent e) {
@@ -136,6 +138,6 @@ public class FunctionTrace implements Traceable {
 
 	@Override
 	public String getTraceName() {
-		return "function";
+		return name;
 	}
 }

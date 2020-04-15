@@ -3,6 +3,7 @@ package iotrace.analyze;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
@@ -19,13 +20,17 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 	private FunctionEvent firstFunctionEvent = null;
 	private FunctionEvent lastFunctionEvent = null;
 	private TreeSet<FunctionEvent> events = new TreeSet<>();
-	private BasicTrace<FunctionTrace> thread = new BasicTrace<>("thread");
+	private BasicTrace<FunctionTrace> thread;
 
-	public ThreadTrace(String hostName, String processId, String threadId) {
+	private ResourceBundle legends;
+
+	public ThreadTrace(String hostName, String processId, String threadId, ResourceBundle legends) {
 		super();
 		this.hostName = hostName;
 		this.processId = processId;
 		this.threadId = threadId;
+		this.legends = legends;
+		thread = new BasicTrace<>(legends.getString("threadTraceThreadTitle"));
 	}
 
 	public String getHostName() {
@@ -88,8 +93,8 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException e) {
 
-					logger.error("Exception during invokation of method for creating file range for function " + functionName
-							+ " for event " + event.getJson(), e);
+					logger.error("Exception during invokation of method for creating file range for function "
+							+ functionName + " for event " + event.getJson(), e);
 				}
 			} else {
 				logger.trace("no method for creating file range for function " + functionName + " for event "
@@ -103,14 +108,14 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 					fileLockFunctions.invoke(functionName);
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 						| NoSuchMethodException e) {
-					logger.error("Exception during invokation of method for creating file lock for function " + functionName
-							+ " for event " + event.getJson(), e);
+					logger.error("Exception during invokation of method for creating file lock for function "
+							+ functionName + " for event " + event.getJson(), e);
 				}
 			}
 
 			FunctionTrace function;
 			if (!thread.containsTrace(functionName)) {
-				function = new FunctionTrace();
+				function = new FunctionTrace(legends.getString("threadTraceFunctionTitle"));
 				thread.addTrace(functionName, function);
 			} else {
 				function = thread.getTrace(functionName);

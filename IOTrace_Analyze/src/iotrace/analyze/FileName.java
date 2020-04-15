@@ -3,6 +3,8 @@ package iotrace.analyze;
 import java.util.ArrayList;
 
 public class FileName {
+	private static final String FILE_PREFIX = "file://";
+
 	private String directoryDelimiter;
 	private String workingDir;
 	private String root;
@@ -29,7 +31,7 @@ public class FileName {
 	public String getWorkingDirFromFileName(String fileName) {
 		int pos;
 
-		if (fileName.startsWith("file://")) {
+		if (fileName.startsWith(FILE_PREFIX)) {
 			fileName = fileName.substring(7);
 			pos = fileName.indexOf(directoryDelimiter);
 			if (pos > 0) {
@@ -50,7 +52,7 @@ public class FileName {
 	}
 
 	public String getHostName(String hostName) {
-		return "file://" + hostName + "/";
+		return FILE_PREFIX + hostName + directoryDelimiter;
 	}
 
 	// TODO: if fileName includes a hostname, use it instead of parameter hostName
@@ -65,7 +67,7 @@ public class FileName {
 		if (hostName == null) {
 			hostName = "";
 		}
-		return "file://" + hostName + root + path + directoryDelimiter + tmpfileName;
+		return FILE_PREFIX + hostName + root + path + directoryDelimiter + tmpfileName;
 	}
 
 	private boolean isAbsolute(String fileName) {

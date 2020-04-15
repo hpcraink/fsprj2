@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
@@ -26,7 +27,7 @@ public class BarChart {
 
 	public BarChart(Map<String, List<Long>> values, List<String> legend, String title, String filePrefix,
 			String fileName, int tickLabelFontSize, int labelFontSize, int legendFontSize, int titleFontSize, int width,
-			int hight) {
+			int hight, ResourceBundle legends) {
 		final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 		for (Entry<String, List<Long>> e : values.entrySet()) {
 			for (int i = 0; i < e.getValue().size(); i++) {
@@ -34,12 +35,12 @@ public class BarChart {
 			}
 		}
 
-		JFreeChart barChart = ChartFactory.createBarChart(title, "Category", "Score", dataset, PlotOrientation.VERTICAL,
-				true, false, false);
+		JFreeChart barChart = ChartFactory.createBarChart(title, legends.getString("barChartCategoryAxisLabel"), null,
+				dataset, PlotOrientation.VERTICAL, true, false, false);
 
 		barChart.getPlot().setBackgroundPaint(Color.WHITE);
-		
-		final LogarithmicAxis rangeAxis = new LogarithmicAxis("scaled logarithmically");
+
+		final LogarithmicAxis rangeAxis = new LogarithmicAxis(legends.getString("barChartValueAxisLabel"));
 		rangeAxis.setStrictValuesFlag(false);
 		barChart.getCategoryPlot().setRangeAxis(rangeAxis);
 		barChart.getCategoryPlot().setRangeGridlinePaint(Color.BLACK);

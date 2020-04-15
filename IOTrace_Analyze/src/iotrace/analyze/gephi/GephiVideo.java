@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Map.Entry;
 import javax.imageio.ImageIO;
 
@@ -72,6 +73,8 @@ import org.openide.util.Lookup;
 public class GephiVideo {
 	private static final Logger logger = LogManager.getLogger(GephiVideo.class);
 
+	private ResourceBundle legends;
+
 	private ExportController exportController;
 	private PNGExporter pngExporter;
 
@@ -115,10 +118,13 @@ public class GephiVideo {
 	private float minZ = Float.MAX_VALUE;
 	private float maxZ = Float.MIN_VALUE;
 
-	public GephiVideo(String gexfFile, int height, int width, int maxLayoutPasses, float baseEdgeThickness) {
+	public GephiVideo(String gexfFile, int height, int width, int maxLayoutPasses, float baseEdgeThickness,
+			ResourceBundle legends) {
 		super();
 
 		logger.debug("Start initialize ...");
+
+		this.legends = legends;
 
 		// Initialize export
 		exportController = Lookup.getDefault().lookup(ExportController.class);
@@ -283,8 +289,10 @@ public class GephiVideo {
 		int endLength = endString.length();
 
 		frames.setLabel("");
-		frame.setLabel("Current frame: " + String.format("%" + endLength + "d", (long) start) + " ns to "
-				+ String.format("%" + endLength + "d", (long) end) + " ns.");
+		frame.setLabel(legends.getString("animationFrameLabelPrefix")
+				+ String.format("%" + endLength + "d", (long) start)
+				+ legends.getString("animationFrameLabelBetweenStartAndEnd")
+				+ String.format("%" + endLength + "d", (long) end) + legends.getString("animationFrameLabelPostfix"));
 
 		try {
 			exportController.exportFile(file, pngExporter);
@@ -304,8 +312,8 @@ public class GephiVideo {
 		String endString = String.valueOf((long) end);
 		int endLength = endString.length();
 
-		frames.setLabel(
-				framesPerSecond + " frames per second; each frame " + rangeSizePercent + "% of program duration.");
+		frames.setLabel(framesPerSecond + legends.getString("animationFramesLabelBetweenFpsAndSizePercent")
+				+ rangeSizePercent + legends.getString("animationFramesLabelAfterSizePercent"));
 
 		DynamicRangeFilter dynamicRangeFilter = new DynamicRangeFilter(graphModel);
 
@@ -318,8 +326,11 @@ public class GephiVideo {
 			GraphView viewSave = graphModel.getVisibleView();
 
 			for (double i = start; i + rangeSize < end; i += step) {
-				frame.setLabel("Current frame: " + String.format("%" + endLength + "d", (long) i) + " ns to "
-						+ String.format("%" + endLength + "d", (long) (i + rangeSize)) + " ns.");
+				frame.setLabel(
+						legends.getString("animationFrameLabelPrefix") + String.format("%" + endLength + "d", (long) i)
+								+ legends.getString("animationFrameLabelBetweenStartAndEnd")
+								+ String.format("%" + endLength + "d", (long) (i + rangeSize))
+								+ legends.getString("animationFrameLabelPostfix"));
 
 				// Range Filter
 				Range range = new Range(i, i + rangeSize);
@@ -690,18 +701,23 @@ public class GephiVideo {
 
 	private List<String> getlegendText() {
 		List<String> texts = new LinkedList<>();
-		texts.add("Size of nodes: " + nodeSizeText + " from " + nodeSizeMin + " to " + nodeSizeMax + ".");
-		texts.add("Node label is shown if size of node is equal or more than " + nodeLabelMinSizePercent
-				+ "% of maximum.");
+		texts.add(legends.getString("animationNodesLabelPrefix") + nodeSizeText
+				+ legends.getString("animationNodesLabelBetweenSizeTextAndMinSize") + nodeSizeMin
+				+ legends.getString("animationNodesLabelBetweenMinSizeAndMaxSize") + nodeSizeMax
+				+ legends.getString("animationNodesLabelPostfix"));
+		texts.add(legends.getString("animationNodesLabel2Prefix") + nodeLabelMinSizePercent
+				+ legends.getString("animationNodesLabel2Postfix"));
 		String logScaled;
 		if (logScaledEdge) {
-			logScaled = "(scaled logarithmically)";
+			logScaled = legends.getString("animationEdgesLabelScale");
 		} else {
 			logScaled = "";
 		}
-		texts.add("Size of edges: " + edgeSizeText + " from " + edgeSizeMin + " to " + edgeSizeMax + " " + logScaled
-				+ ".");
-		texts.add("Edge color: most frequent type of function in current time frame.");
+		texts.add(legends.getString("animationEdgesLabelPrefix") + edgeSizeText
+				+ legends.getString("animationEdgesLabelBetweenSizeTextAndMinSize") + edgeSizeMin
+				+ legends.getString("animationEdgesLabelBetweenMinSizeAndMaxSize") + edgeSizeMax + " " + logScaled
+				+ legends.getString("animationEdgesLabelPostfix"));
+		texts.add(legends.getString("animationEdgesLabel2"));
 
 		return texts;
 	}
@@ -745,7 +761,7 @@ public class GephiVideo {
 		}
 	}
 
-	public static void generate(String pathPrefix, String inputFile, Properties properties) {
+	public static void generate(String pathPrefix, String inputFile, Properties properties, ResourceBundle legends) {
 		String input = pathPrefix + inputFile + ".gexf";
 		String output = pathPrefix + inputFile + "_1.mp4";
 
@@ -753,15 +769,15 @@ public class GephiVideo {
 		int height = Integer.parseInt(properties.getProperty("animationHeight", "2048"));
 		int width = Integer.parseInt(properties.getProperty("animationWidth", "2048"));
 
-		String nodeColorAttribute = "type";
-		String nodeSizeAttribute = "sumTime";
-		String nodeSizeText = "sum of time used for file I/O from program start to end of current time frame in nano seconds";
+		String nodeColorAttribute = legends.getString("gexfTypeAttributeTitle");
+		String nodeSizeAttribute = legends.getString("gexfSumTimeAttributeTitle");
+		String nodeSizeText = legends.getString("animationNodesLabelSizeText");
 		int nodeSizeRangeStart = Integer.parseInt(properties.getProperty("animationNodeSizeRangeStart", "8"));
 		int nodeSizeRangeEnd = Integer.parseInt(properties.getProperty("animationNodeSizeRangeEnd", "80"));
 
-		String edgeColorAttribute = "ioType";
-		String edgeSizeAttribute = "bytes";
-		String edgeSizeText = "average of read and written bytes in current time frame";
+		String edgeColorAttribute = legends.getString("gexfIoTypeAttributeTitle");
+		String edgeSizeAttribute = legends.getString("gexfBytesAttributeTitle");
+		String edgeSizeText = legends.getString("animationEdgesLabelSizeText");
 		double edgeSizeRangeStart = Double.parseDouble(properties.getProperty("animationEdgeSizeRangeStart", "0.05"));
 		double edgeSizeRangeEnd = Double.parseDouble(properties.getProperty("animationEdgeSizeRangeEnd", "2"));
 		boolean logEdgeSize = true;
@@ -781,12 +797,12 @@ public class GephiVideo {
 		int framesPerSecond = Integer.parseInt(properties.getProperty("animationFramesPerSecond", "4"));
 		int videoLengthSeconds = Integer.parseInt(properties.getProperty("animationVideoLengthSeconds", "60"));
 
-		String weightColumn = "Weight";
+		String weightColumn = legends.getString("gexfWeightAttributeTitle");
 		String weightSaveColumn = "Weight_Save";
 		String labelColumn = "Label";
 		String labelSaveColumn = "Label_Save";
 
-		GephiVideo gephiVideo = new GephiVideo(input, height, width, maxLayoutPasses, baseEdgeThickness);
+		GephiVideo gephiVideo = new GephiVideo(input, height, width, maxLayoutPasses, baseEdgeThickness, legends);
 
 		// nodeSizeRangeStart = (int) gephiVideo.scaleToBorders(nodeSizeRangeStart);
 		// nodeSizeRangeEnd = (int) gephiVideo.scaleToBorders(nodeSizeRangeEnd);
@@ -828,11 +844,11 @@ public class GephiVideo {
 
 		output = pathPrefix + inputFile + "_2.mp4";
 
-		nodeSizeAttribute = "sumBytes";
-		nodeSizeText = "sum of read and written bytes from program start to end of current time frame";
+		nodeSizeAttribute = legends.getString("gexfSumBytesAttributeTitle");
+		nodeSizeText = legends.getString("animationNodesLabelSizeText2");
 
-		edgeSizeAttribute = "time";
-		edgeSizeText = "average of time used for file I/O in current time frame in nano seconds";
+		edgeSizeAttribute = legends.getString("gexfTimeAttributeTitle");
+		edgeSizeText = legends.getString("animationEdgesLabelSizeText2");
 
 		funcNodeSize = gephiVideo.setNodeSize(nodeSizeAttribute, nodeSizeRangeStart, nodeSizeRangeEnd, nodeSizeText);
 		// clear label column

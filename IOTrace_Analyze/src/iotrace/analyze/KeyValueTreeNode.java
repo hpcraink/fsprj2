@@ -14,11 +14,14 @@ public class KeyValueTreeNode implements Comparable<KeyValueTreeNode> {
 	private SortedSet<KeyValueTreeNode> children = new TreeSet<>();
 	private Map<String, KeyValueTreeNode> childrenByKey = new HashMap<>();
 	private KeyValueTreeNode otherChild = null;
+	
+	private String other;
 
-	public KeyValueTreeNode(double value, String key) {
+	public KeyValueTreeNode(double value, String key, String other) {
 		super();
 		this.value = value;
 		this.key = key;
+		this.other = other;
 	}
 
 	public double getValue() {
@@ -73,7 +76,7 @@ public class KeyValueTreeNode implements Comparable<KeyValueTreeNode> {
 	public void addOtherChild(double value) {
 		if (value != 0) {
 			if (otherChild == null) {
-				otherChild = new KeyValueTreeNode(value, "other");
+				otherChild = new KeyValueTreeNode(value, other, other);
 			} else {
 				otherChild.value += value;
 			}

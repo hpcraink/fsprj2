@@ -15,9 +15,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.SortedMap;
 
@@ -67,6 +69,7 @@ public class Data {
 	private static final String FILE_LOCK_PROPERTIES = "FileLock.properties";
 	private static final String WORKING_DIR_PROPERTIES = "WorkingDir.properties";
 	private static final String IOTRACE_ANALYZE_PROPERTIES = "IOTrace_Analyze.properties";
+	private static final String LEGEND_BUNDLE = "iotrace.analyze.LegendBundle";
 
 	public static final String JSON_GET_START_TIME = "getStartTime";
 
@@ -192,8 +195,12 @@ public class Data {
 	private Long minTime;
 	private Long maxTime;
 
-	private KeyValueTreeNode fork = new KeyValueTreeNode(0, "fork");
+	private KeyValueTreeNode fork;
 	private HashMap<String, HashMap<String, KeyValueTreeNode>> forkedProcesses = new HashMap<>();
+
+	private String directoryDelimiter = "/";
+
+	private ResourceBundle legends;
 
 	/**
 	 * Creates a data structure of connected traces for file-IO.
@@ -213,8 +220,9 @@ public class Data {
 	 * @throws InvocationTargetException
 	 */
 	public Data(String fileTraceProperties, String fileRangeProperties, String fileLockProperties,
-			String workingDirProperties) throws IOException, ClassNotFoundException, NoSuchMethodException,
-			SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			String workingDirProperties, String legendBundle, Locale locale)
+			throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		super();
 
 		fileTraceFunctions = new AnalyzeFunctionPool(fileTraceProperties);
@@ -225,19 +233,18 @@ public class Data {
 		fileLockFunctions = new AnalyzeFunctionPool(fileLockProperties);
 
 		workingDirFunctions = new AnalyzeFunctionPool(workingDirProperties);
+
+		legends = ResourceBundle.getBundle(legendBundle, locale);
+
+		fork = new KeyValueTreeNode(0, legends.getString("forkTraceMainNode"), legends.getString("forkTraceOther"));
+	}
+
+	public ResourceBundle getLegends() {
+		return legends;
 	}
 
 	public static void main(String[] args) {
 		logger.info("Starting ...");
-
-		Data data;
-		try {
-			data = new Data(FILE_TRACE_PROPERTIES, FILE_RANGE_PROPERTIES, FILE_LOCK_PROPERTIES, WORKING_DIR_PROPERTIES);
-		} catch (IOException | ClassNotFoundException | NoSuchMethodException | SecurityException
-				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			logger.error("Exception during initialize", e);
-			return;
-		}
 
 		Properties properties = new Properties();
 		try {
@@ -250,6 +257,20 @@ public class Data {
 		String pathPrefix = properties.getProperty("workingDir");
 		String inputFile = properties.getProperty("inputFile");
 		String outputFolder = properties.getProperty("outputFolder");
+
+		String language = properties.getProperty("localeLanguage", "en");
+		String country = properties.getProperty("localeCountry", "US");
+		Locale locale = new Locale(language, country);
+
+		Data data;
+		try {
+			data = new Data(FILE_TRACE_PROPERTIES, FILE_RANGE_PROPERTIES, FILE_LOCK_PROPERTIES, WORKING_DIR_PROPERTIES,
+					LEGEND_BUNDLE, locale);
+		} catch (IOException | ClassNotFoundException | NoSuchMethodException | SecurityException
+				| IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			logger.error("Exception during initialize", e);
+			return;
+		}
 
 		new File(outputFolder).mkdirs();
 
@@ -302,7 +323,7 @@ public class Data {
 		}
 
 		if (properties.getProperty("writeAnimations", "false").equalsIgnoreCase("true")) {
-			GephiVideo.generate(outputFolder, inputFile, properties);
+			GephiVideo.generate(outputFolder, inputFile, properties, data.getLegends());
 		}
 
 		data.printStats();
@@ -461,7 +482,7 @@ public class Data {
 			}
 
 			if (!process.containsTrace(tmpThreadId)) {
-				tmpThreadTrace = new ThreadTrace(tmpHostName, tmpProcessId, tmpThreadId);
+				tmpThreadTrace = new ThreadTrace(tmpHostName, tmpProcessId, tmpThreadId, legends);
 				process.addTrace(tmpThreadId, tmpThreadTrace);
 			} else {
 				tmpThreadTrace = process.getTrace(threadId);
@@ -521,7 +542,7 @@ public class Data {
 		}
 
 		// TODO: delimiter and root for windows etc.
-		return new FileName(dir, "/", "");
+		return new FileName(dir, directoryDelimiter, "");
 	}
 
 	/**
@@ -577,7 +598,7 @@ public class Data {
 		KeyValueTreeNode hostNode;
 		HashMap<String, KeyValueTreeNode> host;
 		if (!fork.hasRealChildWithKey(tmpHostName)) {
-			hostNode = new KeyValueTreeNode(0, tmpHostName);
+			hostNode = new KeyValueTreeNode(0, tmpHostName, legends.getString("forkTraceOther"));
 			fork.addChild(hostNode);
 			host = new HashMap<>();
 			forkedProcesses.put(tmpHostName, host);
@@ -588,13 +609,13 @@ public class Data {
 
 		KeyValueTreeNode oldProcess;
 		if (!host.containsKey(processIdOld)) {
-			oldProcess = new KeyValueTreeNode(0, processIdOld);
+			oldProcess = new KeyValueTreeNode(0, processIdOld, legends.getString("forkTraceOther"));
 			host.put(processIdOld, oldProcess);
 			hostNode.addChild(oldProcess);
 		} else {
 			oldProcess = host.get(processIdOld);
 		}
-		KeyValueTreeNode newProcess = new KeyValueTreeNode(0, processIdNew);
+		KeyValueTreeNode newProcess = new KeyValueTreeNode(0, processIdNew, legends.getString("forkTraceOther"));
 		host.put(processIdNew, newProcess);
 		oldProcess.addChild(newProcess);
 	}
@@ -756,7 +777,7 @@ public class Data {
 		FileTrace tmpFileTrace;
 
 		if (!fileTraces.containsTrace(fileTraceid)) {
-			tmpFileTrace = new FileTrace(fileId, getUniqueFileName(), kind);
+			tmpFileTrace = new FileTrace(fileId, getUniqueFileName(), kind, directoryDelimiter, legends);
 			fileTraces.addTrace(fileTraceid, tmpFileTrace);
 		} else {
 			tmpFileTrace = fileTraces.getTrace(fileTraceid);
@@ -935,7 +956,7 @@ public class Data {
 		FileTrace file;
 
 		if (!fileTraces.containsTrace(id)) {
-			file = new FileTrace(fileId, fileName, kind);
+			file = new FileTrace(fileId, fileName, kind, directoryDelimiter, legends);
 			fileTraces.addTrace(id, file);
 		} else {
 			file = fileTraces.getTrace(id);
@@ -1705,7 +1726,7 @@ public class Data {
 
 		for (FunctionEvent e : overlapping) {
 			if (tmp == null) {
-				tmp = "overlapping file range: ";
+				tmp = legends.getString("fileTraceOverlapping") + ": ";
 			} else {
 				tmp += ", ";
 			}
@@ -1744,7 +1765,7 @@ public class Data {
 				attributes.put("fullPath", e.getValue().getFileNames().toString());
 
 				String label = (String) e.getValue().getFileNames().toArray()[0];
-				int slash = label.lastIndexOf("/");
+				int slash = label.lastIndexOf(directoryDelimiter);
 				if (slash > 0) {
 					label = label.substring(slash + 1);
 				}
@@ -1834,34 +1855,44 @@ public class Data {
 		kinds.add(FileKind.TMPFILE);
 
 		Calendar lastModified = Calendar.getInstance();
-		GexfGraph gexfGraph = new GexfGraph(lastModified.getTime(), "IOTrace_Analyze", "Network of file I/O",
-				ModeType.DYNAMIC, DefaultEdgeType.DIRECTED, TimeFormat.DOUBLE);
+		GexfGraph gexfGraph = new GexfGraph(lastModified.getTime(), "IOTrace_Analyze",
+				legends.getString("gexfDescription"), ModeType.DYNAMIC, DefaultEdgeType.DIRECTED, TimeFormat.DOUBLE);
 
 		// set edge weight as dynamic attribute for easier layout in gephi
 		GexfAttributes weightAttributes = gexfGraph.createAttributes(ClassType.EDGE, ModeType.DYNAMIC);
-		GexfAttribute weightAttribute = weightAttributes.createAttribute("weight", "Weight", AttrType.FLOAT);
+		GexfAttribute weightAttribute = weightAttributes.createAttribute("weight",
+				legends.getString("gexfWeightAttributeTitle"), AttrType.FLOAT);
 
 		GexfAttributes allNodeAttributes = gexfGraph.createAttributes(ClassType.NODE, ModeType.STATIC);
-		GexfAttribute typeAttribute = allNodeAttributes.createAttribute("type", "type", AttrType.STRING);
+		GexfAttribute typeAttribute = allNodeAttributes.createAttribute("type",
+				legends.getString("gexfTypeAttributeTitle"), AttrType.STRING);
 
 		GexfAttributes fileNodeAttributes = gexfGraph.createAttributes(ClassType.NODE, ModeType.STATIC);
-		GexfAttribute fullPathAttribute = fileNodeAttributes.createAttribute("fullPath", "fullPath", AttrType.STRING);
+		GexfAttribute fullPathAttribute = fileNodeAttributes.createAttribute("fullPath",
+				legends.getString("gexfFullPathAttributeTitle"), AttrType.STRING);
 
 		GexfAttributes threadNodeAttributes = gexfGraph.createAttributes(ClassType.NODE, ModeType.DYNAMIC);
 //		GexfAttribute startTimeNodeAttribute = threadNodeAttributes.createAttribute("startTime", "startTime",
 //				AttrType.LONG);
 //		GexfAttribute endTimeNodeAttribute = threadNodeAttributes.createAttribute("endTime", "endTime", AttrType.LONG);
-		GexfAttribute sumTimeAttribute = threadNodeAttributes.createAttribute("sumTime", "sumTime", AttrType.LONG);
-		GexfAttribute sumBytesAttribute = threadNodeAttributes.createAttribute("sumBytes", "sumBytes", AttrType.LONG);
+		GexfAttribute sumTimeAttribute = threadNodeAttributes.createAttribute("sumTime",
+				legends.getString("gexfSumTimeAttributeTitle"), AttrType.LONG);
+		GexfAttribute sumBytesAttribute = threadNodeAttributes.createAttribute("sumBytes",
+				legends.getString("gexfSumBytesAttributeTitle"), AttrType.LONG);
 
 		GexfAttributes edgeAttributes = gexfGraph.createAttributes(ClassType.EDGE, ModeType.DYNAMIC);
 //		GexfAttribute startTimeEdgeAttribute = edgeAttributes.createAttribute("startTime", "startTime", AttrType.LONG);
 //		GexfAttribute endTimeEdgeAttribute = edgeAttributes.createAttribute("endTime", "endTime", AttrType.LONG);
-		GexfAttribute functionAttribute = edgeAttributes.createAttribute("function", "function", AttrType.STRING);
-		GexfAttribute bytesAttribute = edgeAttributes.createAttribute("bytes", "bytes", AttrType.LONG);
-		GexfAttribute timeAttribute = edgeAttributes.createAttribute("time", "time", AttrType.LONG);
-		GexfAttribute errorAttribute = edgeAttributes.createAttribute("error", "error", AttrType.BOOLEAN);
-		GexfAttribute ioTypeAttribute = edgeAttributes.createAttribute("ioType", "ioType", AttrType.STRING);
+		GexfAttribute functionAttribute = edgeAttributes.createAttribute("function",
+				legends.getString("gexfFunctionAttributeTitle"), AttrType.STRING);
+		GexfAttribute bytesAttribute = edgeAttributes.createAttribute("bytes",
+				legends.getString("gexfBytesAttributeTitle"), AttrType.LONG);
+		GexfAttribute timeAttribute = edgeAttributes.createAttribute("time",
+				legends.getString("gexfTimeAttributeTitle"), AttrType.LONG);
+		GexfAttribute errorAttribute = edgeAttributes.createAttribute("error",
+				legends.getString("gexfErrorAttributeTitle"), AttrType.BOOLEAN);
+		GexfAttribute ioTypeAttribute = edgeAttributes.createAttribute("ioType",
+				legends.getString("gexfIoTypeAttributeTitle"), AttrType.STRING);
 
 		Map<String, GexfNode> fileNodes = new HashMap<>();
 
@@ -1879,10 +1910,10 @@ public class Data {
 
 			String label;
 			if (e.getValue().getKind() != FileKind.FILE && e.getValue().getKind() != FileKind.TMPFILE) {
-				label = "socket, pipe, pseudo file system or memory";
+				label = legends.getString("gexfNoFileNoTmpFileLabel");
 			} else {
 				label = (String) e.getValue().getFileNames().toArray()[0];
-				int slash = label.lastIndexOf("/");
+				int slash = label.lastIndexOf(directoryDelimiter);
 				if (slash > 0) {
 					label = label.substring(slash);
 				}
@@ -1951,40 +1982,42 @@ public class Data {
 			// add fileType read_only, write_only or read_and_write to file
 			String fileTypeValue;
 			if (e.getValue().getKind() != FileKind.FILE && e.getValue().getKind() != FileKind.TMPFILE) {
-				fileTypeValue = "not a file";
+				fileTypeValue = legends.getString("gexfFileTypeNoFileNoTmpFile");
 			} else if (isRead && isWritten) {
-				fileTypeValue = "file: read and write";
+				fileTypeValue = legends.getString("gexfFileTypeReadWrite");
 			} else if (isRead) {
-				fileTypeValue = "file: read only";
+				fileTypeValue = legends.getString("gexfFileTypeRead");
 			} else if (isWritten) {
-				fileTypeValue = "file: write only";
+				fileTypeValue = legends.getString("gexfFileTypeWrite");
 			} else {
-				fileTypeValue = "file: no read, no write";
+				fileTypeValue = legends.getString("gexfFileTypeNoReadNoWrite");
 			}
 			fileNode.createValue(typeAttribute, fileTypeValue);
 		}
 
 		for (Entry<String, BasicTrace<BasicTrace<ThreadTrace>>> e : cluster.getTraces().entrySet()) {
-			String hostName = "Host:" + e.getKey();
+			String hostName = legends.getString("gexfHostName") + ":" + e.getKey();
 
 			// add hosts as nodes
 			GexfNode hostNode = gexfGraph.createNode(hostName, e.getKey());
-			hostNode.createValue(typeAttribute, "host");
+			hostNode.createValue(typeAttribute, legends.getString("gexfHostType"));
 
 			for (Entry<String, BasicTrace<ThreadTrace>> e2 : e.getValue().getTraces().entrySet()) {
-				String processId = hostName + ":Process:" + e2.getKey();
+				String processId = hostName + ":" + legends.getString("gexfProcessName") + ":" + e2.getKey();
 
 				// add processes as nodes
 				GexfNode processNode = gexfGraph.createNode(processId, e2.getKey());
-				processNode.createValue(typeAttribute, "process");
+				processNode.createValue(typeAttribute, legends.getString("gexfProcessType"));
 
 				// add edge from host to process
-				GexfEdge edge = gexfGraph.createEdge(hostName + "_to_" + processId, hostNode, processNode);
+				GexfEdge edge = gexfGraph.createEdge(
+						hostName + "_" + legends.getString("gexfHostToProcessConnector") + "_" + processId, hostNode,
+						processNode);
 				edge.createValue(weightAttribute, "100.0");
-				edge.createValue(ioTypeAttribute, "process belongs to host");
+				edge.createValue(ioTypeAttribute, legends.getString("gexfIoTypeProcessToHost"));
 
 				for (Entry<String, ThreadTrace> e3 : e2.getValue().getTraces().entrySet()) {
-					String threadId = processId + ":Thread:" + e3.getKey();
+					String threadId = processId + ":" + legends.getString("gexfThreadName") + ":" + e3.getKey();
 					String oldStart = null;
 					long oldStartTime = 0;
 					long sumUsedTime = 0;
@@ -1992,12 +2025,14 @@ public class Data {
 
 					// add threads as nodes
 					GexfNode threadNode = gexfGraph.createNode(threadId, e3.getKey());
-					threadNode.createValue(typeAttribute, "thread");
+					threadNode.createValue(typeAttribute, legends.getString("gexfThreadType"));
 
 					// add edge from process to thread
-					edge = gexfGraph.createEdge(processId + "_to_" + threadId, processNode, threadNode);
+					edge = gexfGraph.createEdge(
+							processId + "_" + legends.getString("gexfProcessToThreadConnector") + "_" + threadId,
+							processNode, threadNode);
 					edge.createValue(weightAttribute, "100.0");
-					edge.createValue(ioTypeAttribute, "thread belongs to process");
+					edge.createValue(ioTypeAttribute, legends.getString("gexfIoTypeThreadToProcess"));
 
 					Map<String, GexfEdge> edges = new HashMap<>();
 					FunctionEvent fe = e3.getValue().getFirstFunctionEvent();
@@ -2023,7 +2058,8 @@ public class Data {
 							if (event.getFileTrace() != null && kinds.contains(event.getFileTrace().getKind())) {
 								writeSummary = true;
 								String fileId = event.getFileTrace().getFileId().toString();
-								String edgeId = threadId + "_to_" + fileId;
+								String edgeId = threadId + "_" + legends.getString("gexfThreadToFileConnector") + "_"
+										+ fileId;
 
 								// add edge from thread to file
 								if (edges.containsKey(edgeId)) {
@@ -2049,17 +2085,17 @@ public class Data {
 								if (fileRange != null) {
 									switch (fileRange.getRangeType()) {
 									case READ:
-										ioType = "function: read";
+										ioType = legends.getString("gexfIoTypeRead");
 										break;
 									case WRITE:
-										ioType = "function: write";
+										ioType = legends.getString("gexfIoTypeWrite");
 										break;
 									default:
-										ioType = "function: other";
+										ioType = legends.getString("gexfIoTypeOther");
 										break;
 									}
 								} else {
-									ioType = "function: other";
+									ioType = legends.getString("gexfIoTypeOther");
 								}
 								edge.createValue(ioTypeAttribute, ioType, startString, endString);
 							}
@@ -2108,7 +2144,12 @@ public class Data {
 		try (FileWriter fileWriter = new FileWriter(file)) {
 			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
 
-			String header = "\"id\",\"function\",\"type\",\"error\",\"function time\",\"wrapper time\",\"bytes\",\"function start time\",\"function end time\",\"thread\",\"file\",\"fileNames\",\"same function call\",\"overlapping function calls\",\"overlapping file range\"";
+			String result[] = legends.getString("csvHeader").trim().split("\\s*,\\s*");
+			String header = "";
+			for (String s : result) {
+				header += "\"" + s + "\",";
+			}
+			header = header.substring(0, header.length() - 1);
 			bufferedWriter.write(header + System.lineSeparator());
 
 			for (Entry<String, FileTrace> e : fileTraces.getTraces().entrySet()) {
@@ -2124,8 +2165,9 @@ public class Data {
 
 					for (FunctionEvent event : events) {
 						ThreadTrace threadTrace = event.getThreadTrace();
-						String threadId = "Host:" + threadTrace.getHostName() + ":Process:" + threadTrace.getProcessId()
-								+ ":Thread:" + threadTrace.getThreadId();
+						String threadId = legends.getString("csvHostName") + ":" + threadTrace.getHostName() + ":"
+								+ legends.getString("csvProcessName") + ":" + threadTrace.getProcessId() + ":"
+								+ legends.getString("csvThreadName") + ":" + threadTrace.getThreadId();
 
 						String fileId;
 						String fileName;
@@ -2230,18 +2272,23 @@ public class Data {
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
 
-		KeyValueTreeNode node = cluster.getKeyValueTree(kinds, ValueKind.FUNCTION_TIME, 2, 6, percent);
-		new PieChart(node, "Time used for I/O (with components which use more than " + percent + "%)", filePrefix,
-				"_time_pie", true, false, initialWidth, incrementWidth, border, fontSize, titleSize);
-
-		node = cluster.getKeyValueTree(kinds, ValueKind.BYTES, 2, 6, percent);
+		KeyValueTreeNode node = cluster.getKeyValueTree(kinds, ValueKind.FUNCTION_TIME, 2, 6, percent, legends);
 		new PieChart(node,
-				"Read and written bytes for I/O (with components which read or write more than " + percent + "%)",
+				legends.getString("pieChartFunctionTimeTitleBeforePercent") + percent
+						+ legends.getString("pieChartFunctionTimeTitleAfterPercent"),
+				filePrefix, "_time_pie", true, false, initialWidth, incrementWidth, border, fontSize, titleSize);
+
+		node = cluster.getKeyValueTree(kinds, ValueKind.BYTES, 2, 6, percent, legends);
+		new PieChart(node,
+				legends.getString("pieChartBytesTitleBeforePercent") + percent
+						+ legends.getString("pieChartBytesTitleAfterPercent"),
 				filePrefix, "_bytes_pie", true, false, initialWidth, incrementWidth, border, fontSize, titleSize);
 
 		if (hasWrapperInfo) {
-			node = cluster.getKeyValueTree(kinds, ValueKind.WRAPPER_TIME, 2, 6, percent);
-			new PieChart(node, "Time used for Wrapper (with components which use more than " + percent + "%)",
+			node = cluster.getKeyValueTree(kinds, ValueKind.WRAPPER_TIME, 2, 6, percent, legends);
+			new PieChart(node,
+					legends.getString("pieChartWrapperTimeTitleBeforePercent") + percent
+							+ legends.getString("pieChartWrapperTimeTitleAfterPercent"),
 					filePrefix, "_wrapper_time_pie", true, false, initialWidth, incrementWidth, border, fontSize,
 					titleSize);
 		}
@@ -2254,10 +2301,10 @@ public class Data {
 		kinds.add(FileKind.TMPFILE);
 
 		List<String> legend = new LinkedList<>();
-		legend.add("sum bytes");
-		legend.add("sum function time in ns");
+		legend.add(legends.getString("barChartLegendSumBytes"));
+		legend.add(legends.getString("barChartLegendSumTime"));
 		if (hasWrapperInfo) {
-			legend.add("sum wrapper time in ns");
+			legend.add(legends.getString("barChartLegendSumWrapperTime"));
 		}
 		Map<String, List<Long>> functions = new TreeMap<>();
 
@@ -2298,8 +2345,8 @@ public class Data {
 			}
 		}
 
-		new BarChart(functions, legend, "Function summary", filePrefix, "_function_summary", tickLabelFontSize,
-				labelFontSize, legendFontSize, titleFontSize, width, hight);
+		new BarChart(functions, legend, legends.getString("barChartTitle"), filePrefix, "_function_summary",
+				tickLabelFontSize, labelFontSize, legendFontSize, titleFontSize, width, hight, legends);
 	}
 
 	public void printOverlappingAsPie(String filePrefix, double percent, int initialWidth, int incrementWidth,
@@ -2308,22 +2355,28 @@ public class Data {
 		kinds.add(FileKind.FILE);
 		kinds.add(FileKind.TMPFILE);
 
-		KeyValueTreeNode node = fileTraces.getKeyValueTree(kinds, ValueKind.OVERLAPPING_FILE_RANGE, 2, 6, percent);
-		new PieChart(node, "Function calls to same range of file (only components with more than " + percent + "%)",
+		KeyValueTreeNode node = fileTraces.getKeyValueTree(kinds, ValueKind.OVERLAPPING_FILE_RANGE, 2, 6, percent,
+				legends);
+		new PieChart(node,
+				legends.getString("pieChartOverlappingRangeTitleBeforePercent") + percent
+						+ legends.getString("pieChartOverlappingRangeTitleAfterPercent"),
 				filePrefix, "_overlapping_range_pie", true, true, initialWidth, incrementWidth, border, fontSize,
 				titleSize);
 
-		node = fileTraces.getKeyValueTree(kinds, ValueKind.OVERLAPPING_FUNCTIONS, 2, 6, percent);
-		new PieChart(node, "Overlapping function calls (only components with more than " + percent + "%)", filePrefix,
-				"_overlapping_function_pie", true, true, initialWidth, incrementWidth, border, fontSize, titleSize);
+		node = fileTraces.getKeyValueTree(kinds, ValueKind.OVERLAPPING_FUNCTIONS, 2, 6, percent, legends);
+		new PieChart(node,
+				legends.getString("pieChartOverlappingFunctionsTitleBeforePercent") + percent
+						+ legends.getString("pieChartOverlappingFunctionsTitleAfterPercent"),
+				filePrefix, "_overlapping_function_pie", true, true, initialWidth, incrementWidth, border, fontSize,
+				titleSize);
 	}
 
 	public void printForkAsPie(String filePrefix, double percent, int initialWidth, int incrementWidth, int border,
 			int fontSize, int titleSize) {
 		prepareForkTree(1, fork);
 
-		new PieChart(fork, "Process fork hierarchy", filePrefix, "_fork_hierarchy_pie", false, true, initialWidth,
-				incrementWidth, border, fontSize, titleSize);
+		new PieChart(fork, legends.getString("pieChartForkTitle"), filePrefix, "_fork_hierarchy_pie", false, true,
+				initialWidth, incrementWidth, border, fontSize, titleSize);
 	}
 
 	private void prepareForkTree(int countNeighbours, KeyValueTreeNode node) {
@@ -2342,7 +2395,6 @@ public class Data {
 
 		for (Entry<String, FileTrace> e : fileTraces.getTraces().entrySet()) {
 			if (kinds.contains(e.getValue().getKind())) {
-				// bachelor-VirtualBox:23:5
 				FileId id = e.getValue().getFileId();
 				String fileName = id.toFileName();
 				printFileTrace(new File(filePrefix + "_fileTrace_" + fileName + ".txt"), e.getValue());

@@ -1,6 +1,6 @@
 # libiotrace and IOTrace_Analyze – Tools for analyzing program File-I/O 
 
-Tools to monitor and analyze File-I/O.
+Tools to monitor, analyze and visualize File-I/O.
 
 ## Table of contents
 

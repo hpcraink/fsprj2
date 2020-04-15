@@ -1,3 +1,3 @@
-# IOTrace_Analyze
+# libiotrace
 
-See [IOTrace_Analyze](../README.md#IOTrace_Analyze) for details.
+See [libiotrace](../README.md#libiotrace) for details.

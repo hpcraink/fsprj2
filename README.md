@@ -5,13 +5,13 @@ Tools to monitor and analyze File-I/O.
 ## Table of contents
 
 * [libiotrace](#libiotrace)
-    * [Prerequisites](#Prerequisites-1)
-    * [License](#License-1)
+    * [Prerequisites](#Prerequisites)
+    * [License](#License)
     * [Build libiotrace](#Build-libiotrace)
     * [Use libiotrace](#Use-libiotrace)
 * [IOTrace_Analyze](#IOTrace_Analyze)
-    * [Prerequisites](#Prerequisites-2)
-    * [License](#License-2)
+    * [Prerequisites](#Prerequisites-1)
+    * [License](#License-1)
     * [Build IOTrace_Analyze](#Build-IOTrace_Analyze)
     * [Use IOTrace_Analyze](#Use-IOTrace_Analyze)
     * [Generated files](#Generated-files)

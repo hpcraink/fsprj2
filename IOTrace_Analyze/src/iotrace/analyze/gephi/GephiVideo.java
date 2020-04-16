@@ -769,14 +769,14 @@ public class GephiVideo {
 		int height = Integer.parseInt(properties.getProperty("animationHeight", "2048"));
 		int width = Integer.parseInt(properties.getProperty("animationWidth", "2048"));
 
-		String nodeColorAttribute = legends.getString("gexfTypeAttributeTitle");
-		String nodeSizeAttribute = legends.getString("gexfSumTimeAttributeTitle");
+		String nodeColorAttribute = "type";
+		String nodeSizeAttribute = "sumTime";
 		String nodeSizeText = legends.getString("animationNodesLabelSizeText");
 		int nodeSizeRangeStart = Integer.parseInt(properties.getProperty("animationNodeSizeRangeStart", "8"));
 		int nodeSizeRangeEnd = Integer.parseInt(properties.getProperty("animationNodeSizeRangeEnd", "80"));
 
-		String edgeColorAttribute = legends.getString("gexfIoTypeAttributeTitle");
-		String edgeSizeAttribute = legends.getString("gexfBytesAttributeTitle");
+		String edgeColorAttribute = "ioType";
+		String edgeSizeAttribute = "bytes";
 		String edgeSizeText = legends.getString("animationEdgesLabelSizeText");
 		double edgeSizeRangeStart = Double.parseDouble(properties.getProperty("animationEdgeSizeRangeStart", "0.05"));
 		double edgeSizeRangeEnd = Double.parseDouble(properties.getProperty("animationEdgeSizeRangeEnd", "2"));
@@ -797,7 +797,7 @@ public class GephiVideo {
 		int framesPerSecond = Integer.parseInt(properties.getProperty("animationFramesPerSecond", "4"));
 		int videoLengthSeconds = Integer.parseInt(properties.getProperty("animationVideoLengthSeconds", "60"));
 
-		String weightColumn = legends.getString("gexfWeightAttributeTitle");
+		String weightColumn = "weight";
 		String weightSaveColumn = "Weight_Save";
 		String labelColumn = "Label";
 		String labelSaveColumn = "Label_Save";
@@ -844,10 +844,10 @@ public class GephiVideo {
 
 		output = pathPrefix + inputFile + "_2.mp4";
 
-		nodeSizeAttribute = legends.getString("gexfSumBytesAttributeTitle");
+		nodeSizeAttribute = "sumBytes";
 		nodeSizeText = legends.getString("animationNodesLabelSizeText2");
 
-		edgeSizeAttribute = legends.getString("gexfTimeAttributeTitle");
+		edgeSizeAttribute = "time";
 		edgeSizeText = legends.getString("animationEdgesLabelSizeText2");
 
 		funcNodeSize = gephiVideo.setNodeSize(nodeSizeAttribute, nodeSizeRangeStart, nodeSizeRangeEnd, nodeSizeText);

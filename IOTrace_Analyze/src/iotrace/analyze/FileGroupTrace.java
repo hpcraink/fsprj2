@@ -2,11 +2,19 @@ package iotrace.analyze;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import iotrace.analyze.FileTrace.FileKind;
 
 public class FileGroupTrace implements Traceable {
 	private ArrayList<FunctionEvent> events = new ArrayList<>();
+	
+	private ResourceBundle legends;
+	
+	public FileGroupTrace(ResourceBundle legends) {
+		super();
+		this.legends = legends;
+	}
 
 	public void add(FunctionEvent event) {
 		events.add(event);
@@ -88,6 +96,6 @@ public class FileGroupTrace implements Traceable {
 
 	@Override
 	public String getTraceName() {
-		return "files";
+		return legends.getString("fileTraceFileTitle");
 	}
 }

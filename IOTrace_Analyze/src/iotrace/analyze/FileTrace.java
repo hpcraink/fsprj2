@@ -188,7 +188,7 @@ public class FileTrace implements Traceable, Comparable<FileTrace> {
 
 			FunctionTrace function;
 			if (!thread.containsTrace(functionName)) {
-				function = new FunctionTrace(legends.getString("fileTraceFunctionTitle"));
+				function = new FunctionTrace(legends.getString("fileTraceFunctionTitle"), legends);
 				thread.addTrace(functionName, function);
 			} else {
 				function = thread.getTrace(functionName);

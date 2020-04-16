@@ -115,7 +115,7 @@ public class ThreadTrace implements Traceable, Comparable<ThreadTrace> {
 
 			FunctionTrace function;
 			if (!thread.containsTrace(functionName)) {
-				function = new FunctionTrace(legends.getString("threadTraceFunctionTitle"));
+				function = new FunctionTrace(legends.getString("threadTraceFunctionTitle"), legends);
 				thread.addTrace(functionName, function);
 			} else {
 				function = thread.getTrace(functionName);

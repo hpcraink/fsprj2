@@ -3,6 +3,7 @@ package iotrace.analyze;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ResourceBundle;
 import java.util.TreeMap;
 
 import iotrace.analyze.FileTrace.FileKind;
@@ -11,9 +12,12 @@ public class FunctionTrace implements Traceable {
 	private TreeMap<FileGroupId, FileGroupTrace> functionEvents = new TreeMap<>();
 	private String name;
 
-	public FunctionTrace(String name) {
+	private ResourceBundle legends;
+
+	public FunctionTrace(String name, ResourceBundle legends) {
 		super();
 		this.name = name;
+		this.legends = legends;
 	}
 
 	public void addFunctionEvent(FunctionEvent e) {
@@ -32,7 +36,7 @@ public class FunctionTrace implements Traceable {
 		if (functionEvents.containsKey(fg)) {
 			fileGroupTrace = functionEvents.get(fg);
 		} else {
-			fileGroupTrace = new FileGroupTrace();
+			fileGroupTrace = new FileGroupTrace(legends);
 			functionEvents.put(fg, fileGroupTrace);
 		}
 

@@ -59,7 +59,7 @@ public class PieChart {
 
 		int level = getSubSegmentsFromNode(node, 1, center);
 
-		MultiLevelPieChart chart = new MultiLevelPieChart(values, title);
+		MultiLevelPieChart chart = new MultiLevelPieChart(values, 200 * 6 / level, 80 * 6 / level, title);
 
 		int sizeWidth = initialWidth + (incrementWidth * 2 * level) + (border * 7);
 		int sizeHeight = initialWidth + (incrementWidth * 2 * level) + (border * 4);

@@ -120,13 +120,13 @@ public class Data {
 	 * Cluster, host and process as {@link BasicTrace}. Thread, function and file in
 	 * {@link ThreadTrace}.
 	 */
-	private BasicTrace<BasicTrace<BasicTrace<ThreadTrace>>> cluster = new BasicTrace<>("cluster");
+	private BasicTrace<BasicTrace<BasicTrace<ThreadTrace>>> cluster;
 	/**
 	 * Grouping traces by files, file, host, process, thread, functions and
 	 * function. Files as {@link BasicTrace}. File, host, process, thread, functions
 	 * and function in {@link FileTrace}.
 	 */
-	private BasicTrace<FileTrace> fileTraces = new BasicTrace<>("files");
+	private BasicTrace<FileTrace> fileTraces;
 	/**
 	 * Contains process specific information as {@link ProcessTrace}-object. First
 	 * map uses name of the host as key. Second map uses processId as key. With
@@ -235,6 +235,9 @@ public class Data {
 		workingDirFunctions = new AnalyzeFunctionPool(workingDirProperties);
 
 		legends = ResourceBundle.getBundle(legendBundle, locale);
+
+		cluster = new BasicTrace<>(legends.getString("threadTraceClusterTitle"));
+		fileTraces = new BasicTrace<>(legends.getString("fileTraceFileTitle"));
 
 		fork = new KeyValueTreeNode(0, legends.getString("forkTraceMainNode"), legends.getString("forkTraceOther"));
 	}
@@ -467,7 +470,7 @@ public class Data {
 
 			BasicTrace<BasicTrace<ThreadTrace>> host;
 			if (!cluster.containsTrace(tmpHostName)) {
-				host = new BasicTrace<>("host");
+				host = new BasicTrace<>(legends.getString("threadTraceHostTitle"));
 				cluster.addTrace(tmpHostName, host);
 			} else {
 				host = cluster.getTrace(tmpHostName);
@@ -475,7 +478,7 @@ public class Data {
 
 			BasicTrace<ThreadTrace> process;
 			if (!host.containsTrace(tmpProcessId)) {
-				process = new BasicTrace<>("process");
+				process = new BasicTrace<>(legends.getString("threadTraceProcessTitle"));
 				host.addTrace(tmpProcessId, process);
 			} else {
 				process = host.getTrace(tmpProcessId);

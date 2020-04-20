@@ -7,7 +7,7 @@ int main(void) {
 	char buffer;
 	int ret;
 
-#   pragma omp parallel default(none) private(file, buffer, ret)
+#   pragma omp parallel private(file, buffer, ret)
     {
         file = fopen("/etc/passwd", "r");
         assert(NULL != file);
@@ -15,6 +15,7 @@ int main(void) {
         fread(&buffer, sizeof(char), 1, file);
         ret = fclose(file);
         assert(ret == 0);
+
     }
 
     return 0;

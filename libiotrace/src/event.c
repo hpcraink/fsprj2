@@ -379,6 +379,7 @@ void open_std_fd(int fd) {
 #endif
 
 	data.return_state = ok;
+	data.return_state_detail = NULL;
 
 	writeData(&data);
 	WRAP_FREE(&data)
@@ -402,6 +403,7 @@ void open_std_file(FILE *file) {
 #endif
 
 	data.return_state = ok;
+	data.return_state_detail = NULL;
 
 	writeData(&data);
 	WRAP_FREE(&data)

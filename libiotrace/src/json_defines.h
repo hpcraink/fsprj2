@@ -60,6 +60,11 @@
                                                                         struct_name.array_name = array;
 #define JSON_STRUCT_SET_INT_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
 
+/* macros for setting struct array */
+#define JSON_STRUCT_SET_STRUCT_ARRAY(struct_name, array_name, array, size) struct_name.size_##array_name = size; \
+                                                                           struct_name.array_name = array;
+#define JSON_STRUCT_SET_STRUCT_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
+
 /* #define's for escaping cstrings (used in print_cstring()-function) */
 #ifndef JSON_STRUCT_ESCAPE_SLASH
 #  define JSON_STRUCT_ESCAPE_SLASH 0
@@ -81,6 +86,8 @@
 #undef JSON_STRUCT_VOID_P_START
 #undef JSON_STRUCT_VOID_P_ELEMENT
 #undef JSON_STRUCT_VOID_P_END
+
+#undef JSON_STRUCT_STRUCT_ARRAY
 
 #undef JSON_STRUCT_STRUCT_P
 #undef JSON_STRUCT_STRUCT
@@ -114,7 +121,9 @@
 #undef JSON_STRUCT_SA_FAMILY_T
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #if JSON_STRUCT == JSON_STRUCT_DATA_TYPE
+/* ----------------------------------------------------------------------------------------------------------------------- */
 
 #  define JSON_STRUCT_ENUM_START(name) enum name {
 #  define JSON_STRUCT_ENUM_ELEMENT(name) name,
@@ -130,6 +139,8 @@
 
 #  define JSON_STRUCT_START(name) struct name {
 #  define JSON_STRUCT_END };
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length) struct type **name; int size_##name;
 
 #  define JSON_STRUCT_STRUCT_P(type, name) struct type *name;
 #  define JSON_STRUCT_STRUCT(type, name) struct type name;
@@ -166,8 +177,9 @@
 #  define JSON_STRUCT_SA_FAMILY_T(name) sa_family_t name;
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_PRINT
-
+/* ----------------------------------------------------------------------------------------------------------------------- */
 /*
  * generate functions
  *
@@ -360,6 +372,27 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                          JSON_STRUCT_WRITE(",") \
                                        }
 
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != json_struct_data->name) { \
+                                                             json_struct_hasElements = 1; \
+                                                             JSON_STRUCT_WRITE(JSON_STRUCT_QUOT(name)":[") \
+                                                             int json_struct_count_##name; \
+                                                             for (json_struct_count_##name = 0; \
+                                                                  json_struct_count_##name < json_struct_data->size_##name; \
+                                                                  json_struct_count_##name++) { \
+                                                               json_struct_ret = json_struct_print_##type(json_struct_buf, \
+                                                                                                          json_struct_size, \
+                                                                                                          *((json_struct_data->name) + json_struct_count_##name)); \
+                                                               json_struct_buf += json_struct_ret;  /* set pointer to end of written characters */ \
+                                                               json_struct_size -= json_struct_ret; /* resize buffer size */ \
+                                                               JSON_STRUCT_WRITE(",") \
+                                                             } \
+                                                             if (json_struct_count_##name > 0) { \
+                                                               json_struct_buf--;  /* remove last comma */ \
+                                                               json_struct_size++; /* and resize buffer size */ \
+                                                             } \
+                                                             JSON_STRUCT_WRITE("],") \
+                                                           }
+
 #  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
                                              json_struct_hasElements = 1; \
                                              JSON_STRUCT_WRITE(JSON_STRUCT_QUOT(name)":") \
@@ -461,7 +494,9 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_SA_FAMILY_T(name) JSON_STRUCT_ELEMENT(name, %hu, json_struct_data->name)
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_BYTES_COUNT
+/* ----------------------------------------------------------------------------------------------------------------------- */
 
 /*
  * generate functions
@@ -519,6 +554,12 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                     if(json_struct_size_void_p_tmp > json_struct_size_void_p) \
                                                       json_struct_size_void_p = json_struct_size_void_p_tmp;
 #  define JSON_STRUCT_VOID_P_END(name) json_struct_size += json_struct_size_void_p;
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length) JSON_STRUCT_ELEMENT_SIZE(name, (json_struct_max_size_##type() \
+                                                                                           + 1) /* +1 for comma */ \
+                                                                                          * max_length \
+                                                                                          - 1   /* for last comma */ \
+                                                                                          + 2)  /* for brackets [] */
 
 #  define JSON_STRUCT_STRUCT_P(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_##type())
 #  define JSON_STRUCT_STRUCT(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_##type())
@@ -587,7 +628,9 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_SA_FAMILY_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(sa_family_t))
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_SIZEOF
+/* ----------------------------------------------------------------------------------------------------------------------- */
 
 #  define JSON_STRUCT_ENUM_START(name)
 #  define JSON_STRUCT_ENUM_ELEMENT(name)
@@ -608,6 +651,18 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_START(name) int json_struct_sizeof_##name(struct name *json_struct_data) { \
                                     size_t json_struct_size = sizeof(struct name);
 #  define JSON_STRUCT_END return json_struct_size;}
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != json_struct_data->name) { \
+                                                             json_struct_size += sizeof(struct type *) \
+                                                                                 * json_struct_data->size_##name; \
+                                                             int json_struct_count_##name; \
+                                                             for (json_struct_count_##name = 0; \
+                                                                  json_struct_count_##name < json_struct_data->size_##name; \
+                                                                  json_struct_count_##name++) { \
+                                                               json_struct_size += json_struct_sizeof_##type( \
+                                                                                     *((json_struct_data->name) + json_struct_count_##name)); \
+                                                             } \
+                                                           }
 
 #  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
                                              json_struct_size += json_struct_sizeof_##type( \
@@ -664,7 +719,9 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_SA_FAMILY_T(name)
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_COPY
+/* ----------------------------------------------------------------------------------------------------------------------- */
 
 int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_from, size_t json_struct_max_length) {
     int json_struct_i;
@@ -708,6 +765,21 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
                                     memcpy(json_struct_buf, (void *) json_struct_data, sizeof(struct name)); \
                                     json_struct_buf += sizeof(struct name);
 #  define JSON_STRUCT_END return json_struct_buf;}
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != json_struct_data->name) { \
+                                                             json_struct_copy->name = (struct type **)json_struct_buf; \
+                                                             json_struct_buf += sizeof(struct type *) \
+                                                                                * json_struct_data->size_##name; \
+                                                             int json_struct_count_##name; \
+                                                             for (json_struct_count_##name = 0; \
+                                                                  json_struct_count_##name < json_struct_data->size_##name; \
+                                                                  json_struct_count_##name++) { \
+                                                               json_struct_copy->name[json_struct_count_##name] = (struct type *)json_struct_buf; \
+                                                               json_struct_buf = json_struct_copy_##type(json_struct_buf, \
+                                                                                                         *((json_struct_data->name) \
+                                                                                                           + json_struct_count_##name)); \
+                                                             } \
+                                                           }
 
 #  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
                                              json_struct_copy->name = json_struct_buf; \
@@ -804,7 +876,9 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_SA_FAMILY_T(name)
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_FREE
+/* ----------------------------------------------------------------------------------------------------------------------- */
 
 #  define JSON_STRUCT_ENUM_START(name)
 #  define JSON_STRUCT_ENUM_ELEMENT(name)
@@ -823,6 +897,16 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 
 #  define JSON_STRUCT_START(name) void json_struct_free_##name(struct name *json_struct_data) {
 #  define JSON_STRUCT_END }
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != json_struct_data->name) { \
+                                                             int json_struct_count_##name; \
+                                                             for (json_struct_count_##name = 0; \
+                                                                  json_struct_count_##name < json_struct_data->size_##name; \
+                                                                  json_struct_count_##name++) { \
+                                                                 json_struct_free_##type(*((json_struct_data->name) \
+                                                                                           + json_struct_count_##name)); \
+                                                             } \
+                                                           }
 
 #  define JSON_STRUCT_STRUCT_P(type, name) if (NULL != json_struct_data->name) { \
                                              json_struct_free_##type(json_struct_data->name); \
@@ -863,7 +947,9 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_SA_FAMILY_T(name)
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #else
+/* ----------------------------------------------------------------------------------------------------------------------- */
 #  error "Undefined JSON_STRUCT value."
 #endif
 

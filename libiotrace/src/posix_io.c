@@ -1318,6 +1318,7 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 	sf->delete_on_close = 0;
 	sf->unique_open = 0;
 	sf->sequential = 0;
+	sf->initial_append = 0;
 
 	// ToDo: c
 	// ToDo: m
@@ -1370,6 +1371,77 @@ enum access_mode check_mode(const char *mode, struct creation_flags *cf,
 		sf->append = 0;
 		return unknown_access_mode;
 	}
+}
+
+enum boolean is_connection_based(int type) {
+	int tmp = type & ~SOCK_NONBLOCK & ~SOCK_CLOEXEC;
+
+	switch (tmp) {
+	case SOCK_STREAM:
+	case SOCK_SEQPACKET:
+		return true;
+	default:
+		return false;
+	}
+}
+
+void cstring_to_hex(const char *cstring, char *hexstring, size_t length_cstring) {
+	const char *hex = "0123456789abcdef";
+
+	for (; length_cstring > 0; length_cstring--) {
+		*hexstring++ = hex[((unsigned char) *cstring >> 4)];
+		*hexstring++ = hex[(*cstring) & 0x0f];
+		cstring++;
+	}
+
+	*hexstring = '\0';
+}
+
+void get_sockaddr(const struct sockaddr *addr,
+		struct sockaddr_function *sockaddr_data, const socklen_t addrlen,
+		char *hex_addr) {
+	size_t len;
+
+	sockaddr_data->family = addr->sa_family;
+
+	if (sockaddr_data->family == AF_UNIX) {
+		if (sizeof(sa_family_t) >= addrlen) {
+			// unnamed socket
+			hex_addr[0] = '\0';
+		} else {
+			struct sockaddr_un *addr_un = (struct sockaddr_un*) addr;
+			if (addr_un->sun_path[0] == '\0') {
+				// abstract socket
+				cstring_to_hex(addr_un->sun_path, hex_addr,
+						(addrlen - offsetof(struct sockaddr_un, sun_path)));
+			} else {
+				// pathname socket
+				len = addrlen - offsetof(struct sockaddr_un, sun_path);
+				memcpy((void*) hex_addr, (void*) addr_un->sun_path, len);
+				hex_addr[len] = '\0';
+			}
+		}
+	} else {
+
+//		switch (sockaddr_data->family) {
+//		case AF_INET:
+//			//len = addrlen - offsetof(struct sockaddr, sa_data)
+//			len = sizeof(struct sockaddr_in) - sizeof(sa_family_t);
+//			break;
+//		case AF_INET6:
+//			len = sizeof(struct sockaddr_in6) - sizeof(sa_family_t);
+//			break;
+//		case AF_NETLINK:
+//			len = sizeof(struct sockaddr_nl) - sizeof(sa_family_t);
+//			break;
+//		default:
+		len = 0;
+//		}
+
+		cstring_to_hex(addr->sa_data, hex_addr, len);
+	}
+
+	sockaddr_data->address = hex_addr;
 }
 
 #ifdef HAVE_OPEN_ELLIPSES
@@ -2954,7 +3026,8 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 		fcntl_flock_data.relative_to = get_seek_where(arg_flock->l_whence);
 		fcntl_flock_data.start = arg_flock->l_start;
 		fcntl_flock_data.len = arg_flock->l_len;
-		if (EACCES == errno || EAGAIN == errno) {
+		if (fcntl_function_data.cmd == getlk
+				|| fcntl_function_data.cmd == ofd_getlk) {
 			fcntl_flock_data.pid = arg_flock->l_pid;
 		} else {
 			fcntl_flock_data.pid = 0;
@@ -3000,13 +3073,16 @@ int WRAP(socket)(int domain, int type, int protocol) {
 	int ret;
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
+	struct socket_function socket_function_data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, socket_function,
+			socket_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
+	socket_function_data.connection_based = is_connection_based(type);
 
 	CALL_REAL_FUNCTION_RET(data, ret, socket, domain, type, protocol)
 
@@ -3029,7 +3105,8 @@ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function, accept_function_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function,
+			accept_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
@@ -3058,7 +3135,8 @@ int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function, accept_function_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function,
+			accept_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
@@ -3081,92 +3159,35 @@ int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
 int WRAP(socketpair)(int domain, int type, int protocol, int sv[2]) {
 	int ret;
 	struct basic data;
-	struct file_pair file_pair_data;
+	struct socketpair_function socketpair_function_data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, file_pair, file_pair_data)
+	JSON_STRUCT_SET_VOID_P(data, function_data, socketpair_function,
+			socketpair_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	socketpair_function_data.connection_based = is_connection_based(type);
 
 	CALL_REAL_FUNCTION_RET(data, ret, socketpair, domain, type, protocol, sv)
 
 	if (-1 == ret) {
 		data.return_state = error;
-		file_pair_data.descriptor1 = -1;
-		file_pair_data.descriptor2 = -1;
+		socketpair_function_data.descriptor1 = -1;
+		socketpair_function_data.descriptor2 = -1;
 	} else {
 		data.return_state = ok;
-		file_pair_data.descriptor1 = sv[0];
-		file_pair_data.descriptor2 = sv[1];
+		socketpair_function_data.descriptor1 = sv[0];
+		socketpair_function_data.descriptor2 = sv[1];
 	}
 
 	WRAP_END(data)
 	return ret;
 }
 
-void cstring_to_hex(const char *cstring, char *hexstring, size_t length_cstring) {
-	const char *hex = "0123456789abcdef";
-
-	for (; length_cstring > 0; length_cstring--) {
-		*hexstring++ = hex[((unsigned char) *cstring >> 4)];
-		*hexstring++ = hex[(*cstring) & 0x0f];
-		cstring++;
-	}
-
-	*hexstring = '\0';
-}
-
-void get_sockaddr(const struct sockaddr *addr,
-		struct sockaddr_function *sockaddr_data, const socklen_t addrlen,
-		char *hex_addr) {
-	size_t len;
-
-	sockaddr_data->family = addr->sa_family;
-
-	if (sockaddr_data->family == AF_UNIX) {
-		if (sizeof(sa_family_t) >= addrlen) {
-			// unnamed socket
-			hex_addr[0] = '\0';
-		} else {
-			struct sockaddr_un *addr_un = (struct sockaddr_un*) addr;
-			if (addr_un->sun_path[0] == '\0') {
-				// abstract socket
-				cstring_to_hex(addr_un->sun_path, hex_addr,
-						(addrlen - offsetof(struct sockaddr_un, sun_path)));
-			} else {
-				// pathname socket
-				len = addrlen - offsetof(struct sockaddr_un, sun_path);
-				memcpy((void*) hex_addr, (void*) addr_un->sun_path, len);
-				hex_addr[len] = '\0';
-			}
-		}
-	} else {
-
-//		switch (sockaddr_data->family) {
-//		case AF_INET:
-//			//len = addrlen - offsetof(struct sockaddr, sa_data)
-//			len = sizeof(struct sockaddr_in) - sizeof(sa_family_t);
-//			break;
-//		case AF_INET6:
-//			len = sizeof(struct sockaddr_in6) - sizeof(sa_family_t);
-//			break;
-//		case AF_NETLINK:
-//			len = sizeof(struct sockaddr_nl) - sizeof(sa_family_t);
-//			break;
-//		default:
-		len = 0;
-//		}
-
-		cstring_to_hex(addr->sa_data, hex_addr, len);
-	}
-
-	sockaddr_data->address = hex_addr;
-}
-
 int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 	int ret;
-	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1];
+	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
 	struct sockaddr_function sockaddr_data;
@@ -3195,7 +3216,7 @@ int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 
 int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 	int ret;
-	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1];
+	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
 	struct sockaddr_function sockaddr_data;
@@ -3639,11 +3660,13 @@ int WRAP(dirfd)(DIR *dirp) {
 
 ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
 	ssize_t ret;
+	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
 	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
+	struct sockaddr_function sockaddr_function_data;
 	struct file_descriptor file_descriptor_data;
 	struct msghdr *n_msg = (struct msghdr*) ((void*) msg);
 	WRAP_START(data)
@@ -3665,6 +3688,15 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
 				cmsg = CMSG_NXTHDR(n_msg, cmsg)) {
 			if ((cmsg->cmsg_level == SOL_SOCKET)
 					&& (cmsg->cmsg_type == SCM_RIGHTS)) {
+				if (0 < n_msg->msg_namelen
+						&& MAX_SOCKADDR_LENGTH <= n_msg->msg_namelen) {
+					get_sockaddr(n_msg->msg_name, &sockaddr_function_data,
+							n_msg->msg_namelen, hex_addr);
+					msg_function_data.sockaddr = &sockaddr_function_data;
+				} else {
+					msg_function_data.sockaddr = NULL;
+				}
+
 				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
 				JSON_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
 						(int*) CMSG_DATA(cmsg), fd_count)
@@ -3681,11 +3713,13 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
 
 ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
 	ssize_t ret;
+	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
 	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
+	struct sockaddr_function sockaddr_function_data;
 	struct file_descriptor file_descriptor_data;
 	WRAP_START(data)
 
@@ -3706,6 +3740,15 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
 				cmsg = CMSG_NXTHDR(msg, cmsg)) {
 			if ((cmsg->cmsg_level == SOL_SOCKET)
 					&& (cmsg->cmsg_type == SCM_RIGHTS)) {
+				if (0 < msg->msg_namelen
+						&& MAX_SOCKADDR_LENGTH <= msg->msg_namelen) {
+					get_sockaddr(msg->msg_name, &sockaddr_function_data,
+							msg->msg_namelen, hex_addr);
+					msg_function_data.sockaddr = &sockaddr_function_data;
+				} else {
+					msg_function_data.sockaddr = NULL;
+				}
+
 				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
 				JSON_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
 						(int*) CMSG_DATA(cmsg), fd_count)
@@ -3724,13 +3767,16 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
 int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 		int flags) {
 	int ret;
-	int fd_count = 0;
-	int fd_count_tmp;
-	int fd[MAX_MSG_FILE_DESCRIPTORS];
+	int fd_count;
+	int sockaddr_count = 0;
+	char hex_addr[MAX_MMSG_MESSAGES][MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	struct cmsghdr *cmsg = NULL;
 	struct msghdr *msg;
 	struct basic data;
-	struct msg_function msg_function_data;
+	struct msg_function msg_function_data[MAX_MMSG_MESSAGES];
+	struct msg_function *messages[MAX_MMSG_MESSAGES];
+	struct mmsg_function mmsg_function_data;
+	struct sockaddr_function sockaddr_function_data[MAX_MMSG_MESSAGES];
 	struct file_descriptor file_descriptor_data;
 	WRAP_START(data)
 
@@ -3738,50 +3784,49 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 	get_basic(&data);
 
-	if (-1 != ret) {
-		for (int i = 0; i < vlen; i++) {
-			msg = &((msgvec + i)->msg_hdr);
+	for (int i = 0; i < vlen && i < ret && i < MAX_MMSG_MESSAGES; i++) {
+		msg = &((msgvec + i)->msg_hdr);
 
-			for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
-					cmsg = CMSG_NXTHDR(msg, cmsg)) {
+		for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+				cmsg = CMSG_NXTHDR(msg, cmsg)) {
 
-				if ((cmsg->cmsg_level == SOL_SOCKET)
-						&& (cmsg->cmsg_type == SCM_RIGHTS)) {
-					fd_count_tmp = (cmsg->cmsg_len - CMSG_LEN(0));
-
-					if ((fd_count + (fd_count_tmp / sizeof(int)))
-							> MAX_MSG_FILE_DESCRIPTORS) {
-						CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-								"In function %s: more than MAX_MSG_FILE_DESCRIPTORS=%d file descriptors are send.\n",
-								__func__,
-								MAX_MSG_FILE_DESCRIPTORS);
-						assert(0);
-					}
-
-					memcpy(fd + fd_count, (void*) CMSG_DATA(cmsg),
-							fd_count_tmp);
-					fd_count += fd_count_tmp / sizeof(int);
-
-					break;
+			if ((cmsg->cmsg_level == SOL_SOCKET)
+					&& (cmsg->cmsg_type == SCM_RIGHTS)) {
+				if (0 < msg->msg_namelen
+						&& MAX_SOCKADDR_LENGTH <= msg->msg_namelen) {
+					get_sockaddr(msg->msg_name,
+							&sockaddr_function_data[sockaddr_count],
+							msg->msg_namelen, hex_addr[sockaddr_count]);
+					msg_function_data[sockaddr_count].sockaddr =
+							&sockaddr_function_data[sockaddr_count];
+				} else {
+					msg_function_data[sockaddr_count].sockaddr = NULL;
 				}
+				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
+
+				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+				JSON_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+						descriptors, (int*) CMSG_DATA(cmsg), fd_count)
+
+				sockaddr_count++;
+				break;
 			}
 		}
+	}
 
-		if (fd_count > 0) {
-			JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
-					msg_function_data)
-			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-			JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-					file_descriptor_data)
-			file_descriptor_data.descriptor = sockfd;
-			data.return_state = ok;
+	if (sockaddr_count > 0) {
+		JSON_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+				mmsg_function_data)
+		JSON_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+				sockaddr_count)
+		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+		JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+				file_descriptor_data)
+		file_descriptor_data.descriptor = sockfd;
+		data.return_state = ok;
 
-			JSON_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors, fd,
-					fd_count)
-
-			WRAP_END(data)
-			return ret;
-		}
+		WRAP_END(data)
+		return ret;
 	}
 
 	WRAP_END_WITHOUT_WRITE(data)
@@ -3797,13 +3842,16 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 		int flags, struct timespec *timeout) {
 #  endif
 	int ret;
-	int fd_count = 0;
-	int fd_count_tmp;
-	int fd[MAX_MSG_FILE_DESCRIPTORS];
+	int fd_count;
+	int sockaddr_count = 0;
+	char hex_addr[MAX_MMSG_MESSAGES][MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	struct cmsghdr *cmsg = NULL;
 	struct msghdr *msg;
 	struct basic data;
-	struct msg_function msg_function_data;
+	struct msg_function msg_function_data[MAX_MMSG_MESSAGES];
+	struct msg_function *messages[MAX_MMSG_MESSAGES];
+	struct mmsg_function mmsg_function_data;
+	struct sockaddr_function sockaddr_function_data[MAX_MMSG_MESSAGES];
 	struct file_descriptor file_descriptor_data;
 	WRAP_START(data)
 
@@ -3812,50 +3860,49 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 	get_basic(&data);
 
-	if (-1 != ret) {
-		for (int i = 0; i < vlen; i++) {
-			msg = &((msgvec + i)->msg_hdr);
+	for (int i = 0; i < vlen && i < ret && i < MAX_MMSG_MESSAGES; i++) {
+		msg = &((msgvec + i)->msg_hdr);
 
-			for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
-					cmsg = CMSG_NXTHDR(msg, cmsg)) {
+		for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+				cmsg = CMSG_NXTHDR(msg, cmsg)) {
 
-				if ((cmsg->cmsg_level == SOL_SOCKET)
-						&& (cmsg->cmsg_type == SCM_RIGHTS)) {
-					fd_count_tmp = (cmsg->cmsg_len - CMSG_LEN(0));
-
-					if ((fd_count + (fd_count_tmp / sizeof(int)))
-							> MAX_MSG_FILE_DESCRIPTORS) {
-						CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-								"In function %s: more than MAX_MSG_FILE_DESCRIPTORS=%d file descriptors are send.\n",
-								__func__,
-								MAX_MSG_FILE_DESCRIPTORS);
-						assert(0);
-					}
-
-					memcpy(fd + fd_count, (void*) CMSG_DATA(cmsg),
-							fd_count_tmp);
-					fd_count += fd_count_tmp / sizeof(int);
-
-					break;
+			if ((cmsg->cmsg_level == SOL_SOCKET)
+					&& (cmsg->cmsg_type == SCM_RIGHTS)) {
+				if (0 < msg->msg_namelen
+						&& MAX_SOCKADDR_LENGTH <= msg->msg_namelen) {
+					get_sockaddr(msg->msg_name,
+							&sockaddr_function_data[sockaddr_count],
+							msg->msg_namelen, hex_addr[sockaddr_count]);
+					msg_function_data[sockaddr_count].sockaddr =
+							&sockaddr_function_data[sockaddr_count];
+				} else {
+					msg_function_data[sockaddr_count].sockaddr = NULL;
 				}
+				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
+
+				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+				JSON_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+						descriptors, (int*) CMSG_DATA(cmsg), fd_count)
+
+				sockaddr_count++;
+				break;
 			}
 		}
+	}
 
-		if (fd_count > 0) {
-			JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
-					msg_function_data)
-			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-			JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-					file_descriptor_data)
-			file_descriptor_data.descriptor = sockfd;
-			data.return_state = ok;
+	if (sockaddr_count > 0) {
+		JSON_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+				mmsg_function_data)
+		JSON_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+				sockaddr_count)
+		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+		JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+				file_descriptor_data)
+		file_descriptor_data.descriptor = sockfd;
+		data.return_state = ok;
 
-			JSON_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors, fd,
-					fd_count)
-
-			WRAP_END(data)
-			return ret;
-		}
+		WRAP_END(data)
+		return ret;
 	}
 
 	WRAP_END_WITHOUT_WRITE(data)

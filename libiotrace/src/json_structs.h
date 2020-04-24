@@ -801,7 +801,7 @@ JSON_STRUCT_START(fcntl_function)
   JSON_STRUCT_ENUM(fcntl_cmd, cmd)
   JSON_STRUCT_VOID_P_START(cmd_data)
     JSON_STRUCT_VOID_P_ELEMENT(cmd_data, dup_function)
-	JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_fd_function)
+    JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_fd_function)
     JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_fl_function)
     JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_flock)
     JSON_STRUCT_VOID_P_ELEMENT(cmd_data, fcntl_own)
@@ -814,10 +814,22 @@ JSON_STRUCT_START(fcntl_function)
   JSON_STRUCT_VOID_P_END(cmd_data)
 JSON_STRUCT_END
 
-/* struct for file-pair functions (socketpair, pipe, pipe2) */
+/* struct for file-pair functions (pipe, pipe2) */
 JSON_STRUCT_START(file_pair)
   JSON_STRUCT_INT(descriptor1)
   JSON_STRUCT_INT(descriptor2)
+JSON_STRUCT_END
+
+/* struct for socketpair */
+JSON_STRUCT_START(socketpair_function)
+  JSON_STRUCT_ENUM(boolean, connection_based)
+  JSON_STRUCT_INT(descriptor1)
+  JSON_STRUCT_INT(descriptor2)
+JSON_STRUCT_END
+
+/* struct for socket */
+JSON_STRUCT_START(socket_function)
+  JSON_STRUCT_ENUM(boolean, connection_based)
 JSON_STRUCT_END
 
 /* struct for fork */
@@ -835,15 +847,21 @@ JSON_STRUCT_START(dirfd_function)
   JSON_STRUCT_INT(descriptor)
 JSON_STRUCT_END
 
-/* struct for sendmsg, recvmsg, sendmmsg and recvmmsg */
-JSON_STRUCT_START(msg_function)
-  JSON_STRUCT_INT_ARRAY(descriptors, MAX_MSG_FILE_DESCRIPTORS)
-JSON_STRUCT_END
-
 /* struct for bind and connect */
 JSON_STRUCT_START(sockaddr_function)
   JSON_STRUCT_SA_FAMILY_T(family)
   JSON_STRUCT_CSTRING_P(address, MAX_SOCKADDR_LENGTH * 2 + 1) // *2 for hex and +1 for terminating '\0'
+JSON_STRUCT_END
+
+/* struct for sendmsg and recvmsg */
+JSON_STRUCT_START(msg_function)
+  JSON_STRUCT_STRUCT_P(sockaddr_function, sockaddr)
+  JSON_STRUCT_INT_ARRAY(descriptors, MAX_MSG_FILE_DESCRIPTORS)
+JSON_STRUCT_END
+
+/* struct for sendmmsg and recvmmsg */
+JSON_STRUCT_START(mmsg_function)
+  JSON_STRUCT_STRUCT_ARRAY(msg_function, messages, MAX_MMSG_MESSAGES)
 JSON_STRUCT_END
 
 /* struct for accept */
@@ -877,7 +895,7 @@ JSON_STRUCT_START(basic)
 #endif
   JSON_STRUCT_VOID_P_START(file_type)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_stream)
-	JSON_STRUCT_VOID_P_ELEMENT(file_type, file_dir)
+    JSON_STRUCT_VOID_P_ELEMENT(file_type, file_dir)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_descriptor)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_memory)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_async)
@@ -937,8 +955,11 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, readdir_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dirfd_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, msg_function)
-	JSON_STRUCT_VOID_P_ELEMENT(function_data, sockaddr_function)
-	JSON_STRUCT_VOID_P_ELEMENT(function_data, accept_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mmsg_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, sockaddr_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, accept_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, socketpair_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, socket_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

@@ -303,6 +303,26 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared
+    add_executable(send_recv_shared send_recv.c)
+    target_compile_options(send_recv_shared PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(send_recv_shared ${LINK_OPTIONS})
+
+    add_library(send_recv_object OBJECT send_recv.c)
+
+    # test with: IOTRACE_LOG_NAME=send_recv_static_test1 ./send_recv_static
+    add_executable(send_recv_static
+        $<TARGET_OBJECTS:send_recv_object>
+        $<TARGET_OBJECTS:iotrace_object>
+    )
+    target_compile_options(send_recv_static PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(send_recv_static ${LINK_OPTIONS_STATIC})
+    target_link_libraries(send_recv_static ${LINK_OPTIONS})
+endif()
+
+##########################################################################################################
+
+if(WITH_POSIX_IO)
     #test with: IOTRACE_LOG_NAME=read_stream_openmp_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
     add_executable(read_stream_openmp_shared read_stream_openmp.c)
 

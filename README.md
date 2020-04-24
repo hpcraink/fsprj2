@@ -96,10 +96,14 @@ Steps to build _libiotrace_:
         
           Sets the maximum length of collected function names.
           Longer names get truncated.
-          
+        
+        * _MAX_MMSG_MESSAGES_:
+        
+          If the monitored program sends or receives multiple messages via call of function sendmmsg or recvmmsg this option sets the maximum count of collected messages in a single function call. 
+        
         * _MAX_MSG_FILE_DESCRIPTORS_:
         
-          If the monitored program uses _Unix Domain Sockets_ to send _File Descriptors_ from one process to another process this option sets the maximum count of collected _File Descriptors_ in a single send or receive operation.
+          If the monitored program uses _Unix Domain Sockets_ to send _File Descriptors_ from one process to another process this option sets the maximum count of collected _File Descriptors_ in a single send or receive message.
           
         * _MAX_STACKTRACE_DEPTH_:
         
@@ -138,7 +142,7 @@ Steps to build _libiotrace_:
           
         * _WITH_POSIX_AIO_:
         
-          If set to _ON_ functions from _aio.h_ (POSIX Asynchronous Input and Output) are monitored (namely _aio_read_, _aio_read64_, _aio_write_, _aio_write64_, _lio_listio_, _lio_listio64_, _aio_error_, _aio_error64_, _aio_return_, _aio_return64_, _aio_fsync_, _aio_fsync64_, _aio_suspend_, _aio_suspend64_, _aio_cancel_, _aio_cancel64_ and _aio_init_).
+          If set to _ON_ functions from _aio.h_ (POSIX Asynchronous Input and Output) are monitored (namely _aio_read_, _aio_read64_, _aio_write_, _aio_write64_, _lio_listio_, _lio_listio64_, _aio_error_, _aio_error64_, _aio_return_, _aio_return64_, _aio_fsync_, _aio_fsync64_, _aio_suspend_, _aio_suspend64_, _aio_cancel_, _aio_cancel64_, _aio_init_ and _shm_open_).
           IOTrace_Analyze (see [IOTrace_Analyze](#IOTrace_Analyze)) doesn't analyze these functions. This will be implemented in the future.
           
         * _WITH_POSIX_IO_:

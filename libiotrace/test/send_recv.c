@@ -1,3 +1,5 @@
+#include "libiotrace_config.h"
+
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -8,14 +10,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <linux/kcmp.h>
+#ifdef HAVE_LINUX_KCMP_H
+#  include <linux/kcmp.h>
+#endif
 
 #define MY_SOCK_PATH "./libiotrace_test_socket"
 
+#ifdef HAVE_LINUX_KCMP_H
 static int kcmp(pid_t pid1, pid_t pid2, int type, unsigned long idx1,
 		unsigned long idx2) {
 	return syscall(SYS_kcmp, pid1, pid2, type, idx1, idx2);
 }
+#endif
 
 int main(void) {
 	pid_t pid = getpid();
@@ -106,8 +112,10 @@ int main(void) {
 	assert(cmsg->cmsg_len - CMSG_LEN(0) == sizeof(myfds));
 	fd2 = *((int*) CMSG_DATA(cmsg));
 
+#ifdef HAVE_LINUX_KCMP_H
 	ret = kcmp(pid, pid, KCMP_FILE, fd, fd2);
 	assert(0 == ret);
+#endif
 
 #ifdef _GNU_SOURCE
 	myfds[0] = fd;

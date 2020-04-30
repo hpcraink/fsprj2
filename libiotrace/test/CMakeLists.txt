@@ -2,6 +2,10 @@ enable_testing()
 
 add_subdirectory(internal)
 
+include(CheckSymbolExists)
+
+check_include_files("linux/kcmp.h" HAVE_LINUX_KCMP_H)
+
 # ToDo: generate file with set LINK_OPTIONS_STATIC and include it here
 
 list(APPEND LINK_OPTIONS_STATIC

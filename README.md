@@ -253,11 +253,12 @@ The graphics, the animation and the output files enable improvements of the File
 To use _IOTrace_Analyze_ a Java Runtime has to be installed.
 It's tested with _java-11-openjdk-amd64_ on Ubuntu and _jre1.8.0_102_ on windows.
 
-Generating the animation is not possible on a headless system.
+Generating the animation is a problem on a headless system.
 The [_Gephi Toolkit_](https://github.com/gephi/gephi-toolkit) is used to animate the Graph.
 Using this toolkit on a headless system will throw a HeadlessException.
 If you want to run IOTrace_Analyze on a headless system omit the animation.
 To do this set the entry writeAnimations in the _IOTrace_Analyze.properties_ to false.
+Alternatively you can do X11 forwarding (use option -X with ssh command) to generate the animations on a headless system.
 
 ### License
 

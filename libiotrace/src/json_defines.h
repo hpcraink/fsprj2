@@ -124,6 +124,9 @@
 /* ----------------------------------------------------------------------------------------------------------------------- */
 #if JSON_STRUCT == JSON_STRUCT_DATA_TYPE
 /* ----------------------------------------------------------------------------------------------------------------------- */
+/*
+ * Macros for struct declaration
+ * */
 
 #  define JSON_STRUCT_ENUM_START(name) enum name {
 #  define JSON_STRUCT_ENUM_ELEMENT(name) name,
@@ -181,7 +184,9 @@
 #elif JSON_STRUCT == JSON_STRUCT_PRINT
 /* ----------------------------------------------------------------------------------------------------------------------- */
 /*
- * generate functions
+ * Macros for serializing structs to json
+ *
+ * following functions are available after include of the macros
  *
  * int json_struct_print_<name of struct>(char* buf, size_t size, struct name *data)
  * int json_struct_print_array_<name of array>(char* buf, size_t size, struct name *data)
@@ -497,9 +502,10 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 /* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_BYTES_COUNT
 /* ----------------------------------------------------------------------------------------------------------------------- */
-
 /*
- * generate functions
+ * Macros for evaluating the maximum length of a serialized struct
+ *
+ * following functions are available after include of the macros
  *
  * int json_struct_max_size_<name of struct>()
  * int json_struct_max_size_array_<name of struct>()
@@ -507,6 +513,8 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
  *
  * for evaluating max size of json-string. The returned size is without trailing
  * null character.
+ * These functions can be used to create a big enough buffer for functions included
+ * with JSON_STRUCT == JSON_STRUCT_PRINT.
  * */
 
 /* compiler replaces following line with constants */
@@ -631,6 +639,17 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 /* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_SIZEOF
 /* ----------------------------------------------------------------------------------------------------------------------- */
+/*
+ * Macros for evaluating the size needed for a deep copy of a struct
+ *
+ * following functions are available after include of the macros
+ *
+ * int json_struct_sizeof_<name of struct>(struct name *json_struct_data)
+ *
+ * for evaluating max size of struct.
+ * These functions can be used to evaluate needed buffer size for deep
+ * copy functions included with JSON_STRUCT == JSON_STRUCT_COPY.
+ * */
 
 #  define JSON_STRUCT_ENUM_START(name)
 #  define JSON_STRUCT_ENUM_ELEMENT(name)
@@ -722,6 +741,16 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 /* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_COPY
 /* ----------------------------------------------------------------------------------------------------------------------- */
+/*
+ * Macros for deep copy a struct
+ *
+ * following functions are available after include of the macros
+ *
+ * void* json_struct_copy_<name of struct>(void *json_struct_buf, struct name *json_struct_data)
+ *
+ * for deep copy a struct.
+ * Functions can be used to write collected data into a buffer.
+ * */
 
 int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_from, size_t json_struct_max_length) {
     int json_struct_i;
@@ -879,6 +908,17 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 /* ----------------------------------------------------------------------------------------------------------------------- */
 #elif JSON_STRUCT == JSON_STRUCT_FREE
 /* ----------------------------------------------------------------------------------------------------------------------- */
+/*
+ * Macros for freeing allocated memory
+ *
+ * following functions are available after include of the macros
+ *
+ * void json_struct_free_<name of struct>(struct name *json_struct_data)
+ *
+ * for freeing allocated memory.
+ * Functions can be used to free memory after deep copying with functions included
+ * with JSON_STRUCT == JSON_STRUCT_COPY.
+ * */
 
 #  define JSON_STRUCT_ENUM_START(name)
 #  define JSON_STRUCT_ENUM_ELEMENT(name)

@@ -182,6 +182,7 @@ if(WITH_POSIX_IO)
         "-Wl,-wrap=__fpending"
         "-Wl,-wrap=fork"
         "-Wl,-wrap=vfork"
+        "-Wl,-wrap=clone"
     )
 endif()
 
@@ -360,6 +361,27 @@ if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=read_MPI_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./read_MPI
     add_executable(read_MPI read_MPI.c)
     target_link_libraries(read_MPI PRIVATE ${LINK_OPTIONS})
+endif()
+
+##########################################################################################################
+
+if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=clone_test1 LD_PRELOAD=../src/libiotrace_shared.so ./clone_shared
+    add_executable(clone_shared clone.c)
+    target_compile_options(clone_shared PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(clone_shared ${LINK_OPTIONS})
+
+    add_library(clone_object OBJECT clone.c)
+    target_compile_options(clone_object PRIVATE "-D_GNU_SOURCE")
+
+    # test with: IOTRACE_LOG_NAME=clone_static_test1 ./clone_static
+    add_executable(clone_static
+        $<TARGET_OBJECTS:clone_object>
+        $<TARGET_OBJECTS:iotrace_object>
+    )
+    target_compile_options(clone_static PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(clone_static ${LINK_OPTIONS_STATIC})
+    target_link_libraries(clone_static ${LINK_OPTIONS})
 endif()
 
 ##########################################################################################################

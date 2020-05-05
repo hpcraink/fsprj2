@@ -24,10 +24,14 @@
 //#include <linux/netlink.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
+#ifdef HAVE_SCHED_H
+#  include <sched.h>
+#endif
 
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+
 #include "json_include_struct.h"
 #include "event.h"
 #include "wrapper_defines.h"
@@ -442,6 +446,9 @@ REAL_DEFINITION_TYPE pid_t REAL_DEFINITION(fork)(void) REAL_DEFINITION_INIT;
 #ifdef HAVE_VFORK
 REAL_DEFINITION_TYPE pid_t REAL_DEFINITION(vfork)(void) REAL_DEFINITION_INIT;
 #endif
+#ifdef HAVE_CLONE
+REAL_DEFINITION_TYPE int REAL_DEFINITION(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... /* pid_t *ptid, void *newtls, pid_t *ctid */ ) REAL_DEFINITION_INIT;
+#endif
 #endif
 
 #ifndef IO_LIB_STATIC
@@ -793,6 +800,9 @@ void posix_io_init() {
 		DLSYM(fork);
 #ifdef HAVE_VFORK
 		DLSYM(vfork);
+#endif
+#ifdef HAVE_CLONE
+		DLSYM(clone);
 #endif
 
 		posix_io_init_done = 1;
@@ -6382,6 +6392,46 @@ pid_t WRAP(vfork)(void) {
 	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfork)
+
+	fork_function_data.pid = ret;
+	if (-1 == ret) {
+		data.return_state = error;
+	} else {
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}
+#endif
+
+#ifdef HAVE_CLONE
+int WRAP(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... /* pid_t *ptid, void *newtls, pid_t *ctid */ ) {
+	int ret;
+	struct basic data;
+	struct fork_function fork_function_data;
+	va_list ap;
+	pid_t *ptid;
+	void *newtls;
+	pid_t *ctid;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, fork_function,
+			fork_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	va_start(ap, arg);
+	if (CLONE_PARENT_SETTID & flags || CLONE_SETTLS & flags || CLONE_CHILD_CLEARTID & flags || CLONE_CHILD_SETTID & flags) {
+		ptid = va_arg(ap, pid_t *);
+		newtls = va_arg(ap, void *);
+		ctid = va_arg(ap, pid_t *);
+		CALL_REAL_FUNCTION_RET(data, ret, clone, fn, child_stack, flags, arg, ptid, newtls, ctid)
+	} else {
+		CALL_REAL_FUNCTION_RET(data, ret, clone, fn, child_stack, flags, arg)
+	}
+	va_end(ap);
 
 	fork_function_data.pid = ret;
 	if (-1 == ret) {

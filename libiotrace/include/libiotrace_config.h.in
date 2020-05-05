@@ -38,6 +38,9 @@
 /* Define to 1 if system has <linux/kcmp.h> header file. */
 #cmakedefine HAVE_LINUX_KCMP_H 1
 
+/* Define to 1 if system has <sched.h> header file. */
+#cmakedefine HAVE_SCHED_H 1
+
 /* Define to 1 if system supports open64(). */
 #cmakedefine HAVE_OPEN64 1
 
@@ -304,6 +307,9 @@
 
 /* Define to 1 if system supports vfork(). */
 #cmakedefine HAVE_VFORK 1
+
+/* Define to 1 if system supports clone(). */
+#cmakedefine HAVE_CLONE 1
 
 /* Define to 1 if system supports execvpe(). */
 #cmakedefine HAVE_EXECVPE 1

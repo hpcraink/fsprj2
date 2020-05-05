@@ -474,10 +474,12 @@ REAL_TYPE pid_t REAL(fork)(void) REAL_INIT;
 #ifdef HAVE_VFORK
 REAL_TYPE pid_t REAL(vfork)(void) REAL_INIT;
 #endif
+#ifdef HAVE_CLONE
+REAL_TYPE int REAL(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... /* pid_t *ptid, void *newtls, pid_t *ctid */ ) REAL_INIT;
+#endif
 //ToDo: int unshare(int flags); see clone, for thread not sharing fd's with process
 //ToDo: int daemon(int nochdir, int noclose); makes a fork ???
 //ToDo: int execve(const char *filename, char *const argv[], char *const envp[]); remove all mmap's and fd's ???
-//ToDo: int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ... /* pid_t *ptid, void *newtls, pid_t *ctid */ );
 //pthread_create ???
 //ToDo: int posix_spawn & int posix_spawnp
 

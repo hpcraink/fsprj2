@@ -55,10 +55,12 @@ Steps to build _libiotrace_:
     3. `cd fsprj2/libiotrace/`
     4. `git rm --cached ext/cunit`
     5. `rm -rf ext`
-    6. `git submodule add https://gitlab.com/cunity/cunit.git ext/cunit`
+    6. `cd ..`
+    7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
+    8. `cd libiotrace/`
     7. `mkdir build` (for out of source build)
     8. `cd build/`
-    9. `ccmake ..`
+    9. `ccmake ..` (if you want to use cmake instead of ccmake type `cmake ..` instead of `ccmake ..`, set options with -D\<option\> and continue with step `make`)
     10. press “c” and wait until configuration is done
     11. optional: customize libiotrace (set/change _cmake_ options)
     

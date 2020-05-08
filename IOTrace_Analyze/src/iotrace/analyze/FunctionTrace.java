@@ -133,7 +133,16 @@ public class FunctionTrace implements Traceable {
 
 		for (Entry<FileGroupId, FileGroupTrace> e : functionEvents.entrySet()) {
 			if (e.getKey().isKind(kinds)) {
-				subTraces.put(e.getKey().getFirstFileName(kinds), e.getValue());
+				String tmpKey = e.getKey().getFirstFileName(kinds);
+
+				String newKey = tmpKey;
+				int i = 1;
+				while (subTraces.containsKey(newKey)) {
+					i++;
+					newKey = tmpKey + "(" + i + ")";
+				}
+
+				subTraces.put(newKey, e.getValue());
 			}
 		}
 

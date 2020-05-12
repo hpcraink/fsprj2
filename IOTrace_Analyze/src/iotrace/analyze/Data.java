@@ -2220,35 +2220,41 @@ public class Data {
 	}
 
 	private static String getCsvArrayFromStringSet(Set<String> strings) {
-		String array = "\"[";
+		StringBuilder builder = new StringBuilder();
+		builder.append("\"[");
 
 		if (strings != null && !strings.isEmpty()) {
 			for (String s : strings) {
-				array += s + ",";
+				builder.append(s);
+				builder.append(",");
 			}
-			array = array.substring(0, array.length() - 1);
+			if (builder.charAt(builder.length() - 1) == ',') {
+				builder.deleteCharAt(builder.length() - 1);
+			}
 		}
 
-		array += "]\"";
+		builder.append("]\"");
 
-		return array;
+		return builder.toString();
 	}
 
 	private static String getCsvArrayFromEvents(Collection<FunctionEvent> events) {
-		String array = "\"[";
+		StringBuilder builder = new StringBuilder();
+		builder.append("\"[");
 
 		if (events != null) {
 			for (FunctionEvent event : events) {
-				array += event.getId() + ",";
+				builder.append(event.getId());
+				builder.append(",");
 			}
-			if (array.endsWith(",")) {
-				array = array.substring(0, array.length() - 1);
+			if (builder.charAt(builder.length() - 1) == ',') {
+				builder.deleteCharAt(builder.length() - 1);
 			}
 		}
 
-		array += "]\"";
+		builder.append("]\"");
 
-		return array;
+		return builder.toString();
 	}
 
 	private static String getCsvString(String value) {

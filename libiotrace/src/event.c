@@ -371,11 +371,11 @@ void open_std_fd(int fd) {
 			file_descriptor_data)
 	file_descriptor_data.descriptor = fd;
 
-	data.time_start = 0;
-	data.time_end = 0;
+	data.time_start = gettime();
+	data.time_end = data.time_start;
 #ifdef LOG_WRAPPER_TIME
-	data.wrapper.time_start = 0;
-	data.wrapper.time_end = 0;
+	data.wrapper.time_start = data.time_start;
+	//data.wrapper.time_end = 0;
 #endif
 
 	data.return_state = ok;
@@ -395,11 +395,11 @@ void open_std_file(FILE *file) {
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 	file_stream_data.stream = file;
 
-	data.time_start = 0;
-	data.time_end = 0;
+	data.time_start = gettime();
+	data.time_end = data.time_start;
 #ifdef LOG_WRAPPER_TIME
-	data.wrapper.time_start = 0;
-	data.wrapper.time_end = 0;
+	data.wrapper.time_start = data.time_start;
+	//data.wrapper.time_end = 0;
 #endif
 
 	data.return_state = ok;

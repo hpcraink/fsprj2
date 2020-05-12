@@ -291,14 +291,17 @@ public class Data {
 //				new File("C:\\Users\\Phil\\Documents\\Studium\\Angewandte_Informatik_Master\\Semester_3\\test.gexf"));
 
 		if (properties.getProperty("writeGexf", "false").equalsIgnoreCase("true")) {
+			logger.debug("writing gexf ...");
 			data.writeGexf(new File(outputFolder + inputFile + ".gexf"));
 		}
 
 		if (properties.getProperty("writeCsv", "false").equalsIgnoreCase("true")) {
+			logger.debug("writing csv ...");
 			data.writeFunctionEventsCsv(new File(outputFolder + inputFile + ".csv"));
 		}
 
 		if (properties.getProperty("writePieCharts", "false").equalsIgnoreCase("true")) {
+			logger.debug("generating pie charts ...");
 			double percent = Double.parseDouble(properties.getProperty("pieChartMinPercent", "3.0"));
 			int initialWidth = Integer.parseInt(properties.getProperty("pieChartInitialWidth", "200"));
 			int incrementWidth = Integer.parseInt(properties.getProperty("pieChartIncrementWidth", "200"));
@@ -315,6 +318,7 @@ public class Data {
 		}
 
 		if (properties.getProperty("writeBarCharts", "false").equalsIgnoreCase("true")) {
+			logger.debug("generating bar charts ...");
 			int tickLabelFontSize = Integer.parseInt(properties.getProperty("barChartTickLabelFontSize", "20"));
 			int labelFontSize = Integer.parseInt(properties.getProperty("barChartLabelFontSize", "25"));
 			int legendFontSize = Integer.parseInt(properties.getProperty("barChartLegendFontSize", "25"));
@@ -326,12 +330,14 @@ public class Data {
 		}
 
 		if (properties.getProperty("writeAnimations", "false").equalsIgnoreCase("true")) {
+			logger.debug("generating animations ...");
 			GephiVideo.generate(outputFolder, inputFile, properties, data.getLegends());
 		}
 
 		data.printStats();
 
 		if (properties.getProperty("writeFileTraces", "false").equalsIgnoreCase("true")) {
+			logger.debug("writing file traces ...");
 			data.printFileTraces(outputFolder + inputFile);
 		}
 
@@ -1080,11 +1086,13 @@ public class Data {
 		if (newFileTraceId == null
 				|| oldFileTraceId != null && oldFileTraceId.getFileTrace().equals(newFileTraceId.getFileTrace())) {
 			addEvent(oldFileTraceId);
-		} else {
+		} else if (oldFileTraceId != null) {
 			Set<FileTraceId> tmpArray = new HashSet<>();
 			tmpArray.add(newFileTraceId);
 			tmpArray.add(oldFileTraceId);
 			addEvent(tmpArray);
+		} else {
+			addEvent(newFileTraceId);
 		}
 
 		if (oldFileTraceId != null && newFileTraceId != null

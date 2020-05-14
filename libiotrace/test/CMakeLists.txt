@@ -328,12 +328,12 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
-    #test with: IOTRACE_LOG_NAME=read_stream_openmp_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./read_stream_openmp_shared
-    add_executable(read_stream_openmp_shared read_stream_openmp.c)
+    #test with: IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared
+    add_executable(OpenMP_read_stream_shared OpenMP_read_stream.c)
 
     find_package(OpenMP)
     if(OpenMP_C_FOUND)
-        target_link_libraries(read_stream_openmp_shared PUBLIC OpenMP::OpenMP_C)
+        target_link_libraries(OpenMP_read_stream_shared PUBLIC OpenMP::OpenMP_C)
     endif()
 endif()
 
@@ -358,9 +358,9 @@ endif()
 ##########################################################################################################
 
 if(WITH_MPI_IO)
-    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=read_MPI_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./read_MPI
-    add_executable(read_MPI read_MPI.c)
-    target_link_libraries(read_MPI PRIVATE ${LINK_OPTIONS})
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read
+    add_executable(MPI_read MPI_read.c)
+    target_link_libraries(MPI_read PRIVATE ${LINK_OPTIONS})
 endif()
 
 ##########################################################################################################

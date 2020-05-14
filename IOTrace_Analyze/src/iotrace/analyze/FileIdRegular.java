@@ -1,11 +1,11 @@
 package iotrace.analyze;
 
-public class RegularFileId implements FileComparable<RegularFileId> {
+public class FileIdRegular implements FileComparable<FileIdRegular> {
 	private String hostName;
 	private long deviceId;
 	private long fileId;
 
-	public RegularFileId(String hostName, long deviceId, long fileId) {
+	public FileIdRegular(String hostName, long deviceId, long fileId) {
 		super();
 		this.hostName = hostName;
 		this.deviceId = deviceId;
@@ -42,7 +42,7 @@ public class RegularFileId implements FileComparable<RegularFileId> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RegularFileId other = (RegularFileId) obj;
+		FileIdRegular other = (FileIdRegular) obj;
 		if (deviceId != other.deviceId)
 			return false;
 		if (fileId != other.fileId)
@@ -56,7 +56,7 @@ public class RegularFileId implements FileComparable<RegularFileId> {
 	}
 
 	@Override
-	public int compareTo(RegularFileId arg0) {
+	public int compareTo(FileIdRegular arg0) {
 		int cmp = hostName.compareTo(arg0.hostName);
 
 		if (cmp == 0) {

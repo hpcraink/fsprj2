@@ -1,6 +1,6 @@
 package iotrace.analyze;
 
-public class SocketFileId implements FileComparable<SocketFileId> {
+public class FileIdSocket implements FileComparable<FileIdSocket> {
 	private String hostName;
 	private int sockaddrFamily;
 	private String sockaddrData;
@@ -8,7 +8,7 @@ public class SocketFileId implements FileComparable<SocketFileId> {
 	public final static int FAMILY_UNBOUND_SOCKET = -1;
 	public final static int FAMILY_UNNAMED_SOCKET = -2;
 
-	public SocketFileId(String hostName, int sockaddrFamily, String sockaddrData) {
+	public FileIdSocket(String hostName, int sockaddrFamily, String sockaddrData) {
 		super();
 		this.hostName = hostName;
 		this.sockaddrFamily = sockaddrFamily;
@@ -45,7 +45,7 @@ public class SocketFileId implements FileComparable<SocketFileId> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		SocketFileId other = (SocketFileId) obj;
+		FileIdSocket other = (FileIdSocket) obj;
 		if (hostName == null) {
 			if (other.hostName != null)
 				return false;
@@ -62,7 +62,7 @@ public class SocketFileId implements FileComparable<SocketFileId> {
 	}
 
 	@Override
-	public int compareTo(SocketFileId arg0) {
+	public int compareTo(FileIdSocket arg0) {
 		int cmp = hostName.compareTo(arg0.hostName);
 
 		if (cmp == 0) {

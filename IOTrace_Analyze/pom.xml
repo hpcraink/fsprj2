@@ -35,6 +35,9 @@
 						<manifest>
 							<mainClass>iotrace.analyze.Data</mainClass>
 						</manifest>
+						<manifestEntries>
+                            <Multi-Release>true</Multi-Release>
+                        </manifestEntries>
 					</archive>
 				</configuration>
 				<executions>

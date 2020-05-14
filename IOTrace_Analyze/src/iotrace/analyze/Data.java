@@ -726,11 +726,11 @@ public class Data {
 		switch (kind) {
 		case SOCKET:
 			countUnnamedSockets++;
-			openTrace(kind, new FileId(new SocketFileId(tmpHostName, SocketFileId.FAMILY_UNNAMED_SOCKET,
+			openTrace(kind, new FileId(new FileIdSocket(tmpHostName, FileIdSocket.FAMILY_UNNAMED_SOCKET,
 					Integer.toString(countUnnamedSockets))), idType1, id1, idType2, id2);
 			break;
 		default:
-			openTrace(kind, new FileId(new RegularFileId(tmpHostName, -1, -1)), idType1, id1, idType2, id2);
+			openTrace(kind, new FileId(new FileIdRegular(tmpHostName, -1, -1)), idType1, id1, idType2, id2);
 		}
 	}
 
@@ -820,10 +820,10 @@ public class Data {
 		switch (kind) {
 		case SOCKET:
 			tmpFileTrace = openTrace(kind,
-					new FileId(new SocketFileId(tmpHostName, SocketFileId.FAMILY_UNBOUND_SOCKET, "")));
+					new FileId(new FileIdSocket(tmpHostName, FileIdSocket.FAMILY_UNBOUND_SOCKET, "")));
 			break;
 		default:
-			tmpFileTrace = openTrace(kind, new FileId(new RegularFileId(tmpHostName, -1, -1)));
+			tmpFileTrace = openTrace(kind, new FileId(new FileIdRegular(tmpHostName, -1, -1)));
 		}
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceId(idType, id, tmpFileTrace, null);
@@ -851,7 +851,7 @@ public class Data {
 	 * @param shared  {@code true} if memory is shared
 	 */
 	private void openTrace(String address, String length, boolean shared) {
-		FileTrace tmpFileTrace = openTrace(FileKind.MEMORY, new FileId(new RegularFileId(tmpHostName, -1, -1)));
+		FileTrace tmpFileTrace = openTrace(FileKind.MEMORY, new FileId(new FileIdRegular(tmpHostName, -1, -1)));
 
 		FileTraceId fileTraceId = tmpProcessTrace.setFileTraceMemoryId(address, length, tmpFileTrace, null, shared);
 
@@ -944,6 +944,23 @@ public class Data {
 		return openFileTrace(fileId, kind, fileName);
 	}
 
+	private FileTrace getWrapperFileTrace() {
+		FileId fileId = new FileId(new FileIdWrapper());
+		String id = fileId.toString();
+		String fileName = fileId.toFileName();
+		FileTrace file;
+
+		if (!fileTraces.containsTrace(id)) {
+			file = new FileTrace(fileId, fileName, FileKind.WRAPPER, directoryDelimiter, legends);
+			fileTraces.addTrace(id, file);
+		} else {
+			file = fileTraces.getTrace(id);
+			file.addFileName(fileName);
+		}
+
+		return file;
+	}
+
 	/**
 	 * Returns an existing or a new created {@link FileTrace}. If an existing
 	 * {@link FileTrace} is found, it is returned. If no existing {@link FileTrace}
@@ -953,7 +970,7 @@ public class Data {
 	 * {@link ProcessTrace} as an currently open file. This is for further methods
 	 * which manipulate all open files.
 	 * 
-	 * For searching and caching the parameter {@code fileName} is used.
+	 * For searching and caching the parameter {@code fileId} is used.
 	 * 
 	 * @param fileId   id (hostName, deviceId and fileId) of the file
 	 * @param kind     type of the file for the {@link FileTrace}
@@ -1031,8 +1048,7 @@ public class Data {
 				addEvent(fileTraceIds);
 			}
 		} else {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		}
 	}
 
@@ -1117,6 +1133,12 @@ public class Data {
 		tmpProcessTrace.removeOpenFile(fileTrace);
 	}
 
+	public void addWrapperEvent() {
+		FileTraceId fileTraceId = new FileTraceId(null, getWrapperFileTrace(), null);
+
+		addEvent(fileTraceId);
+	}
+
 	/**
 	 * Creates a call and a return {@link FunctionEvent} from the current
 	 * {@link Json} in the current {@link ThreadTrace}. The new events are connected
@@ -1160,8 +1182,7 @@ public class Data {
 	 */
 	public void addEvent(IdType idType, LinkedList<String> ids) {
 		if (ids.isEmpty()) {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		} else {
 			Set<FileTraceId> fileTraceIds = new HashSet<>();
 			for (String id : ids) {
@@ -1176,8 +1197,7 @@ public class Data {
 		if (fileTraceIds != null && !fileTraceIds.isEmpty()) {
 			addEvent(fileTraceIds);
 		} else {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		}
 	}
 
@@ -1201,8 +1221,7 @@ public class Data {
 		if (fileTraceIds != null && !fileTraceIds.isEmpty()) {
 			addEvent(fileTraceIds);
 		} else {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		}
 	}
 
@@ -1224,8 +1243,7 @@ public class Data {
 				addEventNullOffset(fileTraces);
 			}
 		} else {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		}
 	}
 
@@ -1239,8 +1257,7 @@ public class Data {
 				addEvent(fileTraceIds);
 			}
 		} else {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		}
 	}
 
@@ -1257,17 +1274,19 @@ public class Data {
 	 * {@link Json} in the current {@link ThreadTrace}. The new events are connected
 	 * to each other (field {@code belongsTo} in {@link FunctionEvent}; can be
 	 * returned with method {@code getBelongsTo()}). Each event points to the given
-	 * {@link FileTrace} and {@link FileOffset}. Additional, the events are
-	 * registered in the {@link FileTrace}, if an {@link FileTrace} is given.
+	 * {@link FileTrace} and {@link FileOffset} (extracted from
+	 * {@param fileTraceId}. Additional, the events are registered in the
+	 * {@link FileTrace}, if an {@link FileTrace} is given.
 	 * 
-	 * @param fileTrace  used for creating the new events. Can be null if no open
-	 *                   {@link FileTrace} for the {@link Json} could be found. This
-	 *                   will create a warning message.
-	 * @param fileOffset used for creating the new events. Can be null if no offset
-	 *                   can be provided. This will make further analysis impossible
-	 *                   and should only be done for non file-traces (e.g. sockets
-	 *                   and pipes) or for events which don't manipulate file
-	 *                   content (e.g. close functions).
+	 * @param fileTraceId used to evaluate {@link FileTrace} (used for creating the
+	 *                    new events. Can be null if no open {@link FileTrace} for
+	 *                    the {@link Json} could be found. This will create a
+	 *                    warning message) and {@link FileOffset} (used for creating
+	 *                    the new events. Can be null if no offset can be provided.
+	 *                    This will make further analysis impossible and should only
+	 *                    be done for non file-traces (e.g. sockets and pipes) or
+	 *                    for events which don't manipulate file content (e.g. close
+	 *                    functions)).
 	 * @return the created call event
 	 * @see {@link FunctionEvent}
 	 */
@@ -1400,8 +1419,7 @@ public class Data {
 
 	public void addId(IdType oldIdType, String oldId, IdType newIdType, String newId, boolean ignore) {
 		if (ignore) {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 			return;
 		}
 
@@ -1480,8 +1498,7 @@ public class Data {
 		if (newMemoryId != null) {
 			addEvent(newMemoryId);
 		} else {
-			ignored++;
-			logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+			ignore();
 		}
 	}
 
@@ -1551,15 +1568,20 @@ public class Data {
 		}
 	}
 
+	public void ignore() {
+		ignored++;
+		logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+	}
+
 	public FileId getRegularFileId(String hostName, String deviceId, String fileId) {
 		long deviceId_long = Long.parseLong(deviceId);
 		long fileId_long = Long.parseLong(fileId);
-		return new FileId(new RegularFileId(hostName, deviceId_long, fileId_long));
+		return new FileId(new FileIdRegular(hostName, deviceId_long, fileId_long));
 	}
 
 	public FileId getSocketFileId(String hostName, String sockaddrFamily, String sockaddrData) {
 		int sockaddrFamily_int = Integer.parseInt(sockaddrFamily);
-		return new FileId(new SocketFileId(hostName, sockaddrFamily_int, sockaddrData));
+		return new FileId(new FileIdSocket(hostName, sockaddrFamily_int, sockaddrData));
 	}
 
 	/**
@@ -1634,10 +1656,10 @@ public class Data {
 		if (ignored > 0) {
 			logger.warn("ignored functions-calls: {} (see more with log level debug)", ignored);
 		}
-		if (ignored > 0) {
+		if (unknown > 0) {
 			logger.warn("unknown functions-calls: {} (see more with log level debug)", unknown);
 		}
-		if (ignored > 0) {
+		if (noFileTrace > 0) {
 			logger.warn("function-calls without file-trace: {} (see more with log level debug)", noFileTrace);
 		}
 

@@ -58,11 +58,11 @@ Steps to build _libiotrace_:
     6. `cd ..`
     7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
     8. `cd libiotrace/`
-    7. `mkdir build` (for out of source build)
-    8. `cd build/`
-    9. `ccmake ..` (if you want to use cmake instead of ccmake type `cmake ..` instead of `ccmake ..`, set options with -D\<option\> and continue with step `make`)
-    10. press “c” and wait until configuration is done
-    11. optional: customize libiotrace (set/change _cmake_ options)
+    9. `mkdir build` (for out of source build)
+    10. `cd build/`
+    11. `ccmake ..` (if you want to use cmake instead of ccmake type `cmake ..` instead of `ccmake ..`, set options with -D\<option\> and continue with step `make`)
+    12. press “c” and wait until configuration is done
+    13. optional: customize libiotrace (set/change _cmake_ options)
     
         * _BUFFER_SIZE_:
         
@@ -164,10 +164,10 @@ Steps to build _libiotrace_:
           So if you are not sure if the monitored program manipulates the standard (std) _file streams_ or _File Descriptors_ (e.g. with an redirect of standard _file streams_ during start of an new process) set this option to _ON_.
           In any other case you can omit a lot of overhead by setting it to _OFF_.
           
-    12. press “c” again (this brings up the option “g” to generate)
-    13. press “g” and wait until _ccmake_ exits
-    14. `make` (wait until build is done)
-    15. libiotrace is now available in folder &lt;libiotrace-folder&gt;/fsprj2/libiotrace/build/src
+    14. press “c” again (this brings up the option “g” to generate)
+    15. press “g” and wait until _ccmake_ exits
+    16. `make` (wait until build is done)
+    17. libiotrace is now available in folder &lt;libiotrace-folder&gt;/fsprj2/libiotrace/build/src
         * _libiotrace_shared.so_ (for dynamically linked programs)
         * _libiotrace_static.a_ (for linking against static linked programs)
 
@@ -292,8 +292,15 @@ Log4j: Apache License, Version 2.0 (see [CMake](https://logging.apache.org/log4j
 ### Use IOTrace_Analyze
 
 1. put the libiotrace output, the _IOTrace_Analyze-jar_, some _log4j2.properties_ and the _IOTrace_Analyze.properties_ in the same directory. Examples for the properties can be found in &lt;libiotrace-folder&gt;/fsprj2/IOTrace_Analyze/test/.
+    * it's possible to alternate between different properties by using the command line parameters `-analyzeprop=<path/filename to IOTrace_Analyze.properties>` and `-log4jprop=<path/filename to log4j2.properties>`.
+      If one of these parameters is given the apropriate file is not searched in the same directory.
+      Instead it's loaded with the given filename from the given path. 
 2. edit the _IOTrace_Analyze.properties_. At least the entry _inputFile_ has to be changed to the value of &lt;prefix-for-log-names&gt; to find the libiotrace output. The other entrys define which output will be generated.
-3. run the jar with the command `java -jar <IOTrace_Analyze-jar>` (for big log files it's necessary to increase the maximum memory allocation pool for the JVM with an additional parameter like `-Xmx16g`)
+    * each value loaded from _IOTrace_Analyze.properties_ can be overwritten by using a command line parameter.
+      So e.g. instead of changing the entry _inputFile_ the parameter `-inputFile=<prefix-for-log-names>` could be used.
+3. run the jar with the command `java -jar <IOTrace_Analyze-jar>`
+   (or with more parameters e.g.: `java -jar <IOTrace_Analyze-jar> -inputFile=<prefix-for-log-names>`;
+   for big log files it's necessary to increase the maximum memory allocation pool for the JVM with an additional parameter like `-Xmx16g`: `java -Xmx16g -jar <IOTrace_Analyze-jar> -inputFile=<prefix-for-log-names>`)
 
 If the given properties are used, two new directorys are generated.
 One with the name _logs_ which includes the file _IOTrace_Analyze.log_.

@@ -31,9 +31,11 @@ To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ 
 
 ### License
 
+BSD 3-Clause
+
 #### Tools needed to build _libiotrace_
 
-CMake and ccmake: OSI-approved BSD 3-clause License (see [CMake](https://cmake.org/))
+CMake and ccmake: OSI-approved BSD 3-Clause License (see [CMake](https://cmake.org/))
 
 CUnit: GNU LIBRARY GENERAL PUBLIC LICENSE Version 2 (see [CUnit](https://gitlab.com/cunity/cunit))
 
@@ -263,6 +265,8 @@ To do this set the entry writeAnimations in the _IOTrace_Analyze.properties_ to 
 Alternatively you can do X11 forwarding (use option -X with ssh command) to generate the animations on a headless system.
 
 ### License
+
+BSD 3-Clause
 
 #### Tools needed to build _IOTrace_Analyze_
 

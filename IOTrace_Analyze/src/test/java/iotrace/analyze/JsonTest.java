@@ -1,4 +1,4 @@
-package iotrace.analyze.test;
+package iotrace.analyze;
 
 import static org.junit.Assert.*;
 

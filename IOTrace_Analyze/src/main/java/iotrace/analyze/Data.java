@@ -348,7 +348,7 @@ public class Data {
 //		data.writeDot(new File(pathPrefix + inputFile + ".gv"));
 
 //		data.writeGexf_gefx4j(
-//				new File("C:\\Users\\Phil\\Documents\\Studium\\Angewandte_Informatik_Master\\Semester_3\\test.gexf"));
+//				new File("test.gexf"));
 
 		if (properties.getProperty("writeGexf", "false").equalsIgnoreCase("true")) {
 			logger.debug("writing gexf ...");

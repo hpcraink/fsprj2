@@ -385,3 +385,19 @@ if(WITH_POSIX_IO)
 endif()
 
 ##########################################################################################################
+
+#if(WITH_POSIX_IO)
+    #test with: OMP_NUM_THREADS=4 ./OpenMP_atomic_buffer_static
+    add_executable(OpenMP_atomic_buffer_static
+        OpenMP_atomic_buffer.c
+        $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src/atomic_buffer.c>
+    )
+    target_include_directories(OpenMP_atomic_buffer_static PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
+    
+    find_package(OpenMP)
+    if(OpenMP_C_FOUND)
+        target_link_libraries(OpenMP_atomic_buffer_static PUBLIC OpenMP::OpenMP_C)
+    endif()
+#endif()
+
+##########################################################################################################

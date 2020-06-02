@@ -176,6 +176,7 @@ check_symbol_exists(HOST_NAME_MAX "limits.h" HAVE_HOST_NAME_MAX)
 
 # Please keep in alphabetical order
 set(SOURCE
+    atomic_buffer.c
     event.c
     init.c
     os.c

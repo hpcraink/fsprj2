@@ -57,6 +57,10 @@
 
 #include "libiotrace_config.h"
 
+#ifdef ATOMIC_BUFFER_TEST
+    extern ATTRIBUTE_THREAD int *atomic_buffer_wait_pos;
+#endif
+
 BEGIN_C_DECLS
 
 /**
@@ -133,7 +137,7 @@ struct atomic_buffer_prefix {
  * @param[in]  size       length in bytes of the new buffer
  * @return 0 on success, -1 if an error occurred (check errno for ENOMEM Out of memory)
  */
-int atomic_buffer_create(volatile struct atomic_buffer *buf, size_t size)
+int atomic_buffer_create(struct atomic_buffer *buf, size_t size)
 		__attribute__((nonnull));
 
 /**
@@ -157,7 +161,7 @@ int atomic_buffer_create(volatile struct atomic_buffer *buf, size_t size)
  *         "size" bytes are available in the buffer, NULL is
  *         returned.
  */
-void* atomic_buffer_alloc(volatile struct atomic_buffer *buf, size_t size)
+void* atomic_buffer_alloc(struct atomic_buffer *buf, size_t size)
 		__attribute__((nonnull));
 
 /**
@@ -183,7 +187,7 @@ void* atomic_buffer_alloc(volatile struct atomic_buffer *buf, size_t size)
  * @param[in,out] buf        buffer to free memory from
  * @param[in]     memory     pointer to via atomic_buffer_alloc() allocated memory
  */
-void atomic_buffer_free(volatile struct atomic_buffer *buf, void *memory)
+void atomic_buffer_free(struct atomic_buffer *buf, void *memory)
 		__attribute__((nonnull));
 
 /**
@@ -225,7 +229,7 @@ void atomic_buffer_free(volatile struct atomic_buffer *buf, void *memory)
  *                                     greater than 999999999 are set to
  *                                     999999999)
  */
-void atomic_buffer_destroy(volatile struct atomic_buffer *buf,
+void atomic_buffer_destroy(struct atomic_buffer *buf,
 		long sleep_nanoseconds) __attribute__((nonnull));
 
 /**
@@ -259,7 +263,7 @@ void atomic_buffer_destroy(volatile struct atomic_buffer *buf,
  *                                     greater than 999999999 are set to
  *                                     999999999)
  */
-void atomic_buffer_reuse(volatile struct atomic_buffer *buf,
+void atomic_buffer_reuse(struct atomic_buffer *buf,
 		long sleep_nanoseconds) __attribute__((nonnull));
 
 /**
@@ -274,7 +278,7 @@ void atomic_buffer_reuse(volatile struct atomic_buffer *buf,
  * @param[in]     buf                  buffer to get information of
  * @return number of not allocated bytes in buffer "buf"
  */
-size_t atomic_buffer_get_free_memory(volatile struct atomic_buffer *buf)
+size_t atomic_buffer_get_free_memory(struct atomic_buffer *buf)
 		__attribute__((nonnull));
 
 /**
@@ -289,7 +293,7 @@ size_t atomic_buffer_get_free_memory(volatile struct atomic_buffer *buf)
  * @param[in]     buf                  buffer to get information of
  * @return number of not longer allocated bytes in buffer "buf"
  */
-size_t atomic_buffer_get_freed_memory(volatile struct atomic_buffer *buf)
+size_t atomic_buffer_get_freed_memory(struct atomic_buffer *buf)
 		__attribute__((nonnull));
 
 END_C_DECLS

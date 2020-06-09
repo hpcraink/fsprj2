@@ -13,8 +13,7 @@ struct test {
 };
 
 int main(void) {
-	volatile struct atomic_buffer buf;
-	volatile struct atomic_buffer *buf_pointer = &buf;
+	struct atomic_buffer buf;
 	int ret;
 	int max_threads;
 	int thread_num;
@@ -29,10 +28,13 @@ int main(void) {
 	iterations = TESTS_PER_BUFFER_PER_THREAD * max_threads;
 	max_mem = iterations * (sizeof(int) + sizeof(struct atomic_buffer_prefix));
 
+	/* 1. allocating and freeing memory in separate steps, so no allocation interferes with an free
+	 * (tests reuse with full buffer) */
+
 	mems = malloc(iterations * sizeof(struct test));
 	assert(NULL != mems);
 
-	ret = atomic_buffer_create(buf_pointer, max_mem);
+	ret = atomic_buffer_create(&buf, max_mem);
 	assert(-1 != ret);
 
 	for (int l = 0; l < BUFFER_REUSES; l++) {
@@ -51,7 +53,7 @@ int main(void) {
 			for (int i = 0; i < iterations; i++) {
 				mems[i].value = rand_r(&seed);
 
-				mem = atomic_buffer_alloc(buf_pointer, sizeof(int));
+				mem = atomic_buffer_alloc(&buf, sizeof(int));
 				assert(NULL != mem);
 
 				// save random values in separate array for later evaluation
@@ -65,7 +67,7 @@ int main(void) {
 			assert(atomic_buffer_get_freed_memory(&buf) == 0);
 
 			// parallel allocate more than maximum buffer size memory (must fail)
-			mem = atomic_buffer_alloc(buf_pointer, 0);
+			mem = atomic_buffer_alloc(&buf, 0);
 			assert(NULL == mem);
 
 			// check if allocated memory got not overwritten (each call to alloc must return a separate memory area)
@@ -96,7 +98,9 @@ int main(void) {
 
 	atomic_buffer_destroy(&buf, 0);
 
-	ret = atomic_buffer_create(buf_pointer, max_mem);
+	/* 2. interfering allocation, freeing and reuse */
+
+	ret = atomic_buffer_create(&buf, max_mem);
 	assert(-1 != ret);
 
 	// check if all memory is available for allocation
@@ -113,11 +117,13 @@ int main(void) {
 		for (int i = 0; i < iterations * BUFFER_REUSES; i++) {
 			value = rand_r(&seed);
 
-			mem = atomic_buffer_alloc(buf_pointer, sizeof(int));
+			mem = atomic_buffer_alloc(&buf, sizeof(int));
 			while (NULL == mem) {
 #               pragma omp critical
-				atomic_buffer_reuse(&buf, 0);
-				mem = atomic_buffer_alloc(buf_pointer, sizeof(int));
+				{
+					atomic_buffer_reuse(&buf, 0);
+				}
+				mem = atomic_buffer_alloc(&buf, sizeof(int));
 			}
 
 			*((int*) mem) = value;

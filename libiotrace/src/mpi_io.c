@@ -82,7 +82,20 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
 	open_data.mode = get_access_amode(amode);
 	get_creation_amode(amode, &open_data.creation);
 	get_status_amode(amode, &open_data.status);
-	//ToDo: get_mode_flags(0, &open_data.file_mode); from MPI_Info parameter
+	
+	open_data.file_mode.execute_by_group = 0;
+	open_data.file_mode.execute_by_others = 0;
+	open_data.file_mode.execute_by_owner = 0;
+	open_data.file_mode.read_by_group = 0;
+	open_data.file_mode.read_by_others = 0;
+	open_data.file_mode.read_by_owner = 0;
+	open_data.file_mode.write_by_group = 0;
+	open_data.file_mode.write_by_others = 0;
+	open_data.file_mode.write_by_owner = 0;
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode, info, fh)
+
+	//ToDo: get_mode_flags(0, &open_data.file_mode); from amode parameter
 	if (MPI_INFO_NULL != info) {
 		int count_elements;
 		int flag;
@@ -95,17 +108,6 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
 			printf("key: %s, value: %s\n",key,value);
 		}
 	}
-	open_data.file_mode.execute_by_group = 0;
-	open_data.file_mode.execute_by_others = 0;
-	open_data.file_mode.execute_by_owner = 0;
-	open_data.file_mode.read_by_group = 0;
-	open_data.file_mode.read_by_others = 0;
-	open_data.file_mode.read_by_owner = 0;
-	open_data.file_mode.write_by_group = 0;
-	open_data.file_mode.write_by_others = 0;
-	open_data.file_mode.write_by_owner = 0;
-
-	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode, info, fh)
 
 	if (-1 == ret) {
 		data.return_state = error;

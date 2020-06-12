@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 
     MPI_Info_set( info_in, "access_style", "write_once" );
 
-    MPI_File_open(MPI_COMM_WORLD, "testfile", MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &file);
+    MPI_File_open(MPI_COMM_WORLD, "testfile", MPI_MODE_CREATE | MPI_MODE_WRONLY, info_in, &file);
 
     MPI_Info_free(&info_in);
 

@@ -8,7 +8,7 @@ int main(int argc, char *argv[]){
     
     int i, rank, buf[BUFSIZE], err;
     char value [1024];
-    MPI_File *file;
+    MPI_File file;
     MPI_Info info_in;
     MPI_Info info_used;
     int flag;
@@ -28,21 +28,24 @@ int main(int argc, char *argv[]){
 
     MPI_Info_free(&info_in);
 
-    printf("%p", file); //Jeder Prozess bekommt eigenes File handle auf File
+    //printf("%p", file); //Jeder Prozess bekommt eigenes File handle auf File
     
-    MPI_File_set_view(file, rank * BUFSIZE * sizeof(int), MPI_INT, MPI_INT, "native", MPI_INFO_NULL);
+    MPI_File_set_view(file, rank * BUFSIZE * sizeof(int), MPI_INT, MPI_INT, "native", info_in);
         
     MPI_File_write(file, buf, BUFSIZE, MPI_INT, MPI_STATUS_IGNORE);
 
     err = MPI_File_get_info( file, &info_used );
+
+    printf("%d\n", err);
+    fflush(stdout);
     
 
-    
+
     MPI_Info_get(info_used, "access_style", 1024, value, &flag);
 
     MPI_Info_free(&info_used);
 
-    printf("%s", value);
+    //printf("%s", value);
 
     
 

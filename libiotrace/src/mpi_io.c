@@ -83,18 +83,18 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
 	get_creation_amode(amode, &open_data.creation);
 	get_status_amode(amode, &open_data.status);
 	//ToDo: get_mode_flags(0, &open_data.file_mode); from MPI_Info parameter
-	// if (MPI_INFO_NULL != info) {
-	// 	int count_elements;
-	// 	int flag;
-	// 	char key[MPI_MAX_INFO_KEY];
-	// 	char value[MPI_MAX_INFO_VAL];
-	// 	MPI_Info_get_nkeys(info, &count_elements);
-	// 	for (int i = 0; i < count_elements; i++) {
-	// 		MPI_Info_get_nthkey(info, i, &key[0]);
-	// 		MPI_Info_get(info, &key[0], MPI_MAX_INFO_VAL-1, &value[0], &flag);
-	// 		printf("key: %s, value: %s\n",key,value);
-	// 	}
-	// }
+	if (MPI_INFO_NULL != info) {
+		int count_elements;
+		int flag;
+		char key[MPI_MAX_INFO_KEY];
+		char value[MPI_MAX_INFO_VAL];
+		MPI_Info_get_nkeys(info, &count_elements);
+		for (int i = 0; i < count_elements; i++) {
+			MPI_Info_get_nthkey(info, i, &key[0]);
+			MPI_Info_get(info, &key[0], MPI_MAX_INFO_VAL-1, &value[0], &flag);
+			printf("key: %s, value: %s\n",key,value);
+		}
+	}
 	open_data.file_mode.execute_by_group = 0;
 	open_data.file_mode.execute_by_others = 0;
 	open_data.file_mode.execute_by_owner = 0;

@@ -386,6 +386,16 @@ JSON_STRUCT_START(open_function)
   JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 
+JSON_STRUCT_START(mpi_open_function)
+  JSON_STRUCT_ENUM(access_mode, mode)
+  JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
+  JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
+  JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_STRUCT(file_id, id)
+  JSON_STRUCT_MALLOC_STRING_ARRAY(file_hints, MAX_MPI_FILE_HINTS, MAX_MPI_FILE_HINT_LENGTH)
+JSON_STRUCT_END
+
 /* struct for file openat */
 JSON_STRUCT_START(openat_function)
   JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
@@ -960,6 +970,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, accept_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, socketpair_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, socket_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_open_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

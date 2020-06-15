@@ -65,26 +65,23 @@ void get_status_amode(const int mode, struct status_flags *sf) {
 	sf->sync = 0;
 }
 
-
-
-int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
-		MPI_Info info, MPI_File *fh) {
+int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
+		MPI_File *fh) {
 	int ret;
 	struct basic data;
 	struct file_mpi file_mpi_data;
 	struct mpi_open_function open_data;
 	WRAP_START(data)
-	
+
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi,
-			file_mpi_data)
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 	open_data.mode = get_access_amode(amode);
 	get_creation_amode(amode, &open_data.creation);
 	get_status_amode(amode, &open_data.status);
-	
+
 	//ToDo: get_mode_flags(0, &open_data.file_mode); from MPI_Info parameter
 	open_data.file_mode.execute_by_group = 0;
 	open_data.file_mode.execute_by_others = 0;
@@ -96,34 +93,34 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
 	open_data.file_mode.write_by_others = 0;
 	open_data.file_mode.write_by_owner = 0;
 
-	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode, info, fh)
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode,
+			info, fh)
 
 	if (MPI_INFO_NULL != info) {
 		int count_elements;
 		int flag;
-		char key[MPI_MAX_INFO_KEY];
-		char value[MPI_MAX_INFO_VAL];
-		char **hints;
+		char *keys[MAX_MPI_FILE_HINTS];
+		char *values[MAX_MPI_FILE_HINTS];
+		char key_strings[MAX_MPI_FILE_HINTS][MAX_MPI_FILE_HINT_LENGTH];
+		char value_strings[MAX_MPI_FILE_HINTS][MAX_MPI_FILE_HINT_LENGTH];
+
 		MPI_Info_get_nkeys(info, &count_elements);
-		hints = malloc(MAX_MPI_FILE_HINTS * (MAX_MPI_FILE_HINT_LENGTH));
-		for (int i = 0; i < count_elements; i++) {
-			MPI_Info_get_nthkey(info, i, &key[0]);
-			MPI_Info_get(info, &key[0], MPI_MAX_INFO_VAL-1, &value[0], &flag);
-			
-			char *current_pos = hints + i*(MAX_MPI_FILE_HINT_LENGTH);
-			strncpy(current_pos, key, MAX_MPI_FILE_HINT_LENGTH);
-			*(current_pos + MAX_MPI_FILE_HINT_LENGTH) = '\0';
-			size_t current_length = strlen(current_pos);
 
-			if(current_length < MAX_MPI_FILE_HINT_LENGTH){
-				*(current_pos + current_length) = ':';
+		if (count_elements < 1) {
+			JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(open_data, file_hints)
+		} else {
+			JSON_STRUCT_INIT_KEY_VALUE_ARRAY(open_data, file_hints, keys,
+					values)
+
+			for (int i = 0; i < count_elements && i < MAX_MPI_FILE_HINTS; i++) {
+				MPI_Info_get_nthkey(info, i, key_strings[i]);
+				MPI_Info_get(info, key_strings[i], MPI_MAX_INFO_VAL - 1,
+						value_strings[i], &flag);
+
+				JSON_STRUCT_ADD_KEY_VALUE(open_data, file_hints, key_strings[i],
+						value_strings[i])
 			}
-
-			strncpy(current_pos + current_length + 1, value, MAX_MPI_FILE_HINT_LENGTH - current_length - 2);
-			
 		}
-
-		JSON_STRUCT_SET_MALLOC_STRING_ARRAY(open_data, file_hints, hints, 0, count_elements)
 	}
 
 	if (-1 == ret) {

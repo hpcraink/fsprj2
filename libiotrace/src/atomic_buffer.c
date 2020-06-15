@@ -88,7 +88,7 @@ void* atomic_buffer_alloc(struct atomic_buffer *buf, size_t size) {
 			return NULL;
 		}
 	} while (!__atomic_compare_exchange_n(&(buf->_current), &old_value,
-			new_value, 0,
+			new_value, 1,
 			__ATOMIC_ACQ_REL /* read and write of buf->_current */,
 			__ATOMIC_ACQUIRE /* read of buf->_current */));
 	/* switch old current position with new one, if (and only if) no other
@@ -133,7 +133,7 @@ void atomic_buffer_free(struct atomic_buffer *buf, void *memory) {
 		/* pointers in one buffer are unique and get only increased
 		 * => no ABA problem */
 	} while (!__atomic_compare_exchange_n(&(buf->_freed), &old_value, new_value,
-			0, __ATOMIC_ACQ_REL /* read and write of buf->_freed */,
+			1, __ATOMIC_ACQ_REL /* read and write of buf->_freed */,
 			__ATOMIC_ACQUIRE /* read of buf->_freed */));
 	/* switch old freed position with new one, if (and only if) no other
 	 * thread has moved the freed position */
@@ -163,7 +163,7 @@ void atomic_buffer_wait_until_freed(struct atomic_buffer *buf,
 		/* pointers in one buffer are unique and get only increased
 		 * => no ABA problem */
 	} while (!__atomic_compare_exchange_n(&(buf->_current), &old_value,
-			new_value, 0,
+			new_value, 1,
 			__ATOMIC_ACQ_REL /* read and write of buf->_current */,
 			__ATOMIC_ACQUIRE /* read of buf->_current */));
 	/* switch old current position with new one, if (and only if) no other

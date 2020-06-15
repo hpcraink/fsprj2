@@ -65,7 +65,7 @@
                                                                            struct_name.array_name = array;
 #define JSON_STRUCT_SET_STRUCT_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
 
-/* mcros for setting key value array */
+/* macros for setting key value array */
 #define JSON_STRUCT_INIT_KEY_VALUE_ARRAY(struct_name, array_name, keys_array, values_array) struct_name.size_##array_name = 0; \
                                                                                             struct_name.keys_##array_name = keys_array; \
                                                                                             struct_name.values_##array_name = values_array;

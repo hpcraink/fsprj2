@@ -8,20 +8,25 @@
 #include "wrapper_defines.h"
 #include "mpi.h"
 
-enum access_mode get_access_amode(int mode) {
-	if (mode & MPI_MODE_RDONLY) {
+enum access_mode get_access_amode(int mode)
+{
+	if (mode & MPI_MODE_RDONLY)
+	{
 		return read_only;
 	}
-	if (mode & MPI_MODE_RDWR) {
+	if (mode & MPI_MODE_RDWR)
+	{
 		return write_only;
 	}
-	if (mode & MPI_MODE_WRONLY) {
+	if (mode & MPI_MODE_WRONLY)
+	{
 		return read_and_write;
 	}
 	return unknown_access_mode;
 }
 
-void get_creation_amode(const int mode, struct creation_flags *cf) {
+void get_creation_amode(const int mode, struct creation_flags *cf)
+{
 	cf->creat = mode & MPI_MODE_CREATE ? 1 : 0;
 	cf->excl = mode & MPI_MODE_EXCL ? 1 : 0;
 #ifdef HAVE_O_CLOEXEC
@@ -40,7 +45,8 @@ void get_creation_amode(const int mode, struct creation_flags *cf) {
 	cf->trunc = 0;
 }
 
-void get_status_amode(const int mode, struct status_flags *sf) {
+void get_status_amode(const int mode, struct status_flags *sf)
+{
 	sf->initial_append = mode & MPI_MODE_APPEND ? 1 : 0;
 	sf->delete_on_close = mode & MPI_MODE_DELETE_ON_CLOSE ? 1 : 0;
 	sf->unique_open = mode & MPI_MODE_UNIQUE_OPEN ? 1 : 0;
@@ -66,11 +72,13 @@ void get_status_amode(const int mode, struct status_flags *sf) {
 }
 
 int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
-		MPI_File *fh) {
+				  MPI_File *fh)
+{
 	int ret;
 	struct basic data;
 	struct file_mpi file_mpi_data;
 	struct mpi_open_function open_data;
+
 	WRAP_START(data)
 
 	get_basic(&data);
@@ -94,9 +102,10 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	open_data.file_mode.write_by_owner = 0;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode,
-			info, fh)
+							   info, fh)
 
-	if (MPI_INFO_NULL != info) {
+	if (MPI_INFO_NULL != info)
+	{
 		int count_elements;
 		int flag;
 		char *keys[MAX_MPI_FILE_HINTS];
@@ -106,28 +115,35 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 
 		MPI_Info_get_nkeys(info, &count_elements);
 
-		if (count_elements < 1) {
+		if (count_elements < 1)
+		{
 			JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(open_data, file_hints)
-		} else {
+		}
+		else
+		{
 			JSON_STRUCT_INIT_KEY_VALUE_ARRAY(open_data, file_hints, keys,
-					values)
+											 values)
 
-			for (int i = 0; i < count_elements && i < MAX_MPI_FILE_HINTS; i++) {
+			for (int i = 0; i < count_elements && i < MAX_MPI_FILE_HINTS; i++)
+			{
 				MPI_Info_get_nthkey(info, i, key_strings[i]);
 				MPI_Info_get(info, key_strings[i], MPI_MAX_INFO_VAL - 1,
-						value_strings[i], &flag);
+							 value_strings[i], &flag);
 
 				JSON_STRUCT_ADD_KEY_VALUE(open_data, file_hints, key_strings[i],
-						value_strings[i])
+										  value_strings[i])
 			}
 		}
 	}
 
-	if (-1 == ret) {
+	if (ret != MPI_SUCCESS)
+	{
 		data.return_state = error;
 		open_data.id.device_id = 0;
 		open_data.id.inode_nr = 0;
-	} else {
+	}
+	else
+	{
 		data.return_state = ok;
 		get_file_id_by_path(filename, &(open_data.id));
 	}
@@ -135,5 +151,27 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	file_mpi_data.mpi_file = fh;
 
 	WRAP_END(data)
+
 	return ret;
 }
+
+
+
+// int MPI_File_write(MPI_File *fh, void *buf, int count, MPI_Status *status)
+// {
+// 	//Todo: Error state handling 
+
+
+// 	int ret;
+// 	struct basic data;
+// 	struct file_mpi file_mpi_data;
+
+
+
+// 	WRAP_START(data)
+// 	get_basic(&data);
+
+
+// 	WRAP_END(data)
+// 	return ret;
+// }

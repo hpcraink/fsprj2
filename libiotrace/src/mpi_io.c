@@ -155,23 +155,38 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	return ret;
 }
 
+int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
+{
+	//Todo: Error state handling
 
+	int ret;
+	struct basic data;
+	struct write_function write_data;
+	struct file_mpi file_mpi_data;
+	int datatype_size;
 
-// int MPI_File_write(MPI_File *fh, void *buf, int count, MPI_Status *status)
-// {
-// 	//Todo: Error state handling 
+	WRAP_START(data)
 
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-// 	int ret;
-// 	struct basic data;
-// 	struct file_mpi file_mpi_data;
+	file_mpi_data.mpi_file = &fh;
+	MPI_Type_size(datatype, &datatype_size);
+	write_data.written_bytes = datatype_size * count;
 
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_write, fh, buf, count, datatype, status)
 
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+	}
+	else
+	{
+		data.return_state = ok;
+	}
 
-// 	WRAP_START(data)
-// 	get_basic(&data);
-
-
-// 	WRAP_END(data)
-// 	return ret;
-// }
+	WRAP_END(data)
+	return ret;
+}

@@ -16,4 +16,6 @@ BEGIN_C_DECLS
 
 extern pid_t iotrace_gettid();
 
+extern size_t cache_line_size();
+
 END_C_DECLS

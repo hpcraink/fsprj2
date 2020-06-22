@@ -4,6 +4,8 @@
 #include <time.h>
 //#include <stdalign.h>
 
+#include "os.h"
+
 #ifdef ATOMIC_BUFFER_TEST
     /**
      * 0: wait point reached or leaved
@@ -43,13 +45,37 @@
 #endif
 
 #define ATOMIC_BUFFER_PREFIX_SIZE sizeof(struct atomic_buffer_prefix)
-/* TODO: alignment of ATOMIC_BUFFER_PREFIX_SIZE */
+
+#ifdef ATOMIC_BUFFER_CACHE_ALIGNED
+/**
+ * Holds length of cache line once per process (or 0 if no call to
+ * atomic_buffer_create() has read this system information).
+ */
+static size_t line_size = 0;
+#endif
 
 int atomic_buffer_create(struct atomic_buffer *buf, size_t size) {
+#ifdef ATOMIC_BUFFER_CACHE_ALIGNED
+	int ret;
+	size_t tmp_line_size;
+
+	if (__atomic_load_n(&line_size, __ATOMIC_ACQUIRE) < 1) {
+		tmp_line_size = cache_line_size();
+		__atomic_store_n(&line_size, tmp_line_size, __ATOMIC_RELEASE);
+	}
+	/* start address of buffer must be aligned to start of a cache line */
+	ret = posix_memalign(&(buf->_start), line_size, size);
+	/* TODO: check for posix_memalign in cmake */
+	if (0 != ret) {
+		buf->_start = NULL;
+		return ret;
+	}
+#else
 	buf->_start = malloc(size);
 	if (buf->_start == NULL) {
 		return -1;
 	}
+#endif
 
 	buf->_end = (char*) buf->_start + size;
 	buf->_current = buf->_start;
@@ -72,8 +98,13 @@ void* atomic_buffer_alloc(struct atomic_buffer *buf, size_t size) {
 	 * free the memory) */
 	tmp_size = size + ATOMIC_BUFFER_PREFIX_SIZE;
 
-	/* TODO: calculate alignment: padding to align to max_align_t ? */
-	//size += ???;
+#ifdef ATOMIC_BUFFER_CACHE_ALIGNED
+	/* add padding to reserved memory (so next call of function
+	 * returns start address of a new cache line) */
+	tmp_size = (tmp_size + line_size - 1) & -line_size;
+	size = tmp_size - ATOMIC_BUFFER_PREFIX_SIZE;
+#endif
+
 	/* change buf->_current with an atomic instruction */
 	old_value = __atomic_load_n(&(buf->_current), __ATOMIC_ACQUIRE);
 	ATOMIC_BUFFER_TEST_WAIT(1);
@@ -190,8 +221,7 @@ void atomic_buffer_wait_until_freed(struct atomic_buffer *buf,
 	 * reuse and especially free is not without risk) */
 }
 
-void atomic_buffer_destroy(struct atomic_buffer *buf,
-		long sleep_nanoseconds) {
+void atomic_buffer_destroy(struct atomic_buffer *buf, long sleep_nanoseconds) {
 	atomic_buffer_wait_until_freed(buf, sleep_nanoseconds);
 
 	/* at this point some threads could be stalled in
@@ -206,8 +236,7 @@ void atomic_buffer_destroy(struct atomic_buffer *buf,
 	free(__atomic_load_n(&(buf->_start), __ATOMIC_ACQUIRE));
 }
 
-void atomic_buffer_reuse(struct atomic_buffer *buf,
-		long sleep_nanoseconds) {
+void atomic_buffer_reuse(struct atomic_buffer *buf, long sleep_nanoseconds) {
 	void *tmp_start;
 
 	atomic_buffer_wait_until_freed(buf, sleep_nanoseconds);

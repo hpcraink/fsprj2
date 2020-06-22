@@ -133,9 +133,16 @@ struct atomic_buffer_prefix {
  * already using "buf" are working properly (see
  * atomic_buffer_destroy()).
  *
- * @param[out] buf        pointer to a struct for holding the new buffer
+ * @param[out] buf        pointer to a struct for holding the
+ *                        new buffer
  * @param[in]  size       length in bytes of the new buffer
- * @return 0 on success, -1 if an error occurred (check errno for ENOMEM Out of memory)
+ * @return 0 on success, -1 if an error occurred and macro
+ *         ATOMIC_BUFFER_CACHE_ALIGNED was not defined
+ *         (check errno for ENOMEM Out of memory) or an error
+ *         value if an error occured and macro
+ *         ATOMIC_BUFFER_CACHE_ALIGNED was defined (check
+ *         return for EINVAL or ENOMEM, see posix_memalign
+ *         function)
  */
 int atomic_buffer_create(struct atomic_buffer *buf, size_t size)
 		__attribute__((nonnull));

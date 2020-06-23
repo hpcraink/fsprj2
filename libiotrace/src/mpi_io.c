@@ -79,7 +79,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	struct file_mpi file_mpi_data;
 	struct mpi_open_function open_data;
 
-	WRAP_START(data)
+	WRAP_MPI_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_open_function, open_data)
@@ -139,18 +139,19 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
 		open_data.id.device_id = 0;
 		open_data.id.inode_nr = 0;
+		file_mpi_data.mpi_file = NULL;
 	}
 	else
 	{
 		data.return_state = ok;
 		get_file_id_by_path(filename, &(open_data.id));
+		file_mpi_data.mpi_file = fh;
 	}
 
-	file_mpi_data.mpi_file = fh;
-
-	WRAP_END(data)
+	WRAP_MPI_END(data)
 
 	return ret;
 }
@@ -165,7 +166,7 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	struct file_mpi file_mpi_data;
 	int datatype_size;
 
-	WRAP_START(data)
+	WRAP_MPI_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
@@ -181,12 +182,13 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
+		SET_MPI_ERROR(ret, status)
 	}
 	else
 	{
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_MPI_END(data)
 	return ret;
 }

@@ -61,6 +61,9 @@
 #else
 #  define __ERROR_FUNCTION(data) errno_data.errno_text = strerror_r(errno_data.errno_value, tmp_errno_text, MAX_ERROR_TEXT);
 #endif
+#define MPI_ERROR_FUNCTION(data) int tmp_len_errno_string; \
+                                 MPI_Error_string(errno_data.errno_value, tmp_errno_text, &tmp_len_errno_string); \
+                                 errno_data.errno_text = tmp_errno_text;
 
 #define GET_ERRNO(data) {char tmp_errno_text[MAX_ERROR_TEXT]; \
                          if (error == data.return_state && 0 != errno_data.errno_value) { \
@@ -69,6 +72,13 @@
                          } else { \
                              data.return_state_detail = NULL; \
                          }} while(0);
+#define GET_MPI_ERRNO(data) {char tmp_errno_text[MPI_MAX_ERROR_STRING]; \
+                             if (error == data.return_state && MPI_SUCCESS != errno_data.errno_value) { \
+                                 MPI_ERROR_FUNCTION(data) \
+                                 data.return_state_detail = &errno_data; \
+                             } else { \
+                                 data.return_state_detail = NULL; \
+                             }} while(0);
 #ifdef IO_LIB_STATIC
 #  define CALL_REAL_FUNCTION_RET(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET(data, return_value, function, __VA_ARGS__)
 #  define CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, __VA_ARGS__)
@@ -107,10 +117,15 @@
                                                             errno_data.errno_value = errno; \
                                                             abort();
 #define CALL_REAL_MPI_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
-                                                                      errno = errno_data.errno_value; \
+                                                                      errno = errno_value; \
                                                                       return_value = P##function(__VA_ARGS__); \
-                                                                      errno_data.errno_value = errno; \
+                                                                      errno_value = errno; \
                                                                       data.time_end = gettime();
+#define SET_MPI_ERROR(errno, status) if (MPI_ERR_IN_STATUS == errno && MPI_STATUS_IGNORE != status) { \
+                                         errno_data.errno_value = status->MPI_ERROR; \
+                                     } else { \
+                                         errno_data.errno_value = errno; \
+                                     }
 #ifdef LOG_WRAPPER_TIME
 #  define WRAPPER_TIME_START(data) data.wrapper.time_start = gettime();
 #  define WRAPPER_TIME_END(data) data.wrapper.time_end = gettime();
@@ -125,6 +140,14 @@
                              init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
                                            /* init_basic() must be called first */ \
                          }
+#define WRAP_MPI_START(data) int errno_value; \
+                             struct errno_detail errno_data; \
+                             errno_value = errno; \
+                             WRAPPER_TIME_START(data) \
+                             if (!init_done) { \
+                                 init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                               /* init_basic() must be called first */ \
+                             }
 //ToDo: use kcmp() with KCMP_FILE as type to check if file descriptor is STDIN_FILENO, STDOUT_FILENO or STDERR_FILENO
 //kcmp() is linux-specific! But without kcmp() a duped descriptor will not be recognized! That will lead to problems by following analysis of written data!
 //ToDo: check for which file_type should not be written instead of which should be written
@@ -154,6 +177,10 @@
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
+#define WRAP_MPI_END(data) GET_MPI_ERRNO(data) \
+                           writeData(&data); \
+                           WRAP_FREE(&data) \
+                           errno = errno_value;
 
 #define WRAP_END_WITHOUT_WRITE(data) WRAP_FREE(&data) \
                                      errno = errno_data.errno_value;

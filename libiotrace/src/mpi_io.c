@@ -104,6 +104,8 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode,
 							   info, fh)
 
+	JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(open_data, file_hints)
+
 	if (MPI_INFO_NULL != info)
 	{
 		int count_elements;
@@ -115,11 +117,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 
 		MPI_Info_get_nkeys(info, &count_elements);
 
-		if (count_elements < 1)
-		{
-			JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(open_data, file_hints)
-		}
-		else
+		if (count_elements >= 1)
 		{
 			JSON_STRUCT_INIT_KEY_VALUE_ARRAY(open_data, file_hints, keys,
 											 values)
@@ -225,3 +223,4 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	WRAP_END(data)
 	return ret;
 }
+

@@ -202,7 +202,7 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	struct file_mpi file_mpi_data;
 	int datatype_size;
 
-	WRAP_START(data)
+	WRAP_MPI_START(data)
 
 	get_basic(&data);
 	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
@@ -218,12 +218,13 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
+		SET_MPI_ERROR(ret, status)
 	}
 	else
 	{
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_MPI_END(data)
 	return ret;
 }

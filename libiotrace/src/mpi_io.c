@@ -190,3 +190,38 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	WRAP_END(data)
 	return ret;
 }
+
+int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
+{
+
+	int ret;
+	struct basic data;
+	struct read_function read_data;
+	struct file_mpi file_mpi_data;
+	int datatype_size;
+
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+	file_mpi_data.mpi_file = &fh;
+	MPI_Type_size(datatype, &datatype_size);
+	read_data.read_bytes = datatype_size * count;
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_read, fh, buf, count, datatype, status)
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+	}
+	else
+	{
+		data.return_state = ok;
+	}
+
+	WRAP_END(data)
+	return ret;
+}

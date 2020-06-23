@@ -227,3 +227,37 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	return ret;
 }
 
+int MPI_File_close(MPI_File *fh){
+
+	int ret;
+	struct basic data;
+	struct file_mpi file_mpi_data;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+	file_mpi_data.mpi_file = &fh;
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_close, fh)
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+	}
+	else
+	{
+		data.return_state = ok;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+
+}
+
+
+
+
+

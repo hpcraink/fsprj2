@@ -140,13 +140,13 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
 		open_data.id.device_id = 0;
 		open_data.id.inode_nr = 0;
-		file_mpi_data.mpi_file = NULL;
+		file_mpi_data.mpi_file = 0;
 	}
 	else
 	{
 		data.return_state = ok;
 		get_file_id_by_path(filename, &(open_data.id));
-		file_mpi_data.mpi_file = fh;
+		file_mpi_data.mpi_file = MPI_File_c2f(*fh);
 	}
 
 	WRAP_MPI_END(data)
@@ -171,7 +171,7 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	file_mpi_data.mpi_file = &fh;
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
 	write_data.written_bytes = datatype_size * count;
 
@@ -207,7 +207,7 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	file_mpi_data.mpi_file = &fh;
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
 	read_data.read_bytes = datatype_size * count;
 
@@ -240,7 +240,7 @@ int MPI_File_close(MPI_File *fh){
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	file_mpi_data.mpi_file = fh;
+	file_mpi_data.mpi_file = MPI_File_c2f(*fh);
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_close, fh)
 

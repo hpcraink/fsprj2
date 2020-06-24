@@ -236,16 +236,18 @@ int MPI_File_close(MPI_File *fh){
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	file_mpi_data.mpi_file = &fh;
+	file_mpi_data.mpi_file = fh;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_close, fh)
 
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
 	}
 	else
 	{

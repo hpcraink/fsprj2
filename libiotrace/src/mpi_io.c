@@ -205,6 +205,7 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
+		write_data.written_bytes = 0;
 		SET_MPI_ERROR(ret, status)
 	}
 	else
@@ -255,6 +256,7 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
+		read_data.read_bytes = 0;
 		SET_MPI_ERROR(ret, status)
 	}
 	else
@@ -337,39 +339,51 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 
 }
 
-// int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count, MPI_Datatype datatype, MPI_Status *status){
+int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count, MPI_Datatype datatype, MPI_Status *status){
 
-// 	int ret;
-// 	struct basic data;
-// 	struct file_mpi file_mpi_data;
-// 	struct pwrite_function pwrite_function_data;
+	int ret;
+	struct basic data;
+	struct file_mpi file_mpi_data;
+	struct pwrite_function pwrite_function_data;
+	MPI_Status own_status;
+	char own_status_used = 0;
+	int get_count;
 
-// 	WRAP_MPI_START(data)
+	WRAP_MPI_START(data)
 
-// 	get_basic(&data);
-// 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
-// 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-// 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-// 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
-// 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_write_at, fh, offset, buf, count, datatype, status)
+	if(MPI_STATUS_IGNORE == status){
+		
+		status = &own_status;
+		own_status_used = 1;
+	}
 
-// 	pwrite_function_data.position = offset;
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_write_at, fh, offset, buf, count, datatype, status)
 
-// 	if (ret != MPI_SUCCESS)
-// 	{
-// 		data.return_state = error;
-// 		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
-// 	}
-// 	else
-// 	{
-// 		data.return_state = ok;
-// 	}
+	pwrite_function_data.position = offset;
 
-// 	WRAP_MPI_END(data)
-// 	return ret;
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		pwrite_function_data.written_bytes = 0;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+		MPI_Get_count(status, datatype, &get_count);
+		pwrite_function_data.written_bytes = datatype_size * get_count;
+	}
 
-// }
+	WRAP_MPI_END(data)
+	return ret;
+
+}
 
 

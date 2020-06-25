@@ -177,6 +177,9 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	struct write_function write_data;
 	struct file_mpi file_mpi_data;
 	int datatype_size;
+	char own_status_used = 0;
+	MPI_Status own_status;
+	int get_count;
 
 	WRAP_MPI_START(data)
 
@@ -187,9 +190,17 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
-	write_data.written_bytes = datatype_size * count;
+	
+
+
+	if(MPI_STATUS_IGNORE == status){
+		
+		status = &own_status;
+		own_status_used = 1;
+	}
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_write, fh, buf, count, datatype, status)
+
 
 	if (ret != MPI_SUCCESS)
 	{
@@ -199,8 +210,14 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	else
 	{
 		data.return_state = ok;
+		MPI_Get_count(status, datatype, &get_count);
+		write_data.written_bytes = datatype_size * get_count;
+		
 	}
 
+	if(own_status_used){
+		status = MPI_STATUS_IGNORE;
+	}
 	WRAP_MPI_END(data)
 	return ret;
 }
@@ -307,4 +324,42 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 
 	WRAP_MPI_END(data)
 	return ret;
+
 }
+
+// int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count, MPI_Datatype datatype, MPI_Status *status){
+
+// 	int ret;
+// 	struct basic data;
+// 	struct file_mpi file_mpi_data;
+// 	struct pwrite_function pwrite_function_data;
+
+// 	WRAP_MPI_START(data)
+
+// 	get_basic(&data);
+// 	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
+// 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+// 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+// 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+
+// 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_write_at, fh, offset, buf, count, datatype, status)
+
+// 	pwrite_function_data.position = offset;
+
+// 	if (ret != MPI_SUCCESS)
+// 	{
+// 		data.return_state = error;
+// 		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+// 	}
+// 	else
+// 	{
+// 		data.return_state = ok;
+// 	}
+
+// 	WRAP_MPI_END(data)
+// 	return ret;
+
+// }
+
+

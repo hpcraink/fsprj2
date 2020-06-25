@@ -397,6 +397,7 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 	MPI_Status own_status;
 	char own_status_used = 0;
 	int get_count;
+	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -406,6 +407,7 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+	MPI_Type_size(datatype, &datatype_size);
 
 	if (MPI_STATUS_IGNORE == status)
 	{

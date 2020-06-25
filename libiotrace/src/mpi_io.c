@@ -71,6 +71,20 @@ void get_status_amode(const int mode, struct status_flags *sf)
 	sf->sync = 0;
 }
 
+enum seek_where get_seek_where_mpi(int whence) {
+	switch (whence) {
+	case MPI_SEEK_SET:
+		return beginning_of_file;
+	case MPI_SEEK_CUR:
+		return current_position;
+	case MPI_SEEK_END:
+		return end_of_file;
+
+	default:
+		return unknown_seek_where;
+	}
+}
+
 int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 				  MPI_File *fh)
 {
@@ -227,7 +241,8 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	return ret;
 }
 
-int MPI_File_close(MPI_File *fh){
+int MPI_File_close(MPI_File *fh)
+{
 
 	int ret;
 	struct basic data;
@@ -256,10 +271,40 @@ int MPI_File_close(MPI_File *fh){
 
 	WRAP_MPI_END(data)
 	return ret;
-
 }
 
+int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
+{
 
+	int ret;
+	struct basic data;
+	struct file_mpi file_mpi_data;
+	struct positioning_function positioning_function_data;
 
+	WRAP_MPI_START(data)
 
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_seek, fh, offset, whence)
+
+	positioning_function_data.offset = offset;
+	positioning_function_data.relative_to = get_seek_where_mpi(whence);
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+};

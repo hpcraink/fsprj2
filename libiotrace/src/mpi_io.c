@@ -317,7 +317,7 @@ int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, 
 	WRAP_MPI_END(data)
 	return ret;
 }
-}
+
 
 int MPI_File_close(MPI_File *fh)
 {

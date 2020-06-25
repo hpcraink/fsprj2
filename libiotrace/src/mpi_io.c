@@ -307,4 +307,4 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 
 	WRAP_MPI_END(data)
 	return ret;
-};
+}

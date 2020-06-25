@@ -230,6 +230,9 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	struct read_function read_data;
 	struct file_mpi file_mpi_data;
 	int datatype_size;
+	MPI_Status own_status;
+	char own_status_used = 0;
+	int get_count;
 
 	WRAP_MPI_START(data)
 
@@ -240,7 +243,12 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
-	read_data.read_bytes = datatype_size * count;
+
+	if(MPI_STATUS_IGNORE == status){
+		
+		status = &own_status;
+		own_status_used = 1;
+	}
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_read, fh, buf, count, datatype, status)
 
@@ -252,6 +260,8 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	else
 	{
 		data.return_state = ok;
+		MPI_Get_count(status, datatype, &get_count);
+		read_data.read_bytes = datatype_size * get_count;
 	}
 
 	WRAP_MPI_END(data)

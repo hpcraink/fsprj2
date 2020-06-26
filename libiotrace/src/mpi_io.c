@@ -338,12 +338,12 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-    mpi_immediate_data.request_id = MPI_Request_c2f(*request);
+	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
 	mpi_immediate_data.datatype_size = datatype_size;
 
-	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iread, xxxxxxx)
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iread, fh, buf, count, datatype, request)
 
 	if (ret != MPI_SUCCESS)
 	{
@@ -353,7 +353,6 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 	else
 	{
 		data.return_state = ok;
-		
 	}
 
 	WRAP_MPI_END(data)
@@ -519,6 +518,54 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 		data.return_state = ok;
 		MPI_Get_count(status, datatype, &get_count);
 		pwrite_function_data.written_bytes = datatype_size * get_count;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+}
+
+int MPI_Wait(MPI_Request *request, MPI_Status *status)
+{
+
+	int ret;
+	struct basic data;
+	struct request_mpi request_mpi_data;
+	struct mpi_wait mpi_wait_data;
+	
+	MPI_Status own_status;
+	char own_status_used = 0;
+	int get_count;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_wait, mpi_wait_data)
+	
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, request_mpi, request_mpi_data)
+
+	request_mpi_data.request_id = MPI_Request_c2f(*request);
+
+	if (MPI_STATUS_IGNORE == status)
+	{
+
+		status = &own_status;
+		own_status_used = 1;
+	}
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_Wait, request, status)
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		mpi_wait_data.count_datatypes = 0;
+		SET_MPI_ERROR(ret, status)
+	}
+	else
+	{
+		data.return_state = ok;
+		MPI_Get_count(status, MPI_DATATYPE_NULL, &get_count); //geht vermutlich nicht
+		mpi_wait_data.count_datatypes = get_count;
 	}
 
 	WRAP_MPI_END(data)

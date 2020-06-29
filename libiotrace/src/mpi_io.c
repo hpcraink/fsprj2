@@ -172,8 +172,6 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 
 int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
 {
-	//Todo: Error state handling
-
 	int ret;
 	struct basic data;
 	struct write_function write_data;
@@ -564,7 +562,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 	else
 	{
 		data.return_state = ok;
-		MPI_Get_count(status, MPI_DATATYPE_NULL, &get_count); //geht vermutlich nicht
+		MPI_Get_count(status, MPI_BYTE, &get_count); //geht vermutlich nicht
 		mpi_wait_data.count_datatypes = get_count;
 	}
 

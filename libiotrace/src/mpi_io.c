@@ -819,6 +819,44 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 	return ret;
 }
 
+int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int count, MPI_Datatype datatype, MPI_Request *request)
+{
+	int ret;
+	struct basic data;
+	struct mpi_immediate_at mpi_immediate_at_data;
+	struct file_mpi file_mpi_data;
+	int datatype_size;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+	MPI_Type_size(datatype, &datatype_size);
+	mpi_immediate_at_data.datatype_size = datatype_size;
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iwrite_at_all, fh, offset, buf, count, datatype, request)
+
+	mpi_immediate_at_data.position = offset;
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+}
+
 int MPI_Wait(MPI_Request *request, MPI_Status *status)
 {
 

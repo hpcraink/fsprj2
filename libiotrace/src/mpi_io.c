@@ -929,6 +929,39 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int 
 	return ret;
 }
 
+int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
+{
+	int ret;
+	struct basic data;
+	struct file_mpi file_mpi_data;
+	int datatype_size;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+	
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_read_all_begin, fh, buf, count, datatype)
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+}
+
 int MPI_Wait(MPI_Request *request, MPI_Status *status)
 {
 

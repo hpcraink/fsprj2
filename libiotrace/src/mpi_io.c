@@ -654,3 +654,70 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 	WRAP_MPI_END(data)
 	return ret;
 }
+
+int MPI_File_delete(const char *filename, MPI_Info info)
+{
+	int ret;
+	struct basic data;
+	struct mpi_delete_function mpi_delete_data;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_delete_function, mpi_delete_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	mpi_delete_data.file_name = filename;
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_delete, filename, info)
+
+	JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(mpi_delete_data, file_hints)
+
+	if (MPI_INFO_NULL != info)
+	{
+		int count_elements;
+		int flag;
+		char *keys[MAX_MPI_FILE_HINTS];
+		char *values[MAX_MPI_FILE_HINTS];
+		char key_strings[MAX_MPI_FILE_HINTS][MAX_MPI_FILE_HINT_LENGTH];
+		char value_strings[MAX_MPI_FILE_HINTS][MAX_MPI_FILE_HINT_LENGTH];
+
+		MPI_Info_get_nkeys(info, &count_elements);
+
+		if (count_elements >= 1)
+		{
+			JSON_STRUCT_INIT_KEY_VALUE_ARRAY(mpi_delete_data, file_hints, keys,
+											 values)
+
+			for (int i = 0; i < count_elements && i < MAX_MPI_FILE_HINTS; i++)
+			{
+				MPI_Info_get_nthkey(info, i, key_strings[i]);
+				MPI_Info_get(info, key_strings[i], MPI_MAX_INFO_VAL - 1,
+							 value_strings[i], &flag);
+
+				JSON_STRUCT_ADD_KEY_VALUE(mpi_delete_data, file_hints, key_strings[i],
+										  value_strings[i])
+			}
+		}
+	}
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+		mpi_delete_data.id.device_id = 0;
+		mpi_delete_data.id.inode_nr = 0;
+		
+	}
+	else
+	{
+		data.return_state = ok;
+		get_file_id_by_path(filename, &(mpi_delete_data.id));
+		
+	}
+
+	WRAP_MPI_END(data)
+
+	return ret;
+}

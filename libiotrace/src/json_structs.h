@@ -896,6 +896,13 @@ JSON_STRUCT_START(mpi_immediate)
 JSON_STRUCT_END
 
 /* struct for dataype size */
+JSON_STRUCT_START(mpi_immediate_at)
+  JSON_STRUCT_SIZE_T(datatype_size)
+  JSON_STRUCT_INT(request_id)
+  JSON_STRUCT_OFF_T(position)
+JSON_STRUCT_END
+
+/* struct for dataype size */
 JSON_STRUCT_START(mpi_wait)
   JSON_STRUCT_INT(count_datatypes)
 JSON_STRUCT_END
@@ -999,6 +1006,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_wait)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_delete_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate_at)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

@@ -607,6 +607,55 @@ int MPI_File_read_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_D
 	return ret;
 }
 
+int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
+{
+	int ret;
+	struct basic data;
+	struct file_mpi file_mpi_data;
+	struct pread_function pread_function_data;
+	MPI_Status own_status;
+	char own_status_used = 0;
+	int get_count;
+	int datatype_size;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+	MPI_Type_size(datatype, &datatype_size);
+
+	if (MPI_STATUS_IGNORE == status)
+	{
+
+		status = &own_status;
+		own_status_used = 1;
+	}
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_read_at_all, fh, offset, buf, count, datatype, status)
+
+	pread_function_data.position = offset;
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		pread_function_data.read_bytes = 0;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+		MPI_Get_count(status, datatype, &get_count);
+		pread_function_data.read_bytes = datatype_size * get_count;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+}
+
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype, MPI_Request *request)
 {
 	int ret;

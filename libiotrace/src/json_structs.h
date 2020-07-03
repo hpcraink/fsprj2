@@ -907,10 +907,15 @@ JSON_STRUCT_START(mpi_wait)
   JSON_STRUCT_INT(count_bytes)
 JSON_STRUCT_END
 
-JSON_STRUCT_START(mpi_waitall)
+JSON_STRUCT_START(mpi_waitall_element)
   JSON_STRUCT_INT(count_bytes)
   JSON_STRUCT_INT(request_id)
+  JSON_STRUCT_ENUM(read_write_state, return_state)
   JSON_STRUCT_STRUCT_P(errno_detail, return_state_detail)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(mpi_waitall)
+  JSON_STRUCT_STRUCT_ARRAY(mpi_waitall_element, requests, MAX_MPI_IMESSAGES)
 JSON_STRUCT_END
 
 

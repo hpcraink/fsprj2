@@ -388,6 +388,11 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 		read_data.read_bytes = datatype_size * get_count;
 	}
 
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
+	}
+
 	WRAP_MPI_END(data)
 	return ret;
 }
@@ -508,6 +513,11 @@ int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, 
 		read_data.read_bytes = datatype_size * get_count;
 	}
 
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
+	}
+
 	WRAP_MPI_END(data)
 	return ret;
 }
@@ -626,6 +636,11 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 		pwrite_function_data.written_bytes = datatype_size * get_count;
 	}
 
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
+	}
+
 	WRAP_MPI_END(data)
 	return ret;
 }
@@ -673,6 +688,11 @@ int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int c
 		data.return_state = ok;
 		MPI_Get_count(status, datatype, &get_count);
 		pwrite_function_data.written_bytes = datatype_size * get_count;
+	}
+
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
 	}
 
 	WRAP_MPI_END(data)
@@ -724,6 +744,11 @@ int MPI_File_read_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_D
 		pread_function_data.read_bytes = datatype_size * get_count;
 	}
 
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
+	}
+
 	WRAP_MPI_END(data)
 	return ret;
 }
@@ -771,6 +796,11 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, M
 		data.return_state = ok;
 		MPI_Get_count(status, datatype, &get_count);
 		pread_function_data.read_bytes = datatype_size * get_count;
+	}
+
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
 	}
 
 	WRAP_MPI_END(data)
@@ -944,7 +974,6 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_read_all_begin, fh, buf, count, datatype)
 
@@ -960,6 +989,11 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 
 	WRAP_MPI_END(data)
 	return ret;
+}
+
+int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status)
+{
+	//TODO
 }
 
 int MPI_Wait(MPI_Request *request, MPI_Status *status)
@@ -996,14 +1030,101 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
-		mpi_wait_data.count_datatypes = 0;
+		mpi_wait_data.count_bytes = 0;
 		SET_MPI_ERROR(ret, status)
 	}
 	else
 	{
 		data.return_state = ok;
-		MPI_Get_count(status, MPI_BYTE, &get_count); //geht vermutlich nicht
-		mpi_wait_data.count_datatypes = get_count;
+		MPI_Get_count(status, MPI_BYTE, &get_count);
+		mpi_wait_data.count_bytes = get_count;
+	}
+
+	if (own_status_used)
+	{
+		status = MPI_STATUS_IGNORE;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+}
+
+int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[])
+{
+
+	int ret;
+	struct basic data;
+	struct mpi_waitall mpi_waitall_data;
+
+	struct mpi_waitall_element mpi_waitall_element_data[MAX_MPI_IMESSAGES];
+	struct mpi_waitall_element *mpi_waitall_element_data_pointer[MAX_MPI_IMESSAGES];
+
+	struct errno_detail request_errno_data[MAX_MPI_IMESSAGES];
+
+	MPI_Status own_status[MAX_MPI_IMESSAGES];
+	char own_status_used = 0;
+	int get_count;
+	char tmp_errno_text[MAX_MPI_IMESSAGES][MPI_MAX_ERROR_STRING];
+	int tmp_len_errno_string;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_waitall, mpi_waitall_data)
+
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	if (MPI_STATUSES_IGNORE == array_of_statuses)
+	{
+		array_of_statuses = own_status;
+		own_status_used = 1;
+	}
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_Waitall, count, array_of_requests, array_of_statuses)
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		JSON_STRUCT_SET_STRUCT_ARRAY_NULL(mpi_waitall_data, requests)
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+
+		for (int i = 0; i < count; i++)
+		{
+
+			if (array_of_statuses[i].MPI_ERROR != MPI_SUCCESS)
+			{
+				mpi_waitall_element_data[i].return_state = error;
+				mpi_waitall_element_data[i].request_id = MPI_Request_c2f(array_of_requests[i]);
+				mpi_waitall_element_data[i].count_bytes = 0;
+				request_errno_data[i].errno_value = array_of_statuses[i].MPI_ERROR;
+				MPI_Error_string(request_errno_data[i].errno_value, tmp_errno_text[i], &tmp_len_errno_string);
+				request_errno_data[i].errno_text = tmp_errno_text[i];
+				mpi_waitall_element_data[i].return_state_detail = &(request_errno_data[i]);
+			}
+
+			else
+			{
+				mpi_waitall_element_data[i].request_id = MPI_Request_c2f(array_of_requests[i]);
+				mpi_waitall_element_data[i].count_bytes = MPI_Get_count(&array_of_statuses[i], MPI_BYTE, &get_count);
+				mpi_waitall_element_data[i].return_state_detail = NULL;
+				mpi_waitall_element_data[i].return_state = ok;
+			}
+
+			mpi_waitall_element_data_pointer[i] = &(mpi_waitall_element_data[i]);
+		}
+
+		JSON_STRUCT_SET_STRUCT_ARRAY(mpi_waitall_data, requests, mpi_waitall_element_data_pointer,
+									 count)
+	}
+
+	if (own_status_used)
+	{
+		array_of_statuses = MPI_STATUSES_IGNORE;
 	}
 
 	WRAP_MPI_END(data)

@@ -236,12 +236,11 @@ int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype dataty
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iwrite, fh, buf, count, datatype, request)
+
+	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 
 	if (ret != MPI_SUCCESS)
 	{
@@ -272,12 +271,11 @@ int MPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype da
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iwrite_all, fh, buf, count, datatype, request)
+
+	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 
 	if (ret != MPI_SUCCESS)
 	{
@@ -413,12 +411,11 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iread, fh, buf, count, datatype, request)
+
+	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 
 	if (ret != MPI_SUCCESS)
 	{
@@ -449,12 +446,11 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iread_all, fh, buf, count, datatype, request)
+
+	mpi_immediate_data.request_id = MPI_Request_c2f(*request);
 
 	if (ret != MPI_SUCCESS)
 	{
@@ -822,12 +818,11 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_at_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iread_at, fh, offset, buf, count, datatype, request)
+
+	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 
 	mpi_immediate_at_data.position = offset;
 
@@ -860,12 +855,11 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, 
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_at_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iread_at_all, fh, offset, buf, count, datatype, request)
+
+	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 
 	mpi_immediate_at_data.position = offset;
 
@@ -898,12 +892,11 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_at_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iwrite_at, fh, offset, buf, count, datatype, request)
+
+	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 
 	mpi_immediate_at_data.position = offset;
 
@@ -936,12 +929,11 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int 
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
-	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
-	MPI_Type_size(datatype, &datatype_size);
-	mpi_immediate_at_data.datatype_size = datatype_size;
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_iwrite_at_all, fh, offset, buf, count, datatype, request)
+
+	mpi_immediate_at_data.request_id = MPI_Request_c2f(*request);
 
 	mpi_immediate_at_data.position = offset;
 
@@ -989,11 +981,6 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 
 	WRAP_MPI_END(data)
 	return ret;
-}
-
-int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status)
-{
-	//TODO
 }
 
 int MPI_Wait(MPI_Request *request, MPI_Status *status)
@@ -1081,6 +1068,11 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 		own_status_used = 1;
 	}
 
+	for (int i = 0; i < count; i++)
+	{
+		mpi_waitall_element_data[i].request_id = MPI_Request_c2f(array_of_requests[i]);
+	}
+
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_Waitall, count, array_of_requests, array_of_statuses)
 
 	if (ret != MPI_SUCCESS)
@@ -1099,7 +1091,6 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 			if (array_of_statuses[i].MPI_ERROR != MPI_SUCCESS)
 			{
 				mpi_waitall_element_data[i].return_state = error;
-				mpi_waitall_element_data[i].request_id = MPI_Request_c2f(array_of_requests[i]);
 				mpi_waitall_element_data[i].count_bytes = 0;
 				request_errno_data[i].errno_value = array_of_statuses[i].MPI_ERROR;
 				MPI_Error_string(request_errno_data[i].errno_value, tmp_errno_text[i], &tmp_len_errno_string);
@@ -1109,8 +1100,8 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 
 			else
 			{
-				mpi_waitall_element_data[i].request_id = MPI_Request_c2f(array_of_requests[i]);
-				mpi_waitall_element_data[i].count_bytes = MPI_Get_count(&array_of_statuses[i], MPI_BYTE, &get_count);
+				MPI_Get_count(&array_of_statuses[i], MPI_BYTE, &get_count);
+				mpi_waitall_element_data[i].count_bytes = get_count;
 				mpi_waitall_element_data[i].return_state_detail = NULL;
 				mpi_waitall_element_data[i].return_state = ok;
 			}

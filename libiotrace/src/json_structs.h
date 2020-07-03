@@ -891,13 +891,11 @@ JSON_STRUCT_END
 
 /* struct for dataype size */
 JSON_STRUCT_START(mpi_immediate)
-  JSON_STRUCT_SIZE_T(datatype_size)
   JSON_STRUCT_INT(request_id)
 JSON_STRUCT_END
 
 /* struct for dataype size */
 JSON_STRUCT_START(mpi_immediate_at)
-  JSON_STRUCT_SIZE_T(datatype_size)
   JSON_STRUCT_INT(request_id)
   JSON_STRUCT_OFF_T(position)
 JSON_STRUCT_END

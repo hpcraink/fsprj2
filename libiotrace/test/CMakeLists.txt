@@ -431,3 +431,27 @@ endif()
 target_link_libraries(OpenMP_atomic_buffer_races_static PUBLIC -lm)
 
 ##########################################################################################################
+
+#test with: OMP_NUM_THREADS=4 ./OpenMP_atomic_buffer_write_once_static 100
+list(APPEND ATOMIC_BUFFER_WRITE_ONCE_TEST_SOURCE
+        OpenMP_atomic_buffer_write_once.c
+        $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src/atomic_buffer_write_once.c>
+)
+add_executable(OpenMP_atomic_buffer_write_once_static ${ATOMIC_BUFFER_WRITE_ONCE_TEST_SOURCE})
+add_executable(OpenMP_atomic_buffer_write_once_static_measure ${ATOMIC_BUFFER_WRITE_ONCE_TEST_SOURCE})
+add_executable(OpenMP_atomic_buffer_write_once_static_malloc ${ATOMIC_BUFFER_WRITE_ONCE_TEST_SOURCE})
+target_include_directories(OpenMP_atomic_buffer_write_once_static PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
+target_include_directories(OpenMP_atomic_buffer_write_once_static_measure PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
+target_include_directories(OpenMP_atomic_buffer_write_once_static_malloc PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
+
+target_compile_options(OpenMP_atomic_buffer_write_once_static_measure PRIVATE "-O2" "-DATOMIC_BUFFER_MEASUREMENT")
+target_compile_options(OpenMP_atomic_buffer_write_once_static_malloc PRIVATE "-O2" "-DATOMIC_BUFFER_MALLOC_TEST")
+
+find_package(OpenMP)
+if(OpenMP_C_FOUND)
+    target_link_libraries(OpenMP_atomic_buffer_write_once_static PUBLIC OpenMP::OpenMP_C)
+    target_link_libraries(OpenMP_atomic_buffer_write_once_static_measure PUBLIC OpenMP::OpenMP_C)
+    target_link_libraries(OpenMP_atomic_buffer_write_once_static_malloc PUBLIC OpenMP::OpenMP_C)
+endif()
+
+##########################################################################################################

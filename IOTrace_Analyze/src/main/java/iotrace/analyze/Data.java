@@ -413,7 +413,7 @@ public class Data {
 	 *             each line
 	 */
 	public void addJsons(File file) {
-		jsons = Json.logFileToJson(file, fileTraceFunctions);
+		jsons = Json.logJsonToObject(file, fileTraceFunctions);
 	}
 
 	/**

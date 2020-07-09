@@ -493,7 +493,7 @@ public class Json {
 		return tmp;
 	}
 
-	public static Map<UniqueStartTime, Json> logFileToJson(File file, AnalyzeFunctionPool fileTraceFunctions) {
+	public static Map<UniqueStartTime, Json> logJsonToObject(File file, AnalyzeFunctionPool fileTraceFunctions) {
 		Map<UniqueStartTime, Json> data = new TreeMap<>();
 		final int step = 50000;
 

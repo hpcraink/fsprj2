@@ -442,9 +442,9 @@ public class Data {
 		int jsonCount = 0;
 
 		logger.debug("Start processing:");
-		for (Entry<UniqueStartTime, Json> j : jsons.entrySet()) {
+		for (Entry<UniqueStartTime, Json> currentJson : jsons.entrySet()) {
 
-			processJson(j.getValue());
+			processJson(currentJson.getValue());
 
 			if (minTime == null) {
 				if (hasWrapperInfo) {

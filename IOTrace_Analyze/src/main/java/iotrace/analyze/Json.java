@@ -406,6 +406,42 @@ public class Json {
 
 		return json;
 	}
+	
+	public LinkedList<String> combineObjectValuesToList(String pathToArrayOfObjects, String pathToElementInObject) {
+	
+		LinkedList<String> tmpList = new LinkedList<>();
+		LinkedList<Json> tmpJsonList = null;
+		
+		Json json = null;
+		
+		String[] tokens = pathToArrayOfObjects.split("/");
+
+		if (tokens.length < 1) {
+			return null;
+		}
+
+		String array = tokens[tokens.length - 1];
+		if (array.length() <= 0) {
+			return null;
+		}
+
+		json = getObjectFromPath(tokens, tokens.length - 1);
+		if (json == null) {
+			return null;
+		}
+		
+		tmpJsonList = json.getObjectArray(tokens[tokens.length - 1]);
+		
+		for(Json j : tmpJsonList) {
+			
+			String tmpReturn = j.getValue(pathToElementInObject);
+			if (tmpReturn != null) {
+				tmpList.add(tmpReturn);
+			}
+		}
+		
+		return tmpList;
+	}
 
 	@Override
 	public int hashCode() {

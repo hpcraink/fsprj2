@@ -2,7 +2,7 @@ package iotrace.analyze;
 
 public class FileTraceId {
 	public static enum IdType {
-		STREAM, DESCRIPTOR, MEMORY, ASYNC, MPI_FILE, SO
+		STREAM, DESCRIPTOR, MEMORY, ASYNC, MPI_FILE, MPI_REQUEST, SO
 	}
 
 	public static enum IdGroup {

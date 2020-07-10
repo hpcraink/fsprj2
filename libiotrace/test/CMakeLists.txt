@@ -376,9 +376,15 @@ if(WITH_MPI_IO)
 endif()
 
 if(WITH_MPI_IO)
-    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test4 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread
     add_executable(MPI_parallel_iread MPI_parallel_iread.c)
     target_link_libraries(MPI_parallel_iread PRIVATE ${LINK_OPTIONS})
+endif()
+
+if(WITH_MPI_IO)
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_immediate_test
+    add_executable(MPI_immediate_test MPI_immediate_test.c)
+    target_link_libraries(MPI_immediate_test PRIVATE ${LINK_OPTIONS})
 endif()
 
 ##########################################################################################################

@@ -261,9 +261,9 @@ void atomic_buffer_reuse(struct atomic_buffer *buf, long sleep_nanoseconds) {
 	__atomic_store_n(&(buf->_current), tmp_start, __ATOMIC_SEQ_CST);
 }
 
-int atomic_buffer_try_reuse(struct atomic_buffer *buf) {
-
-}
+//int atomic_buffer_try_reuse(struct atomic_buffer *buf) {
+//
+//}
 
 size_t atomic_buffer_get_free_memory(struct atomic_buffer *buf) {
 	return buf->_end - buf->_current;

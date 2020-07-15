@@ -456,21 +456,40 @@ endif()
 
 ##########################################################################################################
 
-#test with: OMP_NUM_THREADS=4 ./OpenMP_atomic_memory_cache_static
-list(APPEND ATOMIC_MEMORY_CACHE_TEST_SOURCE
-        OpenMP_atomic_memory_cache.c
+#test with: OMP_NUM_THREADS=4 ./OpenMP_atomic_memory_cache_ordered_static
+list(APPEND ATOMIC_MEMORY_CACHE_ORDERED_TEST_SOURCE
+        OpenMP_atomic_memory_cache_ordered.c
         $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src/atomic_memory_cache.c>
 )
-add_executable(OpenMP_atomic_memory_cache_static ${ATOMIC_MEMORY_CACHE_TEST_SOURCE})
-target_include_directories(OpenMP_atomic_memory_cache_static PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
+add_executable(OpenMP_atomic_memory_cache_ordered_static ${ATOMIC_MEMORY_CACHE_ORDERED_TEST_SOURCE})
+target_include_directories(OpenMP_atomic_memory_cache_ordered_static PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
 
-target_compile_options(OpenMP_atomic_memory_cache_static PRIVATE "-O3" "-Wextra" "-pedantic" "-mcx16")
+target_compile_options(OpenMP_atomic_memory_cache_ordered_static PRIVATE "-O3" "-Wextra" "-pedantic" "-mcx16")
 
 find_package(OpenMP)
 if(OpenMP_C_FOUND)
-    target_link_libraries(OpenMP_atomic_memory_cache_static PUBLIC OpenMP::OpenMP_C)
+    target_link_libraries(OpenMP_atomic_memory_cache_ordered_static PUBLIC OpenMP::OpenMP_C)
 endif()
 #https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94649    -latomic is needed (and -mcx16 is ignored)
-target_link_libraries(OpenMP_atomic_memory_cache_static PUBLIC -latomic)
+target_link_libraries(OpenMP_atomic_memory_cache_ordered_static PUBLIC -latomic)
+
+##########################################################################################################
+
+#test with: OMP_NUM_THREADS=4 ./OpenMP_atomic_memory_cache_mixed_static
+list(APPEND ATOMIC_MEMORY_CACHE_MIXED_TEST_SOURCE
+        OpenMP_atomic_memory_cache_mixed.c
+        $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src/atomic_memory_cache.c>
+)
+add_executable(OpenMP_atomic_memory_cache_mixed_static ${ATOMIC_MEMORY_CACHE_MIXED_TEST_SOURCE})
+target_include_directories(OpenMP_atomic_memory_cache_mixed_static PUBLIC $<BUILD_INTERFACE:${libiotrace_SOURCE_DIR}/src>)
+
+target_compile_options(OpenMP_atomic_memory_cache_mixed_static PRIVATE "-O3" "-Wextra" "-pedantic" "-mcx16")
+
+find_package(OpenMP)
+if(OpenMP_C_FOUND)
+    target_link_libraries(OpenMP_atomic_memory_cache_mixed_static PUBLIC OpenMP::OpenMP_C)
+endif()
+#https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94649    -latomic is needed (and -mcx16 is ignored)
+target_link_libraries(OpenMP_atomic_memory_cache_mixed_static PUBLIC -latomic)
 
 ##########################################################################################################

@@ -97,7 +97,7 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 			__ATOMIC_RELAXED /* read and write */,
 			__ATOMIC_RELAXED /* read */));
 
-	old_value._tag_ptr._tag++; //TODO: check for wrap around and throw error
+	//old_value._tag_ptr._tag++; //TODO: check for wrap around and throw error
 	return old_value;
 }
 

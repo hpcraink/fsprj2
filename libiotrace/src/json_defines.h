@@ -546,8 +546,8 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 
 #  define JSON_STRUCT_START(name) int json_struct_max_size_##name() { \
                                     char json_struct_hasElements = 0; \
-                                    int json_struct_size_void_p; \
-                                    int json_struct_size_void_p_tmp; \
+                                    __attribute__((unused)) int json_struct_size_void_p; \
+                                    __attribute__((unused)) int json_struct_size_void_p_tmp; \
                                     size_t json_struct_size = 1; /* open parentheses */
 #  define JSON_STRUCT_END if (json_struct_hasElements) json_struct_size--; /* remove last comma */ \
                           json_struct_size++; /* close parentheses */ \
@@ -789,8 +789,8 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_VOID_P_END(name) } }
 
 #  define JSON_STRUCT_START(name) void* json_struct_copy_##name(void *json_struct_buf, struct name *json_struct_data) { \
-                                    struct name *json_struct_copy = (struct name *)json_struct_buf; \
-                                    int json_struct_ret; \
+                                    __attribute__((unused)) struct name *json_struct_copy = (struct name *)json_struct_buf; \
+                                    __attribute__((unused)) int json_struct_ret; \
                                     memcpy(json_struct_buf, (void *) json_struct_data, sizeof(struct name)); \
                                     json_struct_buf += sizeof(struct name);
 #  define JSON_STRUCT_END return json_struct_buf;}

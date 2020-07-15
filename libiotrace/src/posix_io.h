@@ -369,7 +369,7 @@ REAL_TYPE size_t REAL(fread)(void *data, size_t size, size_t count, FILE *stream
 REAL_TYPE size_t REAL(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #endif
 REAL_TYPE size_t REAL(fwrite)(const void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
-#ifdef HAVE_FWRITE_UNLOCKED
+#if defined(HAVE_FWRITE_UNLOCKED) && !defined(fwrite_unlocked)
 REAL_TYPE size_t REAL(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #endif
 REAL_TYPE int REAL(fprintf)

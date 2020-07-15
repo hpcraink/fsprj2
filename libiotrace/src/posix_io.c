@@ -352,7 +352,7 @@ REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread)(void *data, size_t size, size
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
-#ifdef HAVE_FWRITE_UNLOCKED
+#if defined(HAVE_FWRITE_UNLOCKED) && !defined(fwrite_unlocked)
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fprintf)(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
@@ -709,7 +709,7 @@ void posix_io_init() {
 		DLSYM(fread_unlocked);
 #endif
 		DLSYM(fwrite);
-#ifdef HAVE_FWRITE_UNLOCKED
+#if defined(HAVE_FWRITE_UNLOCKED) && !defined(fwrite_unlocked)
 		DLSYM(fwrite_unlocked);
 #endif
 		DLSYM(fprintf);
@@ -1463,7 +1463,6 @@ int WRAP(open)(const char *filename, int flags, ...) {
 	int WRAP(open)(const char *filename, int flags, mode_t mode) {
 #endif
 	int ret;
-	char expanded_symlinks[MAXFILENAME];
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
 	struct open_function open_data;
@@ -3066,6 +3065,8 @@ int WRAP(fcntl)(int fd, int cmd, ...) {
 				fcntl_hint_data)
 #endif
 		break;
+	case unknown_fcntl_cmd:
+		abort();
 	}
 	va_end(ap);
 
@@ -3672,7 +3673,6 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
 	ssize_t ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
-	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
@@ -3725,7 +3725,6 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
 	ssize_t ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
-	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
@@ -5138,7 +5137,7 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream) {
 	return ret;
 }
 
-#ifdef HAVE_FWRITE_UNLOCKED
+#if defined(HAVE_FWRITE_UNLOCKED) && !defined(fwrite_unlocked)
 size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 		FILE *stream) {
 	size_t ret;

@@ -9,6 +9,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_C_STANDARD 99)
 
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall")
+
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
 option (WITH_UNIT_TESTS "enable building unit tests" ON)

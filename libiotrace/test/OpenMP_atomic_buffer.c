@@ -17,8 +17,10 @@ struct test {
 
 // TODO: reference test malloc (vs. atomic_buffer_alloc vs. atomic_buffer_alloc with ATOMIC_BUFFER_CACHE_ALIGNED)
 int main(void) {
+#ifndef ATOMIC_BUFFER_MALLOC_TEST
 	struct atomic_buffer buf;
 	int ret;
+#endif
 	int max_threads;
 	int thread_num;
 	int iterations;

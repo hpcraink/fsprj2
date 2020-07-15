@@ -10,7 +10,7 @@
 #  include "os.h"
 #endif
 
-#define BUFFER_REUSES 1
+#define BUFFER_REUSES 10
 #define TESTS_PER_BUFFER_PER_THREAD 100000
 #define BLOCK_SIZE 5000
 
@@ -20,18 +20,22 @@ struct test {
 };
 
 int main(int argc, char *argv[]) {
+#ifndef ATOMIC_BUFFER_MALLOC_TEST
 	struct atomic_buffer_write_once buf;
 	int ret;
+#endif
 	int max_threads;
 	int iterations;
 	void *mem;
 	struct test *mems;
-	int value;
 #ifndef ATOMIC_BUFFER_MALLOC_TEST
 	int max_mem;
 #endif
 	int block_size;
 	int tests_per_buffer_per_thread;
+	int buffer_reuses;
+
+	max_threads = omp_get_max_threads();
 
 	if (argc >= 2) {
 		char *endptr;
@@ -50,7 +54,7 @@ int main(int argc, char *argv[]) {
 		char *endptr;
 		errno = 0;
 		long l = strtol(argv[2], &endptr, 10);
-		if (errno || *endptr != '\0' || argv[1] == endptr || l < INT_MIN
+		if (errno || *endptr != '\0' || argv[2] == endptr || l < INT_MIN
 				|| l > INT_MAX) {
 			tests_per_buffer_per_thread = TESTS_PER_BUFFER_PER_THREAD;
 		} else {
@@ -59,23 +63,38 @@ int main(int argc, char *argv[]) {
 	} else {
 		tests_per_buffer_per_thread = TESTS_PER_BUFFER_PER_THREAD;
 	}
-	printf("block-size: %d, tests-per-buffer-per-thread: %d\n", block_size,
-			tests_per_buffer_per_thread);
+	if (argc >= 4) {
+		char *endptr;
+		errno = 0;
+		long l = strtol(argv[3], &endptr, 10);
+		if (errno || *endptr != '\0' || argv[3] == endptr || l < INT_MIN
+				|| l > INT_MAX) {
+			buffer_reuses = BUFFER_REUSES;
+		} else {
+			buffer_reuses = l;
+		}
+	} else {
+		buffer_reuses = BUFFER_REUSES;
+	}
+	printf(
+			"threads: %d, block-size: %d, tests-per-buffer-per-thread: %d, buffer-reuses: %d\n",
+			max_threads, block_size, tests_per_buffer_per_thread, buffer_reuses);
 
-	max_threads = omp_get_max_threads();
 	iterations = tests_per_buffer_per_thread * max_threads;
 #ifndef ATOMIC_BUFFER_MALLOC_TEST
 	max_mem = iterations
 			* (block_size + sizeof(struct atomic_buffer_write_once_prefix));
 
 	ret = atomic_buffer_write_once_create(&buf, max_mem);
+	//printf("%d\n",errno);
+	//fflush(stdout);
 	assert(-1 != ret);
 #endif
 
 	mems = malloc(iterations * sizeof(struct test));
 	assert(NULL != mems);
 
-	for (int l = 0; l < BUFFER_REUSES; l++) {
+	for (int l = 0; l < buffer_reuses; l++) {
 
 #   pragma omp parallel private(mem	)
 		{

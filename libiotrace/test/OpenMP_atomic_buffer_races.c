@@ -27,7 +27,7 @@ int main(void) {
 	int value;
 	char testing;
 	char loop;
-	static struct timespec wait_time = { 0, 0 };
+	//static struct timespec wait_time = { 0, 0 };
 
 	max_threads = omp_get_max_threads();
 	// check if there are enough threads to control all

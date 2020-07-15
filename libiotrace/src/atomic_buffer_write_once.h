@@ -24,7 +24,10 @@ struct atomic_buffer_write_once_prefix {
 int atomic_buffer_write_once_create(struct atomic_buffer_write_once *buf,
 		size_t size);
 
-static inline __attribute__((always_inline)) __attribute__((warn_unused_result)) void* atomic_buffer_write_once_alloc(
+static inline __attribute__((always_inline)) __attribute__((warn_unused_result)) __attribute__((malloc)) __attribute__((hot)) void* atomic_buffer_write_once_alloc(
+		struct atomic_buffer_write_once *buf, size_t size)
+				__attribute__((nonnull (1)));
+static inline void* atomic_buffer_write_once_alloc(
 		struct atomic_buffer_write_once *buf, size_t size) {
 	void *old_value;
 	void *new_value;
@@ -46,7 +49,7 @@ static inline __attribute__((always_inline)) __attribute__((warn_unused_result))
 		 * The value of buf->_end doesn't change during runtime (after
 		 * initialization), so it's not necessary to get it with an atomic load. */
 		if ((char*) buf->_end - (char*) old_value >= size) {
-		//TODO: faster size check ??? if ((char*) buf->_end + ~((char*) old_value) +1 >= size) {
+			//TODO: faster size check ??? if ((char*) buf->_end + ~((char*) old_value) +1 >= size) {
 			new_value = (char*) old_value + size;
 			/* pointers in one buffer are unique and get only increased
 			 * => no ABA problem */

@@ -1,6 +1,7 @@
 #include "atomic_buffer_write_once.h"
 
 #include <stdlib.h>
+//#include <sys/mman.h>
 
 int atomic_buffer_write_once_create(struct atomic_buffer_write_once *buf,
 		size_t size) {
@@ -8,6 +9,11 @@ int atomic_buffer_write_once_create(struct atomic_buffer_write_once *buf,
 	if (buf->_start == NULL) {
 		return -1;
 	}
+//	buf->_start = mmap(NULL, size, PROT_READ | PROT_WRITE,
+//	MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+//	if (buf->_start == MAP_FAILED) {
+//		return -1;
+//	}
 
 	buf->_end = (char*) buf->_start + size;
 	buf->_free = buf->_start;
@@ -22,9 +28,11 @@ int atomic_buffer_write_once_create(struct atomic_buffer_write_once *buf,
 
 void atomic_buffer_write_once_destroy(struct atomic_buffer_write_once *buf) {
 	free(buf->_start);
+//	munmap(buf->_start, buf->_start - buf->_end);
 }
 
-void atomic_buffer_write_once_push(struct atomic_buffer_write_once *buf, void *ready) {
+void atomic_buffer_write_once_push(struct atomic_buffer_write_once *buf,
+		void *ready) {
 	void *old_value;
 	void *new_value;
 	struct atomic_buffer_write_once_prefix *node =
@@ -41,7 +49,7 @@ void atomic_buffer_write_once_push(struct atomic_buffer_write_once *buf, void *r
 			__ATOMIC_RELAXED /* read of buf->_free */));
 }
 
-void *atomic_buffer_write_once_pop(struct atomic_buffer_write_once *buf) {
+void* atomic_buffer_write_once_pop(struct atomic_buffer_write_once *buf) {
 	void *old_value;
 	void *new_value;
 	struct atomic_buffer_write_once_prefix *node;

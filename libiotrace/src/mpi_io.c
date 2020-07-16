@@ -1185,3 +1185,42 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 
 	return ret;
 }
+
+
+int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, const char *datarep, MPI_Info info){
+
+	int ret;
+	struct basic data;
+	struct file_mpi file_mpi_data;
+	struct positioning_function positioning_function_data;
+
+	WRAP_MPI_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+	file_mpi_data.mpi_file = MPI_File_c2f(fh);
+
+	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_set_view, fh, disp, etype, filetype, datarep, info)
+
+	positioning_function_data.offset = disp;
+	positioning_function_data.relative_to = beginning_of_file;
+
+	if (ret != MPI_SUCCESS)
+	{
+		data.return_state = error;
+		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+	}
+	else
+	{
+		data.return_state = ok;
+	}
+
+	WRAP_MPI_END(data)
+	return ret;
+
+
+
+}

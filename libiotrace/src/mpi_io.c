@@ -557,6 +557,9 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 	struct basic data;
 	struct file_mpi file_mpi_data;
 	struct positioning_function positioning_function_data;
+	MPI_Offset absolute_offset;
+	MPI_Offset view_offset;
+	
 
 	WRAP_MPI_START(data)
 
@@ -580,6 +583,13 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 	else
 	{
 		data.return_state = ok;
+		if (end_of_file == positioning_function_data.relative_to) {
+			// ToDo: file lock over MPI_File_seek; get_position; get_byte_offset
+			MPI_File_get_position(fh, &view_offset);
+			MPI_File_get_byte_offset(fh, view_offset, &absolute_offset);
+			positioning_function_data.offset = absolute_offset;
+		}
+
 	}
 
 	WRAP_MPI_END(data)

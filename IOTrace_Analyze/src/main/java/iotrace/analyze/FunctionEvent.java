@@ -335,6 +335,12 @@ public class FunctionEvent implements Comparable<FunctionEvent> {
 			setRange(rangeType, bytes, offset);
 		}
 	}
+	
+	public void setRange(String bytes) {
+		if (fileTraceId instanceof FileTraceRequestId) {
+            setRange(((FileTraceRequestId) fileTraceId).getRangeType(), bytes);
+        }
+	}
 
 	public void setRange(RangeType rangeType, String bytes) {
 		if (fileTraceId != null && (fileTraceId.getFileTrace().getKind() == FileKind.FILE

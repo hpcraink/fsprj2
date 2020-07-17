@@ -26,32 +26,16 @@ int main(int argc, char *argv[]) {
 #pragma omp for
 		for (int i = 0; i < iterations; i++) {
 			for (int l = 0; l < atomic_memory_size_count; l++) {
+#ifndef ATOMIC_BUFFER_MALLOC_TEST
 				union atomic_memory_block_tag_ptr tmp = atomic_memory_alloc(
 						(enum atomic_memory_size) l);
 				assert(NULL != tmp._tag_ptr._ptr);
-				printf("Test: %d/%d, Thread: %d, Pointer: %p:%ld, Bytes: %ld\n",
-						i, l, thread_num, (void*) (tmp._tag_ptr._ptr),
-						tmp._tag_ptr._tag, atomic_memory_sizes[l]);
-				fflush(stdout);
-				memset(tmp._tag_ptr._ptr->memory, tmp._tag_ptr._ptr->_size,
-						atomic_memory_sizes[l]
-								- sizeof(struct atomic_memory_block));
-
-				atomic_memory_push(tmp);
-
-				tmp = atomic_memory_pop();
-				assert(NULL != tmp._tag_ptr._ptr);
-				for (int j = 0;
-						j
-								< atomic_memory_sizes[tmp._tag_ptr._ptr->_size]
-										- sizeof(struct atomic_memory_block);
-						j++) {
-					assert(
-							tmp._tag_ptr._ptr->memory[j]
-									== tmp._tag_ptr._ptr->_size);
-				}
-
 				atomic_memory_free(tmp);
+#else
+				void *tmp = malloc(atomic_memory_sizes[l]);
+				assert(NULL != tmp);
+				free(tmp);
+#endif
 			}
 		}
 	}

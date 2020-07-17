@@ -8,6 +8,9 @@
 
 /* for atomic operations on atomic_memory_block_tag_ptr and compiler optimizations */
 #define ATOMIC_MEMORY_ALIGNMENT 16
+#define ATOMIC_MEMORY_SIZE_ALIGNED(x) (((x + sizeof(struct atomic_memory_block)) \
+                                        + ATOMIC_MEMORY_ALIGNMENT - 1) \
+                                       & ~(ATOMIC_MEMORY_ALIGNMENT - 1))
 
 enum atomic_memory_size {
 	atomic_memory_size_56,
@@ -17,9 +20,6 @@ enum atomic_memory_size {
 	/* each new enum needs an corresponding entry in atomic_memory_sizes */
 	atomic_memory_size_count
 };
-
-static const size_t atomic_memory_sizes[atomic_memory_size_count] = { 56, 110,
-		520, 1678 };
 
 union atomic_memory_block_tag_ptr {
 	struct {
@@ -34,6 +34,10 @@ struct atomic_memory_block {
 	enum atomic_memory_size _size;
 	char memory[]; //with at least _size array length (optional padding for alignment)
 };
+
+static const size_t atomic_memory_sizes[atomic_memory_size_count] = {
+		ATOMIC_MEMORY_SIZE_ALIGNED(56), ATOMIC_MEMORY_SIZE_ALIGNED(110),
+		ATOMIC_MEMORY_SIZE_ALIGNED(520), ATOMIC_MEMORY_SIZE_ALIGNED(1678) };
 
 union atomic_memory_block_tag_ptr atomic_memory_alloc(
 		enum atomic_memory_size size)

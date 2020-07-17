@@ -16,10 +16,7 @@ int main(int argc, char *argv[]) {
 	int pop_counts[atomic_memory_size_count] = { 0 };
 
 	for (int l = 0; l < atomic_memory_size_count; l++) {
-		size_t tmp_memory = sizeof(struct atomic_memory_block)
-				+ atomic_memory_sizes[l];
-		max_memory += (tmp_memory + ATOMIC_MEMORY_ALIGNMENT - 1)
-				& ~(ATOMIC_MEMORY_ALIGNMENT - 1);
+		max_memory += atomic_memory_sizes[l];
 	}
 
 	iterations = ATOMIC_MEMORY_BUFFER_SIZE / max_memory;
@@ -48,7 +45,8 @@ int main(int argc, char *argv[]) {
 						tmp._tag_ptr._tag, atomic_memory_sizes[l]);
 				fflush(stdout);
 				memset(tmp._tag_ptr._ptr->memory, tmp._tag_ptr._ptr->_size,
-						atomic_memory_sizes[l]);
+						atomic_memory_sizes[l]
+								- sizeof(struct atomic_memory_block));
 				tests[i * atomic_memory_size_count + l] = tmp;
 				atomic_memory_push(tmp);
 			}
@@ -61,8 +59,10 @@ int main(int argc, char *argv[]) {
 		for (int l = 0; l < atomic_memory_size_count; l++) {
 			union atomic_memory_block_tag_ptr tmp = tests[i
 					* atomic_memory_size_count + l];
-			for (int j = 0; j < atomic_memory_sizes[tmp._tag_ptr._ptr->_size];
-					j++) {
+			for (int j = 0;
+					j
+							< atomic_memory_sizes[tmp._tag_ptr._ptr->_size]
+									- sizeof(struct atomic_memory_block); j++) {
 				assert(
 						tmp._tag_ptr._ptr->memory[j]
 								== tmp._tag_ptr._ptr->_size);
@@ -76,8 +76,10 @@ int main(int argc, char *argv[]) {
 		for (int l = 0; l < atomic_memory_size_count; l++) {
 			union atomic_memory_block_tag_ptr tmp = atomic_memory_pop();
 			assert(NULL != tmp._tag_ptr._ptr);
-			for (int j = 0; j < atomic_memory_sizes[tmp._tag_ptr._ptr->_size];
-					j++) {
+			for (int j = 0;
+					j
+							< atomic_memory_sizes[tmp._tag_ptr._ptr->_size]
+									- sizeof(struct atomic_memory_block); j++) {
 				assert(
 						tmp._tag_ptr._ptr->memory[j]
 								== tmp._tag_ptr._ptr->_size);
@@ -106,7 +108,8 @@ int main(int argc, char *argv[]) {
 				fflush(stdout);
 				memset(tmp._tag_ptr._ptr->memory,
 						tmp._tag_ptr._ptr->_size + atomic_memory_size_count,
-						atomic_memory_sizes[l]);
+						atomic_memory_sizes[l]
+								- sizeof(struct atomic_memory_block));
 				tests[i * atomic_memory_size_count + l] = tmp;
 			}
 		}
@@ -118,8 +121,10 @@ int main(int argc, char *argv[]) {
 		for (int l = 0; l < atomic_memory_size_count; l++) {
 			union atomic_memory_block_tag_ptr tmp = tests[i
 					* atomic_memory_size_count + l];
-			for (int j = 0; j < atomic_memory_sizes[tmp._tag_ptr._ptr->_size];
-					j++) {
+			for (int j = 0;
+					j
+							< atomic_memory_sizes[tmp._tag_ptr._ptr->_size]
+									- sizeof(struct atomic_memory_block); j++) {
 				assert(
 						tmp._tag_ptr._ptr->memory[j]
 								== tmp._tag_ptr._ptr->_size

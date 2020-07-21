@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 	printf("start mixing all function calls\n");
 #pragma omp parallel
 	{
-		int thread_num = omp_get_thread_num();
+		//int thread_num = omp_get_thread_num();
 #pragma omp for
 		for (int i = 0; i < iterations; i++) {
 			for (int l = 0; l < atomic_memory_size_count; l++) {

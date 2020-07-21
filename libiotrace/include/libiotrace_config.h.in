@@ -546,13 +546,13 @@
 #  if defined(HAVE_DECLSPEC_THREAD)
 #    define ATTRIBUTE_THREAD       __declspec(thread)
 #  else
-#    define ATTRIBUTE_THREAD
+#    error thread local storage not available
 #  endif
 #else
 #  ifdef HAVE_ATTRIBUTE_THREAD
 #    define ATTRIBUTE_THREAD       __thread
 #  else
-#    define ATTRIBUTE_THREAD
+#    error thread local storage not available
 #  endif
 #endif
 

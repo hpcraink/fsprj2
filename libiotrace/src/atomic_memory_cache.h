@@ -2,9 +2,13 @@
 #define LIBIOTRACE_ATOMIC_MEMORY_CACHE_H
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <inttypes.h>
 
 #define ATOMIC_MEMORY_BUFFER_SIZE 1000 * 1000 * 1000
+#define ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS 200
+#define ATOMIC_MEMORY_CACHE_SIZE 100
 
 /* for atomic operations on atomic_memory_block_tag_ptr and compiler optimizations */
 #define ATOMIC_MEMORY_ALIGNMENT 16
@@ -17,6 +21,7 @@ enum atomic_memory_size {
 	atomic_memory_size_110,
 	atomic_memory_size_520,
 	atomic_memory_size_1678,
+//	atomic_memory_size_3200,
 	/* each new enum needs an corresponding entry in atomic_memory_sizes */
 	atomic_memory_size_count
 };
@@ -30,14 +35,16 @@ union atomic_memory_block_tag_ptr {
 } __attribute__ ((aligned (ATOMIC_MEMORY_ALIGNMENT)));
 
 struct atomic_memory_block {
-	union atomic_memory_block_tag_ptr _next;
+	union atomic_memory_block_tag_ptr _next; // must be the first element, to ensure alignment
+	int32_t _thread;
 	enum atomic_memory_size _size;
-	char memory[]; //with at least _size array length (optional padding for alignment)
+	char memory[]; // with at least _size array length (optional padding for alignment)
 };
 
 static const size_t atomic_memory_sizes[atomic_memory_size_count] = {
 		ATOMIC_MEMORY_SIZE_ALIGNED(56), ATOMIC_MEMORY_SIZE_ALIGNED(110),
-		ATOMIC_MEMORY_SIZE_ALIGNED(520), ATOMIC_MEMORY_SIZE_ALIGNED(1678) };
+		ATOMIC_MEMORY_SIZE_ALIGNED(520), ATOMIC_MEMORY_SIZE_ALIGNED(1678)/*,
+		ATOMIC_MEMORY_SIZE_ALIGNED(3200)*/ };
 
 union atomic_memory_block_tag_ptr atomic_memory_alloc(
 		enum atomic_memory_size size)

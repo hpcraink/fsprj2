@@ -28,29 +28,29 @@ int main(int argc, char *argv[]) {
 			for (int l = 0; l < atomic_memory_size_count; l++) {
 				union atomic_memory_block_tag_ptr tmp = atomic_memory_alloc(
 						(enum atomic_memory_size) l);
-				assert(NULL != tmp._tag_ptr._ptr);
+				assert(NULL != tmp.tag_ptr.ptr);
 				printf(
 						"Test: %d/%d, Thread: %d, Thread-ID: %d, Pointer: %p:%ld, Bytes: %ld\n",
-						i, l, thread_num, tmp._tag_ptr._ptr->_thread,
-						(void*) (tmp._tag_ptr._ptr), tmp._tag_ptr._tag,
+						i, l, thread_num, tmp.tag_ptr.ptr->_thread,
+						(void*) (tmp.tag_ptr.ptr), tmp.tag_ptr._tag,
 						atomic_memory_sizes[l]);
 				fflush(stdout);
-				memset(tmp._tag_ptr._ptr->memory, tmp._tag_ptr._ptr->_size,
+				memset(tmp.tag_ptr.ptr->memory, tmp.tag_ptr.ptr->_size,
 						atomic_memory_sizes[l]
 								- sizeof(struct atomic_memory_block));
 
 				atomic_memory_push(tmp);
 
 				tmp = atomic_memory_pop();
-				assert(NULL != tmp._tag_ptr._ptr);
+				assert(NULL != tmp.tag_ptr.ptr);
 				for (int j = 0;
 						j
-								< atomic_memory_sizes[tmp._tag_ptr._ptr->_size]
+								< atomic_memory_sizes[tmp.tag_ptr.ptr->_size]
 										- sizeof(struct atomic_memory_block);
 						j++) {
 					assert(
-							tmp._tag_ptr._ptr->memory[j]
-									== tmp._tag_ptr._ptr->_size);
+							tmp.tag_ptr.ptr->memory[j]
+									== tmp.tag_ptr.ptr->_size);
 				}
 
 				atomic_memory_free(tmp);

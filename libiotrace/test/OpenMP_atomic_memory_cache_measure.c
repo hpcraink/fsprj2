@@ -5,21 +5,46 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
+#include <errno.h>
 
 #include "omp.h"
 
-int main(int argc, char *argv[]) {
-	//int max_threads = omp_get_max_threads();
-	int iterations;
-	size_t max_memory = 0;
+#define DEFAULT_ITERATIONS 1000;
 
-	for (int l = 0; l < atomic_memory_size_count; l++) {
-		max_memory += atomic_memory_sizes[l];
+int main(int argc, char *argv[]) {
+	/* count threads
+	 * count allocations
+	 * count bytes
+	 * count block sizes
+	 * block sizes */
+	int iterations;
+	int sizes[] = {56, 110, 520, 1678};
+
+	if (argc >= 2) {
+		char *endptr;
+		errno = 0;
+		long l = strtol(argv[1], &endptr, 10);
+		if (errno || *endptr != '\0' || argv[1] == endptr || l < INT_MIN
+				|| l > INT_MAX) {
+			iterations = DEFAULT_ITERATIONS
+			;
+		} else {
+			iterations = l;
+		}
+	} else {
+		iterations = DEFAULT_ITERATIONS
+		;
 	}
 
-	iterations = ATOMIC_MEMORY_BUFFER_SIZE / max_memory;
+	//int max_threads = omp_get_max_threads();
+//	size_t max_memory = 0;
+//
+//	for (int l = 0; l < atomic_memory_size_count; l++) {
+//		max_memory += atomic_memory_sizes[l];
+//	}
 
-	printf("start mixing all function calls\n");
+	//printf("start mixing all function calls\n");
 #pragma omp parallel
 	{
 		//int thread_num = omp_get_thread_num();
@@ -29,10 +54,10 @@ int main(int argc, char *argv[]) {
 #ifndef ATOMIC_BUFFER_MALLOC_TEST
 				union atomic_memory_block_tag_ptr tmp = atomic_memory_alloc(
 						(enum atomic_memory_size) l);
-				assert(NULL != tmp._tag_ptr._ptr);
+				assert(NULL != tmp.tag_ptr.ptr);
 				atomic_memory_free(tmp);
 #else
-				void *tmp = malloc(atomic_memory_sizes[l]);
+				void *tmp = malloc(sizes[l]);
 				assert(NULL != tmp);
 				free(tmp);
 #endif
@@ -40,5 +65,5 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	printf("finish\n");
+	//printf("finish\n");
 }

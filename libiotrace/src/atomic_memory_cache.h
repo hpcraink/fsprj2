@@ -1,4 +1,12 @@
 /**
+ * Lock free cached memory pool.
+ *
+ * One buffer per process is used from multiple threads. Each thread gets
+ * multiple memory blocks out of the buffer, if they are needed (a thread
+ *
+ * Key concept of this memory cache system is to prevent concurrent accesses
+ * to shared resources.
+ *
  * A new created memory block belongs to the thread it was created by.
  *
  * Thread local caches are only accessed by one thread. It's therefore not
@@ -37,7 +45,7 @@
  * memory blocks per cache the thread local cache is pushed to the global
  * cache.
  */
-#define ATOMIC_MEMORY_CACHE_SIZE 100
+#define ATOMIC_MEMORY_CACHE_SIZE 10
 
 /**
  * Alignment of memory blocks and pointers to them.
@@ -91,7 +99,7 @@ enum atomic_memory_size {
  * A simple pointer to struct \a atomic_memory_block is prone to the
  * ABA-problem. Combined with a 8 byte long tag, prevention of the ABA-problem
  * is possible. To read and write the combination of a 8 byte long pointer
- * (\a _tag_ptr._ptr) and the 8 byte long tag (\a _tag_ptr._tag) with single
+ * (\a tag_ptr.ptr) and the 8 byte long tag (\a tag_ptr._tag) with single
  * instructions, it's necessary to keep them together in one 16 byte long
  * memory area and make this area accessible through one 16 bytes long
  * variable (\a _integral_type). For instructions which manipulate 16 bytes at
@@ -99,9 +107,9 @@ enum atomic_memory_size {
  */
 union atomic_memory_block_tag_ptr {
 	struct {
-		struct atomic_memory_block *_ptr;
+		struct atomic_memory_block *ptr;
 		uint64_t _tag;
-	} _tag_ptr;
+	} tag_ptr;
 	unsigned __int128 _integral_type; // TODO: check for __int128
 } __attribute__ ((aligned (ATOMIC_MEMORY_ALIGNMENT))); // TODO: check for attribute aligned
 
@@ -179,13 +187,27 @@ static const size_t atomic_memory_sizes[atomic_memory_size_count] = {
 /**
  * Allocation of a memory block.
  *
- * Returns a pointer to a memory block out of a cache or a new created block
- * if local and global caches are empty. The returned pointer can be used to
- * fill the usable data in the memory block (via \c ._tag_ptr._ptr->memory).
- * After that the pointer can be used to push the memory block to a global
- * stack via function call of \c atomic_memory_push(). Alternatively the
- * memory block can be freed with \c atomic_memory_free() if it is no longer
- * used.
+ * Returns a pointer to a memory block out of a cache or to a new created
+ * block if thread local and global cache are empty. The returned pointer can
+ * be used to fill the usable data in the memory block (via
+ * \c .tag_ptr.ptr->memory). After that the pointer can be used to push the
+ * memory block to a global stack via function call of
+ * \c atomic_memory_push(). Alternatively the memory block can be freed with
+ * \c atomic_memory_free() if it is no longer used.
+ *
+ * To get a block from a cache first the thread local cache is checked. If
+ * there is a block of corresponding size it will be returned. If not the
+ * global cache is checked. If there are blocks of corresponding size which
+ * belong to the allocating thread these blocks are moved to the thread local
+ * cache and one of them is returned. If the thread local and global cache
+ * don't hold a fitting block a new block is created. This new block belongs
+ * to the creating thread and will therefore after freeing it via
+ * \c atomic_memory_free() only available to allocations from the same thread.
+ *
+ * If a new memory block is created the thread local cache is also filled with
+ * additional new created blocks. For that #ATOMIC_MEMORY_CACHE_SIZE new
+ * blocks are created. If there isn't enough memory for that the cache will
+ * not be filled with new blocks.
  *
  * The tag of the returned pointer is increased, if the memory block comes out
  * of a cache. This prevents the ABA-problem if the returned pointer is only
@@ -196,7 +218,7 @@ static const size_t atomic_memory_sizes[atomic_memory_size_count] = {
  * @param[in]  size       enum which gives the length in bytes of the new
  *                        memory block (see array \a atomic_memory_sizes)
  * @return \a atomic_memory_block_tag_ptr to a new memory block on success,
- *         \a atomic_memory_block_tag_ptr with field \c _ptr set to NULL if
+ *         \a atomic_memory_block_tag_ptr with field \c ptr set to NULL if
  *         not enough space in \a atomic_memory_buffer is available
  */
 union atomic_memory_block_tag_ptr atomic_memory_alloc(
@@ -206,13 +228,43 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 /**
  * Pushes a memory block in a ready to consume stack.
  *
+ * Pushes the memory block to a gobal (per process) stack. From this stack
+ * other threads can get the block for further processing via function
+ * \c atomic_memory_pop(). This enables a producer-consumer pattern. If a
+ * producer acts also as a consumer it can get it's own blocks and the blocks
+ * of other threads via \c atomic_memory_pop().
  *
+ * @param[in]  block      memory block to be pushed to the stack
  */
 void atomic_memory_push(union atomic_memory_block_tag_ptr block);
 
+/**
+ * Pops a memory block from a ready to consume stack.
+ *
+ * Returns and removes memory blocks from a global (per process) stack. Can
+ * return blocks which were pushed to the stack (via \c atomic_memory_push()).
+ *
+ * @return \a atomic_memory_block_tag_ptr to a memory block returned from the
+ *         stack on success, \a atomic_memory_block_tag_ptr with field \c ptr
+ *         set to NULL if no block was available
+ */
 union atomic_memory_block_tag_ptr atomic_memory_pop()
 		__attribute__((warn_unused_result));
 
+/**
+ * Moves a memory block to a cache for further reuse.
+ *
+ * If the memory block belongs to the current thread (was created by this
+ * thread) it is moved to the thread local cache of free blocks. Otherwise it
+ * is moved to a separate thread local cache of blocks belonging to other
+ * threads. If that increases the count of free blocks inside the cache for
+ * one other thread to #ATOMIC_MEMORY_CACHE_SIZE the local cache for this
+ * other thread is moved to the global cache. So the other thread can get all
+ * of the cached blocks during a following allocation (see
+ * \c atomic_memory_alloc()).
+ *
+ * @param[in]  block      memory block ready to be reused
+ */
 void atomic_memory_free(union atomic_memory_block_tag_ptr block);
 
 #endif /* LIBIOTRACE_ATOMIC_MEMORY_CACHE_H */

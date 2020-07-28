@@ -22,7 +22,7 @@
  * with locks or atomic instructions.
  */
 static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_cache[atomic_memory_size_count] =
-{	{	._tag_ptr._ptr = NULL, ._tag_ptr._tag = 0}};
+{	{	.tag_ptr.ptr = NULL, .tag_ptr._tag = 0}};
 /**
  * Thread local cache of usable free memory blocks belonging to other threads.
  *
@@ -38,7 +38,7 @@ static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_cach
  * with locks or atomic instructions.
  */
 static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free_start[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
-{	{	{	._tag_ptr._ptr = NULL, ._tag_ptr._tag = 0}}};
+{	{	{	.tag_ptr.ptr = NULL, .tag_ptr._tag = 0}}};
 /**
  * Thread local cache of last elements of linked lists stored in
  * \a atomic_memory_tls_free_start.
@@ -51,7 +51,7 @@ static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free
  * with locks or atomic instructions.
  */
 static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free_end[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
-{	{	{	._tag_ptr._ptr = NULL, ._tag_ptr._tag = 0}}};
+{	{	{	.tag_ptr.ptr = NULL, .tag_ptr._tag = 0}}};
 /**
  * Thread local cache of count of blocks stored in each linked lists in
  * \a atomic_memory_tls_free_start.
@@ -79,7 +79,7 @@ static ATTRIBUTE_THREAD size_t free_count[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS]
  * guarded against concurrent accesses.
  */
 static union atomic_memory_block_tag_ptr atomic_memory_cache[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
-		{ { { ._tag_ptr._ptr = NULL, ._tag_ptr._tag = 0 } } };
+		{ { { .tag_ptr.ptr = NULL, .tag_ptr._tag = 0 } } };
 /**
  * Global cache (per process) of filled and ready to consume memory blocks.
  *
@@ -89,8 +89,8 @@ static union atomic_memory_block_tag_ptr atomic_memory_cache[ATOMIC_MEMORY_MAX_T
  * This cache is manipulated by different threads and must therefore be
  * guarded against concurrent accesses.
  */
-static union atomic_memory_block_tag_ptr atomic_memory_ready = {
-		._tag_ptr._ptr = NULL, ._tag_ptr._tag = 0 };
+static union atomic_memory_block_tag_ptr atomic_memory_ready = { .tag_ptr.ptr =
+NULL, .tag_ptr._tag = 0 };
 
 /**
  * Global buffer (per process) for creating new memory blocks.
@@ -195,7 +195,7 @@ static inline struct atomic_memory_block* atomic_memory_new_block(
  * @param[in]  count      count of new memory blocks
  * @return \a atomic_memory_block_tag_ptr to a linked list with all new memory
  *         blocks on success, \a atomic_memory_block_tag_ptr with field
- *         \c _ptr set to NULL if not enough space in \a atomic_memory_buffer
+ *         \c ptr set to NULL if not enough space in \a atomic_memory_buffer
  *         is available
  */
 static inline union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
@@ -288,57 +288,69 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 	union atomic_memory_block_tag_ptr new_value;
 
 	old_value._integral_type = atomic_memory_tls_cache[size]._integral_type;
-	if (NULL != old_value._tag_ptr._ptr) {
+	if (NULL != old_value.tag_ptr.ptr) {
 
 		/* thread local cache holds an entry with requested size: return it */
-		new_value = old_value._tag_ptr._ptr->_next;
+		new_value = old_value.tag_ptr.ptr->_next;
 		atomic_memory_tls_cache[size]._integral_type = new_value._integral_type;
 
 		/* increase tag of pointer to prevent ABA-problem (every reuse of
 		 * memory blocks from cache inserts a formerly known pointer back
 		 * into the workflow) */
-		old_value._tag_ptr._tag++; //TODO: check for wrap around and throw error
+		if (__builtin_add_overflow(old_value.tag_ptr._tag, 1,
+				&(old_value.tag_ptr._tag))) {
+			fprintf(stderr, "overflow during increment of _tag"); // TODO: use real fprintf and no wrapper
+			abort();
+		}
 
 		return old_value;
 	} else {
 		old_value._integral_type = atomic_load_16(
 				&(atomic_memory_cache[thread_id][size]._integral_type),
-				__ATOMIC_RELAXED);
-		if (NULL != old_value._tag_ptr._ptr) {
+				/* insure that previous stores to old_value.tag_ptr.ptr->_next
+				 * with __ATOMIC_RELEASE can be seen */
+				__ATOMIC_ACQUIRE);
+		if (NULL != old_value.tag_ptr.ptr) {
 
 			/* thread local cache is empty and central cache for this thread
 			 * has elements of requested size: fill local cache with entries
 			 * from central cache and return element from local cache */
+			new_value.tag_ptr.ptr = NULL;
 			do {
-				new_value._tag_ptr._ptr = NULL;
 			} while (!atomic_compare_exchange_16(
 					&(atomic_memory_cache[thread_id][size]._integral_type),
 					&(old_value._integral_type), new_value._integral_type, 1,
-					__ATOMIC_RELAXED /* read and write */,
-					__ATOMIC_RELAXED /* read */));
+					__ATOMIC_RELAXED,
+					/* insure that previous stores to old_value.tag_ptr.ptr->_next
+					 * with __ATOMIC_RELEASE can be seen */
+					__ATOMIC_ACQUIRE));
 
 			atomic_memory_tls_cache[size]._integral_type =
-					old_value._tag_ptr._ptr->_next._integral_type;
+					old_value.tag_ptr.ptr->_next._integral_type;
 
 			/* increase tag of pointer to prevent ABA-problem (every reuse of
 			 * memory blocks from cache inserts a formerly known pointer back
 			 * into the workflow) */
-			old_value._tag_ptr._tag++; //TODO: check for wrap around and throw error
+			if (__builtin_add_overflow(old_value.tag_ptr._tag, 1,
+					&(old_value.tag_ptr._tag))) {
+				fprintf(stderr, "overflow during increment of _tag"); // TODO: use real fprintf and no wrapper
+				abort();
+			}
 
 			return old_value;
 		} else {
 
 			/* thread local cache and central cache for this thread are empty:
 			 * create a new memory block */
-			new_value._tag_ptr._ptr = atomic_memory_new_block(size);
-			new_value._tag_ptr._tag = 0;
+			new_value.tag_ptr.ptr = atomic_memory_new_block(size);
+			new_value.tag_ptr._tag = 0;
 
 			/* fill local cache with additional created new blocks */
 			if (0 < ATOMIC_MEMORY_CACHE_SIZE) {
 				atomic_memory_tls_cache[size] = atomic_memory_new_block_list(
 						size,
 						ATOMIC_MEMORY_CACHE_SIZE);
-//				if (NULL == atomic_memory_tls_cache[size]._tag_ptr._ptr) {
+//				if (NULL == atomic_memory_tls_cache[size].tag_ptr.ptr) {
 //					fprintf(stderr, "not enough memory available (in atomic_memory_buffer)"); // TODO: use real fprintf and no wrapper
 //					abort();
 //				}
@@ -370,8 +382,8 @@ static struct atomic_memory_block* atomic_memory_new_block(
 		}
 	} while (!__atomic_compare_exchange_n(&(atomic_memory_buffer_pos),
 			&old_value, (void*) new_value, 1,
-			__ATOMIC_RELAXED /* read and write */,
-			__ATOMIC_RELAXED /* read */));
+			__ATOMIC_RELAXED,
+			__ATOMIC_RELAXED));
 	// TODO: check for __atomic_compare_exchange_n
 
 	/* initialize memory block */
@@ -403,7 +415,7 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 	if (__builtin_mul_overflow(atomic_memory_sizes[size], count, &real_size)) {
 		// TODO: check for __builtin_mul_overflow
 		/* we have an overflow */
-		tmp._tag_ptr._ptr = NULL;
+		tmp.tag_ptr.ptr = NULL;
 		return tmp; //TODO: abort() ???
 	}
 
@@ -417,20 +429,20 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 				>= real_size) {
 			new_value = (void*) (old_value + real_size);
 		} else {
-			tmp._tag_ptr._ptr = NULL;
+			tmp.tag_ptr.ptr = NULL;
 			return tmp; //TODO: abort() ???
 		}
 	} while (!__atomic_compare_exchange_n(&(atomic_memory_buffer_pos),
 			&old_value, (void*) new_value, 1,
-			__ATOMIC_RELAXED /* read and write */,
-			__ATOMIC_RELAXED /* read */));
+			__ATOMIC_RELAXED,
+			__ATOMIC_RELAXED));
 
 	/* initialize each memory block and link all blocks together to a linked
 	 * list */
 	((struct atomic_memory_block*) old_value)->_size = size;
 	((struct atomic_memory_block*) old_value)->_thread = thread_id;
-	begin._tag_ptr._ptr = ((struct atomic_memory_block*) old_value);
-	begin._tag_ptr._tag = 0;
+	begin.tag_ptr.ptr = ((struct atomic_memory_block*) old_value);
+	begin.tag_ptr._tag = 0;
 	end._integral_type = begin._integral_type;
 	for (uint32_t i = 1; i < count; i++) {
 		((struct atomic_memory_block*) (old_value
@@ -438,14 +450,14 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 		((struct atomic_memory_block*) (old_value
 				+ (i * atomic_memory_sizes[size])))->_thread = thread_id;
 
-		tmp._tag_ptr._ptr = ((struct atomic_memory_block*) (old_value
+		tmp.tag_ptr.ptr = ((struct atomic_memory_block*) (old_value
 				+ (i * atomic_memory_sizes[size])));
-		tmp._tag_ptr._tag = 0;
-		end._tag_ptr._ptr->_next._integral_type = tmp._integral_type;
+		tmp.tag_ptr._tag = 0;
+		end.tag_ptr.ptr->_next._integral_type = tmp._integral_type;
 		end._integral_type = tmp._integral_type;
 	}
-	tmp._tag_ptr._ptr = NULL;
-	end._tag_ptr._ptr->_next._integral_type = tmp._integral_type;
+	tmp.tag_ptr.ptr = NULL;
+	end.tag_ptr.ptr->_next._integral_type = tmp._integral_type;
 
 	return begin;
 }
@@ -456,11 +468,13 @@ void atomic_memory_push(union atomic_memory_block_tag_ptr block) {
 	old_value._integral_type = atomic_load_16(
 			&(atomic_memory_ready._integral_type), __ATOMIC_RELAXED);
 	do {
-		block._tag_ptr._ptr->_next = old_value;
+		block.tag_ptr.ptr->_next = old_value;
 	} while (!atomic_compare_exchange_16(&(atomic_memory_ready._integral_type),
 			&(old_value._integral_type), block._integral_type, 1,
-			__ATOMIC_RELAXED /* read and write */,
-			__ATOMIC_RELAXED /* read */));
+			/* insure that store to block.tag_ptr.ptr->_next
+			 * can be seen by a later load with __ATOMIC_ACQUIRE */
+			__ATOMIC_RELEASE,
+			__ATOMIC_RELAXED));
 }
 
 union atomic_memory_block_tag_ptr atomic_memory_pop() {
@@ -468,38 +482,45 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 	union atomic_memory_block_tag_ptr new_value;
 
 	old_value._integral_type = atomic_load_16(
-			&(atomic_memory_ready._integral_type), __ATOMIC_RELAXED);
+			&(atomic_memory_ready._integral_type),
+			/* insure that previous stores to old_value.tag_ptr.ptr->_next
+			 * with __ATOMIC_RELEASE can be seen */
+			__ATOMIC_ACQUIRE);
 	do {
-		if (NULL != old_value._tag_ptr._ptr) {
-			new_value = old_value._tag_ptr._ptr->_next;
+		if (NULL != old_value.tag_ptr.ptr) {
+			new_value = old_value.tag_ptr.ptr->_next;
 		} else {
-			new_value._tag_ptr._ptr = NULL;
-			new_value._tag_ptr._tag = 0;
+			new_value.tag_ptr.ptr = NULL;
+			new_value.tag_ptr._tag = 0;
 			return new_value;
 		}
 	} while (!atomic_compare_exchange_16(&(atomic_memory_ready._integral_type),
 			&(old_value._integral_type), new_value._integral_type, 1,
-			__ATOMIC_RELAXED /* read and write */,
-			__ATOMIC_RELAXED /* read */));
+			/* insure that store to old_value.tag_ptr.ptr->_next
+			 * can be seen by a later load with __ATOMIC_ACQUIRE */
+			__ATOMIC_RELEASE,
+			/* insure that previous stores to old_value.tag_ptr.ptr->_next
+			 * with __ATOMIC_RELEASE can be seen */
+			__ATOMIC_ACQUIRE));
 
 	return old_value;
 }
 
 void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
-	enum atomic_memory_size size = block._tag_ptr._ptr->_size;
-	int32_t thread = block._tag_ptr._ptr->_thread;
+	enum atomic_memory_size size = block.tag_ptr.ptr->_size;
+	int32_t thread = block.tag_ptr.ptr->_thread;
 
 	if (0 == free_count[thread][size]) {
 		if (thread == thread_id) {
 			/* local cache of free blocks belonging to other threads has no
 			 * entry for size and thread id of current block because the
-			 * current block belongs to the this thread itself
+			 * current block belongs to this thread itself
 			 * => add current block direct to local cache of free blocks (and
 			 * not to local cache of free blocks belonging to other threads) */
 			old_value._integral_type =
 					atomic_memory_tls_cache[size]._integral_type;
-			block._tag_ptr._ptr->_next = old_value;
+			block.tag_ptr.ptr->_next = old_value;
 			atomic_memory_tls_cache[size]._integral_type = block._integral_type;
 			return;
 		} else {
@@ -517,7 +538,7 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 	 * threads */
 	old_value._integral_type =
 			atomic_memory_tls_free_start[thread][size]._integral_type;
-	block._tag_ptr._ptr->_next = old_value;
+	block.tag_ptr.ptr->_next = old_value;
 	atomic_memory_tls_free_start[thread][size]._integral_type =
 			block._integral_type;
 
@@ -532,16 +553,19 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 				&(atomic_memory_cache[thread][size]._integral_type),
 				__ATOMIC_RELAXED);
 		do {
-			atomic_memory_tls_free_end[thread][size]._tag_ptr._ptr->_next =
+			atomic_memory_tls_free_end[thread][size].tag_ptr.ptr->_next =
 					old_value;
 		} while (!atomic_compare_exchange_16(
 				&(atomic_memory_cache[thread][size]._integral_type),
 				&(old_value._integral_type),
 				atomic_memory_tls_free_start[thread][size]._integral_type, 1,
-				__ATOMIC_RELAXED /* read and write */,
-				__ATOMIC_RELAXED /* read */));
+				/* insure that store to
+				 * atomic_memory_tls_free_end[thread][size].tag_ptr.ptr->_next
+				 * can be seen by a later load with __ATOMIC_ACQUIRE */
+				__ATOMIC_RELEASE,
+				__ATOMIC_RELAXED));
 
-		atomic_memory_tls_free_start[thread][size]._tag_ptr._ptr = NULL;
+		atomic_memory_tls_free_start[thread][size].tag_ptr.ptr = NULL;
 		free_count[thread][size] = 0;
 	}
 }

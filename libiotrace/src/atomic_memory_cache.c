@@ -2,11 +2,122 @@
 
 #include "libiotrace_config.h"
 
+#include <sys/mman.h>
+#include <sys/stat.h>        /* For mode constants */
+#include <fcntl.h>           /* For O_* constants */
+#include <unistd.h>
+
 //#define FALL_BACK_TO_SYNC
 
-// TODO: test if invalidate is faster than CAS-loop?
-//#define ATOMIC_MEMORY_INVALID_PTR(x) ((struct atomic_memory_block *) 1)
-//#define ATOMIC_MEMORY_IS_PTR_VALID(x) ((struct atomic_memory_block *) x)
+//#define ATOMIC_MEMORY_CACHE_PER_NODE
+
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT (*atomic_memory_global)
+#else
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT (atomic_memory_global)
+#endif
+
+#define ATOMIC_MEMORY_CACHE_ABORT(message) do { \
+                                               fprintf(stderr, message"\n"); /* TODO: use real fprintf and no wrapper */ \
+                                               abort(); \
+                                           } while(0)
+
+struct atomic_memory_region {
+	/**
+	 * Global cache (per process or per node, see
+	 * #ATOMIC_MEMORY_CACHE_PER_NODE) of usable free memory blocks.
+	 *
+	 * Each array element holds a pointer to the first element of a linked list of
+	 * blocks. Each list holds only blocks of one size belonging to one thread.
+	 * The size of blocks in a list is equal to the size given through the enum
+	 * \a atomic_memory_size equal to the second index of the array element. The
+	 * thread the blocks belonging to is given through the \a thread_id equal to
+	 * the first index of the array element.
+	 *
+	 * This cache is manipulated by different threads and must therefore be
+	 * guarded against concurrent accesses.
+	 */
+	union atomic_memory_block_tag_ptr atomic_memory_cache[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count];
+
+	/**
+	 * Global cache (per process or per node, see
+	 * #ATOMIC_MEMORY_CACHE_PER_NODE) of filled and ready to consume memory blocks.
+	 *
+	 * Holds a pointer to the first element of a linked list of blocks. Each block
+	 * could have a different size and could be filled from a different thread.
+	 *
+	 * This cache is manipulated by different threads and must therefore be
+	 * guarded against concurrent accesses.
+	 */
+	union atomic_memory_block_tag_ptr atomic_memory_ready;
+
+	/**
+	 * Global buffer (per process or per node, see
+	 * #ATOMIC_MEMORY_CACHE_PER_NODE) for creating new memory blocks.
+	 *
+	 * Created blocks are not returned to this buffer. Instead they are hold in
+	 * global and thread local caches. This rule makes the buffer handling easy
+	 * and fast (no real free, no fragmentation and only one pointer to free
+	 * memory necessary).
+	 *
+	 * To build fast linked lists without an additional dereferencing there is a
+	 * pointer to a following block at the beginning of each new memory block
+	 * (see struct \a atomic_memory_block). To prevent the ABA-problem this
+	 * pointer consists of a pointer and a tag (see union
+	 * \a atomic_memory_block_tag_ptr) and needs therefore 16 bytes of memory.
+	 * For fast access to this pointer the memory has to be aligned at least to
+	 * the size of the pointer. E.g. for a x86 architecture the compiler can emit
+	 * a movdqa instruction if the alignment permits it.
+	 */
+	uint8_t atomic_memory_buffer[ATOMIC_MEMORY_BUFFER_SIZE]__attribute__((aligned (ATOMIC_MEMORY_ALIGNMENT)));
+
+	/**
+	 * Pointer to free memory in \a atomic_memory_buffer.
+	 *
+	 * Memory is never returned to the buffer (see \a atomic_memory_buffer). So
+	 * for creating a new block this pointer has only to be increased. This
+	 * prevents the ABA-problem.
+	 *
+	 * Each new block created from the free memory has to be aligned to the size
+	 * of union \a atomic_memory_block_tag_ptr (see \a atomic_memory_buffer for an
+	 * explanation). So this pointer has to be increased by a multiple of
+	 * sizeof(union atomic_memory_block_tag_ptr) only.
+	 *
+	 * This pointer is manipulated by different threads and must therefore be
+	 * guarded against concurrent accesses.
+	 */
+	uint8_t *atomic_memory_buffer_pos;
+
+	/**
+	 * Global (per process or per node, see
+	 * #ATOMIC_MEMORY_CACHE_PER_NODE) counter of active threads.
+	 *
+	 * Has to be incremented for each thread which calls the function
+	 * \c atomic_memory_alloc(). This enables creating a new unique \a thread_id
+	 * for storing the new created block in the different caches.
+	 *
+	 * This counter is manipulated by different threads and must therefore be
+	 * guarded against concurrent accesses.
+	 */
+	int32_t thread_count;
+};
+
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
+#  define ATOMIC_MEMORY_CACHE_SHM_NUMBER "/libiotrace-atomic-memory-cache-number"
+#  define ATOMIC_MEMORY_CACHE_SHM "/libiotrace-atomic-memory-cache-"
+#  define ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH 43
+
+struct atomic_memory_region_init {
+	int32_t region_init;
+	int32_t region_number;
+};
+
+static struct atomic_memory_region *atomic_memory_global;
+
+#else
+
+static struct atomic_memory_region atomic_memory_global;
+#endif
 
 /**
  * Thread local cache of usable free memory blocks belonging to the current
@@ -65,79 +176,6 @@ static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free
  */
 static ATTRIBUTE_THREAD size_t free_count[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
 		{ { 0 } };
-/**
- * Global cache (per process) of usable free memory blocks.
- *
- * Each array element holds a pointer to the first element of a linked list of
- * blocks. Each list holds only blocks of one size belonging to one thread.
- * The size of blocks in a list is equal to the size given through the enum
- * \a atomic_memory_size equal to the second index of the array element. The
- * thread the blocks belonging to is given through the \a thread_id equal to
- * the first index of the array element.
- *
- * This cache is manipulated by different threads and must therefore be
- * guarded against concurrent accesses.
- */
-static union atomic_memory_block_tag_ptr atomic_memory_cache[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
-		{ { { .tag_ptr.ptr = NULL, .tag_ptr._tag = 0 } } };
-/**
- * Global cache (per process) of filled and ready to consume memory blocks.
- *
- * Holds a pointer to the first element of a linked list of blocks. Each block
- * could have a different size and could be filled from a different thread.
- *
- * This cache is manipulated by different threads and must therefore be
- * guarded against concurrent accesses.
- */
-static union atomic_memory_block_tag_ptr atomic_memory_ready = { .tag_ptr.ptr =
-NULL, .tag_ptr._tag = 0 };
-
-/**
- * Global buffer (per process) for creating new memory blocks.
- *
- * Created blocks are not returned to this buffer. Instead they are hold in
- * global and thread local caches. This rule makes the buffer handling easy
- * and fast (no real free, no fragmentation and only one pointer to free
- * memory necessary).
- *
- * To build fast linked lists without an additional dereferencing there is a
- * pointer to a following block at the beginning of each new memory block
- * (see struct \a atomic_memory_block). To prevent the ABA-problem this
- * pointer consists of a pointer and a tag (see union
- * \a atomic_memory_block_tag_ptr) and needs therefore 16 bytes of memory.
- * For fast access to this pointer the memory has to be aligned at least to
- * the size of the pointer. E.g. for a x86 architecture the compiler can emit
- * a movdqa instruction if the alignment permits it.
- */
-static char atomic_memory_buffer[ATOMIC_MEMORY_BUFFER_SIZE]__attribute__((aligned (ATOMIC_MEMORY_ALIGNMENT)));
-/**
- * Pointer to free memory in \a atomic_memory_buffer.
- *
- * Memory is never returned to the buffer (see \a atomic_memory_buffer). So
- * for creating a new block this pointer has only to be increased. This
- * prevents the ABA-problem.
- *
- * Each new block created from the free memory has to be aligned to the size
- * of union \a atomic_memory_block_tag_ptr (see \a atomic_memory_buffer for an
- * explanation). So this pointer has to be increased by a multiple of
- * sizeof(union atomic_memory_block_tag_ptr) only.
- *
- * This pointer is manipulated by different threads and must therefore be
- * guarded against concurrent accesses.
- */
-static char *atomic_memory_buffer_pos = atomic_memory_buffer;
-
-/**
- * Global (per process) counter of active threads.
- *
- * Has to be incremented for each thread which calls the function
- * \c atomic_memory_alloc(). This enables creating a new unique \a thread_id
- * for storing the new created block in the different caches.
- *
- * This counter is manipulated by different threads and must therefore be
- * guarded against concurrent accesses.
- */
-static int32_t thread_count = -1;
 /**
  * Thread local unique id.
  *
@@ -233,8 +271,8 @@ static inline union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
  *         value of \a ptr wasn't changed and value of \a expected was set to
  *         actual value of \a ptr
  */
-static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
-		unsigned __int128 *expected, unsigned __int128 desired, char weak,
+static inline uint8_t atomic_compare_exchange_16(unsigned __int128 *ptr,
+		unsigned __int128 *expected, unsigned __int128 desired, uint8_t weak,
 		int success_memorder, int failure_memorder)__attribute__((always_inline));
 
 /**
@@ -247,13 +285,213 @@ static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
 static inline unsigned __int128 atomic_load_16(unsigned __int128 *ptr,
 		int memorder)__attribute__((always_inline));
 
+/**
+ * TODO
+ */
+static inline void init_cache()__attribute__((always_inline));
+
+/**
+ * TODO
+ */
 static void init_on_load() {
-	// TODO: malloc
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
+	int fd;
+	struct atomic_memory_region_init *memory_region_init;
+	int32_t region_number;
+	int32_t region_init;
+	char shared_memory_name[ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH];
+
+	// TODO: use real functions and no wrapper
+
+	/* get an existing or create a new shared memory atomic_memory_region_init */
+	fd = shm_open(ATOMIC_MEMORY_CACHE_SHM_NUMBER, O_RDWR | O_CREAT,
+	S_IRUSR | S_IWUSR);
+	if (0 > fd) {
+		ATOMIC_MEMORY_CACHE_ABORT("shared memory could not be created");
+	}
+
+	/* Set the size of the region:
+	 *
+	 * After creating a new shared memory region, the size of the region is
+	 * 0, so the first ftruncate increases the size. The POSIX specification
+	 * is unclear about initialization of shared memory objects during an
+	 * increase of size with ftruncate. The man page for ftruncate specifies
+	 * that the extended parts of shared memory will be initialized to null
+	 * bytes ('\0'). The further logic depends on that initialization. So it
+	 * could be prone to errors on non Linux implementations of ftruncate. */
+	if (0 != ftruncate(fd, sizeof(struct atomic_memory_region_init))) {
+		ATOMIC_MEMORY_CACHE_ABORT("set size of shared memory was unsuccessful");
+	}
+
+	/* map the region into the virtual address space of this process */
+	memory_region_init = mmap(NULL, sizeof(struct atomic_memory_region_init),
+	PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (MAP_FAILED == memory_region_init) {
+		ATOMIC_MEMORY_CACHE_ABORT("mmap of shared memory was unsuccessful");
+	}
+	close(fd);
+
+	/* get number of created and initialized shared memory */
+	region_init = __atomic_load_n(&(memory_region_init->region_init),
+	/* ensure that each read and write to memory_region_init is
+	 * sequentially consistent */
+	__ATOMIC_SEQ_CST);
+
+	if (0 == region_init) {
+		/* shared memory for cache is not initialized: do it */
+
+		/* get a unique number for creating and initializing shared memory from
+		 * this process */
+		region_number = __atomic_add_fetch(&(memory_region_init->region_number),
+				1,
+				/* ensure that each read and write to memory_region_init is
+				 * sequentially consistent */
+				__ATOMIC_SEQ_CST);
+
+		/* Build a unique name for shared memory created from this process:
+		 *
+		 * needs 32 + length of region_number as string (10) + 1 for terminating '\0'
+		 * bytes in shared_memory_name */
+		if (ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH < sprintf(shared_memory_name,
+		ATOMIC_MEMORY_CACHE_SHM"%d", region_number)) {
+			ATOMIC_MEMORY_CACHE_ABORT(
+					"name of shared memory could not be created");
+		}
+
+		/* get an existing or create a new shared memory atomic_memory_global */
+		fd = shm_open(shared_memory_name, O_RDWR | O_CREAT,
+		S_IRUSR | S_IWUSR);
+		if (0 > fd) {
+			ATOMIC_MEMORY_CACHE_ABORT("shared memory could not be created");
+		}
+
+		/* Set the size of the region:
+		 *
+		 * see ftruncate above for further details */
+		if (0 != ftruncate(fd, sizeof(struct atomic_memory_region))) {
+			ATOMIC_MEMORY_CACHE_ABORT(
+					"set size of shared memory was unsuccessful");
+		}
+
+		/* Map the region into the virtual address space of this process:
+		 *
+		 * With MAP_FIXED it is possible to give the mapping the same address in
+		 * each process. This would be useful for storing pointers in the shared
+		 * memory and use them to get access to other parts of the shared memory
+		 * independent from the current process. But it is not guaranteed that the
+		 * same address is available for mapping shared memory in each process.
+		 * It's also possible that a address is already used by a other mapping
+		 * and a new call to mmap with this address unmaps this existing (and
+		 * further used) mapping. So MAP_FIXED is not usable.
+		 * => only store relative addresses inside the shared memory region and
+		 *    add value of atomic_memory_global to them during dereferencing
+		 *
+		 * The internal caches are build out of linked lists. These lists are
+		 * linked via 16 byte pointers (pointer and a tag to prevent the
+		 * ABA-problem). To guarantee fast access to this pointers the memory has
+		 * to be at least aligned to 16. The POSIX specification says nothing
+		 * about the alignment of the returned pointer from mmap if the flag
+		 * MAP_FIXED isn't used (it's implementation-defined). The linux man page
+		 * also says nothing about it if mmap is called with NULL as a address.
+		 * The man page only says that a page boundary will be used if MAP_FIXED
+		 * isn't set and a address for the mapping is provided as a hint for
+		 * placing the mapping. This suggests that the address will be align to
+		 * the page boundary (which is a multiple of 16). TODO: ensure the alignment */
+		atomic_memory_global = mmap(NULL, sizeof(struct atomic_memory_region),
+		PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+		if (MAP_FAILED == atomic_memory_global) {
+			ATOMIC_MEMORY_CACHE_ABORT("mmap of shared memory was unsuccessful");
+		}
+		close(fd);
+
+		/* initialize the shared memory region */
+		init_cache();
+
+		if (__atomic_compare_exchange_n(&(memory_region_init->region_init),
+				&region_init, region_number, 0,
+				/* ensure that each read and write to memory_region_init is
+				 * sequentially consistent */
+				__ATOMIC_SEQ_CST,
+				/* ensure that each read and write to memory_region_init is
+				 * sequentially consistent */
+				__ATOMIC_SEQ_CST)) {
+			/* no other number of a initialized shared memory was set to
+			 * memory_region_init->region_init, so the number of this
+			 * initialized shared memory is set
+			 * => atomic_memory_global contains the initialized shared memory
+			 * cache */
+			munmap(memory_region_init,
+					sizeof(struct atomic_memory_region_init));
+			return;
+		} else {
+			/* a other number of a initialized shared memory was set to
+			 * memory_region_init->region_init, so this shared memory is no
+			 * longer needed */
+			munmap(atomic_memory_global, sizeof(struct atomic_memory_region));
+			shm_unlink(shared_memory_name);
+		}
+	}
+
+	munmap(memory_region_init, sizeof(struct atomic_memory_region_init));
+
+	/* region_init contains the number of the initialized shared memory cache
+	 * => map it */
+
+	/* Build the name of the initialized shared memory:
+	 *
+	 * needs 32 + length of region_number as string (10) + 1 for terminating '\0'
+	 * bytes in shared_memory_name */
+	if (ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH < sprintf(shared_memory_name,
+	ATOMIC_MEMORY_CACHE_SHM"%d", region_init)) {
+		ATOMIC_MEMORY_CACHE_ABORT("name of shared memory could not be created");
+	}
+
+	fd = shm_open(shared_memory_name, O_RDWR, 0);
+	if (0 > fd) {
+		ATOMIC_MEMORY_CACHE_ABORT("shared memory could not be opened");
+	}
+
+	if (0 != ftruncate(fd, sizeof(struct atomic_memory_region))) {
+		ATOMIC_MEMORY_CACHE_ABORT("set size of shared memory was unsuccessful");
+	}
+
+	atomic_memory_global = mmap(NULL, sizeof(struct atomic_memory_region),
+	PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (MAP_FAILED == atomic_memory_global) {
+		ATOMIC_MEMORY_CACHE_ABORT("mmap of shared memory was unsuccessful");
+	}
+	close(fd);
+
+	/* later started processes need initialized atomic_memory_global and
+	 * memory_region_init
+	 * => don't unlink the two shared memory regions
+	 * TODO: process counter in memory_region_init, so last process can unlink
+	 * the two regions in dtor (this will be prone to errors if some dtor's
+	 * use wrapped functions) */
+#else
+	init_cache();
+#endif
 }
 
-static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
+static inline void init_cache() {
+	for (int i = 0; i < ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS; i++) {
+		for (int l = 0; l < atomic_memory_size_count; l++) {
+			ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[i][l].tag_ptr.ptr =
+			NULL;
+			ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[i][l].tag_ptr._tag =
+					0;
+		}
+	}
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready.tag_ptr.ptr = NULL;
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready.tag_ptr._tag = 0;
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos =
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer;
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count = -1;
+}
+
+static inline uint8_t atomic_compare_exchange_16(unsigned __int128 *ptr,
 		unsigned __int128 *expected, unsigned __int128 desired,
-		char weak __attribute__((unused)),
+		uint8_t weak __attribute__((unused)),
 		int success_memorder __attribute__((unused)),
 		int failure_memorder __attribute__((unused))) {
 #ifdef FALL_BACK_TO_SYNC
@@ -299,88 +537,94 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 		 * into the workflow) */
 		if (__builtin_add_overflow(old_value.tag_ptr._tag, 1,
 				&(old_value.tag_ptr._tag))) {
-			fprintf(stderr, "overflow during increment of _tag"); // TODO: use real fprintf and no wrapper
-			abort();
+			ATOMIC_MEMORY_CACHE_ABORT("overflow during increment of _tag");
 		}
 
 		return old_value;
 	} else {
-		old_value._integral_type = atomic_load_16(
-				&(atomic_memory_cache[thread_id][size]._integral_type),
-				/* insure that previous stores to old_value.tag_ptr.ptr->_next
-				 * with __ATOMIC_RELEASE can be seen */
-				__ATOMIC_ACQUIRE);
-		if (NULL != old_value.tag_ptr.ptr) {
+		if (-1 < thread_id) {
+			old_value._integral_type =
+					atomic_load_16(
+							&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread_id][size]._integral_type),
+							/* ensure that previous stores to old_value.tag_ptr.ptr->_next
+							 * with __ATOMIC_RELEASE can be seen */
+							__ATOMIC_ACQUIRE);
+			if (NULL != old_value.tag_ptr.ptr) {
 
-			/* thread local cache is empty and central cache for this thread
-			 * has elements of requested size: fill local cache with entries
-			 * from central cache and return element from local cache */
-			new_value.tag_ptr.ptr = NULL;
-			do {
-			} while (!atomic_compare_exchange_16(
-					&(atomic_memory_cache[thread_id][size]._integral_type),
-					&(old_value._integral_type), new_value._integral_type, 1,
-					__ATOMIC_RELAXED,
-					/* insure that previous stores to old_value.tag_ptr.ptr->_next
-					 * with __ATOMIC_RELEASE can be seen */
-					__ATOMIC_ACQUIRE));
+				/* thread local cache is empty and central cache for this thread
+				 * has elements of requested size: fill local cache with entries
+				 * from central cache and return element from local cache */
+				new_value.tag_ptr.ptr = NULL;
+				do {
+				} while (!atomic_compare_exchange_16(
+						&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread_id][size]._integral_type),
+						&(old_value._integral_type), new_value._integral_type,
+						1,
+						/* ensure that previous stores to old_value.tag_ptr.ptr->_next
+						 * with __ATOMIC_RELEASE can be seen */
+						__ATOMIC_ACQUIRE,
+						/* ensure that previous stores to old_value.tag_ptr.ptr->_next
+						 * with __ATOMIC_RELEASE can be seen */
+						__ATOMIC_ACQUIRE));
 
-			atomic_memory_tls_cache[size]._integral_type =
-					old_value.tag_ptr.ptr->_next._integral_type;
+				atomic_memory_tls_cache[size]._integral_type =
+						old_value.tag_ptr.ptr->_next._integral_type;
 
-			/* increase tag of pointer to prevent ABA-problem (every reuse of
-			 * memory blocks from cache inserts a formerly known pointer back
-			 * into the workflow) */
-			if (__builtin_add_overflow(old_value.tag_ptr._tag, 1,
-					&(old_value.tag_ptr._tag))) {
-				fprintf(stderr, "overflow during increment of _tag"); // TODO: use real fprintf and no wrapper
-				abort();
+				/* increase tag of pointer to prevent ABA-problem (every reuse of
+				 * memory blocks from cache inserts a formerly known pointer back
+				 * into the workflow) */
+				if (__builtin_add_overflow(old_value.tag_ptr._tag, 1,
+						&(old_value.tag_ptr._tag))) {
+					ATOMIC_MEMORY_CACHE_ABORT(
+							"overflow during increment of _tag");
+				}
+
+				return old_value;
 			}
-
-			return old_value;
-		} else {
-
-			/* thread local cache and central cache for this thread are empty:
-			 * create a new memory block */
-			new_value.tag_ptr.ptr = atomic_memory_new_block(size);
-			new_value.tag_ptr._tag = 0;
-
-			/* fill local cache with additional created new blocks */
-			if (0 < ATOMIC_MEMORY_CACHE_SIZE) {
-				atomic_memory_tls_cache[size] = atomic_memory_new_block_list(
-						size,
-						ATOMIC_MEMORY_CACHE_SIZE);
-//				if (NULL == atomic_memory_tls_cache[size].tag_ptr.ptr) {
-//					fprintf(stderr, "not enough memory available (in atomic_memory_buffer)"); // TODO: use real fprintf and no wrapper
-//					abort();
-//				}
-			}
-
-			return new_value;
 		}
+
+		/* thread local cache and central cache for this thread are empty:
+		 * create a new memory block */
+		new_value.tag_ptr.ptr = atomic_memory_new_block(size);
+		new_value.tag_ptr._tag = 0;
+
+		/* fill local cache with additional created new blocks */
+		if (0 < ATOMIC_MEMORY_CACHE_SIZE) {
+			atomic_memory_tls_cache[size] = atomic_memory_new_block_list(size,
+			ATOMIC_MEMORY_CACHE_SIZE);
+//			if (NULL == atomic_memory_tls_cache[size].tag_ptr.ptr) {
+//				ATOMIC_MEMORY_CACHE_ABORT(
+//						"not enough memory available (in atomic_memory_buffer)");
+//			}
+		}
+
+		return new_value;
 	}
 }
 
 static struct atomic_memory_block* atomic_memory_new_block(
 		enum atomic_memory_size size) {
-	char *old_value;
-	char *new_value;
+	uint8_t *old_value;
+	uint8_t *new_value;
 	size_t real_size = atomic_memory_sizes[size];
 
 	/* atomic get needed bytes from buffer */
-	old_value = __atomic_load_n(&(atomic_memory_buffer_pos), __ATOMIC_RELAXED);
+	old_value = __atomic_load_n(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos),
+			__ATOMIC_RELAXED);
 	// TODO: check for __atomic_load_n
 	do {
 		/* check if atomic_memory_buffer has enough free memory left for
 		 * needed size (do it without adding size to atomic_memory_buffer_pos
 		 * to prevent wrap around during evaluation) */
-		if (atomic_memory_buffer + ATOMIC_MEMORY_BUFFER_SIZE - old_value
-				>= real_size) {
+		if (ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer
+				+ ATOMIC_MEMORY_BUFFER_SIZE - old_value >= real_size) {
 			new_value = (void*) (old_value + real_size);
 		} else {
 			return NULL; //TODO: abort() ???
 		}
-	} while (!__atomic_compare_exchange_n(&(atomic_memory_buffer_pos),
+	} while (!__atomic_compare_exchange_n(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos),
 			&old_value, (void*) new_value, 1,
 			__ATOMIC_RELAXED,
 			__ATOMIC_RELAXED));
@@ -390,11 +634,13 @@ static struct atomic_memory_block* atomic_memory_new_block(
 	((struct atomic_memory_block*) old_value)->_size = size;
 	if (0 > thread_id) {
 		/* get an index to an unique place in intern cache per thread */
-		thread_id = __atomic_add_fetch(&thread_count, 1, __ATOMIC_RELAXED);
+		thread_id = __atomic_add_fetch(
+				&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count, 1,
+				__ATOMIC_RELAXED);
 		if (ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS <= thread_id) {
 			/* there are more threads than places in intern cache */
-			fprintf(stderr, "more threads than places in intern cache"); // TODO: use real fprintf and no wrapper
-			abort();
+			ATOMIC_MEMORY_CACHE_ABORT(
+					"more threads than places in intern cache");
 		}
 	}
 	((struct atomic_memory_block*) old_value)->_thread = thread_id;
@@ -404,8 +650,8 @@ static struct atomic_memory_block* atomic_memory_new_block(
 
 static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 		enum atomic_memory_size size, uint32_t count) {
-	char *old_value;
-	char *new_value;
+	uint8_t *old_value;
+	uint8_t *new_value;
 	union atomic_memory_block_tag_ptr begin;
 	union atomic_memory_block_tag_ptr end;
 	union atomic_memory_block_tag_ptr tmp;
@@ -420,19 +666,22 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 	}
 
 	/* atomic get needed bytes from buffer */
-	old_value = __atomic_load_n(&(atomic_memory_buffer_pos), __ATOMIC_RELAXED);
+	old_value = __atomic_load_n(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos),
+			__ATOMIC_RELAXED);
 	do {
 		/* check if atomic_memory_buffer has enough free memory left for
 		 * needed size (do it without adding size to atomic_memory_buffer_pos
 		 * to prevent wrap around during evaluation) */
-		if (atomic_memory_buffer + ATOMIC_MEMORY_BUFFER_SIZE - old_value
-				>= real_size) {
+		if (ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer
+				+ ATOMIC_MEMORY_BUFFER_SIZE - old_value >= real_size) {
 			new_value = (void*) (old_value + real_size);
 		} else {
 			tmp.tag_ptr.ptr = NULL;
 			return tmp; //TODO: abort() ???
 		}
-	} while (!__atomic_compare_exchange_n(&(atomic_memory_buffer_pos),
+	} while (!__atomic_compare_exchange_n(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos),
 			&old_value, (void*) new_value, 1,
 			__ATOMIC_RELAXED,
 			__ATOMIC_RELAXED));
@@ -465,13 +714,16 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 void atomic_memory_push(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
 
-	old_value._integral_type = atomic_load_16(
-			&(atomic_memory_ready._integral_type), __ATOMIC_RELAXED);
+	old_value._integral_type =
+			atomic_load_16(
+					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
+					__ATOMIC_RELAXED);
 	do {
 		block.tag_ptr.ptr->_next = old_value;
-	} while (!atomic_compare_exchange_16(&(atomic_memory_ready._integral_type),
+	} while (!atomic_compare_exchange_16(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
 			&(old_value._integral_type), block._integral_type, 1,
-			/* insure that store to block.tag_ptr.ptr->_next
+			/* ensure that store to block.tag_ptr.ptr->_next
 			 * can be seen by a later load with __ATOMIC_ACQUIRE */
 			__ATOMIC_RELEASE,
 			__ATOMIC_RELAXED));
@@ -481,11 +733,12 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 	union atomic_memory_block_tag_ptr old_value;
 	union atomic_memory_block_tag_ptr new_value;
 
-	old_value._integral_type = atomic_load_16(
-			&(atomic_memory_ready._integral_type),
-			/* insure that previous stores to old_value.tag_ptr.ptr->_next
-			 * with __ATOMIC_RELEASE can be seen */
-			__ATOMIC_ACQUIRE);
+	old_value._integral_type =
+			atomic_load_16(
+					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
+					/* ensure that previous stores to old_value.tag_ptr.ptr->_next
+					 * with __ATOMIC_RELEASE can be seen */
+					__ATOMIC_ACQUIRE);
 	do {
 		if (NULL != old_value.tag_ptr.ptr) {
 			new_value = old_value.tag_ptr.ptr->_next;
@@ -494,12 +747,13 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 			new_value.tag_ptr._tag = 0;
 			return new_value;
 		}
-	} while (!atomic_compare_exchange_16(&(atomic_memory_ready._integral_type),
+	} while (!atomic_compare_exchange_16(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
 			&(old_value._integral_type), new_value._integral_type, 1,
-			/* insure that store to old_value.tag_ptr.ptr->_next
+			/* ensure that store to old_value.tag_ptr.ptr->_next
 			 * can be seen by a later load with __ATOMIC_ACQUIRE */
 			__ATOMIC_RELEASE,
-			/* insure that previous stores to old_value.tag_ptr.ptr->_next
+			/* ensure that previous stores to old_value.tag_ptr.ptr->_next
 			 * with __ATOMIC_RELEASE can be seen */
 			__ATOMIC_ACQUIRE));
 
@@ -549,17 +803,18 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 		 * thread id of current block is full
 		 * => copy linked list to global cache (make it available for further
 		 * allocations) */
-		old_value._integral_type = atomic_load_16(
-				&(atomic_memory_cache[thread][size]._integral_type),
-				__ATOMIC_RELAXED);
+		old_value._integral_type =
+				atomic_load_16(
+						&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread][size]._integral_type),
+						__ATOMIC_RELAXED);
 		do {
 			atomic_memory_tls_free_end[thread][size].tag_ptr.ptr->_next =
 					old_value;
 		} while (!atomic_compare_exchange_16(
-				&(atomic_memory_cache[thread][size]._integral_type),
+				&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread][size]._integral_type),
 				&(old_value._integral_type),
 				atomic_memory_tls_free_start[thread][size]._integral_type, 1,
-				/* insure that store to
+				/* ensure that store to
 				 * atomic_memory_tls_free_end[thread][size].tag_ptr.ptr->_next
 				 * can be seen by a later load with __ATOMIC_ACQUIRE */
 				__ATOMIC_RELEASE,

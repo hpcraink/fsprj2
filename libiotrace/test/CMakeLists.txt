@@ -471,7 +471,7 @@ if(OpenMP_C_FOUND)
     target_link_libraries(OpenMP_atomic_memory_cache_ordered_static PUBLIC OpenMP::OpenMP_C)
 endif()
 #https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94649    -latomic is needed (and -mcx16 is ignored)
-target_link_libraries(OpenMP_atomic_memory_cache_ordered_static PUBLIC -latomic)
+target_link_libraries(OpenMP_atomic_memory_cache_ordered_static PUBLIC -latomic -lrt)
 
 ##########################################################################################################
 
@@ -490,7 +490,7 @@ if(OpenMP_C_FOUND)
     target_link_libraries(OpenMP_atomic_memory_cache_mixed_static PUBLIC OpenMP::OpenMP_C)
 endif()
 #https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94649    -latomic is needed (and -mcx16 is ignored)
-target_link_libraries(OpenMP_atomic_memory_cache_mixed_static PUBLIC -latomic)
+target_link_libraries(OpenMP_atomic_memory_cache_mixed_static PUBLIC -latomic -lrt)
 
 ##########################################################################################################
 
@@ -513,7 +513,7 @@ if(OpenMP_C_FOUND)
     target_link_libraries(OpenMP_atomic_memory_cache_malloc_static PUBLIC OpenMP::OpenMP_C)
 endif()
 #https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94649    -latomic is needed (and -mcx16 is ignored)
-target_link_libraries(OpenMP_atomic_memory_cache_measure_static PUBLIC -latomic)
-target_link_libraries(OpenMP_atomic_memory_cache_malloc_static PUBLIC -latomic)
+target_link_libraries(OpenMP_atomic_memory_cache_measure_static PUBLIC -latomic -lrt)
+target_link_libraries(OpenMP_atomic_memory_cache_malloc_static PUBLIC -latomic -lrt)
 
 ##########################################################################################################

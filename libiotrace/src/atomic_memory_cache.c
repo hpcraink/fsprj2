@@ -2,26 +2,111 @@
 
 #include "libiotrace_config.h"
 
-#include <sys/mman.h>
-#include <sys/stat.h>        /* For mode constants */
-#include <fcntl.h>           /* For O_* constants */
-#include <unistd.h>
-
+/**
+ * Use sync builtins instead of atomic builtins from gcc.
+ */
 //#define FALL_BACK_TO_SYNC
 
-//#define ATOMIC_MEMORY_CACHE_PER_NODE
+/**
+ * If defined, global memory is kept in a share memory region and shared
+ * between all processes using this library. Else each process has it's own
+ * global memory.
+ */
+#define ATOMIC_MEMORY_CACHE_PER_NODE
 
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
-#  define ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT (*atomic_memory_global)
-#else
-#  define ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT (atomic_memory_global)
+/* includes for shared memory */
+#  include <sys/mman.h>
+#  include <sys/stat.h>        /* For mode constants */
+#  include <fcntl.h>           /* For O_* constants */
+#  include <unistd.h>
 #endif
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
+/**
+ * Get struct \a atomic_memory_region for access to global memory.
+ *
+ * If \a atomic_memory_global is a struct per process it can be used without
+ * further processing. Else \a atomic_memory_global is a pointer to shared
+ * memory and must be dereferenced.
+ *
+ * @return the struct \a atomic_memory_global
+ */
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT (*atomic_memory_global)
+/**
+ * Get relative offset of absolute pointer in shared memory.
+ *
+ * \a abs_ptr is converted to smallest addressable space (char*). Then the
+ * difference between \a abs_ptr and the beginning of the shared memory region
+ * (starting address of struct \atomic_memory_global) is calculated. For that
+ * the starting address of the region is converted to an integer. So it is
+ * possible to subtract the start address from the \a abs_ptr to get the
+ * difference in multiples of the smallest addressable space (char aka byte).
+ *
+ * The calculated difference is converted to the type \a abs_ptr had before
+ * the conversion to char*. So it is possible to store the returned difference
+ * instead of the pointer inside a variable for the pointer.
+ *
+ * @param[in]  abs_ptr    absolute pointer
+ * @return offset of absolute pointer \a abs_ptr in shared memory
+ */
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(abs_ptr) ((__typeof__(abs_ptr))((char*)abs_ptr - (uintptr_t) atomic_memory_global))
+/**
+ * Get absolute pointer of relative offset in shared memory.
+ *
+ * Reverts the calculation made in
+ * #ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(abs_ptr). Uses the virtual
+ * memory starting address of the shared memory of the current process to do
+ * that. So the resulting pointer is valid in the current process.
+ *
+ * See #ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(abs_ptr) for further
+ * explanation.
+ *
+ * @param[in]  rel_ptr    relative offset
+ * @return absolute pointer of offset \a rel_ptr in shared memory
+ */
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(rel_ptr) ((__typeof__(rel_ptr))((char*)rel_ptr + (uintptr_t) atomic_memory_global))
+/**
+ * Name of the shared memory region which holds the number of processes trying
+ * to initialize a global memory cache for this library and the id of a
+ * successfully initialized global memory cache.
+ */
+#  define ATOMIC_MEMORY_CACHE_SHM_NUMBER "/libiotrace-atomic-memory-cache-number"
+/**
+ * Prefix of the name of a global memory cache. Combined with the id of a
+ * successfully initialized global memory cache it's the name of that cache.
+ */
+#  define ATOMIC_MEMORY_CACHE_SHM "/libiotrace-atomic-memory-cache-"
+/**
+ * Maximum length of prefix #ATOMIC_MEMORY_CACHE_SHM combined with the id of a
+ * successfully initialized global memory cache.
+ */
+#  define ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH 43
+#else
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT (atomic_memory_global)
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(abs_ptr) (abs_ptr)
+#  define ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(rel_ptr) (rel_ptr)
+#endif
+
+/**
+ * Print message and abort.
+ *
+ * \a message is printed to stderr and program is aborted. Doesn't return.
+ *
+ * @param[in]  message    message to be printed
+ */
 #define ATOMIC_MEMORY_CACHE_ABORT(message) do { \
                                                fprintf(stderr, message"\n"); /* TODO: use real fprintf and no wrapper */ \
                                                abort(); \
                                            } while(0)
 
+/**
+ * Struct holds all global (per process or per node) values.
+ *
+ * Holds all global caches of free or ready to consume memory blocks, the
+ * buffer for creating new memory blocks and members to manage the global
+ * space.
+ */
 struct atomic_memory_region {
 	/**
 	 * Global cache (per process or per node, see
@@ -68,8 +153,15 @@ struct atomic_memory_region {
 	 * For fast access to this pointer the memory has to be aligned at least to
 	 * the size of the pointer. E.g. for a x86 architecture the compiler can emit
 	 * a movdqa instruction if the alignment permits it.
+	 *
+	 * This member should never be the first member inside the struct, because
+	 * if it's stored inside a shared memory region used by different processes
+	 * the pointers to memory blocks must be stored as relative addresses. If
+	 * this member was the first member the relative address of the first block
+	 * in it would be 0 and therefore equal to NULL. So NULL could not be used
+	 * to identify empty pointers.
 	 */
-	uint8_t atomic_memory_buffer[ATOMIC_MEMORY_BUFFER_SIZE]__attribute__((aligned (ATOMIC_MEMORY_ALIGNMENT)));
+	char atomic_memory_buffer[ATOMIC_MEMORY_BUFFER_SIZE]__attribute__((aligned (ATOMIC_MEMORY_ALIGNMENT)));
 
 	/**
 	 * Pointer to free memory in \a atomic_memory_buffer.
@@ -86,7 +178,7 @@ struct atomic_memory_region {
 	 * This pointer is manipulated by different threads and must therefore be
 	 * guarded against concurrent accesses.
 	 */
-	uint8_t *atomic_memory_buffer_pos;
+	char *atomic_memory_buffer_pos;
 
 	/**
 	 * Global (per process or per node, see
@@ -103,19 +195,58 @@ struct atomic_memory_region {
 };
 
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
-#  define ATOMIC_MEMORY_CACHE_SHM_NUMBER "/libiotrace-atomic-memory-cache-number"
-#  define ATOMIC_MEMORY_CACHE_SHM "/libiotrace-atomic-memory-cache-"
-#  define ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH 43
-
+/**
+ * Struct to ensure lock free initialization of \a atomic_memory_global.
+ *
+ * During initialization of a shared memory region for \a atomic_memory_global
+ * a synchronization pattern is needed (only one process is allowed to write
+ * to the region during initialization and other processes must wait for the
+ * initialization to end before using of the region is possible). Locking the
+ * region during initialization is not possible because it is error prone and
+ * not lock free (if the lock holding process terminates before the lock is
+ * released the whole system is in deadlock).
+ *
+ * As long as \a region_init is 0 each starting process tries to create and
+ * initialize a new separate \a atomic_memory_global region. To do that the
+ * \a region_number is increased for each trying process via an atomic
+ * instruction. So each process has a unique id to name a new region. If a
+ * process has created and initialized a new region it tries to write the id
+ * to \a region_init. This is done with an atomic compare and swap
+ * instruction. The id is only written, if \a region_init is equal to 0. If
+ * that's the case an initialized region is available and it's id can be read
+ * from \a region_init. Else a other process has successfully written it's own
+ * initialized region and the region of the current process is no longer
+ * needed. The unnecessary region will be deleted and the id from
+ * \a region_init will be used to open and map the first initialized region.
+ */
 struct atomic_memory_region_init {
+	/**
+	 * Id of successfully initialized shared memory region for
+	 * \a atomic_memory_global.
+	 */
 	int32_t region_init;
+	/**
+	 * Number of processes which are trying to initialize a shared memory
+	 * region for \a atomic_memory_global.
+	 */
 	int32_t region_number;
 };
 
+/**
+ * Holds all global (per process or per node) values.
+ *
+ * See \a atomic_memory_region. Is used if #ATOMIC_MEMORY_CACHE_PER_NODE is
+ * defined. Points to a shared memory region.
+ */
 static struct atomic_memory_region *atomic_memory_global;
 
 #else
 
+/**
+ * Holds all global (per process or per node) values.
+ *
+ * See \a atomic_memory_region.
+ */
 static struct atomic_memory_region atomic_memory_global;
 #endif
 
@@ -194,7 +325,13 @@ static ATTRIBUTE_THREAD size_t free_count[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS]
  */
 static ATTRIBUTE_THREAD int32_t thread_id = -1;
 
-// TODO: get atomic_memory_buffer from malloc instead of using stack
+/**
+ * Initialization of \a atomic_memory_global.
+ *
+ * If #ATOMIC_MEMORY_CACHE_PER_NODE is defined \a memory_region_init is used
+ * to get or create a initialized shared memory region per node (see struct
+ * \a atomic_memory_region_init). Else \a atomic_memory_global is initialized.
+ */
 static void init_on_load() ATTRIBUTE_CONSTRUCTOR;
 
 /**
@@ -206,6 +343,10 @@ static void init_on_load() ATTRIBUTE_CONSTRUCTOR;
  * and generates therefore a new \a thread_id (via atomic increment of
  * \a thread_count) if needed. Aborts the program if \a thread_count gets
  * greater than \c ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS.
+ *
+ * Returns absolute pointer to a memory block. If the memory block is stored
+ * via relative pointers in shared memory the relative pointer has to be
+ * calculated before the memory block is stored inside a cache.
  *
  * @param[in]  size       enum which gives the length in bytes of the new
  *                        memory block (see array \a atomic_memory_sizes)
@@ -227,6 +368,10 @@ static inline struct atomic_memory_block* atomic_memory_new_block(
  * Should only be used after the first call to \c atomic_memory_new_block()
  * from the current thread was already made. This is because the new created
  * \a thread_id is needed.
+ *
+ * Returns relative pointers if memory blocks are kept in shared memory.
+ * Should therefore only used to fill intern cache and never for a direct
+ * return to a using program.
  *
  * @param[in]  size       enum which gives the length in bytes of each new
  *                        memory block (see array \a atomic_memory_sizes)
@@ -271,8 +416,8 @@ static inline union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
  *         value of \a ptr wasn't changed and value of \a expected was set to
  *         actual value of \a ptr
  */
-static inline uint8_t atomic_compare_exchange_16(unsigned __int128 *ptr,
-		unsigned __int128 *expected, unsigned __int128 desired, uint8_t weak,
+static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
+		unsigned __int128 *expected, unsigned __int128 desired, char weak,
 		int success_memorder, int failure_memorder)__attribute__((always_inline));
 
 /**
@@ -286,14 +431,15 @@ static inline unsigned __int128 atomic_load_16(unsigned __int128 *ptr,
 		int memorder)__attribute__((always_inline));
 
 /**
- * TODO
+ * Initialization of \a atomic_memory_global.
+ *
+ * Doesn't create a shared memory region if #ATOMIC_MEMORY_CACHE_PER_NODE is
+ * set. Shouldn't therefore be called outside of \c init_on_load().
  */
 static inline void init_cache()__attribute__((always_inline));
 
-/**
- * TODO
- */
 static void init_on_load() {
+	// TODO: get atomic_memory_buffer from malloc instead of using stack
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 	int fd;
 	struct atomic_memory_region_init *memory_region_init;
@@ -473,6 +619,8 @@ static void init_on_load() {
 #endif
 }
 
+/* TODO: call of wrapper from ctor of other library is possible
+ * => init_cache() must be called if alloc is called before ctor of this library was called */
 static inline void init_cache() {
 	for (int i = 0; i < ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS; i++) {
 		for (int l = 0; l < atomic_memory_size_count; l++) {
@@ -484,14 +632,18 @@ static inline void init_cache() {
 	}
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready.tag_ptr.ptr = NULL;
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready.tag_ptr._tag = 0;
+	/* store relative address to free memory inside the buffer if buffer is
+	 * shared between processes via shared memory region (could be mapped to
+	 * a different virtual address per process) */
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos =
-	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer;
+			ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer[0]));
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count = -1;
 }
 
-static inline uint8_t atomic_compare_exchange_16(unsigned __int128 *ptr,
+static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
 		unsigned __int128 *expected, unsigned __int128 desired,
-		uint8_t weak __attribute__((unused)),
+		char weak __attribute__((unused)),
 		int success_memorder __attribute__((unused)),
 		int failure_memorder __attribute__((unused))) {
 #ifdef FALL_BACK_TO_SYNC
@@ -527,6 +679,12 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 
 	old_value._integral_type = atomic_memory_tls_cache[size]._integral_type;
 	if (NULL != old_value.tag_ptr.ptr) {
+
+		/* recreate the absolute address if a relative address was
+		 * used to store the memory block inside a shared memory
+		 * region */
+		old_value.tag_ptr.ptr = ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(
+				old_value.tag_ptr.ptr);
 
 		/* thread local cache holds an entry with requested size: return it */
 		new_value = old_value.tag_ptr.ptr->_next;
@@ -567,6 +725,13 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 						 * with __ATOMIC_RELEASE can be seen */
 						__ATOMIC_ACQUIRE));
 
+				/* recreate the absolute address if a relative address was
+				 * used to store the memory block inside a shared memory
+				 * region */
+				old_value.tag_ptr.ptr =
+						ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(
+								old_value.tag_ptr.ptr);
+
 				atomic_memory_tls_cache[size]._integral_type =
 						old_value.tag_ptr.ptr->_next._integral_type;
 
@@ -604,8 +769,8 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 
 static struct atomic_memory_block* atomic_memory_new_block(
 		enum atomic_memory_size size) {
-	uint8_t *old_value;
-	uint8_t *new_value;
+	char *old_value;
+	char *new_value;
 	size_t real_size = atomic_memory_sizes[size];
 
 	/* atomic get needed bytes from buffer */
@@ -617,7 +782,8 @@ static struct atomic_memory_block* atomic_memory_new_block(
 		/* check if atomic_memory_buffer has enough free memory left for
 		 * needed size (do it without adding size to atomic_memory_buffer_pos
 		 * to prevent wrap around during evaluation) */
-		if (ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer
+		if (ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+				&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer[0]))
 				+ ATOMIC_MEMORY_BUFFER_SIZE - old_value >= real_size) {
 			new_value = (void*) (old_value + real_size);
 		} else {
@@ -629,6 +795,11 @@ static struct atomic_memory_block* atomic_memory_new_block(
 			__ATOMIC_RELAXED,
 			__ATOMIC_RELAXED));
 	// TODO: check for __atomic_compare_exchange_n
+
+	/* recreate the absolute address if a relative address was
+	 * used to store the memory block inside a shared memory
+	 * region */
+	old_value = ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(old_value);
 
 	/* initialize memory block */
 	((struct atomic_memory_block*) old_value)->_size = size;
@@ -650,8 +821,8 @@ static struct atomic_memory_block* atomic_memory_new_block(
 
 static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 		enum atomic_memory_size size, uint32_t count) {
-	uint8_t *old_value;
-	uint8_t *new_value;
+	char *old_value;
+	char *new_value;
 	union atomic_memory_block_tag_ptr begin;
 	union atomic_memory_block_tag_ptr end;
 	union atomic_memory_block_tag_ptr tmp;
@@ -673,7 +844,8 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 		/* check if atomic_memory_buffer has enough free memory left for
 		 * needed size (do it without adding size to atomic_memory_buffer_pos
 		 * to prevent wrap around during evaluation) */
-		if (ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer
+		if (ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+				&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer[0]))
 				+ ATOMIC_MEMORY_BUFFER_SIZE - old_value >= real_size) {
 			new_value = (void*) (old_value + real_size);
 		} else {
@@ -686,11 +858,18 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 			__ATOMIC_RELAXED,
 			__ATOMIC_RELAXED));
 
+	/* recreate the absolute address if a relative address was
+	 * used to store the memory block inside a shared memory
+	 * region */
+	old_value = ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(old_value);
+
 	/* initialize each memory block and link all blocks together to a linked
 	 * list */
 	((struct atomic_memory_block*) old_value)->_size = size;
 	((struct atomic_memory_block*) old_value)->_thread = thread_id;
-	begin.tag_ptr.ptr = ((struct atomic_memory_block*) old_value);
+	begin.tag_ptr.ptr =
+			((struct atomic_memory_block*) ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+					old_value));
 	begin.tag_ptr._tag = 0;
 	end._integral_type = begin._integral_type;
 	for (uint32_t i = 1; i < count; i++) {
@@ -699,14 +878,17 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 		((struct atomic_memory_block*) (old_value
 				+ (i * atomic_memory_sizes[size])))->_thread = thread_id;
 
-		tmp.tag_ptr.ptr = ((struct atomic_memory_block*) (old_value
-				+ (i * atomic_memory_sizes[size])));
+		tmp.tag_ptr.ptr =
+				((struct atomic_memory_block*) ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+						old_value + (i * atomic_memory_sizes[size])));
 		tmp.tag_ptr._tag = 0;
-		end.tag_ptr.ptr->_next._integral_type = tmp._integral_type;
+		ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(end.tag_ptr.ptr)->_next._integral_type =
+				tmp._integral_type;
 		end._integral_type = tmp._integral_type;
 	}
 	tmp.tag_ptr.ptr = NULL;
-	end.tag_ptr.ptr->_next._integral_type = tmp._integral_type;
+	ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(end.tag_ptr.ptr)->_next._integral_type =
+			tmp._integral_type;
 
 	return begin;
 }
@@ -714,12 +896,18 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 void atomic_memory_push(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
 
+	/* store relative address if the memory block is inside a shared memory
+	 * region used by different processes */
+	block.tag_ptr.ptr = ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+			block.tag_ptr.ptr);
+
 	old_value._integral_type =
 			atomic_load_16(
 					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
 					__ATOMIC_RELAXED);
 	do {
-		block.tag_ptr.ptr->_next = old_value;
+		ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(block.tag_ptr.ptr)->_next =
+				old_value;
 	} while (!atomic_compare_exchange_16(
 			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
 			&(old_value._integral_type), block._integral_type, 1,
@@ -741,7 +929,8 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 					__ATOMIC_ACQUIRE);
 	do {
 		if (NULL != old_value.tag_ptr.ptr) {
-			new_value = old_value.tag_ptr.ptr->_next;
+			new_value =
+					ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(old_value.tag_ptr.ptr)->_next;
 		} else {
 			new_value.tag_ptr.ptr = NULL;
 			new_value.tag_ptr._tag = 0;
@@ -757,6 +946,12 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 			 * with __ATOMIC_RELEASE can be seen */
 			__ATOMIC_ACQUIRE));
 
+	/* recreate the absolute address if a relative address was
+	 * used to store the memory block inside a shared memory
+	 * region */
+	old_value.tag_ptr.ptr = ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(
+			old_value.tag_ptr.ptr);
+
 	return old_value;
 }
 
@@ -764,6 +959,11 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
 	enum atomic_memory_size size = block.tag_ptr.ptr->_size;
 	int32_t thread = block.tag_ptr.ptr->_thread;
+
+	/* store relative address if the memory block is inside a shared memory
+	 * region used by different processes */
+	block.tag_ptr.ptr = ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
+			block.tag_ptr.ptr);
 
 	if (0 == free_count[thread][size]) {
 		if (thread == thread_id) {
@@ -774,7 +974,8 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 			 * not to local cache of free blocks belonging to other threads) */
 			old_value._integral_type =
 					atomic_memory_tls_cache[size]._integral_type;
-			block.tag_ptr.ptr->_next = old_value;
+			ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(block.tag_ptr.ptr)->_next =
+					old_value;
 			atomic_memory_tls_cache[size]._integral_type = block._integral_type;
 			return;
 		} else {
@@ -792,7 +993,8 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 	 * threads */
 	old_value._integral_type =
 			atomic_memory_tls_free_start[thread][size]._integral_type;
-	block.tag_ptr.ptr->_next = old_value;
+	ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(block.tag_ptr.ptr)->_next =
+			old_value;
 	atomic_memory_tls_free_start[thread][size]._integral_type =
 			block._integral_type;
 
@@ -808,7 +1010,7 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 						&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread][size]._integral_type),
 						__ATOMIC_RELAXED);
 		do {
-			atomic_memory_tls_free_end[thread][size].tag_ptr.ptr->_next =
+			ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(atomic_memory_tls_free_end[thread][size].tag_ptr.ptr)->_next =
 					old_value;
 		} while (!atomic_compare_exchange_16(
 				&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread][size]._integral_type),

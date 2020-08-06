@@ -29,31 +29,11 @@ int main(int argc, char *argv[]) {
 				union atomic_memory_block_tag_ptr tmp = atomic_memory_alloc(
 						(enum atomic_memory_size) l);
 				assert(NULL != tmp.tag_ptr.ptr);
-				printf(
-						"Test: %d/%d, Thread: %d, Thread-ID: %d, Pointer: %p:%ld, Bytes: %ld\n",
-						i, l, thread_num, tmp.tag_ptr.ptr->_thread,
-						(void*) (tmp.tag_ptr.ptr), tmp.tag_ptr._tag,
-						atomic_memory_sizes[l]);
-				fflush(stdout);
 				memset(tmp.tag_ptr.ptr->memory, tmp.tag_ptr.ptr->_size,
 						atomic_memory_sizes[l]
 								- sizeof(struct atomic_memory_block));
 
 				atomic_memory_push(tmp);
-
-				tmp = atomic_memory_pop();
-				assert(NULL != tmp.tag_ptr.ptr);
-				for (int j = 0;
-						j
-								< atomic_memory_sizes[tmp.tag_ptr.ptr->_size]
-										- sizeof(struct atomic_memory_block);
-						j++) {
-					assert(
-							tmp.tag_ptr.ptr->memory[j]
-									== tmp.tag_ptr.ptr->_size);
-				}
-
-				atomic_memory_free(tmp);
 			}
 		}
 	}

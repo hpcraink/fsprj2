@@ -6,21 +6,27 @@
  * Use sync builtins instead of atomic builtins from gcc.
  */
 //#define FALL_BACK_TO_SYNC
-
 /**
  * If defined, global memory is kept in a share memory region and shared
  * between all processes using this library. Else each process has it's own
  * global memory.
  */
 #define ATOMIC_MEMORY_CACHE_PER_NODE
+// TODO: test cache per process variant
 
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 /* includes for shared memory */
 #  include <sys/mman.h>
 #  include <sys/stat.h>        /* For mode constants */
 #  include <fcntl.h>           /* For O_* constants */
-#  include <unistd.h>
 #endif
+
+#include <signal.h>
+#include <unistd.h>
+#include <time.h>
+
+// TODO: remove
+#include <assert.h>
 
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 /**
@@ -89,18 +95,6 @@
 #endif
 
 /**
- * Print message and abort.
- *
- * \a message is printed to stderr and program is aborted. Doesn't return.
- *
- * @param[in]  message    message to be printed
- */
-#define ATOMIC_MEMORY_CACHE_ABORT(message) do { \
-                                               fprintf(stderr, message"\n"); /* TODO: use real fprintf and no wrapper */ \
-                                               abort(); \
-                                           } while(0)
-
-/**
  * Struct holds all global (per process or per node) values.
  *
  * Holds all global caches of free or ready to consume memory blocks, the
@@ -122,7 +116,7 @@ struct atomic_memory_region {
 	 * This cache is manipulated by different threads and must therefore be
 	 * guarded against concurrent accesses.
 	 */
-	union atomic_memory_block_tag_ptr atomic_memory_cache[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count];
+	union atomic_memory_block_tag_ptr atomic_memory_cache[ATOMIC_MEMORY_MAX_THREADS][atomic_memory_size_count];
 
 	/**
 	 * Global cache (per process or per node, see
@@ -192,6 +186,14 @@ struct atomic_memory_region {
 	 * guarded against concurrent accesses.
 	 */
 	int32_t thread_count;
+
+	pid_t consumer;
+
+	char consumer_is_ready;
+
+	int32_t producer_count;
+
+	int32_t push_count;
 };
 
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
@@ -250,6 +252,11 @@ static struct atomic_memory_region *atomic_memory_global;
 static struct atomic_memory_region atomic_memory_global;
 #endif
 
+static char shared_memory_name[ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH];
+
+static sig_atomic_t consume = 0;
+static sig_atomic_t finish = 0;
+
 /**
  * Thread local cache of usable free memory blocks belonging to the current
  * thread.
@@ -279,7 +286,7 @@ static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_cach
  * concurrent accesses from other threads. So it's not necessary to guard it
  * with locks or atomic instructions.
  */
-static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free_start[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
+static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free_start[ATOMIC_MEMORY_MAX_THREADS][atomic_memory_size_count] =
 {	{	{	.tag_ptr.ptr = NULL, .tag_ptr._tag = 0}}};
 /**
  * Thread local cache of last elements of linked lists stored in
@@ -292,7 +299,7 @@ static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free
  * concurrent accesses from other threads. So it's not necessary to guard it
  * with locks or atomic instructions.
  */
-static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free_end[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
+static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free_end[ATOMIC_MEMORY_MAX_THREADS][atomic_memory_size_count] =
 {	{	{	.tag_ptr.ptr = NULL, .tag_ptr._tag = 0}}};
 /**
  * Thread local cache of count of blocks stored in each linked lists in
@@ -305,7 +312,7 @@ static ATTRIBUTE_THREAD union atomic_memory_block_tag_ptr atomic_memory_tls_free
  * concurrent accesses from other threads. So it's not necessary to guard it
  * with locks or atomic instructions.
  */
-static ATTRIBUTE_THREAD size_t free_count[ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS][atomic_memory_size_count] =
+static ATTRIBUTE_THREAD size_t free_count[ATOMIC_MEMORY_MAX_THREADS][atomic_memory_size_count] =
 		{ { 0 } };
 /**
  * Thread local unique id.
@@ -333,6 +340,25 @@ static ATTRIBUTE_THREAD int32_t thread_id = -1;
  * \a atomic_memory_region_init). Else \a atomic_memory_global is initialized.
  */
 static void init_on_load() ATTRIBUTE_CONSTRUCTOR;
+
+static void cleanup() ATTRIBUTE_DESTRUCTOR;
+
+/**
+ * Pops all memory blocks from a ready to consume stack.
+ *
+ * Returns and removes all memory blocks from a global (per process) stack.
+ * Can return blocks which were pushed to the stack (via
+ * \c atomic_memory_push()).
+ *
+ * The returned linked list uses relative pointers in each
+ * \a atomic_memory_block_tag_ptr. For dereferencing macro
+ * #ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(rel_ptr) must be used.
+ *
+ * @return \a atomic_memory_block_tag_ptr to a list of memory blocks returned
+ *         from the stack on success, \a atomic_memory_block_tag_ptr with
+ *         field \c ptr set to NULL if no block was available
+ */
+union atomic_memory_block_tag_ptr atomic_memory_pop_all() __attribute__((warn_unused_result));
 
 /**
  * Creates a new memory block from the buffer \a atomic_memory_buffer.
@@ -438,6 +464,15 @@ static inline unsigned __int128 atomic_load_16(unsigned __int128 *ptr,
  */
 static inline void init_cache()__attribute__((always_inline));
 
+void atomic_memory_start_consumer()__attribute__((noreturn));
+
+void consume_handler(int signum __attribute__((unused))) {
+	consume = 1;
+}
+void finish_handler(int signum __attribute__((unused))) {
+	finish = 1;
+}
+
 static void init_on_load() {
 	// TODO: get atomic_memory_buffer from malloc instead of using stack
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
@@ -445,7 +480,6 @@ static void init_on_load() {
 	struct atomic_memory_region_init *memory_region_init;
 	int32_t region_number;
 	int32_t region_init;
-	char shared_memory_name[ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH];
 
 	// TODO: use real functions and no wrapper
 
@@ -568,6 +602,9 @@ static void init_on_load() {
 			 * cache */
 			munmap(memory_region_init,
 					sizeof(struct atomic_memory_region_init));
+			__atomic_add_fetch(
+					&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.producer_count, 1,
+					__ATOMIC_RELAXED);
 			return;
 		} else {
 			/* a other number of a initialized shared memory was set to
@@ -575,6 +612,11 @@ static void init_on_load() {
 			 * longer needed */
 			munmap(atomic_memory_global, sizeof(struct atomic_memory_region));
 			shm_unlink(shared_memory_name);
+			if (0 != kill(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer,
+			SIGKILL)) {
+				ATOMIC_MEMORY_CACHE_ABORT(
+						"kill of unused consumer process was unsuccessful");
+			}
 		}
 	}
 
@@ -617,12 +659,39 @@ static void init_on_load() {
 #else
 	init_cache();
 #endif
+
+	__atomic_add_fetch(&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.producer_count, 1,
+	__ATOMIC_RELAXED);
+}
+
+static void cleanup() {
+	int32_t producer_count;
+	producer_count = __atomic_sub_fetch(
+			&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.producer_count, 1,
+			__ATOMIC_RELAXED);
+
+	if (0 == producer_count) {
+		kill(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer, SIGUSR2);
+
+		shm_unlink(ATOMIC_MEMORY_CACHE_SHM_NUMBER);
+		shm_unlink(shared_memory_name);
+	} else {
+		kill(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer, SIGUSR1);
+	}
+
+	munmap(atomic_memory_global, sizeof(struct atomic_memory_region));
+
+	printf("cleanup producer_count: %d\n", producer_count);
+	fflush(stdout);
 }
 
 /* TODO: call of wrapper from ctor of other library is possible
  * => init_cache() must be called if alloc is called before ctor of this library was called */
 static inline void init_cache() {
-	for (int i = 0; i < ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS; i++) {
+	struct timespec before;
+	struct timespec now;
+
+	for (int i = 0; i < ATOMIC_MEMORY_MAX_THREADS; i++) {
 		for (int l = 0; l < atomic_memory_size_count; l++) {
 			ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[i][l].tag_ptr.ptr =
 			NULL;
@@ -639,6 +708,36 @@ static inline void init_cache() {
 			ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
 					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer[0]));
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count = -1;
+
+	/* start consumer */
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer_is_ready = 0;
+	//TODO
+	pid_t pid = fork();
+	if (0 > pid) {
+		ATOMIC_MEMORY_CACHE_ABORT("start of consumer was unsuccessful");
+	}
+	if (0 == pid) {
+		// child process
+		atomic_memory_start_consumer();
+		ATOMIC_MEMORY_CACHE_ABORT("error in consumer");
+	}
+
+	/* spin with timeout to check if consumer has ready state in shared memory */
+	clock_gettime(CLOCK_MONOTONIC_RAW, &before);
+	while (0
+			== __atomic_load_n(
+					&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer_is_ready,
+					__ATOMIC_RELAXED)) {
+		clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+		if (now.tv_sec - before.tv_sec >= ATOMIC_MEMORY_TIMEOUT_CONSUMER_CREATE) {
+			ATOMIC_MEMORY_CACHE_ABORT("timeout during start of consumer");
+		}
+	}
+
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer = pid;
+
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.producer_count = 0;
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.push_count = 0;
 }
 
 static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
@@ -808,7 +907,7 @@ static struct atomic_memory_block* atomic_memory_new_block(
 		thread_id = __atomic_add_fetch(
 				&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count, 1,
 				__ATOMIC_RELAXED);
-		if (ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS <= thread_id) {
+		if (ATOMIC_MEMORY_MAX_THREADS <= thread_id) {
 			/* there are more threads than places in intern cache */
 			ATOMIC_MEMORY_CACHE_ABORT(
 					"more threads than places in intern cache");
@@ -895,6 +994,7 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 
 void atomic_memory_push(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
+	int32_t count;
 
 	/* store relative address if the memory block is inside a shared memory
 	 * region used by different processes */
@@ -915,6 +1015,19 @@ void atomic_memory_push(union atomic_memory_block_tag_ptr block) {
 			 * can be seen by a later load with __ATOMIC_ACQUIRE */
 			__ATOMIC_RELEASE,
 			__ATOMIC_RELAXED));
+
+	/* wake consumer only if enough memory blocks are inside the ready to
+	 * consume list */
+	count = __atomic_add_fetch(&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.push_count, 1,
+	__ATOMIC_RELAXED);
+	if (ATOMIC_MEMORY_CACHE_SIZE <= count) {
+		__atomic_store_n(&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.push_count, 0,
+		__ATOMIC_RELAXED);
+		/* can trigger multiple times if multiple threads are scheduled
+		 * between the if condition and the atomic_store (logic to prevent
+		 * this will be more costly than delivering more than one signal) */
+		kill(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer, SIGUSR1);
+	}
 }
 
 union atomic_memory_block_tag_ptr atomic_memory_pop() {
@@ -951,6 +1064,35 @@ union atomic_memory_block_tag_ptr atomic_memory_pop() {
 	 * region */
 	old_value.tag_ptr.ptr = ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(
 			old_value.tag_ptr.ptr);
+
+	return old_value;
+}
+
+union atomic_memory_block_tag_ptr atomic_memory_pop_all() {
+	union atomic_memory_block_tag_ptr old_value;
+	union atomic_memory_block_tag_ptr new_value;
+
+	old_value._integral_type =
+			atomic_load_16(
+					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
+					/* ensure that previous stores to old_value.tag_ptr.ptr->_next
+					 * with __ATOMIC_RELEASE can be seen */
+					__ATOMIC_ACQUIRE);
+	new_value.tag_ptr.ptr = NULL;
+	new_value.tag_ptr._tag = 0;
+	do {
+		if (NULL == old_value.tag_ptr.ptr) {
+			return new_value;
+		}
+	} while (!atomic_compare_exchange_16(
+			&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_ready._integral_type),
+			&(old_value._integral_type), new_value._integral_type, 1,
+			/* ensure that store to old_value.tag_ptr.ptr->_next
+			 * can be seen by a later load with __ATOMIC_ACQUIRE */
+			__ATOMIC_RELEASE,
+			/* ensure that previous stores to old_value.tag_ptr.ptr->_next
+			 * with __ATOMIC_RELEASE can be seen */
+			__ATOMIC_ACQUIRE));
 
 	return old_value;
 }
@@ -1025,4 +1167,89 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 		atomic_memory_tls_free_start[thread][size].tag_ptr.ptr = NULL;
 		free_count[thread][size] = 0;
 	}
+}
+
+void atomic_memory_start_consumer() {
+	sigset_t mask;
+	sigset_t oldmask;
+	struct sigaction sa;
+	union atomic_memory_block_tag_ptr block_list;
+	union atomic_memory_block_tag_ptr tmp_block;
+
+	/* Detach child process (forked in init_cache()) from parent. Call to
+	 * wait() in parent could not be ended by this new process. No SIGCHLD
+	 * will be send to parent. No terminal is associated with this process. */
+	setsid();
+
+	/* Ensure this process doesn't keep any directory in use. */
+	if (-1 == chdir("/")) {
+		ATOMIC_MEMORY_CACHE_ABORT("working dir could not be changed");
+	}
+
+	/* close all open file descriptors */
+	int max_fd = sysconf(_SC_OPEN_MAX);
+	for (int i = 0; i < max_fd; i++) {
+		close(i);
+	}
+
+	/* Set up the mask of signals to temporarily block. */
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGUSR1);
+	sigaddset(&mask, SIGUSR2);
+
+	/* install signal handlers */
+	sa.sa_handler = consume_handler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+	if (0 != sigaction(SIGUSR1, &sa, NULL)) {
+		ATOMIC_MEMORY_CACHE_ABORT("signal handler could not be installed");
+	}
+	sa.sa_handler = finish_handler;
+	if (0 != sigaction(SIGUSR2, &sa, NULL)) {
+		ATOMIC_MEMORY_CACHE_ABORT("signal handler could not be installed");
+	}
+
+	/* Wait for a signal to arrive. */
+	sigprocmask(SIG_BLOCK, &mask, &oldmask);
+
+	/* write consumer is ready to shared memory */
+	__atomic_store_n(&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer_is_ready, 1,
+	__ATOMIC_RELAXED);
+
+	while (1) {
+		sigsuspend(&oldmask);
+		if (consume || finish) {
+			consume = 0;
+
+			block_list = atomic_memory_pop_all();
+			while (NULL != block_list.tag_ptr.ptr) {
+				block_list.tag_ptr.ptr =
+						ATOMIC_MEMORY_CACHE_GLOBAL_GET_ABSOLUTE_PTR(
+								block_list.tag_ptr.ptr);
+
+				for (int j = 0;
+						j
+								< atomic_memory_sizes[block_list.tag_ptr.ptr->_size]
+										- sizeof(struct atomic_memory_block);
+						j++) {
+					assert(
+							block_list.tag_ptr.ptr->memory[j]
+									== block_list.tag_ptr.ptr->_size);
+				}
+
+				tmp_block = block_list;
+				block_list = block_list.tag_ptr.ptr->_next;
+				atomic_memory_free(tmp_block);
+			}
+		}
+		if (finish) {
+			break;
+		}
+	}
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
+	/* don't call destructors (ctor entries) or at_exit functions, because
+	 * they belong to the monitored program and shouldn't be executed by this
+	 * consumer */
+	_exit(0);
 }

@@ -22,13 +22,31 @@
 #include <inttypes.h>
 
 /**
+ * Print message and abort.
+ *
+ * \a message is printed to stderr and program is aborted. Doesn't return.
+ *
+ * @param[in]  message    message to be printed
+ */
+#define ATOMIC_MEMORY_CACHE_ABORT(message) do { \
+                                               fprintf(stderr, message"\n"); /* TODO: use real fprintf and no wrapper */ \
+                                               abort(); \
+                                           } while(0)
+
+/**
+ * Program is aborted if starting and initializing of consumer daemon takes
+ * more seconds than the value of this macro gives.
+ */
+#define ATOMIC_MEMORY_TIMEOUT_CONSUMER_CREATE 5
+/**
  * Size of global buffer (per process) to create memory blocks from.
  */
 #define ATOMIC_MEMORY_BUFFER_SIZE 1000 * 1000 * 1000
 /**
- * Maximum of caches for different threads (per process).
+ * Maximum of caches for different threads (per process or per node, see
+ * #ATOMIC_MEMORY_CACHE_PER_NODE).
  */
-#define ATOMIC_MEMORY_MAX_THREADS_PER_PROCESS 200
+#define ATOMIC_MEMORY_MAX_THREADS 20
 /**
  * Count of memory blocks per cache.
  *
@@ -45,7 +63,7 @@
  * memory blocks per cache the thread local cache is pushed to the global
  * cache.
  */
-#define ATOMIC_MEMORY_CACHE_SIZE 10
+#define ATOMIC_MEMORY_CACHE_SIZE 100
 
 /**
  * Alignment of memory blocks and pointers to them.
@@ -111,7 +129,8 @@ union atomic_memory_block_tag_ptr {
 		uint64_t _tag;
 	} tag_ptr;
 	unsigned __int128 _integral_type; // TODO: check for __int128
-} __attribute__ ((aligned (ATOMIC_MEMORY_ALIGNMENT))); // TODO: check for attribute aligned
+} __attribute__ ((aligned (ATOMIC_MEMORY_ALIGNMENT)));
+// TODO: check for attribute aligned
 
 /**
  * Memory block.

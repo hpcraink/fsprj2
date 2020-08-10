@@ -680,9 +680,6 @@ static void cleanup() {
 	}
 
 	munmap(atomic_memory_global, sizeof(struct atomic_memory_region));
-
-	printf("cleanup producer_count: %d\n", producer_count);
-	fflush(stdout);
 }
 
 /* TODO: call of wrapper from ctor of other library is possible
@@ -1252,4 +1249,8 @@ void atomic_memory_start_consumer() {
 	 * they belong to the monitored program and shouldn't be executed by this
 	 * consumer */
 	_exit(0);
+}
+
+void free_all(union atomic_memory_block_tag_ptr block) {
+
 }

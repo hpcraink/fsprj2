@@ -1,0 +1,901 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 2,
+  "iteration": 1597668307102,
+  "links": [],
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pluginVersion": "7.1.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    TIMESTAMP(MAKEDATE(0001, 1), SEC_TO_TIME(functions.start_time / 1000000000)) AS time, -- grafana needs time series\n    functions.type AS metric,\n    CAST(SUM(functions.time) AS DECIMAL(20,0)) AS value -- grafana interprets long as string but needs numeric value as value\nFROM functions\nINNER JOIN function_manipulates_file\n    ON functions.collection_id = function_manipulates_file.collection_id\n        AND functions.id = function_manipulates_file.function_id\nINNER JOIN files\n    ON function_manipulates_file.collection_id = files.collection_id\n        AND function_manipulates_file.file = files.file\nWHERE functions.collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\n    AND files.kind = \"FILE\"\nGROUP BY TIMESTAMP(MAKEDATE(0001, 1), SEC_TO_TIME(functions.start_time / 1000000000)), type\n-- ORDER BY metric",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [
+        {
+          "$$hashKey": "object:784",
+          "colorMode": "background6",
+          "fill": true,
+          "fillColor": "rgba(234, 112, 112, 0.12)",
+          "line": false,
+          "lineColor": "rgba(237, 46, 24, 0.60)",
+          "op": "time"
+        }
+      ],
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: time for File I/O in ns",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:147",
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:148",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 5,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pluginVersion": "7.1.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    TIMESTAMP(MAKEDATE(0001, 1), SEC_TO_TIME(functions.start_time / 1000000000)) AS time, -- grafana needs time series\n    functions.type AS metric,\n    CAST(SUM(functions.bytes) AS DECIMAL(20,0)) AS value -- grafana interprets long as string but needs numeric value as value\nFROM functions\nINNER JOIN function_manipulates_file\n    ON functions.collection_id = function_manipulates_file.collection_id\n        AND functions.id = function_manipulates_file.function_id\nINNER JOIN files\n    ON function_manipulates_file.collection_id = files.collection_id\n        AND function_manipulates_file.file = files.file\nWHERE functions.collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\n    AND files.kind = \"FILE\"\nGROUP BY TIMESTAMP(MAKEDATE(0001, 1), SEC_TO_TIME(functions.start_time / 1000000000)), type\n-- ORDER BY metric",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [
+        {
+          "$$hashKey": "object:784",
+          "colorMode": "background6",
+          "fill": true,
+          "fillColor": "rgba(234, 112, 112, 0.12)",
+          "line": false,
+          "lineColor": "rgba(237, 46, 24, 0.60)",
+          "op": "time"
+        }
+      ],
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: bytes for File I/O",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:147",
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:148",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "chartId": "chart_8",
+      "colors": [
+        "rgba(50, 172, 45, 1)",
+        "rgba(241, 255, 0, 1)",
+        "rgba(245, 54, 54, 1)"
+      ],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "format": "none",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 8,
+      "legend": {
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": false,
+        "total": true
+      },
+      "mappingType": 1,
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "pluginVersion": "7.1.3",
+      "seriesOverrides": [],
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    NOW() AS time,\n    name AS metric,\n    SUM(bytes) AS bytes\n--    SUM(time) AS ns\nFROM functions\nWHERE collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\nGROUP BY name\nHAVING SUM(bytes) > 0",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "thresholds": "0,10",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: bytes per function",
+      "treeMap": {
+        "colorByFunction": "total",
+        "debug": false,
+        "depth": 0,
+        "enableGrouping": true,
+        "enableTimeBlocks": false,
+        "groups": [
+          {
+            "$$hashKey": "object:201",
+            "key": "server",
+            "value": "/^.*./g"
+          }
+        ],
+        "ids": [
+          "alias"
+        ],
+        "mode": "squarify",
+        "nodeSizeProperty": "value",
+        "showLegend": false,
+        "sizeByFunction": "total"
+      },
+      "type": "savantly-heatmap-panel",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ]
+    },
+    {
+      "chartId": "chart_9",
+      "colors": [
+        "rgba(50, 172, 45, 1)",
+        "rgba(241, 255, 0, 1)",
+        "rgba(245, 54, 54, 1)"
+      ],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "format": "none",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 9,
+      "legend": {
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": false,
+        "total": true
+      },
+      "mappingType": 1,
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "pluginVersion": "7.1.3",
+      "seriesOverrides": [],
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    NOW() AS time,\n    name AS metric,\n    SUM(time) AS ns\nFROM functions\nWHERE collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\nGROUP BY name\nHAVING SUM(time) > 0",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "thresholds": "0,10",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: time per function",
+      "treeMap": {
+        "colorByFunction": "total",
+        "debug": false,
+        "depth": 0,
+        "enableGrouping": true,
+        "enableTimeBlocks": false,
+        "groups": [
+          {
+            "$$hashKey": "object:201",
+            "key": "server",
+            "value": "/^.*./g"
+          }
+        ],
+        "ids": [
+          "alias"
+        ],
+        "mode": "squarify",
+        "nodeSizeProperty": "value",
+        "showLegend": false,
+        "sizeByFunction": "total"
+      },
+      "type": "savantly-heatmap-panel",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ]
+    },
+    {
+      "Aggregate": "last",
+      "BarPadding": 10,
+      "BaseLineColor": "#ff0000",
+      "BaseLineValue": null,
+      "BaseLineWidth": 1,
+      "CurveType": "Monotone",
+      "DateFormat": "YYYY-MM-DD HH:mm:ss",
+      "DateTimeColName": "date",
+      "DotColor": "white",
+      "DotSize": 10,
+      "EvenRowColor": "rgba(61, 61, 64, 0.78)",
+      "FlashHighLimitBar": false,
+      "FlashLowLimitBar": false,
+      "GroupCols": 0,
+      "GroupGap": 5,
+      "GroupLabelColor": "#ffffff",
+      "GroupLabelFontSize": "200%",
+      "GroupNameFilter": "",
+      "GroupSortString": "",
+      "HighAxisColor": "#ffffff",
+      "HighAxisWidth": 1,
+      "HighBarColor": "rgb(120, 128, 0)",
+      "HighLimitBarColor": "#ff0000",
+      "HighLimitBarFlashColor": "#ffa500",
+      "HighLimitBarFlashTimeout": 1000,
+      "HighLimitLineColor": "#ff0000",
+      "HighLimitValue": null,
+      "HighLmitLineWidth": 1,
+      "HighSideMargin": 22,
+      "Horizontal": true,
+      "LabelColName": "metric",
+      "LabelColor": "#ffffff",
+      "LabelFontSize": "100%",
+      "LabelMargin": null,
+      "LabelNameFilter": "",
+      "LableAngle": 0,
+      "LineColor": "blue",
+      "LineWidth": 5,
+      "Links": [],
+      "LowAxisColor": "#ffffff",
+      "LowAxisWidth": 1,
+      "LowBarColor": "teal",
+      "LowLimitBarColor": "#ff0000",
+      "LowLimitBarFlashColor": "#ffa500",
+      "LowLimitBarFlashTimeout": 200,
+      "LowLimitLineColor": "#ff0000",
+      "LowLimitValue": null,
+      "LowLmitLineWidth": 1,
+      "LowSideMargin": 22,
+      "MaxLineColor": "rgb(74, 232, 12)",
+      "MaxLineValue": null,
+      "MaxLineWidth": 1,
+      "MinLineColor": "#ff0000",
+      "MinLineValue": null,
+      "MinLineWidth": 1,
+      "OddRowColor": "rgba(33, 33, 34, 0.92)",
+      "OutOfRangeLabelColor": "#ffffff",
+      "OutlineColor": "rgba(245, 255, 0, 0.1)",
+      "RecolorColName": null,
+      "RecolorHighLimitBar": false,
+      "RecolorLowLimitBar": false,
+      "RecolorRules": [],
+      "ScaleFactor": 1,
+      "ShowBars": true,
+      "ShowBaseLine": false,
+      "ShowDate": false,
+      "ShowGroupLabels": true,
+      "ShowHighLimitLine": false,
+      "ShowLabels": true,
+      "ShowLeftAxis": true,
+      "ShowLines": false,
+      "ShowLowLimitLine": false,
+      "ShowMaxLine": false,
+      "ShowMinLine": false,
+      "ShowRightAxis": true,
+      "ShowTooltips": true,
+      "ShowValues": true,
+      "SortColName": "value",
+      "SortDirection": "ascending",
+      "TZOffsetHours": 0,
+      "TooltipDateFormat": "YYYY-MM-DD HH:mm:ss",
+      "ValueColName": "ns",
+      "ValueColor": "#ffffff",
+      "ValueDecimals": 2,
+      "ValueFontSize": "100%",
+      "ValuePosition": "top",
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 11,
+      "pluginVersion": "7.1.3",
+      "targets": [
+        {
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n--    NOW() AS time,\n    name AS metric,\n    LOG(SUM(time)) AS ns\nFROM functions\nWHERE collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\nGROUP BY name\n-- HAVING SUM(time) > 0",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: log(time) per function",
+      "type": "michaeldmoore-multistat-panel"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 12,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false
+      },
+      "pluginVersion": "7.1.3",
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    NOW() AS time,\n    name AS metric,\n    LOG(SUM(bytes)) AS bytes\nFROM functions\nWHERE collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\nGROUP BY name",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: log(bytes) per function",
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "hiddenSeries": false,
+      "id": 6,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pluginVersion": "7.1.3",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "format": "time_series",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n    TIMESTAMP(MAKEDATE(0001, 1), SEC_TO_TIME(functions.start_time / 1000000000)) AS time, -- grafana needs time series\n    functions.type AS metric,\n    CAST(SUM(functions.bytes) AS DECIMAL(20,0)) AS value -- grafana interprets long as string but needs numeric value as value\nFROM functions\nINNER JOIN function_manipulates_file\n    ON functions.collection_id = function_manipulates_file.collection_id\n        AND functions.id = function_manipulates_file.function_id\nINNER JOIN files\n    ON function_manipulates_file.collection_id = files.collection_id\n        AND function_manipulates_file.file = files.file\nWHERE functions.collection_id = (SELECT id FROM collections WHERE name = \"2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101\")\n    AND files.kind = \"FILE\"\nGROUP BY TIMESTAMP(MAKEDATE(0001, 1), SEC_TO_TIME(functions.start_time / 1000000000)), type\n-- ORDER BY metric",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [
+        {
+          "$$hashKey": "object:784",
+          "colorMode": "background6",
+          "fill": true,
+          "fillColor": "rgba(234, 112, 112, 0.12)",
+          "line": false,
+          "lineColor": "rgba(237, 46, 24, 0.60)",
+          "op": "time"
+        }
+      ],
+      "timeShift": null,
+      "title": "OpenFOAM wedge15Ma5 test 101: bytes for File I/O",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:147",
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:148",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101",
+          "value": "2020-08-13_10:07:42_MESZ_openFOAM_wedge15Ma5_test101"
+        },
+        "datasource": "MySQL",
+        "definition": "SELECT name\nFROM collections",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data collection",
+        "multi": false,
+        "name": "data_collection",
+        "options": [],
+        "query": "SELECT name\nFROM collections",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 2,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "2001-01-01T03:14:22.011Z",
+    "to": "2001-01-01T03:15:57.996Z"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "iotrace OpenFOAM",
+  "uid": "FcYkDEIMk",
+  "version": 22
+}

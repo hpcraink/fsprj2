@@ -114,12 +114,17 @@ public class FunctionEvent implements Comparable<FunctionEvent> {
 	}
 
 	public Set<FunctionEvent> getOverlappingFunctionEvents() {
+		return getOverlappingFunctionEvents(true);
+	}
+
+	public Set<FunctionEvent> getOverlappingFunctionEvents(boolean withSameFunctionEvents) {
 		if (overlappingFunctionCallEvaluated) {
 			return overlappingFunctionCall;
 		}
 
 		FunctionEvent start;
 		FunctionEvent end;
+		FunctionEvent old;
 
 		if (this.kind == FunctionKind.CALL) {
 			start = this;
@@ -129,11 +134,18 @@ public class FunctionEvent implements Comparable<FunctionEvent> {
 			end = this;
 		}
 
+		old = start;
 		start = start.nextInFileTrace;
-		while (start != end) {
+		while (start != end
+				&& start != null /* TODO: why is start != null necessary (bug during build of FileTrace?)? */) {
 			if (isNextCall(start)) {
-				overlappingFunctionCall.add(start);
+				if (withSameFunctionEvents) {
+					overlappingFunctionCall.add(start);
+				} else if (start.getJson() != old.getJson()) {
+					overlappingFunctionCall.add(start);
+				}
 			}
+			old = start;
 			start = start.nextInFileTrace;
 		}
 

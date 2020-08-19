@@ -11,6 +11,12 @@
 #  define CALL_REAL_POSIX_SYNC(function) function
 #endif
 
+#ifdef WITH_ALLOC
+#  define CALL_REAL_ALLOC(function) CALL_REAL(function)
+#else
+#  define CALL_REAL_ALLOC(function) function
+#endif
+
 #ifdef _GNU_SOURCE
 #  define DLSYM(function_macro) __DLSYM(function_macro)
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\

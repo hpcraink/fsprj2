@@ -225,6 +225,16 @@ if(WITH_DL_IO)
     )
 endif()
 
+if(WITH_ALLOC)
+    list(APPEND LINK_OPTIONS_STATIC
+        "-Wl,-wrap=malloc"
+        "-Wl,-wrap=free"
+        "-Wl,-wrap=calloc"
+        "-Wl,-wrap=realloc"
+        "-Wl,-wrap=reallocarray"
+    )
+endif()
+
 list(APPEND LINK_OPTIONS
     "-lpthread"
 )

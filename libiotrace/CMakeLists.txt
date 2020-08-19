@@ -23,6 +23,7 @@ option (WITH_POSIX_IO "build wrappers for Posix-IO" ON)
 option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
+option (WITH_ALLOC "build wrappers for memory allocations" OFF)
 
 set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
 set(MAX_FUNCTION_NAME "40" CACHE STRING "max length of function names")

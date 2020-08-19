@@ -17,6 +17,9 @@
 #ifdef WITH_DL_IO
 #  include "dl_io.h"
 #endif
+#ifdef WITH_ALLOC
+#  include "alloc.h"
+#endif
 
 #include "json_include_struct.h"
 

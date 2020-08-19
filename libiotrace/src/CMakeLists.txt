@@ -112,6 +112,8 @@ check_symbol_exists(execvpe "unistd.h" HAVE_EXECVPE)
 #check_symbol_exists(_Exit "stdlib.h" HAVE_EXIT)
 #check_symbol_exists(exit_group "linux/unistd.h" HAVE_EXIT_GROUP)
 
+check_symbol_exists(reallocarray "stdlib.h" HAVE_REALLOCARRAY)
+
 list(APPEND CMAKE_REQUIRED_LIBRARIES "-lrt")
 check_symbol_exists(aio_read64 "aio.h" HAVE_AIO_READ64)
 check_symbol_exists(aio_write64 "aio.h" HAVE_AIO_WRITE64)
@@ -251,6 +253,12 @@ if(WITH_DL_IO)
     list(APPEND OPTIONS -DWITH_DL_IO)
 endif()
 
+#compile using cmake -DWITH_ALLOC for memory allocations
+if(WITH_ALLOC)
+    list(APPEND SOURCE alloc.c)
+    list(APPEND OPTIONS -DWITH_ALLOC)
+endif()
+
 add_library(iotrace_shared SHARED ${SOURCE})
 
 add_library(iotrace_static STATIC ${SOURCE})
@@ -273,3 +281,22 @@ target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
 #install(TARGETS iotrace_static
 #        ARCHIVE DESTINATION lib
 #)
+
+########################################################################################################
+
+# Please keep in alphabetical order
+set(FSALLOC_SOURCE
+    atomic_memory_cache.c
+    fsalloc.c
+)
+
+# needed for the RTLD_NEXT macro and other GNU functions
+set(FSALLOC_OPTIONS
+    -D_GNU_SOURCE
+)
+
+add_library(fmalloc SHARED ${FSALLOC_SOURCE})
+
+target_link_libraries(fmalloc PRIVATE ${CMAKE_DL_LIBS})
+
+target_compile_options(fmalloc PRIVATE ${FSALLOC_OPTIONS})

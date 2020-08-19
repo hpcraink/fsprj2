@@ -320,6 +320,9 @@
 /* Define to 1 if system supports exit_group(). */
 #cmakedefine HAVE_EXIT_GROUP 1
 
+/* Define to 1 if system supports reallocarray(). */
+#cmakedefine HAVE_REALLOCARRAY 1
+
 /* Define to 1 if system supports dirfd(). */
 #cmakedefine HAVE_DIRFD 1
 

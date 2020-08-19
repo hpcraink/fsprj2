@@ -6,7 +6,6 @@
 #include <limits.h>
 #include <assert.h>
 #include <math.h>
-#include "posix_io.h"
 
 /*
  * To add a new data-type for generating the struct and the json-cstring seven lines
@@ -976,11 +975,11 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_DEV_T(name)
 #  define JSON_STRUCT_INO_T(name)
 #  define JSON_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != json_struct_data->name) { \
-                                                                                    free(json_struct_data->name); \
+                                                                                    CALL_REAL_ALLOC(free)(json_struct_data->name); \
                                                                                     json_struct_data->name = NULL; \
                                                                                   }
 #  define JSON_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != json_struct_data->name) { \
-                                                         free(json_struct_data->name); \
+                                                         CALL_REAL_ALLOC(free)(json_struct_data->name); \
                                                          json_struct_data->name = NULL; \
                                                        }
 #  define JSON_STRUCT_INT_ARRAY(name, max_size)

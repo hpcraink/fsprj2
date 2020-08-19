@@ -98,17 +98,25 @@ static ATTRIBUTE_THREAD pid_t tid = -1;
 void cleanup() ATTRIBUTE_DESTRUCTOR;
 
 #ifndef IO_LIB_STATIC
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execve)(const char *filename, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execv)(const char *path, char *const argv[]) REAL_DEFINITION_INIT;
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) REAL_DEFINITION_INIT;
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execvp)(const char *file, char *const argv[]) REAL_DEFINITION_INIT;
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execve)
+(const char *filename, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execv)
+(const char *path, char *const argv[]) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execl)
+(const char *path, const char *arg, ... /* (char  *) NULL */) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execvp)
+(const char *file, char *const argv[]) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execlp)
+(const char *file, const char *arg, ... /* (char  *) NULL */) REAL_DEFINITION_INIT;
 #ifdef HAVE_EXECVPE
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execvpe)(const char *file, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execvpe)
+(const char *file, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
 #endif
-REAL_DEFINITION_TYPE int REAL_DEFINITION(execle)(const char *path, const char *arg, ... /*, (char *) NULL, char * const envp[] */) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION( execle)
+(const char *path, const char *arg, ... /*, (char *) NULL, char * const envp[] */) REAL_DEFINITION_INIT;
 
-REAL_DEFINITION_TYPE void REAL_DEFINITION(_exit)(int status) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE void REAL_DEFINITION( _exit)
+(int status) REAL_DEFINITION_INIT;
 #ifdef HAVE_EXIT
 REAL_DEFINITION_TYPE void REAL_DEFINITION(_Exit)(int status) REAL_DEFINITION_INIT;
 #endif
@@ -159,6 +167,9 @@ void init_wrapper() {
 #ifdef WITH_DL_IO
 	dl_io_init(); // initialize of function pointers is necessary
 #endif
+#ifdef WITH_ALLOC
+	alloc_init(); // initialize of function pointers is necessary
+#endif
 }
 #endif
 
@@ -201,12 +212,13 @@ void get_filesystem() {
 	char buf[4 * MAXFILENAME];
 #endif
 	struct mntent *filesystem_entry_ptr;
-	char buf_filesystem[json_struct_max_size_filesystem() + 1]; /* +1 for trailing null character */
+	char buf_filesystem[json_struct_max_size_filesystem() + 2]; /* +1 for trailing null, +1 for newline character */
 	struct filesystem filesystem_data;
 	struct stat stat_data;
 	char mount_point[MAXFILENAME];
 	int fd;
 	int ret;
+	int count;
 
 	fd = CALL_REAL_POSIX_SYNC(open)(filesystem_log_name,
 	O_WRONLY | O_CREAT | O_EXCL,
@@ -258,15 +270,28 @@ void get_filesystem() {
 		filesystem_data.dump_frequency_in_days = filesystem_entry_ptr->mnt_freq;
 		filesystem_data.pass_number_on_parallel_fsck =
 				filesystem_entry_ptr->mnt_passno;
-		json_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
-				&filesystem_data);
-		ret = dprintf(fd, "%s\n", buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+		ret = json_struct_print_filesystem(buf_filesystem,
+				sizeof(buf_filesystem), &filesystem_data);
+		buf_filesystem[ret] = '\n';
+		count = ret + 1;
+		ret = CALL_REAL_POSIX_SYNC(write)(fd, buf_filesystem, count);
 		if (0 > ret) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-					"In function %s: dprintf() returned %d with errno=%d.\n",
-					__func__, ret, errno);
+					"In function %s: write() returned %d.\n", __func__, ret);
 			assert(0);
 		}
+		if (ret < count) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: incomplete write() occurred.\n", __func__);
+			assert(0);
+		}
+//		ret = dprintf(fd, "%s\n", buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+//		if (0 > ret) {
+//			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+//					"In function %s: dprintf() returned %d with errno=%d.\n",
+//					__func__, ret, errno);
+//			assert(0);
+//		}
 	}
 
 	endmntent(file);
@@ -312,12 +337,13 @@ void get_file_id_by_path(const char *filename, struct file_id *data) {
 }
 
 void get_directories() {
-	char buf_working_dir[json_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
+	char buf_working_dir[json_struct_max_size_working_dir() + 2]; /* +1 for trailing null, +1 for newline character */
 	struct working_dir working_dir_data;
 	char cwd[MAXFILENAME];
 	char *ret;
 	int fd;
 	int ret_int;
+	int count;
 
 	ret = getcwd(cwd, sizeof(cwd));
 	if (NULL == ret) {
@@ -342,15 +368,28 @@ void get_directories() {
 		assert(0);
 	}
 
-	json_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
-			&working_dir_data);
-	ret_int = dprintf(fd, "%s\n", buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+	ret_int = json_struct_print_working_dir(buf_working_dir,
+			sizeof(buf_working_dir), &working_dir_data);
+	buf_working_dir[ret_int] = '\n';
+	count = ret_int + 1;
+	ret_int = CALL_REAL_POSIX_SYNC(write)(fd, buf_working_dir, count);
 	if (0 > ret_int) {
 		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-				"In function %s: dprintf() returned %d with errno=%d.\n",
-				__func__, ret_int, errno);
+				"In function %s: write() returned %d.\n", __func__, ret_int);
 		assert(0);
 	}
+	if (ret_int < count) {
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+				"In function %s: incomplete write() occurred.\n", __func__);
+		assert(0);
+	}
+//	ret_int = dprintf(fd, "%s\n", buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+//	if (0 > ret_int) {
+//		CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+//				"In function %s: dprintf() returned %d with errno=%d.\n",
+//				__func__, ret_int, errno);
+//		assert(0);
+//	}
 
 	CALL_REAL_POSIX_SYNC(close)(fd);
 }
@@ -420,7 +459,7 @@ void init_on_load() {
 	data.return_state_detail = NULL;
 #endif
 
-	WRAPPER_TIME_START(data)
+	WRAPPER_TIME_START (data)
 
 	init_basic();
 
@@ -523,7 +562,7 @@ void init_basic() {
 
 void get_stacktrace(struct basic *data) {
 	int size;
-	void *trace = malloc(sizeof(void*) * (stacktrace_depth + 3));
+	void *trace = CALL_REAL_ALLOC(malloc)(sizeof(void*) * (stacktrace_depth + 3));
 	char **messages = (char**) NULL;
 
 	if (NULL == trace) {
@@ -562,7 +601,7 @@ void get_stacktrace(struct basic *data) {
 	}
 
 	if (!stacktrace_ptr) {
-		free(trace);
+		CALL_REAL_ALLOC(free)(trace);
 	}
 }
 
@@ -596,7 +635,8 @@ inline u_int64_t gettime(void) {
 void printData() {
 	struct basic *data;
 	int ret;
-	char buf[json_struct_max_size_basic() + 1]; /* +1 for trailing null character */
+	int count;
+	char buf[json_struct_max_size_basic() + 2]; /* +1 for trailing null, +1 for newline character */
 	int fd;
 	pos = data_buffer;
 
@@ -613,12 +653,25 @@ void printData() {
 		data = (struct basic*) ((void*) pos);
 
 		ret = json_struct_print_basic(buf, sizeof(buf), data);
-		ret = dprintf(fd, "%s\n", buf); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+		buf[ret] = '\n';
+		count = ret + 1;
+		ret = CALL_REAL_POSIX_SYNC(write)(fd, buf, count);
 		if (0 > ret) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-					"In function %s: dprintf() returned %d.\n", __func__, ret);
+					"In function %s: write() returned %d.\n", __func__, ret);
 			assert(0);
 		}
+		if (ret < count) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: incomplete write() occurred.\n", __func__);
+			assert(0);
+		}
+//		ret = dprintf(fd, "%s\n", buf); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+//		if (0 > ret) {
+//			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+//					"In function %s: dprintf() returned %d.\n", __func__, ret);
+//			assert(0);
+//		}
 		ret = json_struct_sizeof_basic(data);
 
 		pos += ret;
@@ -661,7 +714,7 @@ void writeData(struct basic *data) {
 	pos = (void*) json_struct_copy_basic((void*) pos, data);
 	count_basic++;
 	// insert end time for wrapper in buffer
-	WRAPPER_TIME_END((*((struct basic *)((void *)old_pos))))
+	WRAPPER_TIME_END((*((struct basic*) ((void*) old_pos))))
 
 	pthread_mutex_unlock(&lock);
 }
@@ -679,7 +732,7 @@ void cleanup() {
 	data.return_state_detail = NULL;
 #endif
 
-	WRAPPER_TIME_START(data)
+	WRAPPER_TIME_START (data)
 
 	pthread_mutex_lock(&lock);
 	printData();
@@ -747,125 +800,62 @@ void check_ld_preload(char *env[], char *const envp[], const char *func) {
 }
 #endif
 
-int WRAP(execve)(const char *filename, char *const argv[], char *const envp[]) {
+int WRAP( execve)
+(const char *filename, char *const argv[], char *const envp[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+		data, file_type)
 
-	data.return_state = ok;
+data.return_state = ok;
 #ifndef IO_LIB_STATIC
-	char *env[MAX_EXEC_ARRAY_LENGTH];
-	check_ld_preload(env, envp, __func__);
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, env)
+char *env[MAX_EXEC_ARRAY_LENGTH];
+check_ld_preload(env, envp, __func__);
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, env)
 #else
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, envp)
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execve, filename, argv, envp)
 #endif
 
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
-
-	WRAP_END(data)
-	return ret;
+if (-1 == ret) {
+	data.return_state = error;
+} else {
+	data.return_state = ok;
 }
 
-int WRAP(execv)(const char *path, char *const argv[]) {
+WRAP_END(data)
+return ret;
+}
+
+int WRAP( execv)
+(const char *path, char *const argv[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+	data, file_type)
 
-	data.return_state = ok;
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execv, path, argv)
+data.return_state = ok;
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execv, path, argv)
 
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
-
-	WRAP_END(data)
-	return ret;
+if (-1 == ret) {
+data.return_state = error;
+} else {
+data.return_state = ok;
 }
 
-int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
-	int ret;
-	struct basic data;
-	char *argv[MAX_EXEC_ARRAY_LENGTH];
-	int count = 0;
-	char *element;
-	va_list ap;
-	WRAP_START(data)
-
-	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
-
-	data.return_state = ok;
-	va_start(ap, arg);
-	element = (char*) ((void*) arg);
-	while (NULL != element) {
-		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
-					"In function %s: buffer (%d elements) not big enough for argument array.\n",
-					__func__, MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
-		}
-		argv[count] = element;
-		count++;
-
-		element = va_arg(ap, char*);
-	}
-	argv[count] = element;
-	va_end(ap);
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execv, path, argv)
-
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
-
-	WRAP_END(data)
-	return ret;
+WRAP_END(data)
+return ret;
 }
 
-int WRAP(execvp)(const char *file, char *const argv[]) {
-	int ret;
-	struct basic data;
-	WRAP_START(data)
-
-	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
-
-	data.return_state = ok;
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvp, file, argv)
-
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
-
-	WRAP_END(data)
-	return ret;
-}
-
-int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
+int WRAP( execl)
+(const char *path, const char *arg, ... /* (char  *) NULL */) {
 	int ret;
 	struct basic data;
 	char *argv[MAX_EXEC_ARRAY_LENGTH];
@@ -875,71 +865,133 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+data, file_type)
 
-	data.return_state = ok;
-	va_start(ap, arg);
-	element = (char*) ((void*) arg);
+data.return_state = ok;
+	va_start(ap, arg);element = (char*) ((void*) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: buffer (%d elements) not big enough for argument array.\n",
 					__func__, MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
-		}
+			assert(0);}
 		argv[count] = element;
 		count++;
 
-		element = va_arg(ap, char*);
-	}
+		element = va_arg(ap, char*);}
 	argv[count] = element;
-	va_end(ap);
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvp, file, argv)
+	va_end(ap);CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execv, path, argv)
 
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
+if (-1 == ret) {
+data.return_state = error;
+} else {
+data.return_state = ok;
+}
 
-	WRAP_END(data)
-	return ret;
+WRAP_END(data)
+return ret;
+}
+
+int WRAP( execvp)
+(const char *file, char *const argv[]) {
+	int ret;
+	struct basic data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+data, file_type)
+
+data.return_state = ok;
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvp, file, argv)
+
+if (-1 == ret) {
+data.return_state = error;
+} else {
+data.return_state = ok;
+}
+
+WRAP_END(data)
+return ret;
+}
+
+int WRAP( execlp)
+(const char *file, const char *arg, ... /* (char  *) NULL */) {
+	int ret;
+	struct basic data;
+	char *argv[MAX_EXEC_ARRAY_LENGTH];
+	int count = 0;
+	char *element;
+	va_list ap;
+	WRAP_START(data)
+
+	get_basic(&data);
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+data, file_type)
+
+data.return_state = ok;
+	va_start(ap, arg);element = (char*) ((void*) arg);
+	while (NULL != element) {
+		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
+			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
+					"In function %s: buffer (%d elements) not big enough for argument array.\n",
+					__func__, MAX_EXEC_ARRAY_LENGTH);
+			assert(0);}
+		argv[count] = element;
+		count++;
+
+		element = va_arg(ap, char*);}
+	argv[count] = element;
+	va_end(ap);CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvp, file, argv)
+
+if (-1 == ret) {
+data.return_state = error;
+} else {
+data.return_state = ok;
+}
+
+WRAP_END(data)
+return ret;
 }
 
 #ifdef HAVE_EXECVPE
-int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[]) {
+int WRAP( execvpe)
+(const char *file, char *const argv[], char *const envp[]) {
 	int ret;
 	struct basic data;
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+data, file_type)
 
-	data.return_state = ok;
+data.return_state = ok;
 #ifndef IO_LIB_STATIC
-	char *env[MAX_EXEC_ARRAY_LENGTH];
-	check_ld_preload(env, envp, __func__);
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, env)
+char *env[MAX_EXEC_ARRAY_LENGTH];
+check_ld_preload(env, envp, __func__);
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, env)
 #else
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, envp)
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, file, argv, envp)
 #endif
 
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
+if (-1 == ret) {
+data.return_state = error;
+} else {
+data.return_state = ok;
+}
 
-	WRAP_END(data)
-	return ret;
+WRAP_END(data)
+return ret;
 }
 #endif
 
-int WRAP(execle)(const char *path, const char *arg,
+int WRAP( execle)
+(const char *path, const char *arg,
 		... /*, (char *) NULL, char * const envp[] */) {
 #ifndef HAVE_EXECVPE
 	CALL_REAL_POSIX_SYNC(fprintf)(stderr,
@@ -957,58 +1009,55 @@ int WRAP(execle)(const char *path, const char *arg,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	JSON_STRUCT_SET_VOID_P_NULL(
+data, file_type)
 
-	data.return_state = ok;
-	va_start(ap, arg);
-	element = (char*) ((void*) arg);
+data.return_state = ok;
+	va_start(ap, arg);element = (char*) ((void*) arg);
 	while (NULL != element) {
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
 			CALL_REAL_POSIX_SYNC(fprintf)(stderr,
 					"In function %s: buffer (%d elements) not big enough for argument array.\n",
 					__func__, MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
-		}
+			assert(0);}
 		argv[count] = element;
 		count++;
 
-		element = va_arg(ap, char*);
-	}
+		element = va_arg(ap, char*);}
 	argv[count] = element;
-	envp = va_arg(ap, char**);
-	va_end(ap);
+	envp = va_arg(ap, char**);va_end(ap);
 
 #ifndef IO_LIB_STATIC
-	char *env[MAX_EXEC_ARRAY_LENGTH];
-	check_ld_preload(env, envp, __func__);
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, env)
+char *env[MAX_EXEC_ARRAY_LENGTH];
+check_ld_preload(env, envp, __func__);
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, env)
 #else
-	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, envp)
+CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvpe, path, argv, envp)
 #endif
 
-	if (-1 == ret) {
-		data.return_state = error;
-	} else {
-		data.return_state = ok;
-	}
-
-	WRAP_END(data)
-	return ret;
+if (-1 == ret) {
+data.return_state = error;
+} else {
+data.return_state = ok;
 }
 
-void WRAP(_exit)(int status) {
-	struct basic data;
-	WRAP_START(data)
+WRAP_END(data)
+return ret;
+}
 
-	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+void WRAP( _exit)
+(int status) {
+struct basic data;
+WRAP_START(data)
 
-	data.return_state = ok;
-	CALL_REAL_FUNCTION_NO_RETURN(data, _exit, status)
+get_basic(&data);
+JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+data.return_state = ok;
+CALL_REAL_FUNCTION_NO_RETURN(data, _exit, status)
 }
 
 #ifdef HAVE_EXIT

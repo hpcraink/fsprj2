@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <dlfcn.h>
 
 #include "json_defines.h"
 
@@ -869,6 +870,11 @@ JSON_STRUCT_START(accept_function)
   JSON_STRUCT_INT(new_descriptor)
 JSON_STRUCT_END
 
+/* struct for alloc */
+JSON_STRUCT_START(alloc_function)
+  JSON_STRUCT_SIZE_T(size)
+JSON_STRUCT_END
+
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
 JSON_STRUCT_START(wrapper_data)
@@ -960,6 +966,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, accept_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, socketpair_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, socket_function)
+	JSON_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

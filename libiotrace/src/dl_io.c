@@ -57,6 +57,7 @@ enum so_namespace_mode_enum get_so_namespace_mode_enum(Lmid_t mode) {
 #endif
 
 void * WRAP(dlopen)(const char *filename, int flags) {
+	// TODO: filename NULL or no "/" in filename
 	void * ret;
 	struct basic data;
 	struct dlopen_function dlopen_function_data;
@@ -90,6 +91,7 @@ void * WRAP(dlopen)(const char *filename, int flags) {
 
 #ifdef HAVE_DLMOPEN
 void * WRAP(dlmopen)(Lmid_t lmid, const char *filename, int flags) {
+	// TODO: filename NULL or no "/" in filename
 	void * ret;
 	struct basic data;
 	struct dlmopen_function dlmopen_function_data;

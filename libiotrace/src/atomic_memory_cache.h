@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <stdalign.h>
 
 /**
  * Print message and abort.
@@ -100,7 +101,7 @@
  * \a atomic_memory_sizes is needed.
  */
 enum atomic_memory_size {
-	atomic_memory_size_56,
+	atomic_memory_size_16,
 	atomic_memory_size_110,
 	atomic_memory_size_520,
 	atomic_memory_size_1678,
@@ -179,8 +180,10 @@ struct atomic_memory_block {
 	 * This member can be used after a call to \c atomic_memory_alloc() to
 	 * store data. It should not be accessed after it's freed with a call to
 	 * \c atomic_memory_free().
+	 *
+	 * With at least _size array length (and optional padding for alignment).
 	 */
-	char memory[]; // with at least _size array length (optional padding for alignment)
+	char memory[] __attribute__ ((aligned (ATOMIC_MEMORY_ALIGNMENT)));
 };
 
 /**

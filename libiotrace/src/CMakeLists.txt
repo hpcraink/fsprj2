@@ -286,17 +286,21 @@ target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
 
 # Please keep in alphabetical order
 set(FSALLOC_SOURCE
-    atomic_memory_cache.c
     fsalloc.c
 )
 
 # needed for the RTLD_NEXT macro and other GNU functions
 set(FSALLOC_OPTIONS
     -D_GNU_SOURCE
+    "-O3"
+    "-Wextra"
+    "-mcx16"
+# for -fno-builtin-malloc see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67618
+    "-fno-builtin-malloc"
 )
 
-add_library(fmalloc SHARED ${FSALLOC_SOURCE})
+add_library(fsalloc SHARED ${FSALLOC_SOURCE})
 
-target_link_libraries(fmalloc PRIVATE ${CMAKE_DL_LIBS})
+target_link_libraries(fsalloc PRIVATE ${CMAKE_DL_LIBS} "-lrt" "-latomic")
 
-target_compile_options(fmalloc PRIVATE ${FSALLOC_OPTIONS})
+target_compile_options(fsalloc PRIVATE ${FSALLOC_OPTIONS})

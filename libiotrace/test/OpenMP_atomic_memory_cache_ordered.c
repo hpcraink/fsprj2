@@ -48,7 +48,9 @@ int main(int argc, char *argv[]) {
 						atomic_memory_sizes[l]
 								- sizeof(struct atomic_memory_block));
 				tests[i * atomic_memory_size_count + l] = tmp;
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 				atomic_memory_push(tmp);
+#endif
 			}
 		}
 	}
@@ -70,6 +72,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 	printf("start pop and free\n");
 #pragma omp parallel for reduction(+:pop_counts[:atomic_memory_size_count])
 	for (int i = 0; i < iterations; i++) {
@@ -114,6 +117,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
+#endif
 
 	printf("start check alloc\n");
 #pragma omp parallel for

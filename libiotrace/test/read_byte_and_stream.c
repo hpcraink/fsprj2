@@ -47,4 +47,11 @@ int main(void) {
     libiotrace_set_stacktrace_depth(2);
 
     close(fd);
+
+    free(buffer);
+
+    buffer = malloc(16);
+    snprintf(buffer, 16, "test");
+    printf("%s\n", buffer);
+    free(buffer);
 }

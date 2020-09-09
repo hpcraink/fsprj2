@@ -11,19 +11,17 @@
  * between all processes using this library. Else each process has it's own
  * global memory.
  */
-#define ATOMIC_MEMORY_CACHE_PER_NODE
+//#define ATOMIC_MEMORY_CACHE_PER_NODE
 // TODO: test cache per process variant
-
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 /* includes for shared memory */
 #  include <sys/mman.h>
 #  include <sys/stat.h>        /* For mode constants */
 #  include <fcntl.h>           /* For O_* constants */
+#  include <signal.h>
+#  include <unistd.h>
+#  include <time.h>
 #endif
-
-#include <signal.h>
-#include <unistd.h>
-#include <time.h>
 
 // TODO: remove
 #include <assert.h>
@@ -187,6 +185,7 @@ struct atomic_memory_region {
 	 */
 	int32_t thread_count;
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 	pid_t consumer;
 
 	char consumer_is_ready;
@@ -194,6 +193,7 @@ struct atomic_memory_region {
 	int32_t producer_count;
 
 	int32_t push_count;
+#endif
 };
 
 #ifdef ATOMIC_MEMORY_CACHE_PER_NODE
@@ -242,6 +242,8 @@ struct atomic_memory_region_init {
  */
 static struct atomic_memory_region *atomic_memory_global;
 
+static char shared_memory_name[ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH];
+
 #else
 
 /**
@@ -249,13 +251,15 @@ static struct atomic_memory_region *atomic_memory_global;
  *
  * See \a atomic_memory_region.
  */
-static struct atomic_memory_region atomic_memory_global;
+static struct atomic_memory_region atomic_memory_global = {
+		.atomic_memory_buffer_pos =
+				&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer[0]) };
 #endif
 
-static char shared_memory_name[ATOMIC_MEMORY_CACHE_SHM_NAME_LENGTH];
-
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 static sig_atomic_t consume = 0;
 static sig_atomic_t finish = 0;
+#endif
 
 /**
  * Thread local cache of usable free memory blocks belonging to the current
@@ -332,6 +336,7 @@ static ATTRIBUTE_THREAD size_t free_count[ATOMIC_MEMORY_MAX_THREADS][atomic_memo
  */
 static ATTRIBUTE_THREAD int32_t thread_id = -1;
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 /**
  * Initialization of \a atomic_memory_global.
  *
@@ -359,6 +364,7 @@ static void cleanup() ATTRIBUTE_DESTRUCTOR;
  *         field \c ptr set to NULL if no block was available
  */
 union atomic_memory_block_tag_ptr atomic_memory_pop_all() __attribute__((warn_unused_result));
+#endif
 
 /**
  * Creates a new memory block from the buffer \a atomic_memory_buffer.
@@ -456,6 +462,7 @@ static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
 static inline unsigned __int128 atomic_load_16(unsigned __int128 *ptr,
 		int memorder)__attribute__((always_inline));
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 /**
  * Initialization of \a atomic_memory_global.
  *
@@ -472,10 +479,11 @@ void consume_handler(int signum __attribute__((unused))) {
 void finish_handler(int signum __attribute__((unused))) {
 	finish = 1;
 }
+#endif
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 static void init_on_load() {
 	// TODO: get atomic_memory_buffer from malloc instead of using stack
-#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 	int fd;
 	struct atomic_memory_region_init *memory_region_init;
 	int32_t region_number;
@@ -656,14 +664,13 @@ static void init_on_load() {
 	 * TODO: process counter in memory_region_init, so last process can unlink
 	 * the two regions in dtor (this will be prone to errors if some dtor's
 	 * use wrapped functions) */
-#else
-	init_cache();
-#endif
 
 	__atomic_add_fetch(&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.producer_count, 1,
 	__ATOMIC_RELAXED);
 }
+#endif
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 static void cleanup() {
 	int32_t producer_count;
 	producer_count = __atomic_sub_fetch(
@@ -681,9 +688,11 @@ static void cleanup() {
 
 	munmap(atomic_memory_global, sizeof(struct atomic_memory_region));
 }
+#endif
 
 /* TODO: call of wrapper from ctor of other library is possible
  * => init_cache() must be called if alloc is called before ctor of this library was called */
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 static inline void init_cache() {
 	struct timespec before;
 	struct timespec now;
@@ -704,7 +713,7 @@ static inline void init_cache() {
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer_pos =
 			ATOMIC_MEMORY_CACHE_GLOBAL_GET_RELATIVE_PTR(
 					&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_buffer[0]));
-	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count = -1;
+	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count = 0;
 
 	/* start consumer */
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.consumer_is_ready = 0;
@@ -736,6 +745,7 @@ static inline void init_cache() {
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.producer_count = 0;
 	ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.push_count = 0;
 }
+#endif
 
 static inline char atomic_compare_exchange_16(unsigned __int128 *ptr,
 		unsigned __int128 *expected, unsigned __int128 desired,
@@ -797,6 +807,7 @@ union atomic_memory_block_tag_ptr atomic_memory_alloc(
 		return old_value;
 	} else {
 		if (-1 < thread_id) {
+
 			old_value._integral_type =
 					atomic_load_16(
 							&(ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.atomic_memory_cache[thread_id][size]._integral_type),
@@ -901,7 +912,7 @@ static struct atomic_memory_block* atomic_memory_new_block(
 	((struct atomic_memory_block*) old_value)->_size = size;
 	if (0 > thread_id) {
 		/* get an index to an unique place in intern cache per thread */
-		thread_id = __atomic_add_fetch(
+		thread_id = __atomic_fetch_add(
 				&ATOMIC_MEMORY_CACHE_GLOBAL_STRUCT.thread_count, 1,
 				__ATOMIC_RELAXED);
 		if (ATOMIC_MEMORY_MAX_THREADS <= thread_id) {
@@ -989,6 +1000,7 @@ static union atomic_memory_block_tag_ptr atomic_memory_new_block_list(
 	return begin;
 }
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 void atomic_memory_push(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
 	int32_t count;
@@ -1093,6 +1105,7 @@ union atomic_memory_block_tag_ptr atomic_memory_pop_all() {
 
 	return old_value;
 }
+#endif
 
 void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 	union atomic_memory_block_tag_ptr old_value;
@@ -1166,6 +1179,7 @@ void atomic_memory_free(union atomic_memory_block_tag_ptr block) {
 	}
 }
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 void atomic_memory_start_consumer() {
 	sigset_t mask;
 	sigset_t oldmask;
@@ -1254,3 +1268,4 @@ void atomic_memory_start_consumer() {
 void free_all(union atomic_memory_block_tag_ptr block) {
 
 }
+#endif

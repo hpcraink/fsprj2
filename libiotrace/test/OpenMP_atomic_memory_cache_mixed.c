@@ -33,7 +33,9 @@ int main(int argc, char *argv[]) {
 						atomic_memory_sizes[l]
 								- sizeof(struct atomic_memory_block));
 
+#ifdef ATOMIC_MEMORY_CACHE_PER_NODE
 				atomic_memory_push(tmp);
+#endif
 			}
 		}
 	}

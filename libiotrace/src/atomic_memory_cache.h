@@ -42,7 +42,7 @@
 /**
  * Size of global buffer (per process) to create memory blocks from.
  */
-#define ATOMIC_MEMORY_BUFFER_SIZE 1000 * 1000 * 1000
+#define ATOMIC_MEMORY_BUFFER_SIZE 1000LL * 1000 * 1000 * 2
 /**
  * Maximum of caches for different threads (per process or per node, see
  * #ATOMIC_MEMORY_CACHE_PER_NODE).
@@ -64,7 +64,7 @@
  * memory blocks per cache the thread local cache is pushed to the global
  * cache.
  */
-#define ATOMIC_MEMORY_CACHE_SIZE 100
+#define ATOMIC_MEMORY_CACHE_SIZE 1
 
 /**
  * Alignment of memory blocks and pointers to them.
@@ -101,10 +101,34 @@
  * \a atomic_memory_sizes is needed.
  */
 enum atomic_memory_size {
-	atomic_memory_size_16,
-	atomic_memory_size_110,
-	atomic_memory_size_520,
-	atomic_memory_size_1678,
+	 atomic_memory_size_25,
+//	 atomic_memory_size_1000,
+//	 atomic_memory_size_10000,
+
+//	atomic_memory_size_16,
+//	atomic_memory_size_8,
+//	atomic_memory_size_12,
+//	atomic_memory_size_24,
+//	atomic_memory_size_32,
+//	atomic_memory_size_4,
+//	atomic_memory_size_152,
+//	atomic_memory_size_20,
+//	atomic_memory_size_28,
+//	atomic_memory_size_40,
+//	atomic_memory_size_36,
+//	atomic_memory_size_88,
+//	atomic_memory_size_44,
+//	atomic_memory_size_58,
+//	atomic_memory_size_48,
+//	atomic_memory_size_232,
+//	atomic_memory_size_52,
+//	atomic_memory_size_56,
+//	atomic_memory_size_31,
+//	atomic_memory_size_64,
+
+//	atomic_memory_size_110,
+//	atomic_memory_size_520,
+//	atomic_memory_size_1678,
 //	atomic_memory_size_3200,
 	/* each new enum needs an corresponding entry in atomic_memory_sizes */
 	atomic_memory_size_count
@@ -202,9 +226,26 @@ struct atomic_memory_block {
  * #ATOMIC_MEMORY_ALIGNMENT.
  */
 static const size_t atomic_memory_sizes[atomic_memory_size_count] = {
-		ATOMIC_MEMORY_SIZE_ALIGNED(56), ATOMIC_MEMORY_SIZE_ALIGNED(110),
-		ATOMIC_MEMORY_SIZE_ALIGNED(520), ATOMIC_MEMORY_SIZE_ALIGNED(1678) /*,
- ATOMIC_MEMORY_SIZE_ALIGNED(3200)*/};
+		ATOMIC_MEMORY_SIZE_ALIGNED(25),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(1000),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(10000),
+
+//		ATOMIC_MEMORY_SIZE_ALIGNED(16), ATOMIC_MEMORY_SIZE_ALIGNED(8),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(12), ATOMIC_MEMORY_SIZE_ALIGNED(24),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(32), ATOMIC_MEMORY_SIZE_ALIGNED(4),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(152), ATOMIC_MEMORY_SIZE_ALIGNED(20),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(28), ATOMIC_MEMORY_SIZE_ALIGNED(40),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(36), ATOMIC_MEMORY_SIZE_ALIGNED(88),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(44), ATOMIC_MEMORY_SIZE_ALIGNED(58),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(48), ATOMIC_MEMORY_SIZE_ALIGNED(232),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(52), ATOMIC_MEMORY_SIZE_ALIGNED(56),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(31), ATOMIC_MEMORY_SIZE_ALIGNED(64),
+
+//		ATOMIC_MEMORY_SIZE_ALIGNED(110),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(520),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(1678),
+//		ATOMIC_MEMORY_SIZE_ALIGNED(3200)
+};
 
 /**
  * Allocation of a memory block.
@@ -287,6 +328,6 @@ union atomic_memory_block_tag_ptr atomic_memory_pop()
  *
  * @param[in]  block      memory block ready to be reused
  */
-void atomic_memory_free(union atomic_memory_block_tag_ptr block);
+void atomic_memory_free(union atomic_memory_block_tag_ptr block)__attribute__((hot));
 
 #endif /* LIBIOTRACE_ATOMIC_MEMORY_CACHE_H */

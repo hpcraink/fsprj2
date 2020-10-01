@@ -9,6 +9,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
+import iotrace.analyze.FileRange.RangeType;
 import iotrace.analyze.FileTraceId.IdType;
 
 public class ProcessTrace {
@@ -140,6 +141,21 @@ public class ProcessTrace {
 		}
 
 		FileTraceId fileTraceId = new FileTraceStringId(idType, id, fileTrace, fileOffset);
+		tmpMap.put(id, fileTraceId);
+		return fileTraceId;
+	}
+	
+	public FileTraceId setFileTraceId(IdType idType, String id, FileTrace fileTrace, FileOffset fileOffset, RangeType rangeType) {
+		HashMap<String, FileTraceId> tmpMap;
+
+		if (!ids.containsKey(idType)) {
+			tmpMap = new HashMap<>();
+			ids.put(idType, tmpMap);
+		} else {
+			tmpMap = ids.get(idType);
+		}
+
+		FileTraceId fileTraceId = new FileTraceRequestId(idType, id, fileTrace, fileOffset, rangeType);
 		tmpMap.put(id, fileTraceId);
 		return fileTraceId;
 	}

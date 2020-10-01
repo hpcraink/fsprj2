@@ -10,6 +10,7 @@ int main(int argc, char *argv[]){
     int *buf, rank, nprocs, nints, bufsize;
     MPI_File file;
     MPI_Status status;
+    MPI_Request request;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -25,7 +26,9 @@ int main(int argc, char *argv[]){
 
     MPI_File_seek(file, rank*bufsize, MPI_SEEK_SET);
 
-    MPI_File_read(file, buf, nints, MPI_INT, &status);
+    MPI_File_iread(file, buf, nints, MPI_INT, &request);
+
+    MPI_Wait(&request, &status);
     MPI_File_close(&file);
 
     free(buf);

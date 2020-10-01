@@ -26,6 +26,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.SortedMap;
 
+import iotrace.analyze.FileRange.RangeType;
 import iotrace.analyze.FileTrace.FileKind;
 import iotrace.analyze.FileTraceId.IdGroup;
 import iotrace.analyze.FileTraceId.IdType;
@@ -421,7 +422,7 @@ public class Data {
 	 *             each line
 	 */
 	public void addJsons(File file) {
-		jsons = Json.logFileToJson(file, fileTraceFunctions);
+		jsons = Json.logJsonToObject(file, fileTraceFunctions);
 	}
 
 	/**
@@ -450,9 +451,9 @@ public class Data {
 		int jsonCount = 0;
 
 		logger.debug("Start processing:");
-		for (Entry<UniqueStartTime, Json> j : jsons.entrySet()) {
+		for (Entry<UniqueStartTime, Json> currentJson : jsons.entrySet()) {
 
-			processJson(j.getValue());
+			processJson(currentJson.getValue());
 
 			if (minTime == null) {
 				if (hasWrapperInfo) {
@@ -1538,6 +1539,24 @@ public class Data {
 
 		FileTraceId newFileTraceId = tmpProcessTrace.setFileTraceId(newIdType, newId, fileTrace, fileOffset);
 		addEvent(oldFileTraceId, newFileTraceId);
+	}
+	
+	public void addId(IdType oldIdType, String oldId, IdType newIdType, String newId, RangeType rangeType) {
+		FileTraceId oldFileTraceId = tmpProcessTrace.getFileTraceId(oldIdType, oldId);
+		FileTrace fileTrace;
+		FileOffset fileOffset;
+
+		if (oldFileTraceId != null) {
+			fileTrace = oldFileTraceId.getFileTrace();
+			fileOffset = oldFileTraceId.getFileOffset();
+		} else {
+			fileTrace = null;
+			fileOffset = null;
+		}
+
+		FileTraceId newFileTraceId = tmpProcessTrace.setFileTraceId(newIdType, newId, fileTrace, fileOffset, rangeType);
+		addEvent(oldFileTraceId, newFileTraceId);
+		
 	}
 
 	public void addId(IdType oldIdType, String oldId, String address, String length, String offset, boolean shared) {

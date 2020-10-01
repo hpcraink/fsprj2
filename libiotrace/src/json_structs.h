@@ -48,7 +48,11 @@ JSON_STRUCT_START(file_async)
 JSON_STRUCT_END
 
 JSON_STRUCT_START(file_mpi)
-  JSON_STRUCT_VOID_P_CONST(mpi_file)
+  JSON_STRUCT_INT(mpi_file)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(request_mpi)
+  JSON_STRUCT_INT(request_id)
 JSON_STRUCT_END
 
 JSON_STRUCT_START(shared_library)
@@ -384,6 +388,22 @@ JSON_STRUCT_START(open_function)
   JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
   JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
   JSON_STRUCT_STRUCT(file_id, id)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(mpi_open_function)
+  JSON_STRUCT_ENUM(access_mode, mode)
+  JSON_STRUCT_ARRAY_BITFIELD(creation_flags, creation)
+  JSON_STRUCT_ARRAY_BITFIELD(status_flags, status)
+  JSON_STRUCT_ARRAY_BITFIELD(mode_flags, file_mode)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_STRUCT(file_id, id)
+  JSON_STRUCT_KEY_VALUE_ARRAY(file_hints, MAX_MPI_FILE_HINTS, MAX_MPI_FILE_HINT_LENGTH)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(mpi_delete_function)
+  JSON_STRUCT_CSTRING_P_CONST(file_name, MAXFILENAME)
+  JSON_STRUCT_STRUCT(file_id, id)
+  JSON_STRUCT_KEY_VALUE_ARRAY(file_hints, MAX_MPI_FILE_HINTS, MAX_MPI_FILE_HINT_LENGTH)
 JSON_STRUCT_END
 
 /* struct for file openat */
@@ -869,6 +889,36 @@ JSON_STRUCT_START(accept_function)
   JSON_STRUCT_INT(new_descriptor)
 JSON_STRUCT_END
 
+/* struct for dataype size */
+JSON_STRUCT_START(mpi_immediate)
+  JSON_STRUCT_INT(request_id)
+JSON_STRUCT_END
+
+/* struct for dataype size */
+JSON_STRUCT_START(mpi_immediate_at)
+  JSON_STRUCT_INT(request_id)
+  JSON_STRUCT_OFF_T(position)
+JSON_STRUCT_END
+
+/* struct for dataype size */
+JSON_STRUCT_START(mpi_wait)
+  JSON_STRUCT_INT(count_bytes)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(mpi_waitall_element)
+  JSON_STRUCT_INT(count_bytes)
+  JSON_STRUCT_INT(request_id)
+  JSON_STRUCT_ENUM(read_write_state, return_state)
+  JSON_STRUCT_STRUCT_P(errno_detail, return_state_detail)
+JSON_STRUCT_END
+
+JSON_STRUCT_START(mpi_waitall)
+  JSON_STRUCT_STRUCT_ARRAY(mpi_waitall_element, requests, MAX_MPI_IMESSAGES)
+JSON_STRUCT_END
+
+
+
+
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
 JSON_STRUCT_START(wrapper_data)
@@ -901,6 +951,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_async)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, file_mpi)
     JSON_STRUCT_VOID_P_ELEMENT(file_type, shared_library)
+    JSON_STRUCT_VOID_P_ELEMENT(file_type, request_mpi)
   JSON_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position has changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)
@@ -960,6 +1011,12 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, accept_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, socketpair_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, socket_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_open_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_wait)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_delete_function)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate_at)
+    JSON_STRUCT_VOID_P_ELEMENT(function_data, mpi_waitall)
   JSON_STRUCT_VOID_P_END(function_data)
 JSON_STRUCT_END
 

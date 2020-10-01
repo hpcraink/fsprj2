@@ -363,6 +363,30 @@ if(WITH_MPI_IO)
     target_link_libraries(MPI_read PRIVATE ${LINK_OPTIONS})
 endif()
 
+if(WITH_MPI_IO)
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_IO_single
+    add_executable(MPI_parallel_IO_single MPI_parallel_IO_single.c)
+    target_link_libraries(MPI_parallel_IO_single PRIVATE ${LINK_OPTIONS})
+endif()
+
+if(WITH_MPI_IO)
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_read
+    add_executable(MPI_parallel_read MPI_parallel_read.c)
+    target_link_libraries(MPI_parallel_read PRIVATE ${LINK_OPTIONS})
+endif()
+
+if(WITH_MPI_IO)
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread
+    add_executable(MPI_parallel_iread MPI_parallel_iread.c)
+    target_link_libraries(MPI_parallel_iread PRIVATE ${LINK_OPTIONS})
+endif()
+
+if(WITH_MPI_IO)
+    # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_immediate_test
+    add_executable(MPI_immediate_test MPI_immediate_test.c)
+    target_link_libraries(MPI_immediate_test PRIVATE ${LINK_OPTIONS})
+endif()
+
 ##########################################################################################################
 
 if(WITH_POSIX_IO)

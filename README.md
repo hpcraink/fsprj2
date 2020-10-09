@@ -345,3 +345,15 @@ So this char shows some optimization potential.
 *&lt;prefix-for-log-names&gt;_1.mp4*
 
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_1.gif "&lt;prefix-for-log-names&gt;_1.mp4")
+
+
+## Grafana and Prometheus
+To use Grafana and Prometheus for real-time tracing from libiotrace execute the following commands:
+
+1. Go to the fsprj2 root directory
+2. `cd Grafana`
+3. `sudo docker-compose up -d`
+
+Prometheus is now acessible on http://localhost:9090 and fetches data from the Prometheus Pushgateway on http://localhost:9091. Libiotrace sends its live data via HTTP to the Pushgateway.
+
+Grafana is accessible on http://localhost:3000 and is preconfigured with the Prometheus database.

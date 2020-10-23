@@ -54,9 +54,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    //Set socket option
+    //Set socket option TCP_NODELAY
     int option = 0;
     if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
+    {
+        fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
+        return 1;
+    }
+
+    //Set socket option REUSEADDR
+    int option2 = 0;
+    if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
     {
         fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
         return 1;
@@ -74,50 +82,12 @@ int main(int argc, char *argv[])
     printf("Connected.\n");
     printf("Enter text to send\n");
 
-    while (1)
-    {
+    char message[] = "POST /metrics/job/some_job HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
+    "Content-Length: 17\nContent-Type: application/x-www-form-urlencoded\n\nsome_metric 6.10\n";
+    int bytes_sent = send(socket_peer, message, strlen(message), 0);
+    printf("Sent %d bytes.\n", bytes_sent);
 
-        fd_set reads;
-        FD_ZERO(&reads);
-        FD_SET(socket_peer, &reads);
-        FD_SET(0, &reads);
 
-        struct timeval timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_usec = 100000;
-
-        if (select(socket_peer + 1, &reads, 0, 0, &timeout) < 0)
-        {
-            fprintf(stderr, "select() failed. (%d)\n", GETSOCKETERRNO());
-            return 1;
-        }
-
-        if (FD_ISSET(socket_peer, &reads))
-        {
-            char read[4096];
-            int bytes_received = recv(socket_peer, read, 4096, 0);
-            if (bytes_received < 1)
-            {
-                printf("Connection closed by peer.\n");
-                break;
-            }
-            printf("Received (%d bytes): %.*s",
-                   bytes_received, bytes_received, read);
-        }
-
-        if (FD_ISSET(0, &reads))
-        {
-
-            char read[4096];
-            if (!fgets(read, 4096, stdin))
-                break;
-            printf("Sending: %s", read);
-            int bytes_sent = send(socket_peer, read, strlen(read), 0);
-            printf("Sent %d bytes.\n", bytes_sent);
-        }
-    }
-
-    // Close socket
     CLOSESOCKET(socket_peer);
 
     printf("Finished.\n");

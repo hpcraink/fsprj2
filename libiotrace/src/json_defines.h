@@ -24,6 +24,8 @@
 #define JSON_STRUCT_SIZEOF      4 /* generate function to evaluate size for JSON_STRUCT_COPY */
 #define JSON_STRUCT_COPY        5 /* generate function to deep copy struct (with VOID_P elements) */
 #define JSON_STRUCT_FREE        6 /* generate function to free malloc'ed memory */
+#define JSON_STRUCT_PUSH_COUNT  7 /* generate function to evaluate size for HTTP Posts */
+#define JSON_STRUCT_PUSH        8 /* generate function to generate POST request*/
 
 /* #defines for error handling */
 #ifndef JSON_STRUCT_ERROR
@@ -1083,6 +1085,124 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
 /* insert new line for new data-type here */
 
+/* ----------------------------------------------------------------------------------------------------------------------- */
+#elif JSON_STRUCT == JSON_STRUCT_PUSH_COUNT
+/*
+ * Macros for evaluating size of HTTP Posts
+ *
+ * following functions are available after include of the macros
+ *
+ * size_t json_struct_push_max_size_<name of struct>()
+ *
+ * */
+#  define JSON_STRUCT_ENUM_START(name)
+#  define JSON_STRUCT_ENUM_ELEMENT(name)
+#  define JSON_STRUCT_ENUM_END
+
+#  define JSON_STRUCT_ARRAY_BITFIELD_START(name)
+#  define JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
+#  define JSON_STRUCT_ARRAY_BITFIELD_END
+
+#  define JSON_STRUCT_VOID_P_START(name)
+#  define JSON_STRUCT_VOID_P_ELEMENT(name, element)
+#  define JSON_STRUCT_VOID_P_END(name)
+
+#  define JSON_STRUCT_START(name)
+#  define JSON_STRUCT_END
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length)
+
+#  define JSON_STRUCT_STRUCT_P(type, name)
+#  define JSON_STRUCT_STRUCT(type, name)
+#  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
+#  define JSON_STRUCT_ENUM(type, name)
+#  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_PID_T(name)
+#  define JSON_STRUCT_CSTRING(name, length)
+#  define JSON_STRUCT_CSTRING_P(name, max_length)
+#  define JSON_STRUCT_CSTRING_P_CONST(name, max_length)
+#  define JSON_STRUCT_CLOCK_T(name)
+#  define JSON_STRUCT_FILE_P(name)
+#  define JSON_STRUCT_LONG_INT(name)
+#  define JSON_STRUCT_SIZE_T(name)
+#  define JSON_STRUCT_SSIZE_T(name)
+#  define JSON_STRUCT_OFF_T(name)
+#  define JSON_STRUCT_U_INT64_T(name)
+#  define JSON_STRUCT_VOID_P(name)
+#  define JSON_STRUCT_VOID_P_CONST(name)
+#  define JSON_STRUCT_FD_SET_P(name)
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name)
+#  endif
+#  define JSON_STRUCT_SHORT(name)
+#  define JSON_STRUCT_DEV_T(name)
+#  define JSON_STRUCT_INO_T(name)
+#  define JSON_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element)
+#  define JSON_STRUCT_MALLOC_PTR_ARRAY(name, max_size)
+#  define JSON_STRUCT_INT_ARRAY(name, max_size)
+#  define JSON_STRUCT_SA_FAMILY_T(name)
+#  define JSON_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
+
+/* insert new line for new data-type here */
+/* ----------------------------------------------------------------------------------------------------------------------- */
+#elif JSON_STRUCT == JSON_STRUCT_PUSH
+/*
+ * Macros for generating HTTP Posts
+ *
+ * following functions are available after include of the macros
+ *
+ * int json_struct_push_<name of struct>(void* json_struct_buffer_to_post, size_t json_struct_length_of_buffer_to_post, struct name *json_struct_data);
+ *
+ * */
+#  define JSON_STRUCT_ENUM_START(name)
+#  define JSON_STRUCT_ENUM_ELEMENT(name)
+#  define JSON_STRUCT_ENUM_END
+
+#  define JSON_STRUCT_ARRAY_BITFIELD_START(name)
+#  define JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
+#  define JSON_STRUCT_ARRAY_BITFIELD_END
+
+#  define JSON_STRUCT_VOID_P_START(name)
+#  define JSON_STRUCT_VOID_P_ELEMENT(name, element)
+#  define JSON_STRUCT_VOID_P_END(name)
+
+#  define JSON_STRUCT_START(name) int json_struct_push_##name(void* json_struct_buffer_to_post, size_t json_struct_length_of_buffer_to_post, struct name *json_struct_data){
+#  define JSON_STRUCT_END }
+
+#  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length)
+
+#  define JSON_STRUCT_STRUCT_P(type, name)
+#  define JSON_STRUCT_STRUCT(type, name)
+#  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
+#  define JSON_STRUCT_ENUM(type, name)
+#  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_PID_T(name)
+#  define JSON_STRUCT_CSTRING(name, length)
+#  define JSON_STRUCT_CSTRING_P(name, max_length)
+#  define JSON_STRUCT_CSTRING_P_CONST(name, max_length)
+#  define JSON_STRUCT_CLOCK_T(name)
+#  define JSON_STRUCT_FILE_P(name)
+#  define JSON_STRUCT_LONG_INT(name)
+#  define JSON_STRUCT_SIZE_T(name)
+#  define JSON_STRUCT_SSIZE_T(name)
+#  define JSON_STRUCT_OFF_T(name)
+#  define JSON_STRUCT_U_INT64_T(name)
+#  define JSON_STRUCT_VOID_P(name)
+#  define JSON_STRUCT_VOID_P_CONST(name)
+#  define JSON_STRUCT_FD_SET_P(name)
+#  ifdef HAVE_DLMOPEN
+#    define JSON_STRUCT_LMID_T(name)
+#  endif
+#  define JSON_STRUCT_SHORT(name)
+#  define JSON_STRUCT_DEV_T(name)
+#  define JSON_STRUCT_INO_T(name)
+#  define JSON_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element)
+#  define JSON_STRUCT_MALLOC_PTR_ARRAY(name, max_size)
+#  define JSON_STRUCT_INT_ARRAY(name, max_size)
+#  define JSON_STRUCT_SA_FAMILY_T(name)
+#  define JSON_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
+
+/* insert new line for new data-type here */
 /* ----------------------------------------------------------------------------------------------------------------------- */
 #else
 /* ----------------------------------------------------------------------------------------------------------------------- */

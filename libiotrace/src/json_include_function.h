@@ -17,5 +17,11 @@
 #undef JSON_STRUCT
 #define JSON_STRUCT JSON_STRUCT_FREE
 #include "json_structs.h"
+#undef JSON_STRUCT
+#define JSON_STRUCT JSON_STRUCT_PUSH_COUNT
+#include "json_structs.h"
+#undef JSON_STRUCT
+#define JSON_STRUCT JSON_STRUCT_PUSH
+#include "json_structs.h"
 
 #endif /* LIBIOTRACE_JSON_INCLUDE_FUNCTION_H */

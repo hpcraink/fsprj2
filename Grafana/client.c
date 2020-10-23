@@ -82,8 +82,13 @@ int main(int argc, char *argv[])
     printf("Connected.\n");
     printf("Enter text to send\n");
 
-    char message[] = "POST /metrics/job/some_job HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
-    "Content-Length: 17\nContent-Type: application/x-www-form-urlencoded\n\nsome_metric 6.10\n";
+    char message[250];
+    char body[] = "some_metric 6.10\nsome_other_metric 7.14\n";
+    
+    snprintf(message, sizeof(message), "POST /metrics/job/some_job HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
+    "Content-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s", strlen(body), body);
+    
+    
     int bytes_sent = send(socket_peer, message, strlen(message), 0);
     printf("Sent %d bytes.\n", bytes_sent);
 

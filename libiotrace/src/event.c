@@ -717,8 +717,13 @@ void printData()
 
 void pushData(struct basic *data)
 {
-
-	char buf[json_struct_push_max_size_basic() + 1]; /* +1 for trailing null character */
+	//riesen buffer fuer alles
+	char message[400 + json_struct_push_max_size_basic() + 1];
+    //char body[] = "some_metric 6.10\nsome_other_metric 7.14\n";
+    
+  
+	//buffer fuer body
+	char buf[json_struct_push_max_size_basic() + 1]; /* +1 for trailing null character   Funktion wird von Markos gebaut   Groesse vom Body zum senden*/
 	int ret = json_struct_push_basic(buf, sizeof(buf), data);
 
 	if (0 > ret)
@@ -728,6 +733,12 @@ void pushData(struct basic *data)
 		 "In function %s: json_struct_push_basic() returned %d.\n", __func__, ret);
 		assert(0);
 	}
+
+	snprintf(message, sizeof(message), "POST /%s/%u/%u HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
+    "Content-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s", data.hostname , data.process_id, data.thread_id, ret, buf);
+
+	//DEBUG
+	printf("Request to Prometheus: %s\n", message);
 
 	//TODO: Send data via socket
 }

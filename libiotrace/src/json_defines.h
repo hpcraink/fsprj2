@@ -88,6 +88,9 @@
 #undef JSON_STRUCT_ELEMENT_SIZE
 #undef JSON_STRUCT_TYPE_SIZE_DEC
 
+#undef JSON_STRUCT_ELEMENT
+#undef JSON_STRUCT_SNPRINTF
+
 #undef JSON_STRUCT_ENUM_START
 #undef JSON_STRUCT_ENUM_ELEMENT
 #undef JSON_STRUCT_ENUM_END
@@ -1171,20 +1174,37 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
  * int json_struct_push_<name of struct>(void* json_struct_buffer_to_post, size_t json_struct_length_of_buffer_to_post, struct name *json_struct_data);
  *
  * */
+#  define JSON_STRUCT_ELEMENT(key, template, ...) JSON_STRUCT_SNPRINTF(#key" "#template"\n", __VA_ARGS__)
+
+#  define JSON_STRUCT_SNPRINTF(...) json_struct_ret = snprintf(json_struct_buf, json_struct_size, __VA_ARGS__); \
+                                    JSON_STRUCT_SIZE_ERROR(json_struct_ret, json_struct_size) /* don't write more characters then size of buffer */ \
+                                    json_struct_buf += json_struct_ret;  /* set pointer to end of written characters */ \
+                                    json_struct_size -= json_struct_ret; /* resize buffer size */
+
+
+#  define JSON_STRUCT_SIZE_ERROR(ret, size) if (ret >= size) { \
+                                                CALL_REAL_POSIX_SYNC(fprintf)(stderr, "Output buffer in function %s not big enough.\n", __func__); \
+                                                assert(0); \
+                                            }
+
+
 #  define JSON_STRUCT_ENUM_START(name)
 #  define JSON_STRUCT_ENUM_ELEMENT(name)
-#  define JSON_STRUCT_ENUM_END
+#  define JSON_STRUCT_ENUM_END 
 
 #  define JSON_STRUCT_ARRAY_BITFIELD_START(name)
 #  define JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define JSON_STRUCT_ARRAY_BITFIELD_END
 
-#  define JSON_STRUCT_VOID_P_START(name)
+#  define JSON_STRUCT_VOID_P_START(name) 
 #  define JSON_STRUCT_VOID_P_ELEMENT(name, element)
 #  define JSON_STRUCT_VOID_P_END(name)
 
-#  define JSON_STRUCT_START(name) int json_struct_push_##name(void* json_struct_buffer_to_post, size_t json_struct_length_of_buffer_to_post, struct name *json_struct_data){
-#  define JSON_STRUCT_END }
+#  define JSON_STRUCT_START(name) int json_struct_push_##name(char* json_struct_buf, size_t json_struct_size, \
+                                        struct name *json_struct_data) { \
+                                    int json_struct_ret = 0; \
+                                    int json_struct_start_size = json_struct_size;
+#  define JSON_STRUCT_END return json_struct_start_size - json_struct_size;}
 
 #  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length)
 
@@ -1203,7 +1223,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_SIZE_T(name)
 #  define JSON_STRUCT_SSIZE_T(name)
 #  define JSON_STRUCT_OFF_T(name)
-#  define JSON_STRUCT_U_INT64_T(name)
+#  define JSON_STRUCT_U_INT64_T(name) JSON_STRUCT_ELEMENT(name, %lu, json_struct_data->name)
 #  define JSON_STRUCT_VOID_P(name)
 #  define JSON_STRUCT_VOID_P_CONST(name)
 #  define JSON_STRUCT_FD_SET_P(name)

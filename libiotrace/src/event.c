@@ -1,5 +1,25 @@
 #include "libiotrace_config.h"
 
+//################## 
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <netinet/tcp.h>
+
+#define ISVALIDSOCKET(s) ((s) >= 0)
+#define CLOSESOCKET(s) close(s)
+#define SOCKET int
+#define GETSOCKETERRNO() (errno)
+
+#include <stdio.h>
+#include <string.h>
+
+//##################
 #include <assert.h>
 
 #ifdef HAVE_UNISTD_H
@@ -732,7 +752,7 @@ void pushData(struct basic *data)
 		assert(0);
 	}
 
-	snprintf(message, sizeof(message), "POST /%s/%u/%u HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
+	snprintf(message, sizeof(message), "POST /metrics/job/%s-%u-%u HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
     "Content-Length: %d\nContent-Type: application/x-www-form-urlencoded\n\n%s", data->hostname , data->process_id, data->thread_id, ret, buf);
 
 	//DEBUG
@@ -740,6 +760,72 @@ void pushData(struct basic *data)
 	fflush(stdout);
 
 	//TODO: Send data via socket
+
+
+	//Configure remote address
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    struct addrinfo *peer_address;
+    if (getaddrinfo("localhost", "9091", &hints, &peer_address))
+    {
+        fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
+        return;
+    }
+
+    //Print remote address
+    char address_buffer[100];
+    char service_buffer[100];
+    getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
+                address_buffer, sizeof(address_buffer),
+                service_buffer, sizeof(service_buffer),
+                NI_NUMERICHOST);
+    printf("%s %s\n", address_buffer, service_buffer);
+
+    //Create
+    SOCKET socket_peer;
+    socket_peer = socket(peer_address->ai_family,
+                         peer_address->ai_socktype, peer_address->ai_protocol);
+    if (!ISVALIDSOCKET(socket_peer))
+    {
+        fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+        return;
+    }
+
+    //Set socket option TCP_NODELAY
+    int option = 0;
+    if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
+    {
+        fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
+        return;
+    }
+
+    //Set socket option REUSEADDR
+    int option2 = 0;
+    if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
+    {
+        fprintf(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
+        return;
+    }
+
+    //Connect
+    if (connect(socket_peer,
+                peer_address->ai_addr, peer_address->ai_addrlen))
+    {
+        fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+        return;
+    }
+    freeaddrinfo(peer_address);
+
+    printf("Connected.\n");
+    printf("Enter text to send\n");
+    
+    int bytes_sent = send(socket_peer, message, strlen(message), 0);
+    printf("Sent %d bytes.\n", bytes_sent);
+
+
+    CLOSESOCKET(socket_peer);
+
 }
 
 void writeData(struct basic *data)

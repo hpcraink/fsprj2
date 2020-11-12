@@ -34,6 +34,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data);
 u_int64_t gettime(void);
 
 void writeData(struct basic *data);
+void pushData(struct basic *data);
 void freeMemory(struct basic *data);
 
 

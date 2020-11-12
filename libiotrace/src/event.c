@@ -739,6 +739,7 @@ void pushData(struct basic *data)
 
 	//DEBUG
 	printf("Request to Prometheus: %s\n", message);
+	fflush(stdout);
 
 	//TODO: Send data via socket
 }

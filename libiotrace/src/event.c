@@ -742,7 +742,7 @@ void pushData(struct basic *data)
 
 	//buffer fuer body
 	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character   Funktion wird von Markos gebaut   Groesse vom Body zum senden*/
-	int ret = json_struct_push_basic(buf, sizeof(buf), data);
+	int ret = json_struct_push_basic(buf, sizeof(buf), data, "");
 
 	if (0 > ret)
 	{
@@ -752,14 +752,14 @@ void pushData(struct basic *data)
 		assert(0);
 	}
 
-	snprintf(message, sizeof(message), "POST /metrics/job/%s-%u-%u HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
-    "Content-Length: %d\nContent-Type: application/x-www-form-urlencoded\n\n%s", data->hostname , data->process_id, data->thread_id, ret, buf);
+	snprintf(message, sizeof(message), "POST /metrics/job/%s-%u-%u-%s HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
+    "Content-Length: %d\nContent-Type: application/x-www-form-urlencoded\n\n%s", data->hostname , data->process_id, data->thread_id,data ->function_name, ret, buf);
 
 	//DEBUG
 	printf("Request to Prometheus: %s\n", message);
 	fflush(stdout);
 
-	//TODO: Send data via socket
+	printf("Length: %d\n", json_struct_push_max_size_basic(0));
 
 
 	//Configure remote address
@@ -818,7 +818,6 @@ void pushData(struct basic *data)
     freeaddrinfo(peer_address);
 
     printf("Connected.\n");
-    printf("Enter text to send\n");
     
     int bytes_sent = send(socket_peer, message, strlen(message), 0);
     printf("Sent %d bytes.\n", bytes_sent);

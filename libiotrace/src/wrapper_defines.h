@@ -178,8 +178,8 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data) GET_MPI_ERRNO(data) \
-                           writeData(&data); \
                            pushData(&data); \
+                           writeData(&data); \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

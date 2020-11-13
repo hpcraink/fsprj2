@@ -1104,7 +1104,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 
 //char body[] = "some_metric 6.10\nsome_other_metric 7.14\n";   "some_metric"
 
-#  define JSON_STRUCT_ELEMENT_SIZE(name, sizeValue) json_struct_size += sizeof(#name) \
+#  define JSON_STRUCT_ELEMENT_SIZE(name, sizeValue) json_struct_size += prefix_length + sizeof(#name) \
                                                                         - 1  /* nullbyte entfernen von #name */ \
                                                                         + sizeValue \
                                                                         + 2; /* space and \n */
@@ -1118,12 +1118,18 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define JSON_STRUCT_ARRAY_BITFIELD_END
 
-#  define JSON_STRUCT_VOID_P_START(name)
-#  define JSON_STRUCT_VOID_P_ELEMENT(name, element)
-#  define JSON_STRUCT_VOID_P_END(name) 
+// Nur fuer eingehaenkte Strukturen ####################################################################################
+#  define JSON_STRUCT_VOID_P_START(name) json_struct_size_void_p = 0;
+// JSON_STRUCT_VOID_P_ELEMENT ruft fuer jede Struktur die eingehaengt sein kann die Funktion zur Groessenermittlung auf und gibt dabei die Praefixlaenge(=name) mit
+// Ziel: Groesste eingehaengte Struktur finden
+#  define JSON_STRUCT_VOID_P_ELEMENT(name, element) json_struct_size_void_p_tmp = json_struct_push_max_size_##element(sizeof(#name) + prefix_length); \
+                                                    if(json_struct_size_void_p_tmp > json_struct_size_void_p) \
+                                                      json_struct_size_void_p = json_struct_size_void_p_tmp;
+#  define JSON_STRUCT_VOID_P_END(name) json_struct_size += json_struct_size_void_p;
+// ####################################################################################################################
 
 //Jede Struktur beginnt mit diesem Makro
-#  define JSON_STRUCT_START(name) int json_struct_push_max_size_##name() { \
+#  define JSON_STRUCT_START(name) int json_struct_push_max_size_##name(size_t prefix_length) { /* prefix zb. file_type -- prefix nur fuer basic 0 */ \
                                     /* char json_struct_hasElements = 0; /* Merken ob in Struktur ueberhaupt was drin ist - nicht benoetigt weil letztes Element auch \n hat */ \
                                     int json_struct_size_void_p; /* Nur fuer eingehaengte Strukuten... Merken welche eingeh. Strkt. am groessten */ \
                                     int json_struct_size_void_p_tmp; \

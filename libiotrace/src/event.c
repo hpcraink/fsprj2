@@ -738,10 +738,10 @@ void printData()
 void pushData(struct basic *data)
 {
 	//riesen buffer fuer alles
-	char message[400 + json_struct_push_max_size_basic() + 1];
+	char message[400 + json_struct_push_max_size_basic(0) + 1];
 
 	//buffer fuer body
-	char buf[json_struct_push_max_size_basic() + 1]; /* +1 for trailing null character   Funktion wird von Markos gebaut   Groesse vom Body zum senden*/
+	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character   Funktion wird von Markos gebaut   Groesse vom Body zum senden*/
 	int ret = json_struct_push_basic(buf, sizeof(buf), data);
 
 	if (0 > ret)

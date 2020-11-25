@@ -752,8 +752,8 @@ void pushData(struct basic *data)
 		assert(0);
 	}
 
-	snprintf(message, sizeof(message), "POST /metrics/job/%s-%u-%u-%s HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
-    "Content-Length: %d\nContent-Type: application/x-www-form-urlencoded\n\n%s", data->hostname , data->process_id, data->thread_id,data ->function_name, ret, buf);
+	snprintf(message, sizeof(message), "POST /metrics/job/%s/hostname/%s/processid/%u/threadid/%u/functionname/%s HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
+    "Content-Length: %d\nContent-Type: application/x-www-form-urlencoded\n\n%s", log_name, data->hostname , data->process_id, data->thread_id,data ->function_name, ret, buf);
 
 	//DEBUG
 	printf("Request to Prometheus: %s\n", message);

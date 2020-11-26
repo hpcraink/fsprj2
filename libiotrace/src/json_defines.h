@@ -1102,12 +1102,11 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
  *
  * */
 
-//char body[] = "some_metric 6.10\nsome_other_metric 7.14\n";   "some_metric"
 
 #  define JSON_STRUCT_ELEMENT_SIZE(name, sizeValue) json_struct_size += prefix_length + sizeof(#name) \
                                                                         - 1  /* nullbyte entfernen von #name */ \
                                                                         + sizeValue \
-                                                                        + 2; /* space and \n */
+                                                                        + 2; /* equal sign  and comma */
 #  define JSON_STRUCT_TYPE_SIZE_DEC(type) ceil(log10(pow(2, sizeof(type) * CHAR_BIT))) /* wie viele ascii character passen in numerischen Typ wie zb uint64_t */
 
 #  define JSON_STRUCT_ENUM_START(name)
@@ -1181,9 +1180,9 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
  *
  * */
 #  define JSON_STRUCT_ELEMENT(key, template, ...) if(*prefix=='\0') { \
-                                                      JSON_STRUCT_SNPRINTF(#key" "#template"\n", __VA_ARGS__) \
+                                                      JSON_STRUCT_SNPRINTF(#key"="#template",", __VA_ARGS__) \
                                                   } else { \
-                                                      JSON_STRUCT_SNPRINTF("%s_"#key" "#template"\n", prefix, __VA_ARGS__)\
+                                                      JSON_STRUCT_SNPRINTF("%s_"#key"="#template",", prefix, __VA_ARGS__)\
                                                   }
 
 #  define JSON_STRUCT_SNPRINTF(...) json_struct_ret = snprintf(json_struct_buf, json_struct_size, __VA_ARGS__); \

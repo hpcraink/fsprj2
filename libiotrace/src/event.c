@@ -1,9 +1,11 @@
 #include "libiotrace_config.h"
 
-//################## 
+//##################
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/sysinfo.h>
+#include <time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -112,6 +114,7 @@ static char working_dir_log_name[MAXFILENAME];
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
 #endif
+static long long system_start_time;
 // once per thread
 static ATTRIBUTE_THREAD pid_t tid = -1;
 
@@ -574,6 +577,18 @@ void init_basic()
 		strcpy(ld_preload + length + 1, log);
 #endif
 
+		struct sysinfo info;
+		int errret = sysinfo(&info);
+		if (errret != 0)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: sysinfo() returned %d.\n", __func__, errret);
+			assert(0);
+		}
+		time_t current_time = time(NULL);
+		system_start_time = (current_time - info.uptime) * 1000000000;
+
 		pthread_mutex_init(&lock, NULL);
 
 		pthread_atfork(NULL, NULL, clear_init);
@@ -743,6 +758,7 @@ void pushData(struct basic *data)
 	//buffer fuer body
 	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character   Funktion wird von Markos gebaut   Groesse vom Body zum senden*/
 	int ret = json_struct_push_basic(buf, sizeof(buf), data, "");
+	buf[strlen(buf) - 1] = '\0'; /*remove last comma*/
 
 	if (0 > ret)
 	{
@@ -752,11 +768,23 @@ void pushData(struct basic *data)
 		assert(0);
 	}
 
-	snprintf(message, sizeof(message), "POST /metrics/job/%s/hostname/%s/processid/%u/threadid/%u/functionname/%s HTTP/1.1\nHost: localhost:9091\nAccept: */*\n"
-    "Content-Length: %d\nContent-Type: application/x-www-form-urlencoded\n\n%s", log_name, data->hostname , data->process_id, data->thread_id,data ->function_name, ret, buf);
+	char labels[200];
+	char short_log_name[50];
+	strncpy(short_log_name, log_name, sizeof(short_log_name));
+	snprintf(labels, sizeof(labels), "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u,functionname=%s", short_log_name, data->hostname, data->process_id, data->thread_id, data->function_name);
+
+
+	char timestamp[50];
+
+	snprintf(timestamp, sizeof(timestamp), "%lld", system_start_time + data->time_end);
+
+	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=mydb&precision=ns HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
+									   "Content-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
+			 strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
+
 
 	//DEBUG
-	printf("Request to Prometheus: %s\n", message);
+	printf("Request to InfluxDB: %s\n", message);
 	fflush(stdout);
 
 	printf("Length: %d\n", json_struct_push_max_size_basic(0));
@@ -767,7 +795,7 @@ void pushData(struct basic *data)
     memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     struct addrinfo *peer_address;
-    if (getaddrinfo("localhost", "9091", &hints, &peer_address))
+    if (getaddrinfo("localhost", "8086", &hints, &peer_address))
     {
         fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
         return;
@@ -839,7 +867,7 @@ void writeData(struct basic *data)
 	}
 
 	/* write (synchronized) */
-	pthread_mutex_lock(&lock);
+																 pthread_mutex_lock(&lock);
 
 	int length = json_struct_sizeof_basic(data);
 

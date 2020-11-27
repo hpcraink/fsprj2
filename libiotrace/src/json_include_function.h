@@ -18,7 +18,7 @@
 #define JSON_STRUCT JSON_STRUCT_FREE
 #include "json_structs.h"
 #undef JSON_STRUCT
-#define JSON_STRUCT JSON_STRUCT_PUSH_COUNT
+#define JSON_STRUCT JSON_STRUCT_PUSH_BYTES_COUNT
 #include "json_structs.h"
 #undef JSON_STRUCT
 #define JSON_STRUCT JSON_STRUCT_PUSH

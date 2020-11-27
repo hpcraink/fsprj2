@@ -18,6 +18,8 @@ services:
                         - prometheus
                 volumes:
                         - ./provisioning:/etc/grafana/provisioning
+                          #environment:
+                          #- GF_INSTALL_PLUGINS=grafana-influxdb-flux-datasource
         node-exporter:
                 image: 'prom/node-exporter'
                 ports:
@@ -37,3 +39,9 @@ services:
                         - "8086:8086"
                 volumes:
                         - './influxdb:/var/lib/influxdb'
+                          # - ./influxdb.conf:/etc/influxdb/influxdb.conf
+                          #command:
+                          #- '-config'
+                          #- '/etc/influxdb/influxdb.conf'
+                          # environment:
+                          #- INFLUXDB_FLUX_ENABLED=true

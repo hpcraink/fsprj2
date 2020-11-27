@@ -31,7 +31,9 @@ int main(int argc, char *argv[]){
     //printf("%p", file); //Jeder Prozess bekommt eigenes File handle auf File
     
     MPI_File_set_view(file, rank * BUFSIZE * sizeof(int), MPI_INT, MPI_INT, "native", info_in);
-        
+
+    sleep(3);
+
     MPI_File_write(file, buf, BUFSIZE, MPI_INT, MPI_STATUS_IGNORE);
 
     err = MPI_File_get_info( file, &info_used );

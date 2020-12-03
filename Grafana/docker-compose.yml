@@ -1,15 +1,5 @@
 version: '3'
 services:
-        prometheus:
-                image: 'prom/prometheus'
-                volumes:
-                        - './prometheus.yml:/etc/prometheus/prometheus.yml'
-                ports:
-                        - "9090:9090"
-        push-gateway:
-                image: 'prom/pushgateway'
-                ports:
-                        - "9091:9091"
         grafana:
                 image: 'grafana/grafana'
                 ports:
@@ -18,30 +8,16 @@ services:
                         - prometheus
                 volumes:
                         - ./provisioning:/etc/grafana/provisioning
-                          #environment:
-                          #- GF_INSTALL_PLUGINS=grafana-influxdb-flux-datasource
-        node-exporter:
-                image: 'prom/node-exporter'
-                ports:
-                        - "9100:9100"
-        graphite:
-                image: graphiteapp/graphite-statsd
-                ports:
-                        - "80:80"
-                        - "2003-2004:2003-2004"
-                        - "2023-2024:2023-2024"
-                        - "8125:8125/udp"
-                        - "8126:8126"
+   
 
         influxdb:
-                image: influxdb
+                image: quay.io/influxdb/influxdb:v2.0.2
                 ports:
                         - "8086:8086"
                 volumes:
                         - './influxdb:/var/lib/influxdb'
-                          # - ./influxdb.conf:/etc/influxdb/influxdb.conf
-                          #command:
-                          #- '-config'
-                          #- '/etc/influxdb/influxdb.conf'
-                          # environment:
-                          #- INFLUXDB_FLUX_ENABLED=true
+                environment: 
+                        - INFLUXDB_DB=libiotrace
+                        - INFLUXDB_ADMIN_USER=admin
+                        - INFLUXDB_ADMIN_PASSWORD=test12345678
+                        - INFLUXDB_HTTP_AUTH_ENABLED=true

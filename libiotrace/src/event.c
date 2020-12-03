@@ -778,8 +778,8 @@ void pushData(struct basic *data)
 
 	snprintf(timestamp, sizeof(timestamp), "%lld", system_start_time + data->time_end);
 
-	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=mydb&precision=ns HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
-									   "Content-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
+	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=hsebucket&precision=ns&org=hsesslingen HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
+									   "Authorization: Token Qyct269FruMT8p8oXwJdO-f0ILbbPoicZIAi4uunmoMVM73RpOrtlaGzawaPymXVs-hUssO41DZN2_UXGN_gPQ==\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
 			 strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 
 

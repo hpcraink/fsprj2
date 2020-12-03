@@ -1253,7 +1253,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ENUM(type, name)
 #  define JSON_STRUCT_INT(name)
 #  define JSON_STRUCT_PID_T(name) JSON_STRUCT_ELEMENT(name, %u, json_struct_data->name)
-#  define JSON_STRUCT_CSTRING(name, length) JSON_STRUCT_ELEMENT(name, %s, json_struct_data->name)
+#  define JSON_STRUCT_CSTRING(name, length) /*JSON_STRUCT_ELEMENT(name, %s, json_struct_data->name)*/
 #  define JSON_STRUCT_CSTRING_P(name, max_length)
 #  define JSON_STRUCT_CSTRING_P_CONST(name, max_length)
 #  define JSON_STRUCT_CLOCK_T(name)

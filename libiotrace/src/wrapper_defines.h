@@ -167,12 +167,14 @@
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
+                           pushData(&data); \
                            writeData(&data); \
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #else
 #  define WRAP_END(data) GET_ERRNO(data) \
+                         pushData(&data); \
                          writeData(&data); \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;

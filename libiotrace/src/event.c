@@ -59,6 +59,10 @@
 #define MAX_EXEC_ARRAY_LENGTH 1000
 #endif
 
+#ifndef MAX_INFLUX_TOKEN
+#  define MAX_INFLUX_TOKEN 200
+#endif
+
 /* flags and values to control logging */
 #ifdef LOGGING
 static ATTRIBUTE_THREAD char no_logging = 0;
@@ -100,9 +104,11 @@ static pthread_mutex_t lock;
 
 /* environment variables */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
+static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
 #ifndef IO_LIB_STATIC
 static const char *env_ld_preload = "LD_PRELOAD";
 #endif
+
 
 // once per process
 static pid_t pid;
@@ -110,6 +116,7 @@ static char hostname[HOST_NAME_MAX];
 static char log_name[MAXFILENAME];
 static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
+static char influx_token[MAX_INFLUX_TOKEN];
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
@@ -557,6 +564,26 @@ void init_basic()
 		strcpy(filesystem_log_name + length + 12 + strlen(hostname), ".log");
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 
+		log = getenv(env_influx_token);
+		if (NULL == log)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: function getenv(\"%s\") returned NULL.\n",
+			 __func__, env_influx_token);
+			assert(0);
+		}
+		length = strlen(log);
+		if (MAX_INFLUX_TOKEN < length)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
+			 __func__, env_influx_token, length);
+			assert(0);
+		}
+		strcpy(influx_token, log);
+
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);
 		strcpy(log_name_env + length, "=");
@@ -779,8 +806,8 @@ void pushData(struct basic *data)
 	snprintf(timestamp, sizeof(timestamp), "%lld", system_start_time + data->time_end);
 
 	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=hsebucket&precision=ns&org=hsesslingen HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
-									   "Authorization: Token Qyct269FruMT8p8oXwJdO-f0ILbbPoicZIAi4uunmoMVM73RpOrtlaGzawaPymXVs-hUssO41DZN2_UXGN_gPQ==\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
-			 strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
+									   "Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
+			 env_influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 
 
 	//DEBUG

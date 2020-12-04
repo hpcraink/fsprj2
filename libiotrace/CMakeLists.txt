@@ -28,6 +28,7 @@ set(MAX_ERROR_TEXT "1024" CACHE STRING "max length of error text for errno numbe
 set(MAX_MMSG_MESSAGES "20" CACHE STRING "max number of messages send/received over a socket via single function call")
 set(MAX_MSG_FILE_DESCRIPTORS "200" CACHE STRING "max number of file descriptors send/received over a socket via single message")
 set(MAX_EXEC_ARRAY_LENGTH "1000" CACHE STRING "max number of environment variables processed in wrapper for exec functions")
+set(MAX_INFLUX_TOKEN "200" CACHE STRING "max length of influxdb token")
 set(MAX_STACKTRACE_DEPTH "50" CACHE STRING "max number of function call entries in a single stack trace")
 set(MAX_STACKTRACE_ENTRY_LENGTH "200" CACHE STRING "max length of single entry in stack trace")
 set(MAX_MPI_FILE_HINTS "30" CACHE STRING "max number of MPI_Info file hints")

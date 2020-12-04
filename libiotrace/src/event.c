@@ -530,6 +530,10 @@ void init_basic()
 		pos = data_buffer;
 		count_basic = 0;
 
+#if !defined(IO_LIB_STATIC)
+		init_wrapper();
+#endif
+
 #if !defined(HAVE_HOST_NAME_MAX)
 		host_name_max = sysconf(POSIX_HOST_NAME_MAX);
 #endif
@@ -619,10 +623,6 @@ void init_basic()
 		pthread_mutex_init(&lock, NULL);
 
 		pthread_atfork(NULL, NULL, clear_init);
-
-#if !defined(IO_LIB_STATIC)
-		init_wrapper();
-#endif
 
 		get_filesystem();
 		get_directories();

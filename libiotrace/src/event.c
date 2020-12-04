@@ -1142,6 +1142,8 @@ void cleanup()
 #endif
 
 	pthread_mutex_destroy(&lock);
+
+	//PLACEHOLDER CLOSE SOCKET
 }
 
 #ifndef IO_LIB_STATIC

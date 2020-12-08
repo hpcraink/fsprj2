@@ -63,6 +63,10 @@
 #define MAX_INFLUX_TOKEN 200
 #endif
 
+#ifndef MAX_DATABSE_IP
+#define MAX_DATABASE_IP 200
+#endif
+
 /* flags and values to control logging */
 #ifdef LOGGING
 static ATTRIBUTE_THREAD char no_logging = 0;
@@ -105,6 +109,7 @@ static pthread_mutex_t lock;
 /* environment variables */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
 static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
+static const char *env_database_ip = "IOTRACE_DATABASE_IP";
 #ifndef IO_LIB_STATIC
 static const char *env_ld_preload = "LD_PRELOAD";
 #endif
@@ -117,6 +122,7 @@ static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
 SOCKET socket_peer;
 static char influx_token[MAX_INFLUX_TOKEN];
+static char database_ip[MAX_DATABASE_IP];
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
@@ -568,6 +574,7 @@ void init_basic()
 		strcpy(filesystem_log_name + length + 12 + strlen(hostname), ".log");
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 
+		// get token from environment
 		log = getenv(env_influx_token);
 		if (NULL == log)
 		{
@@ -588,7 +595,31 @@ void init_basic()
 		}
 		strcpy(influx_token, log);
 
-		//Create
+		// get database ip from environment
+		log = getenv(env_database_ip);
+		if (NULL == log)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: function getenv(\"%s\") returned NULL.\n",
+			 __func__, env_database_ip);
+			assert(0);
+		}
+		length = strlen(log);
+		if (MAX_DATABASE_IP < length)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
+			 __func__, env_database_ip, length);
+			assert(0);
+		}
+		strcpy(database_ip, log);
+
+		// printf("IP VON ENVIRONMENT: %s\n", database_ip);
+		// sleep(3);
+
+		//Create Socket
 		socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
 		printf("socket peer oben: %d\n", socket_peer);
 		if (!ISVALIDSOCKET(socket_peer))
@@ -616,15 +647,37 @@ void init_basic()
 			return;
 		}
 
+		//MAP DATABASE IP TO SA_DATA
+		char *str = database_ip, *str2;
+		unsigned char value[4] = {0};
+		size_t index = 0;
 
+		str2 = str; /* save the pointer */
+		while (*str)
+		{
+			if (isdigit((unsigned char)*str))
+			{
+				value[index] *= 10;
+				value[index] += *str - '0';
+			}
+			else
+			{
+				index++;
+			}
+			str++;
+		}
+		printf("values in \"%s\": %d %d %d %d\n", str2,
+			   value[0], value[1], value[2], value[3]);
+
+		sleep(3);
 
 		struct sockaddr own_ai_addr;
 		own_ai_addr.sa_data[0] = 0x1f;
 		own_ai_addr.sa_data[1] = 0x96;
-		own_ai_addr.sa_data[2] = 0x7f;
-		own_ai_addr.sa_data[3] = 0x00;
-		own_ai_addr.sa_data[4] = 0x00;
-		own_ai_addr.sa_data[5] = 0x01;
+		own_ai_addr.sa_data[2] = value[0];
+		own_ai_addr.sa_data[3] = value[1];
+		own_ai_addr.sa_data[4] = value[2];
+		own_ai_addr.sa_data[5] = value[3];
 		own_ai_addr.sa_data[6] = 0x00;
 		own_ai_addr.sa_data[7] = 0x00;
 		own_ai_addr.sa_data[8] = 0x00;
@@ -634,7 +687,6 @@ void init_basic()
 		own_ai_addr.sa_data[12] = 0x00;
 		own_ai_addr.sa_data[13] = 0x00;
 		own_ai_addr.sa_family = 2;
-
 
 		if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
 		{
@@ -839,6 +891,7 @@ void pushData(struct basic *data)
 {
 	printf("Ich lauf rein\n");
 	//riesen buffer fuer alles
+
 	char message[400 + json_struct_push_max_size_basic(0) + 1];
 
 	//buffer fuer body
@@ -872,7 +925,6 @@ void pushData(struct basic *data)
 	int bytes_sent = send(socket_peer, message, strlen(message), 0);
 	printf("errno:%d\n", errno);
 	printf("Sent %d bytes.\n", bytes_sent);
-
 }
 
 void writeData(struct basic *data)

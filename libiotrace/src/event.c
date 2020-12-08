@@ -1143,7 +1143,25 @@ void cleanup()
 
 	pthread_mutex_destroy(&lock);
 
-	//PLACEHOLDER CLOSE SOCKET
+	while (1)
+	{
+		fd_set reads;
+		FD_ZERO(&reads);
+		FD_SET(socket_peer, &reads);
+		FD_SET(0, &reads);
+
+		if (FD_ISSET(socket_peer, &reads))
+		{
+			char read[4096];
+			int bytes_received = recv(socket_peer, read, 4096, 0);
+			if (bytes_received < 1)
+			{
+				printf("Connection closed by peer.\n");
+				break;
+			}
+		}
+	}
+	CLOSESOCKET(socket_peer);
 }
 
 #ifndef IO_LIB_STATIC

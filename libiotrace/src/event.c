@@ -616,6 +616,8 @@ void init_basic()
 			return;
 		}
 
+
+
 		struct sockaddr own_ai_addr;
 		own_ai_addr.sa_data[0] = 0x1f;
 		own_ai_addr.sa_data[1] = 0x96;
@@ -633,16 +635,6 @@ void init_basic()
 		own_ai_addr.sa_data[13] = 0x00;
 		own_ai_addr.sa_family = 2;
 
-		//Connect
-		// if (connect(socket_peer,
-		// 			peer_address->ai_addr, peer_address->ai_addrlen))
-		// {
-		// 	fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-		// 	return;
-		// }
-		// freeaddrinfo(peer_address);
-
-		// printf("Connected.\n");
 
 		if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
 		{
@@ -875,191 +867,12 @@ void pushData(struct basic *data)
 									   "Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
 			 influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 	printf("Testlauf 2\n");
-	//DEBUG
-	//printf("Request to InfluxDB: %s\n", message);
-	//fflush(stdout);
-
-	//printf("Length: %d\n", json_struct_push_max_size_basic(0));
-
-	//printf("Sent %d bytes.\n", bytes_sent);
-
-	// // Hier Socket oeffnen
-	// //Configure remote address
-	// //printf("Hier schmiert er ab\n");
-	// // struct addrinfo hints;
-	// // memset(&hints, 0, sizeof(hints));
-	// // hints.ai_family = AF_UNSPEC;
-	// // hints.ai_socktype = SOCK_STREAM;
-	// // struct addrinfo *peer_address;
-	// // printf("Hier schmiert er ab vor if\n");
-	// // if (getaddrinfo("localhost", "8086", &hints, &peer_address))
-	// // {
-	// // 	printf("Hier schmiert er ab 1\n");
-	// // 	CALL_REAL_POSIX_SYNC(fprintf)(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
-	// // 	assert(0);
-	// // }
-	// // printf("Hier schmiert er ab 2\n");
-	// // //Print remote address
-	// // char address_buffer[100];
-	// // char service_buffer[100];
-	// // getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
-	// // 			address_buffer, sizeof(address_buffer),
-	// // 			service_buffer, sizeof(service_buffer),
-	// // 			NI_NUMERICHOST);
-	// // printf("%s %s\n", address_buffer, service_buffer);
-
-	// //Create
-	// printf("Ausgabe 2\n");
-	// socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET,
-	// 										   SOCK_STREAM, 0);
-	// if (!ISVALIDSOCKET(socket_peer))
-	// {
-	// 	CALL_REAL_POSIX_SYNC(fprintf)
-	// 	(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
-	// 	assert(0);
-	// }
-
-	// //Set socket option TCP_NODELAY
-	// // int option = 0;
-	// // if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
-	// // {
-	// // 	CALL_REAL_POSIX_SYNC(fprintf)(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-	// // 	assert(0);
-	// // }
-
-	// //Set socket option REUSEADDR
-	// // int option2 = 0;
-	// // if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
-	// // {
-	// // 	CALL_REAL_POSIX_SYNC(fprintf)(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-	// // 	assert(0);
-	// // }
-
-	// //Connect
-	// // struct hostent
-	// // {
-	// // 	char *h_name;		/* Official name of host.  */
-	// // 	char **h_aliases;	/* Alias list.  */
-	// // 	int h_addrtype;		/* Host address type.  */
-	// // 	int h_length;		/* Length of address.  */
-	// // 	char **h_addr_list; /* List of addresses from name server.  */
-	// // };
-
-	// printf("Ausgabe 1\n");
-	// struct sockaddr_in server;
-	// struct hostent manual_hp;
-	// struct hostent *hp;
-
-	// char *manual_aliases[1];
-	// manual_aliases[0] = NULL;
-	// manual_hp.h_name = "localhost";
-	// manual_hp.h_aliases = manual_aliases;
-	// manual_hp.h_addrtype = 2;
-	// manual_hp.h_length = 4;
-	// manual_hp.h_addr_list = NULL;
-
-	// server.sin_family = AF_INET;
-	// printf("Hier schmiert er ab 1\n");
-	// hp = gethostbyname("127.0.0.1"); // loopt wenn posix mitgebaut wird (gilt auch fuer addrinfo)
-	// if (hp == NULL)
-	// {
-	// 	CALL_REAL_POSIX_SYNC(fprintf)
-	// 	(stderr, "%s unknown host.\n", "127.0.0.1");
-	// 	assert(0);
-	// }
-	// printf("Hier schmiert er ab 2\n");
-	// printf("hp.name: %s\n", hp->h_name);
-	// for (char *testpointer = *(hp->h_aliases); testpointer != NULL; testpointer++)
-	// {
-	// 	printf("hp.aliases: %s\n", testpointer);
-	// }
-	// printf("hp.aliases NULL: %s\n", *(hp->h_aliases) == NULL ? "TRUE" : "FALSE");
-	// printf("hp.addrtype: %d\n", hp->h_addrtype);
-	// printf("hp.length: %d\n", hp->h_length);
-
-	// // for (int i = 0; i < hp->h_length; i++)
-	// // {
-	// // 	printf("hp.addr_list: %s\n", hp->h_addr_list[i]);
-	// // }
-
-	// printf("hp addr list: %d %d %d %d\n", *(hp->h_addr_list[0]), *(hp->h_addr_list[0] + 1), *(hp->h_addr_list[0] + 2), *(hp->h_addr_list[0] + 3));
-
-	// bcopy(hp->h_addr, &server.sin_addr, hp->h_length); /* set port */
-	// server.sin_port = 8086;
-
-	// union
-	// {
-	// 	char as_char[4];
-	// 	struct in_addr as_int;
-	// } ipaddress;
-
-	// ipaddress.as_char[0] = 127;
-	// ipaddress.as_char[1] = 0;
-	// ipaddress.as_char[2] = 0;
-	// ipaddress.as_char[3] = 1;
-
-	// server.sin_addr = ipaddress.as_int;
-
-	// if (CALL_REAL_POSIX_SYNC(connect)(socket_peer,
-	// 								  (struct sockaddr *)&server, sizeof(struct sockaddr_in)))
-	// {
-	// 	CALL_REAL_POSIX_SYNC(fprintf)
-	// 	(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-	// 	assert(0);
-	// }
-	// //freeaddrinfo(peer_address);
-
-	// printf("Connected.\n");
-
-	// int bytes_sent = send(socket_peer, message, strlen(message), 0);
-
-	// //CLOSESOCKET(socket_peer);
-
-	//Configure remote address
-	// struct addrinfo hints;
-	// memset(&hints, 0, sizeof(hints));
-	// hints.ai_socktype = SOCK_STREAM;
-	// struct addrinfo *peer_address;
-	// if (getaddrinfo("localhost", "8086", &hints, &peer_address))
-	// {
-	// 	fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
-	// 	return;
-	// }
-
-	// printf("AI_ADDR: ");
-	// for (int i = 0; i < 14; i++)
-	// {
-	// 	printf("%02X ", peer_address->ai_addr->sa_data[i]);
-
-	// }
-	// printf("\n");
-
-	// printf("AI_ADDR: ");
-	// for (int i = 0; i < 14; i++)
-	// {
-	// 	printf("%d ", peer_address->ai_addr->sa_data[i]);
-
-	// }
-	// printf("\n");
-
-	// printf("AI ADDR FAM %d\n", peer_address->ai_addr->sa_family);
-	// printf("AI ADDRLEN %d\n", peer_address->ai_addrlen);
-
-	// //Print remote address
-	// char address_buffer[100];
-	// char service_buffer[100];
-	// getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen,
-	// 			address_buffer, sizeof(address_buffer),
-	// 			service_buffer, sizeof(service_buffer),
-	// 			NI_NUMERICHOST);
-	// printf("%s %s\n", address_buffer, service_buffer);
 
 	printf("%d\n", socket_peer);
 	int bytes_sent = send(socket_peer, message, strlen(message), 0);
 	printf("errno:%d\n", errno);
 	printf("Sent %d bytes.\n", bytes_sent);
 
-	//CLOSESOCKET(socket_peer);
 }
 
 void writeData(struct basic *data)

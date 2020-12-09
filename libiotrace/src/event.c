@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <netinet/tcp.h>
+#include <limits.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
 #define CLOSESOCKET(s) close(s)
@@ -67,6 +68,10 @@
 #define MAX_DATABASE_IP 200
 #endif
 
+#ifndef MAX_DATABSE_PORT
+#define MAX_DATABASE_PORT 200
+#endif
+
 /* flags and values to control logging */
 #ifdef LOGGING
 static ATTRIBUTE_THREAD char no_logging = 0;
@@ -110,6 +115,7 @@ static pthread_mutex_t lock;
 static const char *env_log_name = "IOTRACE_LOG_NAME";
 static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
 static const char *env_database_ip = "IOTRACE_DATABASE_IP";
+static const char *env_database_port = "IOTRACE_DATABASE_PORT";
 #ifndef IO_LIB_STATIC
 static const char *env_ld_preload = "LD_PRELOAD";
 #endif
@@ -123,6 +129,7 @@ static char working_dir_log_name[MAXFILENAME];
 SOCKET socket_peer;
 static char influx_token[MAX_INFLUX_TOKEN];
 static char database_ip[MAX_DATABASE_IP];
+static char database_port[MAX_DATABASE_PORT];
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
@@ -616,6 +623,27 @@ void init_basic()
 		}
 		strcpy(database_ip, log);
 
+		// get database port from environment
+		log = getenv(env_database_port);
+		if (NULL == log)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: function getenv(\"%s\") returned NULL.\n",
+			 __func__, env_database_port);
+			assert(0);
+		}
+		length = strlen(log);
+		if (MAX_DATABASE_IP < length)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
+			 __func__, env_database_port, length);
+			assert(0);
+		}
+		strcpy(database_port, log);
+
 		// printf("IP VON ENVIRONMENT: %s\n", database_ip);
 		// sleep(3);
 
@@ -628,7 +656,7 @@ void init_basic()
 			(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 			return;
 		}
-		printf("Testlauf 3\n");
+		
 		//Set socket option TCP_NODELAY
 		int option = 0;
 		if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
@@ -637,7 +665,7 @@ void init_basic()
 			(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
 			return;
 		}
-		printf("Testlauf 4\n");
+		
 		//Set socket option REUSEADDR
 		int option2 = 0;
 		if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
@@ -647,18 +675,22 @@ void init_basic()
 			return;
 		}
 
-		//MAP DATABASE IP TO SA_DATA
+		//MAP PORT FROM ENV TO SA_DATA (IPv4)
+		unsigned short database_port_short = (unsigned short)atoi(database_port);
+		unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
+
+		//MAP IP FROM ENV TO SA_DATA (IPv4)
 		char *str = database_ip, *str2;
-		unsigned char value[4] = {0};
+		unsigned char database_ip_char[4] = {0};
 		size_t index = 0;
 
-		str2 = str; /* save the pointer */
+		str2 = str;
 		while (*str)
 		{
 			if (isdigit((unsigned char)*str))
 			{
-				value[index] *= 10;
-				value[index] += *str - '0';
+				database_ip_char[index] *= 10;
+				database_ip_char[index] += *str - '0';
 			}
 			else
 			{
@@ -666,18 +698,14 @@ void init_basic()
 			}
 			str++;
 		}
-		printf("values in \"%s\": %d %d %d %d\n", str2,
-			   value[0], value[1], value[2], value[3]);
-
-		sleep(3);
 
 		struct sockaddr own_ai_addr;
-		own_ai_addr.sa_data[0] = 0x1f;
-		own_ai_addr.sa_data[1] = 0x96;
-		own_ai_addr.sa_data[2] = value[0];
-		own_ai_addr.sa_data[3] = value[1];
-		own_ai_addr.sa_data[4] = value[2];
-		own_ai_addr.sa_data[5] = value[3];
+		own_ai_addr.sa_data[0] = database_port_short_p[1];
+		own_ai_addr.sa_data[1] = database_port_short_p[0];
+		own_ai_addr.sa_data[2] = database_ip_char[0];
+		own_ai_addr.sa_data[3] = database_ip_char[1];
+		own_ai_addr.sa_data[4] = database_ip_char[2];
+		own_ai_addr.sa_data[5] = database_ip_char[3];
 		own_ai_addr.sa_data[6] = 0x00;
 		own_ai_addr.sa_data[7] = 0x00;
 		own_ai_addr.sa_data[8] = 0x00;

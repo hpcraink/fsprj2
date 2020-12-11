@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <netinet/tcp.h>
 #include <limits.h>
+#include <ctype.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
 #define CLOSESOCKET(s) close(s)

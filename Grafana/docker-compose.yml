@@ -8,6 +8,7 @@ services:
                         - influxdb
                 volumes:
                         - ./provisioning:/etc/grafana/provisioning
+                        - ./config/grafana.ini:/etc/grafana/grafana.ini
    
 
         influxdb:

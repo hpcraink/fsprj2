@@ -650,7 +650,7 @@ void init_basic()
 
 		//Create Socket
 		socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
-		printf("socket peer oben: %d\n", socket_peer);
+		//printf("socket peer oben: %d\n", socket_peer);
 		if (!ISVALIDSOCKET(socket_peer))
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
@@ -724,8 +724,8 @@ void init_basic()
 			return;
 		}
 		//freeaddrinfo(peer_address);
-		printf("Testlauf 5\n");
-		printf("Connected.\n");
+		//printf("Testlauf 5\n");
+		//printf("Connected.\n");
 
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);
@@ -918,7 +918,7 @@ void printData()
 
 void pushData(struct basic *data)
 {
-	printf("Ich lauf rein\n");
+	//printf("Ich lauf rein\n");
 	//riesen buffer fuer alles
 
 	char message[400 + json_struct_push_max_size_basic(0) + 1];
@@ -935,7 +935,7 @@ void pushData(struct basic *data)
 		 "In function %s: json_struct_push_basic() returned %d.\n", __func__, ret);
 		assert(0);
 	}
-	printf("Testlauf 1\n");
+	//printf("Testlauf 1\n");
 	char labels[200];
 	char short_log_name[50];
 	strncpy(short_log_name, log_name, sizeof(short_log_name));
@@ -948,12 +948,12 @@ void pushData(struct basic *data)
 	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=hsebucket&precision=ns&org=hse HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
 									   "Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
 			 influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
-	printf("Testlauf 2\n");
+	//printf("Testlauf 2\n");
 
-	printf("%d\n", socket_peer);
+	//printf("%d\n", socket_peer);
 	int bytes_sent = send(socket_peer, message, strlen(message), 0);
-	printf("errno:%d\n", errno);
-	printf("Sent %d bytes.\n", bytes_sent);
+	//printf("errno:%d\n", errno);
+	//printf("Sent %d bytes.\n", bytes_sent);
 }
 
 void writeData(struct basic *data)

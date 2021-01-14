@@ -645,6 +645,9 @@ void init_basic()
 		}
 		strcpy(database_port, log);
 
+#if defined (WITH_POSIX_IO) || defined(WITH_STD_IO)
+		socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
+#else
 		//Configure remote address for socket
 		struct addrinfo hints;
 		memset(&hints, 0, sizeof(hints));
@@ -653,25 +656,16 @@ void init_basic()
 		if (getaddrinfo(database_ip, database_port, &hints, &peer_address))
 		{
 			fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
-			return 1;
+			return;
 		}
+		socket_peer = CALL_REAL_POSIX_SYNC(socket)(peer_address->ai_family,
+												   peer_address->ai_socktype, peer_address->ai_protocol);
 
-		//Create Socket when ifndef posix_io
-		socket_peer = socket(peer_address->ai_family,
-							 peer_address->ai_socktype, peer_address->ai_protocol);
+#endif
+
 		if (!ISVALIDSOCKET(socket_peer))
 		{
 			fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
-			return 1;
-		}
-
-		//Create Socket when ifdef posix_io
-		// socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
-		//printf("socket peer oben: %d\n", socket_peer);
-		if (!ISVALIDSOCKET(socket_peer))
-		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 			return;
 		}
 
@@ -693,61 +687,63 @@ void init_basic()
 			return;
 		}
 
-		//MAP PORT FROM ENV TO SA_DATA (IPv4)
-		// unsigned short database_port_short = (unsigned short)atoi(database_port);
-		// unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
+#if defined(WITH_POSIX_IO) || defined(WITH_STD_IO)
+		//MAP PORT FROM ENV TO SA_DATA(IPv4)
+		unsigned short database_port_short = (unsigned short)atoi(database_port);
+		unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
 
-		//MAP IP FROM ENV TO SA_DATA (IPv4)
-		// char *str = database_ip, *str2;
-		// unsigned char database_ip_char[4] = {0};
-		// size_t index = 0;
+		//MAP IP FROM ENV TO SA_DATA(IPv4)
+		char *str = database_ip, *str2;
+		unsigned char database_ip_char[4] = {0};
+		size_t index = 0;
 
-		// str2 = str;
-		// while (*str)
-		// {
-		// 	if (isdigit((unsigned char)*str))
-		// 	{
-		// 		database_ip_char[index] *= 10;
-		// 		database_ip_char[index] += *str - '0';
-		// 	}
-		// 	else
-		// 	{
-		// 		index++;
-		// 	}
-		// 	str++;
-		// }
+		str2 = str;
+		while (*str)
+		{
+			if (isdigit((unsigned char)*str))
+			{
+				database_ip_char[index] *= 10;
+				database_ip_char[index] += *str - '0';
+			}
+			else
+			{
+				index++;
+			}
+			str++;
+		}
 
-		// struct sockaddr own_ai_addr;
-		// own_ai_addr.sa_data[0] = database_port_short_p[1];
-		// own_ai_addr.sa_data[1] = database_port_short_p[0];
-		// own_ai_addr.sa_data[2] = database_ip_char[0];
-		// own_ai_addr.sa_data[3] = database_ip_char[1];
-		// own_ai_addr.sa_data[4] = database_ip_char[2];
-		// own_ai_addr.sa_data[5] = database_ip_char[3];
-		// own_ai_addr.sa_data[6] = 0x00;
-		// own_ai_addr.sa_data[7] = 0x00;
-		// own_ai_addr.sa_data[8] = 0x00;
-		// own_ai_addr.sa_data[9] = 0x00;
-		// own_ai_addr.sa_data[10] = 0x00;
-		// own_ai_addr.sa_data[11] = 0x00;
-		// own_ai_addr.sa_data[12] = 0x00;
-		// own_ai_addr.sa_data[13] = 0x00;
-		// own_ai_addr.sa_family = 2;
+		struct sockaddr own_ai_addr;
+		own_ai_addr.sa_data[0] = database_port_short_p[1];
+		own_ai_addr.sa_data[1] = database_port_short_p[0];
+		own_ai_addr.sa_data[2] = database_ip_char[0];
+		own_ai_addr.sa_data[3] = database_ip_char[1];
+		own_ai_addr.sa_data[4] = database_ip_char[2];
+		own_ai_addr.sa_data[5] = database_ip_char[3];
+		own_ai_addr.sa_data[6] = 0x00;
+		own_ai_addr.sa_data[7] = 0x00;
+		own_ai_addr.sa_data[8] = 0x00;
+		own_ai_addr.sa_data[9] = 0x00;
+		own_ai_addr.sa_data[10] = 0x00;
+		own_ai_addr.sa_data[11] = 0x00;
+		own_ai_addr.sa_data[12] = 0x00;
+		own_ai_addr.sa_data[13] = 0x00;
+		own_ai_addr.sa_family = 2;
 
-		// if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
-		// {
-		// 	CALL_REAL_POSIX_SYNC(fprintf)
-		// 	(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-		// 	return;
-		// }
-
+		if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+			return;
+		}
+#else
 		if (connect(socket_peer,
 					peer_address->ai_addr, peer_address->ai_addrlen))
 		{
 			fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-			return 1;
+			return;
 		}
 		freeaddrinfo(peer_address);
+#endif
 
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);

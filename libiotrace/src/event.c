@@ -645,11 +645,28 @@ void init_basic()
 		}
 		strcpy(database_port, log);
 
-		// printf("IP VON ENVIRONMENT: %s\n", database_ip);
-		// sleep(3);
+		//Configure remote address for socket
+		struct addrinfo hints;
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_socktype = SOCK_STREAM;
+		struct addrinfo *peer_address;
+		if (getaddrinfo(database_ip, database_port, &hints, &peer_address))
+		{
+			fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
+			return 1;
+		}
 
-		//Create Socket
-		socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
+		//Create Socket when ifndef posix_io
+		socket_peer = socket(peer_address->ai_family,
+							 peer_address->ai_socktype, peer_address->ai_protocol);
+		if (!ISVALIDSOCKET(socket_peer))
+		{
+			fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+			return 1;
+		}
+
+		//Create Socket when ifdef posix_io
+		// socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
 		//printf("socket peer oben: %d\n", socket_peer);
 		if (!ISVALIDSOCKET(socket_peer))
 		{
@@ -657,7 +674,7 @@ void init_basic()
 			(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
 			return;
 		}
-		
+
 		//Set socket option TCP_NODELAY
 		int option = 0;
 		if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
@@ -666,7 +683,7 @@ void init_basic()
 			(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
 			return;
 		}
-		
+
 		//Set socket option REUSEADDR
 		int option2 = 0;
 		if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
@@ -677,55 +694,60 @@ void init_basic()
 		}
 
 		//MAP PORT FROM ENV TO SA_DATA (IPv4)
-		unsigned short database_port_short = (unsigned short)atoi(database_port);
-		unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
+		// unsigned short database_port_short = (unsigned short)atoi(database_port);
+		// unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
 
 		//MAP IP FROM ENV TO SA_DATA (IPv4)
-		char *str = database_ip, *str2;
-		unsigned char database_ip_char[4] = {0};
-		size_t index = 0;
+		// char *str = database_ip, *str2;
+		// unsigned char database_ip_char[4] = {0};
+		// size_t index = 0;
 
-		str2 = str;
-		while (*str)
+		// str2 = str;
+		// while (*str)
+		// {
+		// 	if (isdigit((unsigned char)*str))
+		// 	{
+		// 		database_ip_char[index] *= 10;
+		// 		database_ip_char[index] += *str - '0';
+		// 	}
+		// 	else
+		// 	{
+		// 		index++;
+		// 	}
+		// 	str++;
+		// }
+
+		// struct sockaddr own_ai_addr;
+		// own_ai_addr.sa_data[0] = database_port_short_p[1];
+		// own_ai_addr.sa_data[1] = database_port_short_p[0];
+		// own_ai_addr.sa_data[2] = database_ip_char[0];
+		// own_ai_addr.sa_data[3] = database_ip_char[1];
+		// own_ai_addr.sa_data[4] = database_ip_char[2];
+		// own_ai_addr.sa_data[5] = database_ip_char[3];
+		// own_ai_addr.sa_data[6] = 0x00;
+		// own_ai_addr.sa_data[7] = 0x00;
+		// own_ai_addr.sa_data[8] = 0x00;
+		// own_ai_addr.sa_data[9] = 0x00;
+		// own_ai_addr.sa_data[10] = 0x00;
+		// own_ai_addr.sa_data[11] = 0x00;
+		// own_ai_addr.sa_data[12] = 0x00;
+		// own_ai_addr.sa_data[13] = 0x00;
+		// own_ai_addr.sa_family = 2;
+
+		// if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
+		// {
+		// 	CALL_REAL_POSIX_SYNC(fprintf)
+		// 	(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		// 	return;
+		// }
+
+		if (connect(socket_peer,
+					peer_address->ai_addr, peer_address->ai_addrlen))
 		{
-			if (isdigit((unsigned char)*str))
-			{
-				database_ip_char[index] *= 10;
-				database_ip_char[index] += *str - '0';
-			}
-			else
-			{
-				index++;
-			}
-			str++;
+			fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+			return 1;
 		}
-
-		struct sockaddr own_ai_addr;
-		own_ai_addr.sa_data[0] = database_port_short_p[1];
-		own_ai_addr.sa_data[1] = database_port_short_p[0];
-		own_ai_addr.sa_data[2] = database_ip_char[0];
-		own_ai_addr.sa_data[3] = database_ip_char[1];
-		own_ai_addr.sa_data[4] = database_ip_char[2];
-		own_ai_addr.sa_data[5] = database_ip_char[3];
-		own_ai_addr.sa_data[6] = 0x00;
-		own_ai_addr.sa_data[7] = 0x00;
-		own_ai_addr.sa_data[8] = 0x00;
-		own_ai_addr.sa_data[9] = 0x00;
-		own_ai_addr.sa_data[10] = 0x00;
-		own_ai_addr.sa_data[11] = 0x00;
-		own_ai_addr.sa_data[12] = 0x00;
-		own_ai_addr.sa_data[13] = 0x00;
-		own_ai_addr.sa_family = 2;
-
-		if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
-		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-			return;
-		}
-		//freeaddrinfo(peer_address);
-		//printf("Testlauf 5\n");
-		//printf("Connected.\n");
+		freeaddrinfo(peer_address);
 
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);

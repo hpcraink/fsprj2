@@ -645,7 +645,7 @@ void init_basic()
 		}
 		strcpy(database_port, log);
 
-#if defined (WITH_POSIX_IO) || defined(WITH_STD_IO)
+#ifdef WITH_POSIX_IO
 		socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
 #else
 		//Configure remote address for socket
@@ -687,7 +687,7 @@ void init_basic()
 			return;
 		}
 
-#if defined(WITH_POSIX_IO) || defined(WITH_STD_IO)
+#ifdef WITH_POSIX_IO
 		//MAP PORT FROM ENV TO SA_DATA(IPv4)
 		unsigned short database_port_short = (unsigned short)atoi(database_port);
 		unsigned char *database_port_short_p = (unsigned char *)&database_port_short;

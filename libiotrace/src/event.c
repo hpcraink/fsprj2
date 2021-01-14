@@ -970,6 +970,22 @@ void pushData(struct basic *data)
 
 	//printf("%d\n", socket_peer);
 	int bytes_sent = send(socket_peer, message, strlen(message), 0);
+	if (-1 == bytes_sent)
+	{
+		if (errno == EWOULDBLOCK || EAGAIN)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "Send buffer is full. Please increase your limit. Data is lost.\n");
+		}
+		else
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: open() returned %d.\n", __func__, bytes_sent);
+			assert(0);
+		}
+	}
 	//printf("errno:%d\n", errno);
 	//printf("Sent %d bytes.\n", bytes_sent);
 }

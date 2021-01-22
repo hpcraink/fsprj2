@@ -972,7 +972,7 @@ void pushData(struct basic *data)
 	int bytes_sent = send(socket_peer, message, strlen(message), 0);
 	if (-1 == bytes_sent)
 	{
-		if (errno == EWOULDBLOCK || EAGAIN)
+		if (errno == EWOULDBLOCK || errno == EAGAIN)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr,
@@ -982,7 +982,7 @@ void pushData(struct basic *data)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr,
-			 "In function %s: open() returned %d.\n", __func__, bytes_sent);
+			 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
 			assert(0);
 		}
 	}
@@ -1071,24 +1071,37 @@ void cleanup()
 
 	pthread_mutex_destroy(&lock);
 
+	shutdown(socket_peer, SHUT_WR);
 	while (1)
 	{
 		fd_set reads;
 		FD_ZERO(&reads);
 		FD_SET(socket_peer, &reads);
-		FD_SET(0, &reads);
+		//FD_SET(0, &reads);
 
+		int ret = CALL_REAL_POSIX_SYNC(select)(socket_peer + 1, &reads, NULL, NULL, NULL);
+		if (-1 == ret)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: Select returned -1 (%d).\n",
+			 __func__,
+			 errno);
+			break;
+		}
 		if (FD_ISSET(socket_peer, &reads))
 		{
+			//printf("In isset\n");
 			char read[4096];
 			int bytes_received = recv(socket_peer, read, 4096, 0);
 			if (bytes_received < 1)
 			{
-				printf("Connection closed by peer.\n");
+				printf("Connection closed by peer...\n");
 				break;
 			}
 		}
 	}
+
 	CLOSESOCKET(socket_peer);
 }
 

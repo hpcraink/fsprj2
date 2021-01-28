@@ -134,6 +134,9 @@ static char database_port[MAX_DATABASE_PORT];
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
+static char database_port_env[MAX_DATABASE_PORT + sizeof(env_database_port)];
+static char database_ip_env[MAX_DATABASE_PORT + sizeof(env_database_ip)];
+static char influx_token_env[MAX_DATABASE_PORT + sizeof(env_influx_token)];
 #endif
 static long long system_start_time;
 // once per thread
@@ -750,6 +753,18 @@ void init_basic()
 		strcpy(log_name_env + length, "=");
 		strcpy(log_name_env + length + 1, log);
 
+		strcpy(database_ip_env, env_database_ip);
+		strcpy(database_ip_env + length, "=");
+		strcpy(database_ip_env + length + 1, database_ip);
+
+		strcpy(database_port_env, env_database_port);
+		strcpy(database_port_env + length, "=");
+		strcpy(database_port_env + length + 1, database_port);
+
+		strcpy(influx_token_env, env_influx_token);
+		strcpy(influx_token_env + length, "=");
+		strcpy(influx_token_env + length + 1, influx_token);
+
 		log = getenv(env_ld_preload);
 		if (NULL == log)
 		{
@@ -968,7 +983,10 @@ void pushData(struct basic *data)
 			 influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 	//printf("Testlauf 2\n");
 
-	//printf("%d\n", socket_peer);
+	
+	CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "Socket: %d\n", socket_peer);
 	int bytes_sent = send(socket_peer, message, strlen(message), 0);
 	if (-1 == bytes_sent)
 	{
@@ -980,6 +998,10 @@ void pushData(struct basic *data)
 		}
 		else
 		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "IP: %s PORT: %s TOKEN:%s\n", database_ip, database_port, influx_token);
+			
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr,
 			 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
@@ -1101,7 +1123,10 @@ void cleanup()
 			}
 		}
 	}
-
+	CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "CLOSE: %d\n",
+			 socket_peer);
 	CLOSESOCKET(socket_peer);
 }
 
@@ -1142,7 +1167,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 
 	if (!has_ld_preload)
 	{
-		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 2)
+		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 5) //Add 3 for TOKEN, IP and PORT
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr,
@@ -1153,7 +1178,11 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 		}
 		env[env_element] = &ld_preload[0];
 		env[++env_element] = &log_name_env[0];
+		env[++env_element] = &database_ip_env[0];
+		env[++env_element] = &database_port_env[0];
+		env[++env_element] = &influx_token_env[0];
 		env[++env_element] = NULL;
+
 	}
 }
 #endif

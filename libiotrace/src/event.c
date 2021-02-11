@@ -16,7 +16,8 @@
 #include <ctype.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
-#define CLOSESOCKET(s) close(s)
+#define CLOSESOCKET(s) CALL_REAL_POSIX_SYNC(close) \
+(s)
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 
@@ -127,10 +128,11 @@ static char hostname[HOST_NAME_MAX];
 static char log_name[MAXFILENAME];
 static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
-SOCKET socket_peer;
+static SOCKET socket_peer;
 static char influx_token[MAX_INFLUX_TOKEN];
 static char database_ip[MAX_DATABASE_IP];
 static char database_port[MAX_DATABASE_PORT];
+static char event_cleanup_done = 0;
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
@@ -165,7 +167,8 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #endif
 
 #ifndef IO_LIB_STATIC
-char event_init_done = 0;
+static char event_init_done = 0;
+
 /* Initialize pointers for glibc functions. */
 void event_init()
 {
@@ -673,22 +676,22 @@ void init_basic()
 		}
 
 		//Set socket option TCP_NODELAY
-		int option = 0;
-		if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
-		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-			return;
-		}
+		// int option = 0;
+		// if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
+		// {
+		// 	CALL_REAL_POSIX_SYNC(fprintf)
+		// 	(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
+		// 	return;
+		// }
 
 		//Set socket option REUSEADDR
-		int option2 = 0;
-		if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
-		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
-			return;
-		}
+		// int option2 = 0;
+		// if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
+		// {
+		// 	CALL_REAL_POSIX_SYNC(fprintf)
+		// 	(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
+		// 	return;
+		// }
 
 #ifdef WITH_POSIX_IO
 		//MAP PORT FROM ENV TO SA_DATA(IPv4)
@@ -951,6 +954,10 @@ void printData()
 
 void pushData(struct basic *data)
 {
+	if (event_cleanup_done)
+	{
+		return;
+	}
 	//printf("Ich lauf rein\n");
 	//riesen buffer fuer alles
 
@@ -983,33 +990,57 @@ void pushData(struct basic *data)
 			 influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 	//printf("Testlauf 2\n");
 
+	// CALL_REAL_POSIX_SYNC(fprintf)
+	// 		(stderr,
+	// 		 "Socket: %d\n", socket_peer);
+	// CALL_REAL_POSIX_SYNC(fprintf)
+	// (stderr,
+	//  "Message content: %s\n", message);
+
+	char *message_to_send = message;
+	size_t bytes_to_send = strlen(message);
+
 	
-	CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "Socket: %d\n", socket_peer);
-	int bytes_sent = send(socket_peer, message, strlen(message), 0);
-	if (-1 == bytes_sent)
+	while (bytes_to_send > 0)
 	{
-		if (errno == EWOULDBLOCK || errno == EAGAIN)
+
+		int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, MSG_DONTWAIT);
+		if (-1 == bytes_sent)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "Send buffer is full. Please increase your limit. Data is lost.\n");
+			if (errno == EWOULDBLOCK || errno == EAGAIN)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "Send buffer is full. Please increase your limit. Data is lost.\n");
+			}
+			else
+			{
+
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
+				assert(0);
+			}
 		}
 		else
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "IP: %s PORT: %s TOKEN:%s\n", database_ip, database_port, influx_token);
-			
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
-			assert(0);
+			if (bytes_sent < bytes_to_send)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "Seems that send doesn't return enough bytes.....\n");
+				CALL_REAL_POSIX_SYNC(fflush)
+				(stderr);
+				bytes_to_send -= bytes_sent;
+				message_to_send += bytes_sent;
+			}
+			else {
+				bytes_to_send = 0;
+			}
 		}
+		//printf("errno:%d\n", errno);
+		//printf("Sent %d bytes.\n", bytes_sent);
 	}
-	//printf("errno:%d\n", errno);
-	//printf("Sent %d bytes.\n", bytes_sent);
 }
 
 void writeData(struct basic *data)
@@ -1060,6 +1091,7 @@ void freeMemory(struct basic *data)
 
 void cleanup()
 {
+	event_cleanup_done = 1;
 #ifdef LOG_WRAPPER_TIME
 	struct basic data;
 	data.time_start = 0;
@@ -1118,15 +1150,15 @@ void cleanup()
 			int bytes_received = recv(socket_peer, read, 4096, 0);
 			if (bytes_received < 1)
 			{
-				printf("Connection closed by peer...\n");
+				//printf("Connection closed by peer...\n");
 				break;
 			}
 		}
 	}
-	CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "CLOSE: %d\n",
-			 socket_peer);
+	// CALL_REAL_POSIX_SYNC(fprintf)
+	// 		(stderr,
+	// 		 "CLOSE: %d\n",
+	// 		 socket_peer);
 	CLOSESOCKET(socket_peer);
 }
 
@@ -1182,7 +1214,6 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 		env[++env_element] = &database_port_env[0];
 		env[++env_element] = &influx_token_env[0];
 		env[++env_element] = NULL;
-
 	}
 }
 #endif

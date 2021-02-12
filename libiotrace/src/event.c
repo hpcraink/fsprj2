@@ -16,8 +16,9 @@
 #include <ctype.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
-#define CLOSESOCKET(s) CALL_REAL_POSIX_SYNC(close) \
-(s)
+#define CLOSESOCKET(s)          \
+	CALL_REAL_POSIX_SYNC(close) \
+	(s)
 #define SOCKET int
 #define GETSOCKETERRNO() (errno)
 
@@ -539,6 +540,48 @@ void init_on_load()
 #endif
 }
 
+void *recvData(void *arg)
+{
+	while (!event_cleanup_done)
+	{
+		fd_set reads;
+		FD_ZERO(&reads);
+		FD_SET(socket_peer, &reads);
+
+		int ret = CALL_REAL_POSIX_SYNC(select)(socket_peer + 1, &reads, NULL, NULL, NULL); //Auf Daten warten
+		if (-1 == ret)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: Select returned -1 (%d).\n",
+			 __func__,
+			 errno);
+			break;
+		}
+		if (FD_ISSET(socket_peer, &reads))
+		{
+			char read[4096];
+			ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
+			if (-1 == bytes_received)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: recv returned -1 (%d).\n",
+				 __func__,
+				 errno);
+			}
+			else
+			{
+				// CALL_REAL_POSIX_SYNC(fprintf)
+				// (stderr,
+				//  "Thread raeumt ab (%d): %s.\n",
+				//  bytes_received, read);
+			}
+		}
+	}
+	return NULL;
+}
+
 char init_done = 0;
 void init_basic()
 {
@@ -750,6 +793,14 @@ void init_basic()
 		}
 		freeaddrinfo(peer_address);
 #endif
+		pthread_t recv_thread;
+		int ret = pthread_create(&recv_thread, NULL, recvData, NULL);
+		if (0 != ret)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr, "pthread_create() failed. (%d)\n", ret);
+			return;
+		}
 
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);
@@ -1000,11 +1051,10 @@ void pushData(struct basic *data)
 	char *message_to_send = message;
 	size_t bytes_to_send = strlen(message);
 
-	
 	while (bytes_to_send > 0)
 	{
 
-		int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, MSG_DONTWAIT);
+		int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
 		if (-1 == bytes_sent)
 		{
 			if (errno == EWOULDBLOCK || errno == EAGAIN)
@@ -1026,15 +1076,16 @@ void pushData(struct basic *data)
 		{
 			if (bytes_sent < bytes_to_send)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "Seems that send doesn't return enough bytes.....\n");
-				CALL_REAL_POSIX_SYNC(fflush)
-				(stderr);
+				// CALL_REAL_POSIX_SYNC(fprintf)
+				// (stderr,
+				//  "Seems that send doesn't return enough bytes.....\n");
+				// CALL_REAL_POSIX_SYNC(fflush)
+				// (stderr);
 				bytes_to_send -= bytes_sent;
 				message_to_send += bytes_sent;
 			}
-			else {
+			else
+			{
 				bytes_to_send = 0;
 			}
 		}

@@ -17,6 +17,10 @@
 #ifdef WITH_DL_IO
 #  include "dl_io.h"
 #endif
+#ifdef WITH_MPI_IO
+#  include "mpi_io.h"
+#endif
+
 
 #include "json_include_struct.h"
 

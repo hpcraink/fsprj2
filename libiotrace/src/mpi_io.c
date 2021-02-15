@@ -8,6 +8,50 @@
 #include "wrapper_defines.h"
 #include "mpi.h"
 
+
+char libio_MPI_File_open = WRAPPER_ACTIVE;
+char libio_MPI_File_write = WRAPPER_ACTIVE;
+char libio_MPI_File_iwrite = WRAPPER_ACTIVE;
+char libio_MPI_File_iwrite_all = WRAPPER_ACTIVE;
+char libio_MPI_File_write_all = WRAPPER_ACTIVE;
+char libio_MPI_File_read = WRAPPER_ACTIVE;
+char libio_MPI_File_iread = WRAPPER_ACTIVE;
+char libio_MPI_File_iread_all = WRAPPER_ACTIVE;
+char libio_MPI_File_read_all = WRAPPER_ACTIVE;
+char libio_MPI_File_close = WRAPPER_ACTIVE;
+char libio_MPI_File_seek = WRAPPER_ACTIVE;
+char libio_MPI_File_write_at = WRAPPER_ACTIVE;
+char libio_MPI_File_write_at_all = WRAPPER_ACTIVE;
+char libio_MPI_File_read_at = WRAPPER_ACTIVE;
+char libio_MPI_File_read_at_all = WRAPPER_ACTIVE;
+char libio_MPI_File_iread_at = WRAPPER_ACTIVE;
+char libio_MPI_File_iread_at_all = WRAPPER_ACTIVE;
+char libio_MPI_File_iwrite_at = WRAPPER_ACTIVE;
+char libio_MPI_File_iwrite_at_all = WRAPPER_ACTIVE;
+char libio_MPI_File_read_all_begin = WRAPPER_ACTIVE;
+char libio_MPI_Wait = WRAPPER_ACTIVE;
+char libio_MPI_Waitall = WRAPPER_ACTIVE;
+char libio_MPI_File_delete = WRAPPER_ACTIVE;
+char libio_MPI_File_set_view = WRAPPER_ACTIVE;
+
+char activate_mpi_wrapper(char *line)
+{
+	char ret = 1;
+	if (!strcmp(line, "MPI_Waitall"))
+	{
+		libio_MPI_Waitall = 1;
+	}
+	else if (!strcmp(line, "MPI_Wait"))
+	{
+		libio_MPI_Wait = 1;
+	}
+	else
+	{
+		ret = 0;
+	}
+	return ret;
+}
+
 enum access_mode get_access_amode(int mode)
 {
 	if (mode & MPI_MODE_RDONLY)
@@ -165,7 +209,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 		file_mpi_data.mpi_file = MPI_File_c2f(*fh);
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_open)
 
 	return ret;
 }
@@ -217,7 +261,7 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	{
 		status = MPI_STATUS_IGNORE;
 	}
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_write)
 	return ret;
 }
 
@@ -252,7 +296,7 @@ int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype dataty
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iwrite)
 	return ret;
 }
 
@@ -287,7 +331,7 @@ int MPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype da
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iwrite_all)
 	return ret;
 }
 
@@ -338,7 +382,7 @@ int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype dat
 	{
 		status = MPI_STATUS_IGNORE;
 	}
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_write_all)
 	return ret;
 }
 
@@ -391,7 +435,7 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_read)
 	return ret;
 }
 
@@ -427,7 +471,7 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iread)
 	return ret;
 }
 
@@ -462,7 +506,7 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iread_all)
 	return ret;
 }
 
@@ -514,7 +558,7 @@ int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, 
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_read_all)
 	return ret;
 }
 
@@ -546,7 +590,7 @@ int MPI_File_close(MPI_File *fh)
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_close)
 	return ret;
 }
 
@@ -592,7 +636,7 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_seek)
 	return ret;
 }
 
@@ -647,7 +691,7 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_write_at)
 	return ret;
 }
 
@@ -701,7 +745,7 @@ int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int c
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_write_at_all)
 	return ret;
 }
 
@@ -755,7 +799,7 @@ int MPI_File_read_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_D
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_read_at)
 	return ret;
 }
 
@@ -809,7 +853,7 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, M
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_read_at_all)
 	return ret;
 }
 
@@ -846,7 +890,7 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iread_at)
 	return ret;
 }
 
@@ -883,7 +927,7 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, 
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iread_at_all)
 	return ret;
 }
 
@@ -920,7 +964,7 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iwrite_at)
 	return ret;
 }
 
@@ -957,7 +1001,7 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int 
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_iwrite_at_all)
 	return ret;
 }
 
@@ -989,7 +1033,7 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_read_all_begin)
 	return ret;
 }
 
@@ -1042,7 +1086,7 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 		status = MPI_STATUS_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_Wait)
 	return ret;
 }
 
@@ -1128,7 +1172,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 		array_of_statuses = MPI_STATUSES_IGNORE;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_Waitall)
 	return ret;
 }
 
@@ -1191,7 +1235,7 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 		get_file_id_by_path(filename, &(mpi_delete_data.id));
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_delete)
 
 	return ret;
 }
@@ -1228,7 +1272,7 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
 		data.return_state = ok;
 	}
 
-	WRAP_MPI_END(data)
+	WRAP_MPI_END(data, MPI_File_set_view)
 	return ret;
 
 

@@ -5,6 +5,12 @@
 #include <dlfcn.h>
 #include "json_include_struct.h"
 
+#ifdef ALL_WRAPPERS_ACTIVE
+#  define WRAPPER_ACTIVE 1
+#else
+#  define WRAPPER_ACTIVE 0
+#endif
+
 #ifdef WITH_POSIX_IO
 #  define CALL_REAL_POSIX_SYNC(function) CALL_REAL(function)
 #else
@@ -98,7 +104,7 @@
                                                                     data.time_end = gettime();
 #define __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) data.time_start = gettime(); \
                                                                               data.time_end = gettime(); \
-                                                                              WRAP_END(data) \
+                                                                              WRAP_END(data, function) \
                                                                               cleanup(); \
                                                                               errno = errno_data.errno_value; \
                                                                               return_value = CALL_REAL(function)(__VA_ARGS__); \
@@ -110,7 +116,7 @@
                                                   data.time_end = gettime();
 #define __CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) data.time_start = gettime(); \
                                                             data.time_end = gettime(); \
-                                                            WRAP_END(data) \
+                                                            WRAP_END(data, function) \
                                                             cleanup(); \
                                                             errno = errno_data.errno_value; \
                                                             CALL_REAL(function)(__VA_ARGS__); \
@@ -151,8 +157,10 @@
 //ToDo: use kcmp() with KCMP_FILE as type to check if file descriptor is STDIN_FILENO, STDOUT_FILENO or STDERR_FILENO
 //kcmp() is linux-specific! But without kcmp() a duped descriptor will not be recognized! That will lead to problems by following analysis of written data!
 //ToDo: check for which file_type should not be written instead of which should be written
+#define WRAP_END(data, functionname) __WRAP_END(data, functionname)
+
 #ifndef WITH_STD_IO
-#  define WRAP_END(data) GET_ERRNO(data) \
+#  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          if(data.file_type == NULL || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
@@ -167,21 +175,27 @@
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
+                            if(libio_##functionname){ \
+                              pushData(&data); \
+                              writeData(&data); \
+                            } \
+                         } \
+                         WRAP_FREE(&data) \
+                         errno = errno_data.errno_value;
+#else
+#  define __WRAP_END(data, functionname) GET_ERRNO(data) \
+                         if(libio_##functionname){ \
                            pushData(&data); \
                            writeData(&data); \
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
-#else
-#  define WRAP_END(data) GET_ERRNO(data) \
-                         pushData(&data); \
-                         writeData(&data); \
-                         WRAP_FREE(&data) \
-                         errno = errno_data.errno_value;
 #endif
-#define WRAP_MPI_END(data) GET_MPI_ERRNO(data) \
-                           pushData(&data); \
-                           writeData(&data); \
+#define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
+                           if(libio_##functionname){ \
+                             pushData(&data); \
+                             writeData(&data); \
+                           } \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

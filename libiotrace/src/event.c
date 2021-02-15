@@ -119,6 +119,7 @@ static const char *env_log_name = "IOTRACE_LOG_NAME";
 static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
 static const char *env_database_ip = "IOTRACE_DATABASE_IP";
 static const char *env_database_port = "IOTRACE_DATABASE_PORT";
+static const char *env_wrapper_whitelist = "IOTRACE_WHITELIST";
 #ifndef IO_LIB_STATIC
 static const char *env_ld_preload = "LD_PRELOAD";
 #endif
@@ -132,6 +133,7 @@ static char working_dir_log_name[MAXFILENAME];
 static char influx_token[MAX_INFLUX_TOKEN];
 static char database_ip[MAX_DATABASE_IP];
 static char database_port[MAX_DATABASE_PORT];
+static char whitelist[MAXFILENAME];
 static char event_cleanup_done = 0;
 #ifndef IO_LIB_STATIC
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
@@ -139,6 +141,7 @@ static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
 static char database_port_env[MAX_DATABASE_PORT + sizeof(env_database_port)];
 static char database_ip_env[MAX_DATABASE_PORT + sizeof(env_database_ip)];
 static char influx_token_env[MAX_DATABASE_PORT + sizeof(env_influx_token)];
+static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 #endif
 static long long system_start_time;
 // once per thread
@@ -167,6 +170,17 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(_Exit)(int status) REAL_DEFINITION_INI
 REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITION_INIT;
 #endif
 #endif
+
+char libio_execve = WRAPPER_ACTIVE;
+char libio_execv = WRAPPER_ACTIVE;
+char libio_execl = WRAPPER_ACTIVE;
+char libio_execvp = WRAPPER_ACTIVE;
+char libio_execlp = WRAPPER_ACTIVE;
+char libio_execvpe = WRAPPER_ACTIVE;
+char libio_execle = WRAPPER_ACTIVE;
+char libio__exit = WRAPPER_ACTIVE;
+char libio__Exit = WRAPPER_ACTIVE;
+char libio_exit_group = WRAPPER_ACTIVE;
 
 #ifndef IO_LIB_STATIC
 static char event_init_done = 0;
@@ -199,6 +213,71 @@ void event_init()
 	}
 }
 #endif
+
+void activate_event_wrapper(char *line)
+{
+	char ret = 1;
+
+	if (!strcmp(line, "execve"))
+	{
+		libio_execve = 1;
+	}
+	else if (!strcmp(line, "execv"))
+	{
+		libio_execv = 1;
+	}
+	else if (!strcmp(line, "execl"))
+	{
+		libio_execl = 1;
+	}
+	else if (!strcmp(line, "execvp"))
+	{
+		libio_execvp = 1;
+	}
+	else if (!strcmp(line, "execlp"))
+	{
+		libio_execlp = 1;
+	}
+	else if (!strcmp(line, "execvpe"))
+	{
+		libio_execvpe = 1;
+	}
+	else if (!strcmp(line, "execlp"))
+	{
+		libio_execlp = 1;
+	}
+	else if (!strcmp(line, "execle"))
+	{
+		libio_execle = 1;
+	}
+	else if (!strcmp(line, "_exit"))
+	{
+		libio__exit = 1;
+	}
+	else if (!strcmp(line, "_Exit"))
+	{
+		libio__Exit = 1;
+	}
+	else if (!strcmp(line, "exit_group"))
+	{
+		libio_exit_group = 1;
+	}
+	else {
+		ret = 0;
+	}
+#ifdef WITH_POSIX_IO
+	if (!ret)
+	{
+		ret = activate_posix_wrapper(line);
+	}
+#endif
+#ifdef WITH_MPI_IO
+	if (!ret)
+	{
+		ret = activate_mpi_wrapper(line);
+	}
+#endif
+}
 
 #ifndef IO_LIB_STATIC
 void init_wrapper()
@@ -663,7 +742,7 @@ void init_on_load()
 
 void *recvData(void *arg)
 {
-	socket_peer = *((SOCKET*)arg);
+	socket_peer = *((SOCKET *)arg);
 	free(arg);
 	while (!event_cleanup_done)
 	{
@@ -755,6 +834,11 @@ void init_basic()
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 
 		// get token from environment
+#ifndef IO_LIB_STATIC
+		strcpy(log_name_env, env_log_name);
+		strcpy(log_name_env + length, "=");
+		strcpy(log_name_env + length + 1, log);
+#endif
 		log = getenv(env_influx_token);
 		if (NULL == log)
 		{
@@ -774,6 +858,12 @@ void init_basic()
 			assert(0);
 		}
 		strcpy(influx_token, log);
+
+#ifndef IO_LIB_STATIC
+		strcpy(influx_token_env, env_influx_token);
+		strcpy(influx_token_env + length, "=");
+		strcpy(influx_token_env + length + 1, influx_token);
+#endif
 
 		// get database ip from environment
 		log = getenv(env_database_ip);
@@ -796,6 +886,11 @@ void init_basic()
 		}
 		strcpy(database_ip, log);
 
+#ifndef IO_LIB_STATIC
+		strcpy(database_ip_env, env_database_ip);
+		strcpy(database_ip_env + length, "=");
+		strcpy(database_ip_env + length + 1, database_ip);
+#endif
 		// get database port from environment
 		log = getenv(env_database_port);
 		if (NULL == log)
@@ -816,23 +911,64 @@ void init_basic()
 			assert(0);
 		}
 		strcpy(database_port, log);
-
 #ifndef IO_LIB_STATIC
-		strcpy(log_name_env, env_log_name);
-		strcpy(log_name_env + length, "=");
-		strcpy(log_name_env + length + 1, log);
-
-		strcpy(database_ip_env, env_database_ip);
-		strcpy(database_ip_env + length, "=");
-		strcpy(database_ip_env + length + 1, database_ip);
-
 		strcpy(database_port_env, env_database_port);
 		strcpy(database_port_env + length, "=");
 		strcpy(database_port_env + length + 1, database_port);
+#endif
+		// Path to wrapper whitelist
+		log = getenv(env_wrapper_whitelist);
+		if (NULL != log)
+		{
+			length = strlen(log);
+			if (MAXFILENAME < length)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
+				 __func__, env_wrapper_whitelist, length);
+				assert(0);
+			}
+			strcpy(whitelist, log);
+#ifndef IO_LIB_STATIC
+			strcpy(whitelist_env, env_wrapper_whitelist);
+			strcpy(whitelist_env + length, "=");
+			strcpy(whitelist_env + length + 1, whitelist);
+#endif
+			//Hier Auslesen der Whitelist
+			FILE *stream;
+			char *line = NULL;
+			size_t len = 0;
+			ssize_t nread;
+			stream = CALL_REAL_POSIX_SYNC(fopen)(whitelist, "r");
+			if (stream == NULL)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: fopen() failed (ERRNO: %d)\n",
+				 __func__, errno);
+				assert(0);
+			}
 
-		strcpy(influx_token_env, env_influx_token);
-		strcpy(influx_token_env + length, "=");
-		strcpy(influx_token_env + length + 1, influx_token);
+			while ((nread = CALL_REAL_POSIX_SYNC(getline)(&line, &len, stream)) != -1)
+			{
+				size_t byte_count = strlen(line);
+				if(byte_count > 0 && line[byte_count-1] == '\n'){
+					line[byte_count-1] = '\0';
+				}
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "Zeile: %s, %d\n",
+				 line, len);
+				activate_event_wrapper(line);
+			}
+
+			free(line);
+			CALL_REAL_POSIX_SYNC(fclose)
+			(stream);
+		}
+
+#ifndef IO_LIB_STATIC
 
 		log = getenv(env_ld_preload);
 		if (NULL == log)
@@ -1266,7 +1402,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 
 	if (!has_ld_preload)
 	{
-		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 5) //Add 3 for TOKEN, IP and PORT
+		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 6)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr,
@@ -1280,6 +1416,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 		env[++env_element] = &database_ip_env[0];
 		env[++env_element] = &database_port_env[0];
 		env[++env_element] = &influx_token_env[0];
+		env[++env_element] = &whitelist_env[0];
 		env[++env_element] = NULL;
 	}
 }
@@ -1314,7 +1451,7 @@ int WRAP(execve)(const char *filename, char *const argv[], char *const envp[])
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execve)
 	return ret;
 }
 
@@ -1341,7 +1478,7 @@ int WRAP(execv)(const char *path, char *const argv[])
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execv)
 	return ret;
 }
 
@@ -1391,7 +1528,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */)
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execl)
 	return ret;
 }
 
@@ -1418,7 +1555,7 @@ int WRAP(execvp)(const char *file, char *const argv[])
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execvp)
 	return ret;
 }
 
@@ -1468,7 +1605,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */)
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execlp)
 	return ret;
 }
 
@@ -1502,7 +1639,7 @@ int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[])
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execvpe)
 	return ret;
 }
 #endif
@@ -1570,7 +1707,7 @@ int WRAP(execle)(const char *path, const char *arg,
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, execle)
 	return ret;
 }
 

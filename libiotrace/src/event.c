@@ -833,7 +833,8 @@ void *recvData(void *arg)
 				ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
 				if (1 > bytes_received)
 				{
-					//Socket is destroyed or closed
+					//Socket is destroyed or closed by peer
+					//close(recv_sockets[i]);
 					delete_socket(recv_sockets[i]);
 					i--;
 				}
@@ -1401,41 +1402,38 @@ void cleanup()
 	pthread_mutex_destroy(&lock);
 	pthread_mutex_destroy(&socket_lock);
 
-	shutdown(socket_peer, SHUT_WR);
-	while (1)
+	for (int i = 0; i < recv_sockets_len; i++)
 	{
-		fd_set reads;
-		FD_ZERO(&reads);
-		FD_SET(socket_peer, &reads);
-		//FD_SET(0, &reads);
+		shutdown(recv_sockets[i], SHUT_WR);
+		while (1)
+		{
+			fd_set reads;
+			FD_ZERO(&reads);
+			FD_SET(recv_sockets[i], &reads);
 
-		int ret = CALL_REAL_POSIX_SYNC(select)(socket_peer + 1, &reads, NULL, NULL, NULL);
-		if (-1 == ret)
-		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: Select returned -1 (%d).\n",
-			 __func__,
-			 errno);
-			break;
-		}
-		if (FD_ISSET(socket_peer, &reads))
-		{
-			//printf("In isset\n");
-			char read[4096];
-			int bytes_received = recv(socket_peer, read, 4096, 0);
-			if (bytes_received < 1)
+			int ret = CALL_REAL_POSIX_SYNC(select)(recv_sockets[i] + 1, &reads, NULL, NULL, NULL);
+			if (-1 == ret)
 			{
-				//printf("Connection closed by peer...\n");
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: Select returned -1 (%d).\n",
+				 __func__,
+				 errno);
 				break;
 			}
+			if (FD_ISSET(recv_sockets[i], &reads))
+			{
+				char read[4096];
+				int bytes_received = recv(recv_sockets[i], read, 4096, 0);
+				if (bytes_received < 1)
+				{
+					//printf("Connection closed by peer...\n");
+					break;
+				}
+			}
 		}
+		CLOSESOCKET(recv_sockets[i]);
 	}
-	// CALL_REAL_POSIX_SYNC(fprintf)
-	// 		(stderr,
-	// 		 "CLOSE: %d\n",
-	// 		 socket_peer);
-	CLOSESOCKET(socket_peer);
 }
 
 #ifndef IO_LIB_STATIC

@@ -191,6 +191,11 @@ if(LOGGING)
     list(APPEND OPTIONS -DLOGGING)
 endif()
 
+#compile using cmake -DSENDING for sending log to influxdb (can be changed during execution with functions from libiotrace.h)
+if(SENDING)
+    list(APPEND OPTIONS -DSENDING)
+endif()
+
 #compile using cmake -DLOG_WRAPPER_TIME for logging start and end time of function wrappers
 if(LOG_WRAPPER_TIME)
     list(APPEND OPTIONS -DLOG_WRAPPER_TIME)

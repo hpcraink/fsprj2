@@ -81,6 +81,11 @@ static ATTRIBUTE_THREAD char no_logging = 0;
 #else
 static ATTRIBUTE_THREAD char no_logging = 1;
 #endif
+#ifdef SENDING
+static ATTRIBUTE_THREAD char no_sending = 0;
+#else
+static ATTRIBUTE_THREAD char no_sending = 1;
+#endif
 #ifdef STACKTRACE_DEPTH
 static ATTRIBUTE_THREAD int stacktrace_depth = STACKTRACE_DEPTH;
 #else
@@ -478,6 +483,16 @@ void libiotrace_start_log()
 void libiotrace_end_log()
 {
 	no_logging = 1;
+}
+
+void libiotrace_start_send()
+{
+	no_sending = 0;
+}
+
+void libiotrace_end_send()
+{
+	no_sending = 1;
 }
 
 void libiotrace_start_stacktrace_ptr()
@@ -1230,7 +1245,7 @@ void printData()
 
 void pushData(struct basic *data)
 {
-	if (event_cleanup_done)
+	if (event_cleanup_done || no_sending)
 	{
 		return;
 	}

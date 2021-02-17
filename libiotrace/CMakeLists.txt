@@ -13,6 +13,7 @@ set(CMAKE_C_STANDARD 99)
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
 option (WITH_UNIT_TESTS "enable building unit tests" ON)
 option (LOGGING "write log (can be changed during execution with functions from libiotrace.h)" ON)
+option (SENDING "send log to influxdb (can be changed during execution with functions from libiotrace.h)" ON)
 option (STACKTRACE_PTR "write stacktrace pointer to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (STACKTRACE_SYMBOL "write stacktrace symbols to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (LOG_WRAPPER_TIME "log start and end time of function wrappers" ON)

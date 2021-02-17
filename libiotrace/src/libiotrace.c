@@ -8,6 +8,14 @@ void libiotrace_end_log() {
 	return;
 }
 
+void libiotrace_start_send() {
+	return;
+}
+
+void libiotrace_end_send() {
+	return;
+}
+
 void libiotrace_start_stacktrace_ptr() {
 	return;
 }

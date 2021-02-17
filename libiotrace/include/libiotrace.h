@@ -42,6 +42,16 @@ void libiotrace_start_log();
 void libiotrace_end_log();
 
 /**
+ * Start sending log in actual thread.
+ */
+void libiotrace_start_send();
+
+/**
+ * End sending log in actual thread.
+ */
+void libiotrace_end_send();
+
+/**
  * Start logging of stacktrace pointer in actual thread
  * (if logging is active and stacktrace depth is greater than 0).
  */

@@ -37,14 +37,34 @@ char libio_MPI_File_set_view = WRAPPER_ACTIVE;
 char activate_mpi_wrapper(char *line)
 {
 	char ret = 1;
-	if (!strcmp(line, "MPI_Waitall"))
-	{
-		libio_MPI_Waitall = 1;
+
+	if (!strcmp(line, "")) {
+		ret = 0;
 	}
-	else if (!strcmp(line, "MPI_Wait"))
-	{
-		libio_MPI_Wait = 1;
-	}
+	WRAPPER_ACTIVATE(line, MPI_File_open)
+	WRAPPER_ACTIVATE(line, MPI_File_write)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite_all)
+	WRAPPER_ACTIVATE(line, MPI_File_write_all)
+	WRAPPER_ACTIVATE(line, MPI_File_read)
+	WRAPPER_ACTIVATE(line, MPI_File_iread)
+	WRAPPER_ACTIVATE(line, MPI_File_iread_all)
+	WRAPPER_ACTIVATE(line, MPI_File_read_all)
+	WRAPPER_ACTIVATE(line, MPI_File_close)
+	WRAPPER_ACTIVATE(line, MPI_File_seek)
+	WRAPPER_ACTIVATE(line, MPI_File_write_at)
+	WRAPPER_ACTIVATE(line, MPI_File_write_at_all)
+	WRAPPER_ACTIVATE(line, MPI_File_read_at)
+	WRAPPER_ACTIVATE(line, MPI_File_read_at_all)
+	WRAPPER_ACTIVATE(line, MPI_File_iread_at)
+	WRAPPER_ACTIVATE(line, MPI_File_iread_at_all)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at_all)
+	WRAPPER_ACTIVATE(line, MPI_File_read_all_begin)
+	WRAPPER_ACTIVATE(line, MPI_Wait)
+	WRAPPER_ACTIVATE(line, MPI_Waitall)
+	WRAPPER_ACTIVATE(line, MPI_File_delete)
+	WRAPPER_ACTIVATE(line, MPI_File_set_view)
 	else
 	{
 		ret = 0;

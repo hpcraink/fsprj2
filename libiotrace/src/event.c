@@ -302,50 +302,20 @@ void activate_event_wrapper(char *line)
 {
 	char ret = 1;
 
-	if (!strcmp(line, "execve"))
-	{
-		libio_execve = 1;
+	if (!strcmp(line, "")) {
+		ret = 0;
 	}
-	else if (!strcmp(line, "execv"))
-	{
-		libio_execv = 1;
-	}
-	else if (!strcmp(line, "execl"))
-	{
-		libio_execl = 1;
-	}
-	else if (!strcmp(line, "execvp"))
-	{
-		libio_execvp = 1;
-	}
-	else if (!strcmp(line, "execlp"))
-	{
-		libio_execlp = 1;
-	}
-	else if (!strcmp(line, "execvpe"))
-	{
-		libio_execvpe = 1;
-	}
-	else if (!strcmp(line, "execlp"))
-	{
-		libio_execlp = 1;
-	}
-	else if (!strcmp(line, "execle"))
-	{
-		libio_execle = 1;
-	}
-	else if (!strcmp(line, "_exit"))
-	{
-		libio__exit = 1;
-	}
-	else if (!strcmp(line, "_Exit"))
-	{
-		libio__Exit = 1;
-	}
-	else if (!strcmp(line, "exit_group"))
-	{
-		libio_exit_group = 1;
-	}
+	WRAPPER_ACTIVATE(line, execve)
+	WRAPPER_ACTIVATE(line, execv)
+	WRAPPER_ACTIVATE(line, execl)
+	WRAPPER_ACTIVATE(line, execvp)
+	WRAPPER_ACTIVATE(line, execlp)
+	WRAPPER_ACTIVATE(line, execvpe)
+	WRAPPER_ACTIVATE(line, execlp)
+	WRAPPER_ACTIVATE(line, execle)
+	WRAPPER_ACTIVATE(line, _exit)
+	WRAPPER_ACTIVATE(line, _Exit)
+	WRAPPER_ACTIVATE(line, exit_group)
 	else
 	{
 		ret = 0;
@@ -360,6 +330,18 @@ void activate_event_wrapper(char *line)
 	if (!ret)
 	{
 		ret = activate_mpi_wrapper(line);
+	}
+#endif
+#ifdef WITH_POSIX_AIO
+	if (!ret)
+	{
+		ret = activate_posix_aio_wrapper(line);
+	}
+#endif
+#ifdef WITH_DL_IO
+	if (!ret)
+	{
+		ret = activate_dl_wrapper(line);
 	}
 #endif
 }

@@ -50,6 +50,25 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(aio_init)(const struct aioinit *init) 
 REAL_DEFINITION_TYPE int REAL_DEFINITION(shm_open)(const char *name, int oflag, mode_t mode) REAL_DEFINITION_INIT;
 #endif
 
+char libio_aio_read = WRAPPER_ACTIVE;
+char libio_aio_read64 = WRAPPER_ACTIVE;
+char libio_aio_write = WRAPPER_ACTIVE;
+char libio_aio_write64 = WRAPPER_ACTIVE;
+char libio_lio_listio = WRAPPER_ACTIVE;
+char libio_lio_listio64 = WRAPPER_ACTIVE;
+char libio_aio_error = WRAPPER_ACTIVE;
+char libio_aio_error64 = WRAPPER_ACTIVE;
+char libio_aio_return = WRAPPER_ACTIVE;
+char libio_aio_return64 = WRAPPER_ACTIVE;
+char libio_aio_fsync = WRAPPER_ACTIVE;
+char libio_aio_fsync64 = WRAPPER_ACTIVE;
+char libio_aio_suspend = WRAPPER_ACTIVE;
+char libio_aio_suspend64 = WRAPPER_ACTIVE;
+char libio_aio_cancel = WRAPPER_ACTIVE;
+char libio_aio_cancel64 = WRAPPER_ACTIVE;
+char libio_aio_init = WRAPPER_ACTIVE;
+char libio_shm_open = WRAPPER_ACTIVE;
+
 #ifndef IO_LIB_STATIC
 char posix_aio_init_done = 0;
 /* Initialize pointers for glibc functions. */
@@ -97,6 +116,39 @@ void posix_aio_init() {
 	}
 }
 #endif
+
+char activate_posix_aio_wrapper(char *line)
+{
+	char ret = 1;
+
+	if (!strcmp(line, "")) {
+		ret = 0;
+	}
+	WRAPPER_ACTIVATE(line, aio_read)
+	WRAPPER_ACTIVATE(line, aio_read64)
+	WRAPPER_ACTIVATE(line, aio_write)
+	WRAPPER_ACTIVATE(line, aio_write64)
+	WRAPPER_ACTIVATE(line, lio_listio)
+	WRAPPER_ACTIVATE(line, lio_listio64)
+	WRAPPER_ACTIVATE(line, aio_error)
+	WRAPPER_ACTIVATE(line, aio_error64)
+	WRAPPER_ACTIVATE(line, aio_return)
+	WRAPPER_ACTIVATE(line, aio_return64)
+	WRAPPER_ACTIVATE(line, aio_fsync)
+	WRAPPER_ACTIVATE(line, aio_fsync64)
+	WRAPPER_ACTIVATE(line, aio_suspend)
+	WRAPPER_ACTIVATE(line, aio_suspend64)
+	WRAPPER_ACTIVATE(line, aio_cancel)
+	WRAPPER_ACTIVATE(line, aio_cancel64)
+	WRAPPER_ACTIVATE(line, aio_init)
+	WRAPPER_ACTIVATE(line, shm_open)
+	else
+	{
+		ret = 0;
+	}
+
+	return ret;
+}
 
 enum listio_mode get_listio_mode(int mode) {
 	switch (mode) {

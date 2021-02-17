@@ -17,6 +17,25 @@ REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlmopen)(Lmid_t lmid, const char *fi
 #endif
 #endif
 
+char libio_dlopen = WRAPPER_ACTIVE;
+char libio_dlmopen = WRAPPER_ACTIVE;
+
+char activate_dl_wrapper(char *line)
+{
+	char ret = 1;
+
+	if (!strcmp(line, "")) {
+		ret = 0;
+	}
+	WRAPPER_ACTIVATE(line, dlopen)
+	WRAPPER_ACTIVATE(line, dlmopen)
+	else
+	{
+		ret = 0;
+	}
+	return ret;
+}
+
 #ifndef IO_LIB_STATIC
 char dl_io_init_done = 0;
 /* Initialize pointers for dl functions. */

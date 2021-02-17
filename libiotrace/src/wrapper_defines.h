@@ -11,6 +11,10 @@
 #  define WRAPPER_ACTIVE 0
 #endif
 
+#define WRAPPER_ACTIVATE(cmp_string, function) else if (!strcmp(cmp_string, #function)) { \
+                                                  libio_##function = 1; \
+                                               }
+
 #ifdef WITH_POSIX_IO
 #  define CALL_REAL_POSIX_SYNC(function) CALL_REAL(function)
 #else

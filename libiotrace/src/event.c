@@ -1416,9 +1416,6 @@ void cleanup()
 	pthread_mutex_unlock(&lock);
 	WRAP_FREE(&data)
 #endif
-	CALL_REAL_POSIX_SYNC(fprintf)
-	(stderr,
-	 "In Endeverarbeitung\n");
 
 	pthread_mutex_lock(&socket_lock);
 	for (int i = 0; i < recv_sockets_len; i++)

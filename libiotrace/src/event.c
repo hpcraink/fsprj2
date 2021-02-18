@@ -25,6 +25,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 //##################
 #include <assert.h>
 
@@ -73,6 +78,14 @@
 
 #ifndef MAX_DATABSE_PORT
 #define MAX_DATABASE_PORT 200
+#endif
+
+#ifndef PORT_RANGE_MIN
+#define PORT_RANGE_MIN 50000
+#endif
+
+#ifndef PORT_RANGE_MAX
+#define PORT_RANGE_MAX 60000
 #endif
 
 /* flags and values to control logging */
@@ -136,6 +149,7 @@ static char hostname[HOST_NAME_MAX];
 static char log_name[MAXFILENAME];
 static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
+static char control_log_name[MAXFILENAME];
 static char influx_token[MAX_INFLUX_TOKEN];
 static char database_ip[MAX_DATABASE_IP];
 static char database_port[MAX_DATABASE_PORT];
@@ -152,6 +166,8 @@ static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 static long long system_start_time;
 static SOCKET *recv_sockets = NULL;
 static int recv_sockets_len = 0;
+static SOCKET socket_control;
+
 // once per thread
 static ATTRIBUTE_THREAD pid_t tid = -1;
 static ATTRIBUTE_THREAD SOCKET socket_peer;
@@ -816,6 +832,88 @@ void init_on_load()
 
 void *recvData(void *arg)
 {
+	//Open Socket to receive control information
+	struct sockaddr_in addr;
+	socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
+	if (socket_control < 0)
+	{
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "Could not open socket (%d).\n", errno);
+		assert(0);
+	}
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	//Look up free ports in specific range
+	int i;
+	for (i = PORT_RANGE_MIN; i <= PORT_RANGE_MAX; i++)
+	{
+		addr.sin_port = htons(i);
+		if (!CALL_REAL_POSIX_SYNC(bind)(socket_control, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)))
+		{
+			//Write PORT and IP for control commands
+			struct ifreq ifreqs[20];
+			struct ifconf ic;
+
+			ic.ifc_len = sizeof ifreqs;
+			ic.ifc_req = ifreqs;
+
+			if (ioctl(socket_control, SIOCGIFCONF, &ic) < 0)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: ioctl returned -1 (%d).\n",
+				 __func__,
+				 errno);
+				perror("SIOCGIFCONF");
+				assert(0);
+			}
+
+			int fd = CALL_REAL_POSIX_SYNC(open)(control_log_name,
+												O_WRONLY | O_CREAT | O_APPEND,
+												S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+			if (-1 == fd)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: open() of file %s returned %d.\n", __func__,
+				 control_log_name, fd);
+				assert(0);
+			}
+
+			for (int l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
+			{
+				int ret = dprintf(fd, "%s: %s:%d\n", ifreqs[l].ifr_name,
+								  inet_ntoa(((struct sockaddr_in *)&ifreqs[l].ifr_addr)->sin_addr), i);
+
+				if (0 > ret)
+				{
+					CALL_REAL_POSIX_SYNC(fprintf)
+					(stderr,
+					 "In function %s: dprintf() returned %d with errno=%d.\n",
+					 __func__, ret, errno);
+					assert(0);
+				}
+			}
+
+			CALL_REAL_POSIX_SYNC(close)
+			(fd);
+
+			break;
+		}
+	}
+	if (i > PORT_RANGE_MAX)
+	{
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "Unable to bind socket.\n");
+		CALL_REAL_POSIX_SYNC(close)
+		(socket_control);
+		assert(0);
+	}
+
+	//Read messages from influx and read control messages
 	while (!event_cleanup_done)
 	{
 		fd_set fd_recv_sockets;
@@ -848,18 +946,18 @@ void *recvData(void *arg)
 			if (FD_ISSET(recv_sockets[i], &fd_recv_sockets))
 			{
 				char read[4096];
-				//ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
-				// if (1 > bytes_received)
-				// {
-				// 	//Socket is destroyed or closed by peer
-				// 	//close(recv_sockets[i]);
-				// 	//delete_socket(recv_sockets[i]);
-				// 	//i--;
-				// }
-				// else
-				// {
-				// 	//TODO: Read requests to control wrappers
-				// }
+				ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
+				if (1 > bytes_received)
+				{
+					//Socket is destroyed or closed by peer
+					//close(recv_sockets[i]);
+					//delete_socket(recv_sockets[i]);
+					//i--;
+				}
+				else
+				{
+					//TODO: Read requests to control wrappers
+				}
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
@@ -910,11 +1008,13 @@ void init_basic()
 		strcpy(log_name, log);
 		strcpy(filesystem_log_name, log);
 		strcpy(working_dir_log_name, log);
+		strcpy(control_log_name, log);
 		strcpy(log_name + length, "_iotrace.log");
 		strcpy(filesystem_log_name + length, "_filesystem_");
 		strcpy(filesystem_log_name + length + 12, hostname);
 		strcpy(filesystem_log_name + length + 12 + strlen(hostname), ".log");
 		strcpy(working_dir_log_name + length, "_working_dir.log");
+		strcpy(control_log_name + length, "_control.log");
 
 		// get token from environment
 #ifndef IO_LIB_STATIC
@@ -1047,16 +1147,19 @@ void init_basic()
 				clean_line = line;
 
 				// remove leading spaces
-				while(isspace((unsigned char)*clean_line)) {
+				while (isspace((unsigned char)*clean_line))
+				{
 					clean_line++;
 				}
 
 				// not a comment and not only spaces
-				if(*clean_line != '#' && *clean_line != '\0')  {
+				if (*clean_line != '#' && *clean_line != '\0')
+				{
 					end_clean_line = clean_line + strlen(clean_line) - 1;
 
 					// remove trailing spaces
-					while(end_clean_line > clean_line && isspace((unsigned char)*end_clean_line)) {
+					while (end_clean_line > clean_line && isspace((unsigned char)*end_clean_line))
+					{
 						end_clean_line--;
 					}
 					end_clean_line[1] = '\0';

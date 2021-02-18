@@ -307,7 +307,8 @@ void activate_event_wrapper(char *line)
 {
 	char ret = 1;
 
-	if (!strcmp(line, "")) {
+	if (!strcmp(line, ""))
+	{
 		ret = 0;
 	}
 	WRAPPER_ACTIVATE(line, execve)
@@ -725,6 +726,8 @@ void clear_init()
 {
 	init_done = 0;
 	tid = -1;
+	recv_sockets = NULL;
+	recv_sockets_len = 0;
 }
 
 void open_std_fd(int fd)
@@ -845,18 +848,18 @@ void *recvData(void *arg)
 			if (FD_ISSET(recv_sockets[i], &fd_recv_sockets))
 			{
 				char read[4096];
-				ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
-				if (1 > bytes_received)
-				{
-					//Socket is destroyed or closed by peer
-					//close(recv_sockets[i]);
-					delete_socket(recv_sockets[i]);
-					i--;
-				}
-				else
-				{
-					//TODO: Read requests to control wrappers
-				}
+				//ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
+				// if (1 > bytes_received)
+				// {
+				// 	//Socket is destroyed or closed by peer
+				// 	//close(recv_sockets[i]);
+				// 	//delete_socket(recv_sockets[i]);
+				// 	//i--;
+				// }
+				// else
+				// {
+				// 	//TODO: Read requests to control wrappers
+				// }
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
@@ -1436,9 +1439,7 @@ void cleanup()
 	WRAP_FREE(&data)
 #endif
 
-	pthread_mutex_destroy(&lock);
-	pthread_mutex_destroy(&socket_lock);
-
+	pthread_mutex_lock(&socket_lock);
 	for (int i = 0; i < recv_sockets_len; i++)
 	{
 		shutdown(recv_sockets[i], SHUT_WR);
@@ -1471,6 +1472,10 @@ void cleanup()
 		}
 		CLOSESOCKET(recv_sockets[i]);
 	}
+	pthread_mutex_unlock(&socket_lock);
+
+	pthread_mutex_destroy(&lock);
+	pthread_mutex_destroy(&socket_lock);
 }
 
 #ifndef IO_LIB_STATIC

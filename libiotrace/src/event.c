@@ -132,6 +132,7 @@ static int host_name_max;
 /* Mutex */
 static pthread_mutex_t lock;
 static pthread_mutex_t socket_lock;
+static pthread_mutex_t socket_control_lock;
 
 /* environment variables */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
@@ -166,6 +167,8 @@ static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 static long long system_start_time;
 static SOCKET *recv_sockets = NULL;
 static int recv_sockets_len = 0;
+static SOCKET *open_control_sockets = NULL;
+static int open_control_sockets_len = 0;
 static SOCKET socket_control;
 
 // once per thread
@@ -206,85 +209,87 @@ char libio__exit = WRAPPER_ACTIVE;
 char libio__Exit = WRAPPER_ACTIVE;
 char libio_exit_group = WRAPPER_ACTIVE;
 
-void save_socket(SOCKET socket)
+void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
-	pthread_mutex_lock(&socket_lock);
-	recv_sockets_len++;
-	ret = realloc(recv_sockets, sizeof(SOCKET) * recv_sockets_len);
+	pthread_mutex_lock(lock);
+	(*len)++;
+	ret = realloc(*array, sizeof(SOCKET) * (*len));
 	if (NULL == ret)
 	{
 		CALL_REAL_POSIX_SYNC(fprintf)
 		(stderr, "realloc() failed. (%d)\n", ret);
-		free(recv_sockets);
+		free(*array);
 		assert(0);
 	}
-	recv_sockets = ret;
-	recv_sockets[recv_sockets_len - 1] = socket;
-	pthread_mutex_unlock(&socket_lock);
+	*array = ret;
+	(*array)[*len - 1] = socket;
+	pthread_mutex_unlock(lock);
 }
 
 //Attention: Function not thread-safe
 //Should only be used inside of block guarded by mutex 'socket_lock'
-void delete_socket(SOCKET socket)
+void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
-	recv_sockets_len--;
-	if (recv_sockets[recv_sockets_len] == socket)
+	pthread_mutex_lock(lock);
+	(*len)--;
+	if ((*array)[*len] == socket)
 	{
 		//Delete last element if last element is current socket
-		ret = realloc(recv_sockets, sizeof(SOCKET) * recv_sockets_len);
-		if (recv_sockets_len == 0)
+		ret = realloc(*array, sizeof(SOCKET) * (*len));
+		if (*len == 0)
 		{
 			if (ret != NULL)
 			{
 				free(ret);
 			}
-			recv_sockets = NULL;
+			*array = NULL;
 		}
 		else if (NULL == ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr, "realloc() failed. (%d)\n", ret);
-			free(recv_sockets);
+			free(*array);
 			assert(0);
 		}
 		else
 		{
-			recv_sockets = ret;
+			*array = ret;
 		}
 	}
 	else
 	{
-		for (int i = 0; i < recv_sockets_len; i++)
+		for (int i = 0; i < *len; i++)
 		{
-			if (recv_sockets[i] == socket)
+			if ((*array)[i] == socket)
 			{
-				recv_sockets[i] = recv_sockets[recv_sockets_len];
+				(*array)[i] = (*array)[*len];
 				break;
 			}
 		}
-		ret = realloc(recv_sockets, sizeof(SOCKET) * recv_sockets_len);
-		if (recv_sockets_len == 0)
+		ret = realloc(*array, sizeof(SOCKET) * (*len));
+		if (*len == 0)
 		{
 			if (ret != NULL)
 			{
 				free(ret);
 			}
-			recv_sockets = NULL;
+			*array = NULL;
 		}
 		else if (NULL == ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
 			(stderr, "realloc() failed. (%d)\n", ret);
-			free(recv_sockets);
+			free(*array);
 			assert(0);
 		}
 		else
 		{
-			recv_sockets = ret;
+			*array = ret;
 		}
 	}
+	pthread_mutex_unlock(lock);
 }
 
 #ifndef IO_LIB_STATIC
@@ -489,7 +494,7 @@ void prepare_socket()
 #endif
 
 	// save socket globally to create thread that listens to all sockets
-	save_socket(socket_peer);
+	save_socket(socket_peer, &socket_lock, &recv_sockets_len, &recv_sockets);
 }
 
 void libiotrace_start_log()
@@ -884,7 +889,7 @@ void *recvData(void *arg)
 
 			for (int l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
 			{
-				int ret = dprintf(fd, "%s: %s:%d\n", ifreqs[l].ifr_name,
+				int ret = dprintf(fd, "(%u) %s: %s:%d\n", pid, ifreqs[l].ifr_name,
 								  inet_ntoa(((struct sockaddr_in *)&ifreqs[l].ifr_addr)->sin_addr), i);
 
 				if (0 > ret)
@@ -913,6 +918,19 @@ void *recvData(void *arg)
 		assert(0);
 	}
 
+	//Listen to socket
+	int ret = listen(socket_control, 10);
+	if (0 > ret)
+	{
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "Unable to listen to socket (%d).\n", errno);
+		CALL_REAL_POSIX_SYNC(close)
+		(socket_control);
+		assert(0);
+	}
+	// Now wait for connection in select below
+
 	//Read messages from influx and read control messages
 	while (!event_cleanup_done)
 	{
@@ -929,7 +947,24 @@ void *recvData(void *arg)
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
-		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, NULL); //Wait for data
+		//Add listening socket for establishing control connections to fd_set
+		FD_SET(socket_control, &fd_recv_sockets);
+		if (socket_control > socket_max)
+		{
+			socket_max = socket_control;
+		}
+		//Add active control connections to fd_set
+		for (int i = 0; i < open_control_sockets_len; i++)
+		{
+			FD_SET(open_control_sockets[i], &fd_recv_sockets);
+			if (open_control_sockets[i] > socket_max)
+			{
+				socket_max = open_control_sockets[i];
+			}
+		}
+
+		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, NULL);
+		//Select: At least one socket is ready to be processed
 		if (-1 == ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
@@ -946,7 +981,7 @@ void *recvData(void *arg)
 			if (FD_ISSET(recv_sockets[i], &fd_recv_sockets))
 			{
 				char read[4096];
-				ssize_t bytes_received = recv(socket_peer, read, 4096, 0);
+				ssize_t bytes_received = recv(recv_sockets[i], read, 4096, 0);
 				if (1 > bytes_received)
 				{
 					//Socket is destroyed or closed by peer
@@ -954,13 +989,74 @@ void *recvData(void *arg)
 					//delete_socket(recv_sockets[i]);
 					//i--;
 				}
-				else
-				{
-					//TODO: Read requests to control wrappers
-				}
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
+		// If socket to establish new connections is ready
+		if (FD_ISSET(socket_control, &fd_recv_sockets))
+		{
+			//Accept one new socket but more could be ready at this point
+			SOCKET socket = accept(socket_control, NULL, NULL);
+			if (0 > socket)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: Accept returned -1 (%d).\n",
+				 __func__,
+				 errno);
+				assert(0);
+			}
+			//Connection established; write all established sockets in array
+			save_socket(socket, &socket_control_lock, &open_control_sockets_len, &open_control_sockets);
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "Socket: (%d).\n",
+			 socket);
+		}
+
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "open_control_sockets_len %d\n", open_control_sockets_len);
+		for (int i = 0; i < open_control_sockets_len; i++)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "TEST0\n");
+			//Which sockets are ready to read
+			if (FD_ISSET(open_control_sockets[i], &fd_recv_sockets))
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "TEST1\n");
+				char read[4096];
+				ssize_t bytes_received = recv(open_control_sockets[i], read, 4096, 0);
+				if (1 > bytes_received)
+				{
+					CALL_REAL_POSIX_SYNC(fprintf)
+					(stderr,
+					 "TEST2\n");
+					//Socket is destroyed or closed by peer
+					close(open_control_sockets[i]);
+					delete_socket(open_control_sockets[i], &socket_control_lock, &open_control_sockets_len, &open_control_sockets);
+					i--;
+				}
+				else
+				{
+					CALL_REAL_POSIX_SYNC(fprintf)
+					(stderr,
+					 "Socket-Inhalt: ");
+					CALL_REAL_POSIX_SYNC(write)
+					(STDOUT_FILENO, read, bytes_received);
+					CALL_REAL_POSIX_SYNC(fprintf)
+					(stderr,
+					 "\n");
+				}
+			}
+		}
+	}
+	CLOSESOCKET(socket_control);
+	for (int i = 0; i < open_control_sockets_len; i++){
+		CLOSESOCKET(open_control_sockets[i]);
 	}
 	return NULL;
 }
@@ -1204,6 +1300,7 @@ void init_basic()
 
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);
+		pthread_mutex_init(&socket_control_lock, NULL);
 
 		pthread_atfork(NULL, NULL, clear_init);
 
@@ -1579,6 +1676,7 @@ void cleanup()
 
 	pthread_mutex_destroy(&lock);
 	pthread_mutex_destroy(&socket_lock);
+	pthread_mutex_destroy(&socket_control_lock);
 }
 
 #ifndef IO_LIB_STATIC

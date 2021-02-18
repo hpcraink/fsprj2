@@ -36,6 +36,8 @@ set(MAX_STACKTRACE_ENTRY_LENGTH "200" CACHE STRING "max length of single entry i
 set(MAX_MPI_FILE_HINTS "30" CACHE STRING "max number of MPI_Info file hints")
 set(MAX_MPI_FILE_HINT_LENGTH "30" CACHE STRING "max length per MPI_Info file hint (key + value)")
 set(MAX_MPI_IMESSAGES "1000" CACHE STRING "max number of immediate messages that could be processed in MPI_Waitall and MPI_Testall")
+set(PORT_RANGE_MIN "50000" CACHE STRING "begin of port range to control live tracing")
+set(PORT_RANGE_MAX "60000" CACHE STRING "end of port range to control live tracing")
 
 set(STACKTRACE_DEPTH "0" CACHE STRING "stacktrace depth for logging (can be changed during execution with functions from libiotrace.h); value must be lower or equal than MAX_STACKTRACE_DEPTH")
 set(STACKTRACE_DEPTH_VALUES "0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32")

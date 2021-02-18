@@ -1018,6 +1018,8 @@ void init_basic()
 			//Hier Auslesen der Whitelist
 			FILE *stream;
 			char *line = NULL;
+			char *clean_line = NULL;
+			char *end_clean_line = NULL;
 			size_t len = 0;
 			ssize_t nread;
 			stream = CALL_REAL_POSIX_SYNC(fopen)(whitelist, "r");
@@ -1033,11 +1035,31 @@ void init_basic()
 			while ((nread = CALL_REAL_POSIX_SYNC(getline)(&line, &len, stream)) != -1)
 			{
 				size_t byte_count = strlen(line);
+
+				// remove trailing linebreak
 				if (byte_count > 0 && line[byte_count - 1] == '\n')
 				{
 					line[byte_count - 1] = '\0';
 				}
-				activate_event_wrapper(line);
+				clean_line = line;
+
+				// remove leading spaces
+				while(isspace((unsigned char)*clean_line)) {
+					clean_line++;
+				}
+
+				// not a comment and not only spaces
+				if(*clean_line != '#' && *clean_line != '\0')  {
+					end_clean_line = clean_line + strlen(clean_line) - 1;
+
+					// remove trailing spaces
+					while(end_clean_line > clean_line && isspace((unsigned char)*end_clean_line)) {
+						end_clean_line--;
+					}
+					end_clean_line[1] = '\0';
+
+					activate_event_wrapper(clean_line);
+				}
 			}
 
 			free(line);

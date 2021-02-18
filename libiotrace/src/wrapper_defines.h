@@ -11,8 +11,8 @@
 #  define WRAPPER_ACTIVE 0
 #endif
 
-#define WRAPPER_ACTIVATE(cmp_string, function) else if (!strcmp(cmp_string, #function)) { \
-                                                  libio_##function = 1; \
+#define WRAPPER_ACTIVATE(cmp_string, function, toggle) else if (!strcmp(cmp_string, #function)) { \
+                                                  libio_##function = toggle; \
                                                }
 
 #ifdef WITH_POSIX_IO

@@ -34,37 +34,37 @@ char libio_MPI_Waitall = WRAPPER_ACTIVE;
 char libio_MPI_File_delete = WRAPPER_ACTIVE;
 char libio_MPI_File_set_view = WRAPPER_ACTIVE;
 
-char activate_mpi_wrapper(char *line)
+char toggle_mpi_wrapper(char *line, char toggle)
 {
 	char ret = 1;
 
 	if (!strcmp(line, "")) {
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, MPI_File_open)
-	WRAPPER_ACTIVATE(line, MPI_File_write)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite_all)
-	WRAPPER_ACTIVATE(line, MPI_File_write_all)
-	WRAPPER_ACTIVATE(line, MPI_File_read)
-	WRAPPER_ACTIVATE(line, MPI_File_iread)
-	WRAPPER_ACTIVATE(line, MPI_File_iread_all)
-	WRAPPER_ACTIVATE(line, MPI_File_read_all)
-	WRAPPER_ACTIVATE(line, MPI_File_close)
-	WRAPPER_ACTIVATE(line, MPI_File_seek)
-	WRAPPER_ACTIVATE(line, MPI_File_write_at)
-	WRAPPER_ACTIVATE(line, MPI_File_write_at_all)
-	WRAPPER_ACTIVATE(line, MPI_File_read_at)
-	WRAPPER_ACTIVATE(line, MPI_File_read_at_all)
-	WRAPPER_ACTIVATE(line, MPI_File_iread_at)
-	WRAPPER_ACTIVATE(line, MPI_File_iread_at_all)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at_all)
-	WRAPPER_ACTIVATE(line, MPI_File_read_all_begin)
-	WRAPPER_ACTIVATE(line, MPI_Wait)
-	WRAPPER_ACTIVATE(line, MPI_Waitall)
-	WRAPPER_ACTIVATE(line, MPI_File_delete)
-	WRAPPER_ACTIVATE(line, MPI_File_set_view)
+	WRAPPER_ACTIVATE(line, MPI_File_open, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_write, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_write_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_read, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iread, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iread_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_read_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_close, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_seek, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_write_at, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_write_at_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_read_at, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_read_at_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iread_at, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iread_at_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at_all, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_read_all_begin, toggle)
+	WRAPPER_ACTIVATE(line, MPI_Wait, toggle)
+	WRAPPER_ACTIVATE(line, MPI_Waitall, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_delete, toggle)
+	WRAPPER_ACTIVATE(line, MPI_File_set_view, toggle)
 	else
 	{
 		ret = 0;

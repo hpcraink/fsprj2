@@ -117,31 +117,31 @@ void posix_aio_init() {
 }
 #endif
 
-char activate_posix_aio_wrapper(char *line)
+char toggle_posix_aio_wrapper(char *line, toggle)
 {
 	char ret = 1;
 
 	if (!strcmp(line, "")) {
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, aio_read)
-	WRAPPER_ACTIVATE(line, aio_read64)
-	WRAPPER_ACTIVATE(line, aio_write)
-	WRAPPER_ACTIVATE(line, aio_write64)
-	WRAPPER_ACTIVATE(line, lio_listio)
-	WRAPPER_ACTIVATE(line, lio_listio64)
-	WRAPPER_ACTIVATE(line, aio_error)
-	WRAPPER_ACTIVATE(line, aio_error64)
-	WRAPPER_ACTIVATE(line, aio_return)
-	WRAPPER_ACTIVATE(line, aio_return64)
-	WRAPPER_ACTIVATE(line, aio_fsync)
-	WRAPPER_ACTIVATE(line, aio_fsync64)
-	WRAPPER_ACTIVATE(line, aio_suspend)
-	WRAPPER_ACTIVATE(line, aio_suspend64)
-	WRAPPER_ACTIVATE(line, aio_cancel)
-	WRAPPER_ACTIVATE(line, aio_cancel64)
-	WRAPPER_ACTIVATE(line, aio_init)
-	WRAPPER_ACTIVATE(line, shm_open)
+	WRAPPER_ACTIVATE(line, aio_read, toggle)
+	WRAPPER_ACTIVATE(line, aio_read64, toggle)
+	WRAPPER_ACTIVATE(line, aio_write, toggle)
+	WRAPPER_ACTIVATE(line, aio_write64, toggle)
+	WRAPPER_ACTIVATE(line, lio_listio, toggle)
+	WRAPPER_ACTIVATE(line, lio_listio64, toggle)
+	WRAPPER_ACTIVATE(line, aio_error, toggle)
+	WRAPPER_ACTIVATE(line, aio_error64, toggle)
+	WRAPPER_ACTIVATE(line, aio_return, toggle)
+	WRAPPER_ACTIVATE(line, aio_return64, toggle)
+	WRAPPER_ACTIVATE(line, aio_fsync, toggle)
+	WRAPPER_ACTIVATE(line, aio_fsync64, toggle)
+	WRAPPER_ACTIVATE(line, aio_suspend, toggle)
+	WRAPPER_ACTIVATE(line, aio_suspend64, toggle)
+	WRAPPER_ACTIVATE(line, aio_cancel, toggle)
+	WRAPPER_ACTIVATE(line, aio_cancel64, toggle)
+	WRAPPER_ACTIVATE(line, aio_init, toggle)
+	WRAPPER_ACTIVATE(line, shm_open, toggle)
 	else
 	{
 		ret = 0;

@@ -20,15 +20,15 @@ REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlmopen)(Lmid_t lmid, const char *fi
 char libio_dlopen = WRAPPER_ACTIVE;
 char libio_dlmopen = WRAPPER_ACTIVE;
 
-char activate_dl_wrapper(char *line)
+char toggle_dl_wrapper(char *line, char toggle)
 {
 	char ret = 1;
 
 	if (!strcmp(line, "")) {
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, dlopen)
-	WRAPPER_ACTIVATE(line, dlmopen)
+	WRAPPER_ACTIVATE(line, dlopen, toggle)
+	WRAPPER_ACTIVATE(line, dlmopen, toggle)
 	else
 	{
 		ret = 0;

@@ -324,7 +324,7 @@ void event_init()
 }
 #endif
 
-void activate_event_wrapper(char *line)
+void toggle_event_wrapper(char *line, char toggle)
 {
 	char ret = 1;
 
@@ -332,17 +332,17 @@ void activate_event_wrapper(char *line)
 	{
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, execve)
-	WRAPPER_ACTIVATE(line, execv)
-	WRAPPER_ACTIVATE(line, execl)
-	WRAPPER_ACTIVATE(line, execvp)
-	WRAPPER_ACTIVATE(line, execlp)
-	WRAPPER_ACTIVATE(line, execvpe)
-	WRAPPER_ACTIVATE(line, execlp)
-	WRAPPER_ACTIVATE(line, execle)
-	WRAPPER_ACTIVATE(line, _exit)
-	WRAPPER_ACTIVATE(line, _Exit)
-	WRAPPER_ACTIVATE(line, exit_group)
+	WRAPPER_ACTIVATE(line, execve, toggle)
+	WRAPPER_ACTIVATE(line, execv, toggle)
+	WRAPPER_ACTIVATE(line, execl, toggle)
+	WRAPPER_ACTIVATE(line, execvp, toggle)
+	WRAPPER_ACTIVATE(line, execlp, toggle)
+	WRAPPER_ACTIVATE(line, execvpe, toggle)
+	WRAPPER_ACTIVATE(line, execlp, toggle)
+	WRAPPER_ACTIVATE(line, execle, toggle)
+	WRAPPER_ACTIVATE(line, _exit, toggle)
+	WRAPPER_ACTIVATE(line, _Exit, toggle)
+	WRAPPER_ACTIVATE(line, exit_group, toggle)
 	else
 	{
 		ret = 0;
@@ -350,25 +350,25 @@ void activate_event_wrapper(char *line)
 #ifdef WITH_POSIX_IO
 	if (!ret)
 	{
-		ret = activate_posix_wrapper(line);
+		ret = toggle_posix_wrapper(line, toggle);
 	}
 #endif
 #ifdef WITH_MPI_IO
 	if (!ret)
 	{
-		ret = activate_mpi_wrapper(line);
+		ret = toggle_mpi_wrapper(line, toggle);
 	}
 #endif
 #ifdef WITH_POSIX_AIO
 	if (!ret)
 	{
-		ret = activate_posix_aio_wrapper(line);
+		ret = toggle_posix_aio_wrapper(line, toggle);
 	}
 #endif
 #ifdef WITH_DL_IO
 	if (!ret)
 	{
-		ret = activate_dl_wrapper(line);
+		ret = toggle_dl_wrapper(line, toggle);
 	}
 #endif
 }
@@ -1050,12 +1050,43 @@ void *recvData(void *arg)
 					CALL_REAL_POSIX_SYNC(fprintf)
 					(stderr,
 					 "\n");
+
+					if (bytes_received > 7 && read[0] == 'P' && read[1] == 'O' && read[2] == 'S' && read[3] == 'T' && read[4] == ' ' && read[5] == '/')
+					{
+						int i;
+						for (i = 6; i < bytes_received; i++)
+						{
+							if (read[i] == '/')
+							{
+								break;
+							}
+						}
+						if (i != bytes_received)
+						{
+							read[i] = '\0';
+							if (read[i + 1] == '1')
+							{
+								toggle_event_wrapper(read + 6, 1);
+								CALL_REAL_POSIX_SYNC(fprintf)
+								(stderr,
+								 "Wrapper toggled: %s, 1\n", read+6);
+							}
+							else
+							{
+								toggle_event_wrapper(read + 6, 0);
+								CALL_REAL_POSIX_SYNC(fprintf)
+								(stderr,
+								 "Wrapper toggled: %s, 0\n", read+6);
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 	CLOSESOCKET(socket_control);
-	for (int i = 0; i < open_control_sockets_len; i++){
+	for (int i = 0; i < open_control_sockets_len; i++)
+	{
 		CLOSESOCKET(open_control_sockets[i]);
 	}
 	return NULL;
@@ -1260,7 +1291,7 @@ void init_basic()
 					}
 					end_clean_line[1] = '\0';
 
-					activate_event_wrapper(clean_line);
+					toggle_event_wrapper(clean_line, 1);
 				}
 			}
 

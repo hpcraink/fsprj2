@@ -486,7 +486,7 @@ REAL_TYPE int REAL(clone)(int (*fn)(void *), void *child_stack, int flags, void 
 #ifndef IO_LIB_STATIC
 void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
-char activate_posix_wrapper(char *line);
+char toggle_posix_wrapper(char *line, char toggle);
 
 END_C_DECLS
 

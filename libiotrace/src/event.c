@@ -837,17 +837,86 @@ void init_on_load()
 
 int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 {
+
 	if (parser->method == HTTP_POST)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "BEGIN URL: ");
-		CALL_REAL_POSIX_SYNC(write)
-		(STDERR_FILENO, at, length);
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "\n");
+		char *slash1 = NULL;
+		char *slash2 = NULL;
+		slash1 = (char *)memchr(at, '/', length);
+		slash2 = (char *)memrchr(at, '/', length);
+		if (slash1 != NULL && slash1 != slash2 && at + length - 1 == slash2 + 1)
+		{
+			char functionname[slash2 - slash1];
+			strncpy(functionname, slash1 + 1, slash2 - slash1 - 1);
+			functionname[slash2 - slash1 - 1] = '\0';
+			if (at[length - 1] == '1')
+			{
+				toggle_event_wrapper(functionname, 1);
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "Wrapper toggled: %s, 1\n", functionname);
+			}
+			else
+			{
+				toggle_event_wrapper(functionname, 0);
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "Wrapper toggled: %s, 0\n", functionname);
+			}
+			char message_200[] = "HTTP/1.1 200 OK\n\n\n";
+			size_t bytes_to_send = strlen(message_200);
+			char* message_to_send = message_200;
+
+			while (bytes_to_send > 0)
+			{
+				int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
+
+				if (-1 == bytes_sent)
+				{
+					if (errno == EWOULDBLOCK || errno == EAGAIN)
+					{
+						CALL_REAL_POSIX_SYNC(fprintf)
+						(stderr,
+						 "Send buffer is full. Please increase your limit. Data is lost.\n");
+					}
+					else
+					{
+
+						CALL_REAL_POSIX_SYNC(fprintf)
+						(stderr,
+						 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
+						assert(0);
+					}
+				}
+				else
+				{
+					if (bytes_sent < bytes_to_send)
+					{
+						bytes_to_send -= bytes_sent;
+						message_to_send += bytes_sent;
+					}
+					else
+					{
+						bytes_to_send = 0;
+					}
+				}
+			}
+		}
+		else
+		{
+			//malformed URL
+		}
 	}
+
+	// switch (parser->method)
+	// {
+	// case HTTP_POST:int x = 5;
+	// 	break;
+	// case HTTP_GET:
+	// 	break;
+	// default:
+	// 	break;
+	// }
 
 	return 0;
 }
@@ -1062,42 +1131,13 @@ void *recvData(void *arg)
 				}
 				else
 				{
+					socket_peer = open_control_sockets[i];
 					enum llhttp_errno err = llhttp_execute(&parser, read, bytes_received);
 					if (err != HPE_OK)
 					{
 						CALL_REAL_POSIX_SYNC(fprintf)
 						(stderr, "Parse error: %s %s\n", llhttp_errno_name(err),
 						 parser.reason);
-					}
-
-					if (bytes_received > 7 && read[0] == 'P' && read[1] == 'O' && read[2] == 'S' && read[3] == 'T' && read[4] == ' ' && read[5] == '/')
-					{
-						int i;
-						for (i = 6; i < bytes_received; i++)
-						{
-							if (read[i] == '/')
-							{
-								break;
-							}
-						}
-						if (i != bytes_received)
-						{
-							read[i] = '\0';
-							if (read[i + 1] == '1')
-							{
-								toggle_event_wrapper(read + 6, 1);
-								CALL_REAL_POSIX_SYNC(fprintf)
-								(stderr,
-								 "Wrapper toggled: %s, 1\n", read + 6);
-							}
-							else
-							{
-								toggle_event_wrapper(read + 6, 0);
-								CALL_REAL_POSIX_SYNC(fprintf)
-								(stderr,
-								 "Wrapper toggled: %s, 0\n", read + 6);
-							}
-						}
 					}
 				}
 			}
@@ -1568,13 +1608,13 @@ void pushData(struct basic *data)
 
 	while (bytes_to_send > 0)
 	{
-		u_int64_t starttime = gettime();
+		//u_int64_t starttime = gettime();
 		int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
-		starttime = gettime() - starttime;
+		//starttime = gettime() - starttime;
 
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "Send time: %lu\n", starttime);
+		// CALL_REAL_POSIX_SYNC(fprintf)
+		// (stderr,
+		//  "Send time: %lu\n", starttime);
 
 		if (-1 == bytes_sent)
 		{

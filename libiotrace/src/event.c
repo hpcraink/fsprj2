@@ -27,8 +27,6 @@
 
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 //##################
 #include <assert.h>
@@ -56,6 +54,8 @@
 #include <fcntl.h>
 
 #include <execinfo.h>
+
+#include "llhttp/llhttp.h"
 
 #include "os.h"
 #include "event.h"
@@ -835,8 +835,37 @@ void init_on_load()
 #endif
 }
 
+int my_url_callback(llhttp_t *parser, const char *at, size_t length)
+{
+	if (parser->method == HTTP_POST)
+	{
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "BEGIN URL: ");
+		CALL_REAL_POSIX_SYNC(write)
+		(STDERR_FILENO, at, length);
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "\n");
+	}
+
+	return 0;
+}
+
 void *recvData(void *arg)
 {
+
+	llhttp_t parser;
+	llhttp_settings_t settings;
+
+	/* Initialize user callbacks and settings */
+	llhttp_settings_init(&settings);
+
+	/* Set user callback */
+	settings.on_url = my_url_callback;
+
+	llhttp_init(&parser, HTTP_BOTH, &settings);
+
 	//Open Socket to receive control information
 	struct sockaddr_in addr;
 	socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
@@ -1008,33 +1037,24 @@ void *recvData(void *arg)
 			}
 			//Connection established; write all established sockets in array
 			save_socket(socket, &socket_control_lock, &open_control_sockets_len, &open_control_sockets);
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "Socket: (%d).\n",
-			 socket);
+			// CALL_REAL_POSIX_SYNC(fprintf)
+			// (stderr,
+			//  "Socket: (%d).\n",
+			//  socket);
 		}
 
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "open_control_sockets_len %d\n", open_control_sockets_len);
+		// CALL_REAL_POSIX_SYNC(fprintf)
+		// (stderr,
+		//  "open_control_sockets_len %d\n", open_control_sockets_len);
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "TEST0\n");
 			//Which sockets are ready to read
 			if (FD_ISSET(open_control_sockets[i], &fd_recv_sockets))
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "TEST1\n");
 				char read[4096];
 				ssize_t bytes_received = recv(open_control_sockets[i], read, 4096, 0);
 				if (1 > bytes_received)
 				{
-					CALL_REAL_POSIX_SYNC(fprintf)
-					(stderr,
-					 "TEST2\n");
 					//Socket is destroyed or closed by peer
 					close(open_control_sockets[i]);
 					delete_socket(open_control_sockets[i], &socket_control_lock, &open_control_sockets_len, &open_control_sockets);
@@ -1042,14 +1062,13 @@ void *recvData(void *arg)
 				}
 				else
 				{
-					CALL_REAL_POSIX_SYNC(fprintf)
-					(stderr,
-					 "Socket-Inhalt: ");
-					CALL_REAL_POSIX_SYNC(write)
-					(STDOUT_FILENO, read, bytes_received);
-					CALL_REAL_POSIX_SYNC(fprintf)
-					(stderr,
-					 "\n");
+					enum llhttp_errno err = llhttp_execute(&parser, read, bytes_received);
+					if (err != HPE_OK)
+					{
+						CALL_REAL_POSIX_SYNC(fprintf)
+						(stderr, "Parse error: %s %s\n", llhttp_errno_name(err),
+						 parser.reason);
+					}
 
 					if (bytes_received > 7 && read[0] == 'P' && read[1] == 'O' && read[2] == 'S' && read[3] == 'T' && read[4] == ' ' && read[5] == '/')
 					{
@@ -1069,14 +1088,14 @@ void *recvData(void *arg)
 								toggle_event_wrapper(read + 6, 1);
 								CALL_REAL_POSIX_SYNC(fprintf)
 								(stderr,
-								 "Wrapper toggled: %s, 1\n", read+6);
+								 "Wrapper toggled: %s, 1\n", read + 6);
 							}
 							else
 							{
 								toggle_event_wrapper(read + 6, 0);
 								CALL_REAL_POSIX_SYNC(fprintf)
 								(stderr,
-								 "Wrapper toggled: %s, 0\n", read+6);
+								 "Wrapper toggled: %s, 0\n", read + 6);
 							}
 						}
 					}
@@ -1549,8 +1568,14 @@ void pushData(struct basic *data)
 
 	while (bytes_to_send > 0)
 	{
-
+		u_int64_t starttime = gettime();
 		int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
+		starttime = gettime() - starttime;
+
+		CALL_REAL_POSIX_SYNC(fprintf)
+		(stderr,
+		 "Send time: %lu\n", starttime);
+
 		if (-1 == bytes_sent)
 		{
 			if (errno == EWOULDBLOCK || errno == EAGAIN)

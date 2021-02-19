@@ -178,6 +178,9 @@ check_symbol_exists(HOST_NAME_MAX "limits.h" HAVE_HOST_NAME_MAX)
 set(SOURCE
     event.c
     init.c
+    llhttp/api.c
+    llhttp/http.c
+    llhttp/llhttp.c
     os.c
 )
 

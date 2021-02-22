@@ -6,7 +6,7 @@
 #undef WRAPPER_NAME
 
 #if WRAPPER_NAME_TO_SOURCE == WRAPPER_NAME_TO_JSON_STRUCT
-#define WRAPPER_NAME(function_name) JSON_STRUCT_INT(function_name)
+#define WRAPPER_NAME(function_name) JSON_STRUCT_CHAR(function_name)
 
 #elif WRAPPER_NAME_TO_SOURCE == WRAPPER_NAME_TO_VARIABLE
 #define WRAPPER_NAME(function_name) active_wrapper_status.function_name = WRAPPER_ACTIVE;

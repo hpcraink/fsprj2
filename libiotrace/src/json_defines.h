@@ -113,6 +113,7 @@
 #undef JSON_STRUCT_ARRAY_BITFIELD
 #undef JSON_STRUCT_ENUM
 #undef JSON_STRUCT_INT
+#undef JSON_STRUCT_CHAR
 #undef JSON_STRUCT_PID_T
 #undef JSON_STRUCT_CSTRING
 #undef JSON_STRUCT_CSTRING_P
@@ -170,6 +171,7 @@
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name) struct type name;
 #  define JSON_STRUCT_ENUM(type, name) enum type name;
 #  define JSON_STRUCT_INT(name) int name;
+#  define JSON_STRUCT_CHAR(name) char name;
 #  define JSON_STRUCT_PID_T(name) pid_t name;
 #  define JSON_STRUCT_CSTRING(name, length) char name[length];
 #  define JSON_STRUCT_CSTRING_P(name, max_length) char *name;
@@ -433,6 +435,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name) JSON_STRUCT_TYPE(name, json_struct_print_array_##type)
 #  define JSON_STRUCT_ENUM(type, name) JSON_STRUCT_TYPE(name, json_struct_print_enum_##type)
 #  define JSON_STRUCT_INT(name) JSON_STRUCT_ELEMENT(name, %d, json_struct_data->name)
+#  define JSON_STRUCT_CHAR(name) JSON_STRUCT_ELEMENT(name, %d, json_struct_data->name)
 #  define JSON_STRUCT_PID_T(name) JSON_STRUCT_ELEMENT(name, %u, json_struct_data->name)
 #  define JSON_STRUCT_CSTRING(name, length) JSON_STRUCT_ESCAPE(name)
 #  define JSON_STRUCT_CSTRING_P(name, max_length) JSON_STRUCT_ESCAPE(name)
@@ -622,6 +625,8 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_ENUM(type, name) JSON_STRUCT_ELEMENT_SIZE(name, json_struct_max_size_enum_##type())
 #  define JSON_STRUCT_INT(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(int) \
                                                                + 1) /* for sign (-) */
+#  define JSON_STRUCT_CHAR(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(int) \
+                                                                + 1) /* for sign (-) */
 #  define JSON_STRUCT_PID_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(pid_t))
 #  define JSON_STRUCT_CSTRING(name,length) JSON_STRUCT_ELEMENT_SIZE(name, (length - 1) /* -1 trailing null character */ \
                                                                           * 6  /* *6 for escaping (\u00ff) */ \
@@ -747,6 +752,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)
 #  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_CHAR(name)
 #  define JSON_STRUCT_PID_T(name)
 #  define JSON_STRUCT_CSTRING(name, length)
 #  define JSON_STRUCT_CSTRING_P(name, max_length) if (NULL != json_struct_data->name) { \
@@ -890,6 +896,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)
 #  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_CHAR(name)
 #  define JSON_STRUCT_PID_T(name)
 #  define JSON_STRUCT_CSTRING(name, length)
 #  define JSON_STRUCT_CSTRING_P(name, max_length) if (NULL != json_struct_data->name) { \
@@ -1058,6 +1065,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)
 #  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_CHAR(name)
 #  define JSON_STRUCT_PID_T(name)
 #  define JSON_STRUCT_CSTRING(name, length)
 #  define JSON_STRUCT_CSTRING_P(name, max_length)
@@ -1142,6 +1150,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)
 #  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_CHAR(name)
 #  define JSON_STRUCT_PID_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(pid_t))
 #  define JSON_STRUCT_CSTRING(name, length) JSON_STRUCT_ELEMENT_SIZE(name, length + 2) /* +2 for "" in Strings --> Influx 2.X */
 #  define JSON_STRUCT_CSTRING_P(name, max_length)
@@ -1252,6 +1261,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)
 #  define JSON_STRUCT_ENUM(type, name)
 #  define JSON_STRUCT_INT(name)
+#  define JSON_STRUCT_CHAR(name)
 #  define JSON_STRUCT_PID_T(name) JSON_STRUCT_ELEMENT(name, %u, json_struct_data->name)
 #  define JSON_STRUCT_CSTRING(name, length) JSON_STRUCT_ELEMENT(name, "%s", json_struct_data->name)
 #  define JSON_STRUCT_CSTRING_P(name, max_length)

@@ -757,6 +757,8 @@ void clear_init()
 	tid = -1;
 	recv_sockets = NULL;
 	recv_sockets_len = 0;
+	open_control_sockets = NULL;
+	open_control_sockets_len = 0;
 }
 
 void open_std_fd(int fd)

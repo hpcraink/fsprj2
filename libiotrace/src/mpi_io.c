@@ -8,63 +8,71 @@
 #include "wrapper_defines.h"
 #include "mpi.h"
 
+#include "wrapper_name.h"
 
-char libio_MPI_File_open = WRAPPER_ACTIVE;
-char libio_MPI_File_write = WRAPPER_ACTIVE;
-char libio_MPI_File_iwrite = WRAPPER_ACTIVE;
-char libio_MPI_File_iwrite_all = WRAPPER_ACTIVE;
-char libio_MPI_File_write_all = WRAPPER_ACTIVE;
-char libio_MPI_File_read = WRAPPER_ACTIVE;
-char libio_MPI_File_iread = WRAPPER_ACTIVE;
-char libio_MPI_File_iread_all = WRAPPER_ACTIVE;
-char libio_MPI_File_read_all = WRAPPER_ACTIVE;
-char libio_MPI_File_close = WRAPPER_ACTIVE;
-char libio_MPI_File_seek = WRAPPER_ACTIVE;
-char libio_MPI_File_write_at = WRAPPER_ACTIVE;
-char libio_MPI_File_write_at_all = WRAPPER_ACTIVE;
-char libio_MPI_File_read_at = WRAPPER_ACTIVE;
-char libio_MPI_File_read_at_all = WRAPPER_ACTIVE;
-char libio_MPI_File_iread_at = WRAPPER_ACTIVE;
-char libio_MPI_File_iread_at_all = WRAPPER_ACTIVE;
-char libio_MPI_File_iwrite_at = WRAPPER_ACTIVE;
-char libio_MPI_File_iwrite_at_all = WRAPPER_ACTIVE;
-char libio_MPI_File_read_all_begin = WRAPPER_ACTIVE;
-char libio_MPI_Wait = WRAPPER_ACTIVE;
-char libio_MPI_Waitall = WRAPPER_ACTIVE;
-char libio_MPI_File_delete = WRAPPER_ACTIVE;
-char libio_MPI_File_set_view = WRAPPER_ACTIVE;
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "mpi_io_wrapper.h"
+// char libio_MPI_File_open = WRAPPER_ACTIVE;
+// char libio_MPI_File_write = WRAPPER_ACTIVE;
+// char libio_MPI_File_iwrite = WRAPPER_ACTIVE;
+// char libio_MPI_File_iwrite_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_write_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_read = WRAPPER_ACTIVE;
+// char libio_MPI_File_iread = WRAPPER_ACTIVE;
+// char libio_MPI_File_iread_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_read_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_close = WRAPPER_ACTIVE;
+// char libio_MPI_File_seek = WRAPPER_ACTIVE;
+// char libio_MPI_File_write_at = WRAPPER_ACTIVE;
+// char libio_MPI_File_write_at_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_read_at = WRAPPER_ACTIVE;
+// char libio_MPI_File_read_at_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_iread_at = WRAPPER_ACTIVE;
+// char libio_MPI_File_iread_at_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_iwrite_at = WRAPPER_ACTIVE;
+// char libio_MPI_File_iwrite_at_all = WRAPPER_ACTIVE;
+// char libio_MPI_File_read_all_begin = WRAPPER_ACTIVE;
+// char libio_MPI_Wait = WRAPPER_ACTIVE;
+// char libio_MPI_Waitall = WRAPPER_ACTIVE;
+// char libio_MPI_File_delete = WRAPPER_ACTIVE;
+// char libio_MPI_File_set_view = WRAPPER_ACTIVE;
 
 char toggle_mpi_wrapper(char *line, char toggle)
 {
 	char ret = 1;
 
-	if (!strcmp(line, "")) {
+	if (!strcmp(line, ""))
+	{
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, MPI_File_open, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_write, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_write_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_read, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iread, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iread_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_read_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_close, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_seek, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_write_at, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_write_at_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_read_at, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_read_at_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iread_at, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iread_at_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_iwrite_at_all, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_read_all_begin, toggle)
-	WRAPPER_ACTIVATE(line, MPI_Wait, toggle)
-	WRAPPER_ACTIVATE(line, MPI_Waitall, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_delete, toggle)
-	WRAPPER_ACTIVATE(line, MPI_File_set_view, toggle)
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
+#include "mpi_io_wrapper.h"
+	// WRAPPER_ACTIVATE(line, MPI_File_open, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_write, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iwrite, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iwrite_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_write_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_read, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iread, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iread_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_read_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_close, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_seek, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_write_at, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_write_at_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_read_at, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_read_at_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iread_at, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iread_at_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iwrite_at, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_iwrite_at_all, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_read_all_begin, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_Wait, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_Waitall, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_delete, toggle)
+	// WRAPPER_ACTIVATE(line, MPI_File_set_view, toggle)
 	else
 	{
 		ret = 0;
@@ -623,7 +631,6 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 	struct positioning_function positioning_function_data;
 	MPI_Offset absolute_offset;
 	MPI_Offset view_offset;
-	
 
 	WRAP_MPI_START(data)
 
@@ -647,13 +654,13 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 	else
 	{
 		data.return_state = ok;
-		if (end_of_file == positioning_function_data.relative_to) {
+		if (end_of_file == positioning_function_data.relative_to)
+		{
 			// ToDo: file lock over MPI_File_seek; get_position; get_byte_offset
 			MPI_File_get_position(fh, &view_offset);
 			MPI_File_get_byte_offset(fh, view_offset, &absolute_offset);
 			positioning_function_data.offset = absolute_offset;
 		}
-
 	}
 
 	WRAP_MPI_END(data, MPI_File_seek)
@@ -1260,8 +1267,8 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 	return ret;
 }
 
-
-int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, const char *datarep, MPI_Info info){
+int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, const char *datarep, MPI_Info info)
+{
 
 	int ret;
 	struct basic data;
@@ -1294,7 +1301,4 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
 
 	WRAP_MPI_END(data, MPI_File_set_view)
 	return ret;
-
-
-
 }

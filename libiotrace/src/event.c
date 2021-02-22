@@ -63,6 +63,8 @@
 #include "libiotrace.h"
 #include "json_include_function.h"
 
+#include "wrapper_name.h"
+
 /* defines for exec-functions */
 #ifndef MAX_EXEC_ARRAY_LENGTH
 #define MAX_EXEC_ARRAY_LENGTH 1000
@@ -198,16 +200,19 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #endif
 #endif
 
-char libio_execve = WRAPPER_ACTIVE;
-char libio_execv = WRAPPER_ACTIVE;
-char libio_execl = WRAPPER_ACTIVE;
-char libio_execvp = WRAPPER_ACTIVE;
-char libio_execlp = WRAPPER_ACTIVE;
-char libio_execvpe = WRAPPER_ACTIVE;
-char libio_execle = WRAPPER_ACTIVE;
-char libio__exit = WRAPPER_ACTIVE;
-char libio__Exit = WRAPPER_ACTIVE;
-char libio_exit_group = WRAPPER_ACTIVE;
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "event_wrapper.h"
+// char libio_execve = WRAPPER_ACTIVE;
+// char libio_execv = WRAPPER_ACTIVE;
+// char libio_execl = WRAPPER_ACTIVE;
+// char libio_execvp = WRAPPER_ACTIVE;
+// char libio_execlp = WRAPPER_ACTIVE;
+// char libio_execvpe = WRAPPER_ACTIVE;
+// char libio_execle = WRAPPER_ACTIVE;
+// char libio__exit = WRAPPER_ACTIVE;
+// char libio__Exit = WRAPPER_ACTIVE;
+// char libio_exit_group = WRAPPER_ACTIVE;
 
 void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
@@ -332,17 +337,21 @@ void toggle_event_wrapper(char *line, char toggle)
 	{
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, execve, toggle)
-	WRAPPER_ACTIVATE(line, execv, toggle)
-	WRAPPER_ACTIVATE(line, execl, toggle)
-	WRAPPER_ACTIVATE(line, execvp, toggle)
-	WRAPPER_ACTIVATE(line, execlp, toggle)
-	WRAPPER_ACTIVATE(line, execvpe, toggle)
-	WRAPPER_ACTIVATE(line, execlp, toggle)
-	WRAPPER_ACTIVATE(line, execle, toggle)
-	WRAPPER_ACTIVATE(line, _exit, toggle)
-	WRAPPER_ACTIVATE(line, _Exit, toggle)
-	WRAPPER_ACTIVATE(line, exit_group, toggle)
+
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
+#include "event_wrapper.h"
+	// WRAPPER_ACTIVATE(line, execve, toggle)
+	// WRAPPER_ACTIVATE(line, execv, toggle)
+	// WRAPPER_ACTIVATE(line, execl, toggle)
+	// WRAPPER_ACTIVATE(line, execvp, toggle)
+	// WRAPPER_ACTIVATE(line, execlp, toggle)
+	// WRAPPER_ACTIVATE(line, execvpe, toggle)
+	// WRAPPER_ACTIVATE(line, execlp, toggle)
+	// WRAPPER_ACTIVATE(line, execle, toggle)
+	// WRAPPER_ACTIVATE(line, _exit, toggle)
+	// WRAPPER_ACTIVATE(line, _Exit, toggle)
+	// WRAPPER_ACTIVATE(line, exit_group, toggle)
 	else
 	{
 		ret = 0;
@@ -865,7 +874,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			}
 			char message_200[] = "HTTP/1.1 200 OK\n\n\n";
 			size_t bytes_to_send = strlen(message_200);
-			char* message_to_send = message_200;
+			char *message_to_send = message_200;
 
 			while (bytes_to_send > 0)
 			{

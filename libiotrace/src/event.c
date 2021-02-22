@@ -63,6 +63,7 @@
 #include "libiotrace.h"
 #include "json_include_function.h"
 
+#undef WRAPPER_NAME_TO_SOURCE
 #include "wrapper_name.h"
 
 /* defines for exec-functions */
@@ -200,9 +201,7 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #endif
 #endif
 
-#undef WRAPPER_NAME_TO_SOURCE
-#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
-#include "event_wrapper.h"
+struct wrapper_status active_wrapper_status;
 // char libio_execve = WRAPPER_ACTIVE;
 // char libio_execv = WRAPPER_ACTIVE;
 // char libio_execl = WRAPPER_ACTIVE;
@@ -223,7 +222,7 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 	if (NULL == ret)
 	{
 		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr, "realloc() failed. (%d)\n", ret);
+		(stderr, "realloc() failed.\n");
 		free(*array);
 		assert(0);
 	}
@@ -254,7 +253,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 		else if (NULL == ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "realloc() failed. (%d)\n", ret);
+			(stderr, "realloc() failed.\n");
 			free(*array);
 			assert(0);
 		}
@@ -285,7 +284,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 		else if (NULL == ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "realloc() failed. (%d)\n", ret);
+			(stderr, "realloc() failed.\n");
 			free(*array);
 			assert(0);
 		}
@@ -916,16 +915,63 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			//malformed URL
 		}
 	}
+	else if (parser->method == HTTP_GET)
+	{
+		char message[400 + json_struct_max_size_wrapper_status() + 1];
 
-	// switch (parser->method)
-	// {
-	// case HTTP_POST:int x = 5;
-	// 	break;
-	// case HTTP_GET:
-	// 	break;
-	// default:
-	// 	break;
-	// }
+		//buffer fuer body
+		char buf[json_struct_max_size_wrapper_status() + 1];
+		int ret = json_struct_print_wrapper_status(buf, sizeof(buf), &active_wrapper_status);
+		//buf[strlen(buf) - 1] = '\0'; /*remove last comma*/
+
+		if (0 > ret)
+		{
+			CALL_REAL_POSIX_SYNC(fprintf)
+			(stderr,
+			 "In function %s: json_struct_print_wrapper_status() returned %d.\n", __func__, ret);
+			assert(0);
+		}
+
+		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
+
+		char *message_to_send = message;
+		size_t bytes_to_send = strlen(message);
+
+		while (bytes_to_send > 0)
+		{
+			int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
+
+			if (-1 == bytes_sent)
+			{
+				if (errno == EWOULDBLOCK || errno == EAGAIN)
+				{
+					CALL_REAL_POSIX_SYNC(fprintf)
+					(stderr,
+					 "Send buffer is full. Please increase your limit. Data is lost.\n");
+				}
+				else
+				{
+
+					CALL_REAL_POSIX_SYNC(fprintf)
+					(stderr,
+					 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
+					assert(0);
+				}
+			}
+			else
+			{
+				if (bytes_sent < bytes_to_send)
+				{
+					bytes_to_send -= bytes_sent;
+					message_to_send += bytes_sent;
+				}
+				else
+				{
+					bytes_to_send = 0;
+				}
+			}
+		}
+	}
 
 	return 0;
 }
@@ -1170,6 +1216,16 @@ void init_basic()
 	{
 		pos = data_buffer;
 		count_basic = 0;
+
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "event_wrapper.h"
+
+#ifdef WITH_MPI_IO
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "mpi_io_wrapper.h"
+#endif
 
 #if !defined(IO_LIB_STATIC)
 		init_wrapper();

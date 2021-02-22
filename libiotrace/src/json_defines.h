@@ -1238,15 +1238,15 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_STRUCT_ARRAY(type, name, max_length)
 
 #  define JSON_STRUCT_STRUCT_P(type, name)
-#  define JSON_STRUCT_STRUCT(type, name) char prefix_new [strlen(prefix) + sizeof(#name) +1]; /*+1 weil _ als Trennzeichen*/\
+#  define JSON_STRUCT_STRUCT(type, name) char prefix_new_##name [strlen(prefix) + sizeof(#name) +1]; /*+1 weil _ als Trennzeichen*/\
                                          if(*prefix == '\0') { \
-                                           snprintf(prefix_new, sizeof(prefix_new),"%s", #name);\
+                                           snprintf(prefix_new_##name, sizeof(prefix_new_##name),"%s", #name);\
                                          } else { \
-                                           snprintf(prefix_new, sizeof(prefix_new),"%s_%s", prefix, #name);\
+                                           snprintf(prefix_new_##name, sizeof(prefix_new_##name),"%s_%s", prefix, #name);\
                                          }\
                                          json_struct_ret = json_struct_push_##type(json_struct_buf, \
                                                              json_struct_size, \
-                                                             &(json_struct_data->name), prefix_new); \
+                                                             &(json_struct_data->name), prefix_new_##name); \
                                          json_struct_buf += json_struct_ret;  /* set pointer to end of written characters */ \
                                          json_struct_size -= json_struct_ret; /* resize buffer size */
 #  define JSON_STRUCT_ARRAY_BITFIELD(type, name)

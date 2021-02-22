@@ -10,9 +10,6 @@
 
 #include "wrapper_name.h"
 
-#undef WRAPPER_NAME_TO_SOURCE
-#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
-#include "mpi_io_wrapper.h"
 // char libio_MPI_File_open = WRAPPER_ACTIVE;
 // char libio_MPI_File_write = WRAPPER_ACTIVE;
 // char libio_MPI_File_iwrite = WRAPPER_ACTIVE;

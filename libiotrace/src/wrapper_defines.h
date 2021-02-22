@@ -12,7 +12,7 @@
 #endif
 
 #define WRAPPER_ACTIVATE(cmp_string, function, toggle) else if (!strcmp(cmp_string, #function)) { \
-                                                  libio_##function = toggle; \
+                                                  active_wrapper_status.function = toggle; \
                                                }
 
 #ifdef WITH_POSIX_IO
@@ -179,7 +179,7 @@
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
-                            if(libio_##functionname){ \
+                            if(active_wrapper_status.functionname){ \
                               pushData(&data); \
                               writeData(&data); \
                             } \
@@ -188,7 +188,7 @@
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
-                         if(libio_##functionname){ \
+                         if(active_wrapper_status.functionname){ \
                            pushData(&data); \
                            writeData(&data); \
                          } \
@@ -196,7 +196,7 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
-                           if(libio_##functionname){ \
+                           if(active_wrapper_status.functionname){ \
                              pushData(&data); \
                              writeData(&data); \
                            } \

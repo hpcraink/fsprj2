@@ -10,15 +10,14 @@
 #include "wrapper_defines.h"
 #include "dl_io.h"
 
+#include "wrapper_name.h"
+
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlopen)(const char *filename, int flags) REAL_DEFINITION_INIT;
 #ifdef HAVE_DLMOPEN
 REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlmopen)(Lmid_t lmid, const char *filename, int flags) REAL_DEFINITION_INIT;
 #endif
 #endif
-
-char libio_dlopen = WRAPPER_ACTIVE;
-char libio_dlmopen = WRAPPER_ACTIVE;
 
 char toggle_dl_wrapper(char *line, char toggle)
 {
@@ -27,8 +26,9 @@ char toggle_dl_wrapper(char *line, char toggle)
 	if (!strcmp(line, "")) {
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, dlopen, toggle)
-	WRAPPER_ACTIVATE(line, dlmopen, toggle)
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
+#include "dl_io_wrapper.h"
 	else
 	{
 		ret = 0;
@@ -42,10 +42,9 @@ char dl_io_init_done = 0;
 void dl_io_init() {
 	if (!dl_io_init_done) {
 
-		DLSYM(dlopen);
-#ifdef HAVE_DLMOPEN
-		DLSYM(dlmopen);
-#endif
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_DLSYM
+#include "dl_io_wrapper.h"
 
 		dl_io_init_done = 1;
 	}

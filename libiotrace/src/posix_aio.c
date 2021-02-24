@@ -11,6 +11,8 @@
 #include "wrapper_defines.h"
 #include "posix_aio.h"
 
+#include "wrapper_name.h"
+
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(aio_read)(struct aiocb *aiocbp) REAL_DEFINITION_INIT;
 #ifdef HAVE_AIO_READ64
@@ -50,67 +52,15 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(aio_init)(const struct aioinit *init) 
 REAL_DEFINITION_TYPE int REAL_DEFINITION(shm_open)(const char *name, int oflag, mode_t mode) REAL_DEFINITION_INIT;
 #endif
 
-char libio_aio_read = WRAPPER_ACTIVE;
-char libio_aio_read64 = WRAPPER_ACTIVE;
-char libio_aio_write = WRAPPER_ACTIVE;
-char libio_aio_write64 = WRAPPER_ACTIVE;
-char libio_lio_listio = WRAPPER_ACTIVE;
-char libio_lio_listio64 = WRAPPER_ACTIVE;
-char libio_aio_error = WRAPPER_ACTIVE;
-char libio_aio_error64 = WRAPPER_ACTIVE;
-char libio_aio_return = WRAPPER_ACTIVE;
-char libio_aio_return64 = WRAPPER_ACTIVE;
-char libio_aio_fsync = WRAPPER_ACTIVE;
-char libio_aio_fsync64 = WRAPPER_ACTIVE;
-char libio_aio_suspend = WRAPPER_ACTIVE;
-char libio_aio_suspend64 = WRAPPER_ACTIVE;
-char libio_aio_cancel = WRAPPER_ACTIVE;
-char libio_aio_cancel64 = WRAPPER_ACTIVE;
-char libio_aio_init = WRAPPER_ACTIVE;
-char libio_shm_open = WRAPPER_ACTIVE;
-
 #ifndef IO_LIB_STATIC
 char posix_aio_init_done = 0;
 /* Initialize pointers for glibc functions. */
 void posix_aio_init() {
 	if (!posix_aio_init_done) {
 
-		DLSYM(aio_read);
-#ifdef HAVE_AIO_READ64
-		DLSYM(aio_read64);
-#endif
-		DLSYM(aio_write);
-#ifdef HAVE_AIO_WRITE64
-		DLSYM(aio_write64);
-#endif
-		DLSYM(lio_listio);
-#ifdef HAVE_AIO_LIO_LISTIO64
-		DLSYM(lio_listio64);
-#endif
-		DLSYM(aio_error);
-#ifdef HAVE_AIO_ERROR64
-		DLSYM(aio_error64);
-#endif
-		DLSYM(aio_return);
-#ifdef HAVE_AIO_RETURN64
-		DLSYM(aio_return64);
-#endif
-		DLSYM(aio_fsync);
-#ifdef HAVE_AIO_FSYNC64
-		DLSYM(aio_fsync64);
-#endif
-		DLSYM(aio_suspend);
-#ifdef HAVE_AIO_SUSPEND64
-		DLSYM(aio_suspend64);
-#endif
-		DLSYM(aio_cancel);
-#ifdef HAVE_AIO_CANCEL64
-		DLSYM(aio_cancel64);
-#endif
-#ifdef HAVE_AIO_INIT
-		DLSYM(aio_init);
-#endif
-		DLSYM(shm_open);
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_DLSYM
+#include "posix_aio_wrapper.h"
 
 		posix_aio_init_done = 1;
 	}
@@ -124,24 +74,9 @@ char toggle_posix_aio_wrapper(char *line, toggle)
 	if (!strcmp(line, "")) {
 		ret = 0;
 	}
-	WRAPPER_ACTIVATE(line, aio_read, toggle)
-	WRAPPER_ACTIVATE(line, aio_read64, toggle)
-	WRAPPER_ACTIVATE(line, aio_write, toggle)
-	WRAPPER_ACTIVATE(line, aio_write64, toggle)
-	WRAPPER_ACTIVATE(line, lio_listio, toggle)
-	WRAPPER_ACTIVATE(line, lio_listio64, toggle)
-	WRAPPER_ACTIVATE(line, aio_error, toggle)
-	WRAPPER_ACTIVATE(line, aio_error64, toggle)
-	WRAPPER_ACTIVATE(line, aio_return, toggle)
-	WRAPPER_ACTIVATE(line, aio_return64, toggle)
-	WRAPPER_ACTIVATE(line, aio_fsync, toggle)
-	WRAPPER_ACTIVATE(line, aio_fsync64, toggle)
-	WRAPPER_ACTIVATE(line, aio_suspend, toggle)
-	WRAPPER_ACTIVATE(line, aio_suspend64, toggle)
-	WRAPPER_ACTIVATE(line, aio_cancel, toggle)
-	WRAPPER_ACTIVATE(line, aio_cancel64, toggle)
-	WRAPPER_ACTIVATE(line, aio_init, toggle)
-	WRAPPER_ACTIVATE(line, shm_open, toggle)
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
+#include "posix_aio_wrapper.h"
 	else
 	{
 		ret = 0;

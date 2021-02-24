@@ -1044,9 +1044,16 @@ JSON_STRUCT_START(wrapper_status)
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_JSON_STRUCT
 #include "event_wrapper.h"
+#ifdef WITH_POSIX_IO
+#include "posix_io_wrapper.h"
+#endif
+#ifdef WITH_MPI_AIO
+#include "posix_aio_wrapper.h"
+#endif
+#ifdef WITH_DL_IO
+#include "dl_io_wrapper.h"
+#endif
 #ifdef WITH_MPI_IO
-#undef WRAPPER_NAME_TO_SOURCE
-#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_JSON_STRUCT
 #include "mpi_io_wrapper.h"
 #endif
 JSON_STRUCT_END

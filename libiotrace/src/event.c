@@ -135,7 +135,6 @@ static int host_name_max;
 /* Mutex */
 static pthread_mutex_t lock;
 static pthread_mutex_t socket_lock;
-static pthread_mutex_t socket_control_lock;
 
 /* environment variables */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
@@ -216,7 +215,11 @@ struct wrapper_status active_wrapper_status;
 void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
-	pthread_mutex_lock(lock);
+
+	if (NULL != lock) {
+		pthread_mutex_lock(lock);
+	}
+
 	(*len)++;
 	ret = realloc(*array, sizeof(SOCKET) * (*len));
 	if (NULL == ret)
@@ -228,15 +231,20 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 	}
 	*array = ret;
 	(*array)[*len - 1] = socket;
-	pthread_mutex_unlock(lock);
+
+	if (NULL != lock) {
+		pthread_mutex_unlock(lock);
+	}
 }
 
-//Attention: Function not thread-safe
-//Should only be used inside of block guarded by mutex 'socket_lock'
 void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
-	pthread_mutex_lock(lock);
+
+	if (NULL != lock) {
+		pthread_mutex_lock(lock);
+	}
+
 	(*len)--;
 	if ((*array)[*len] == socket)
 	{
@@ -293,7 +301,10 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 			*array = ret;
 		}
 	}
-	pthread_mutex_unlock(lock);
+
+	if (NULL != lock) {
+		pthread_mutex_unlock(lock);
+	}
 }
 
 #ifndef IO_LIB_STATIC
@@ -845,6 +856,45 @@ void init_on_load()
 #endif
 }
 
+void send_data(const char* message, SOCKET socket) {
+	size_t bytes_to_send = strlen(message);
+	const char *message_to_send = message;
+
+	while (bytes_to_send > 0)
+	{
+		int bytes_sent = send(socket, message_to_send, bytes_to_send, 0);
+
+		if (-1 == bytes_sent)
+		{
+			if (errno == EWOULDBLOCK || errno == EAGAIN)
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "Send buffer is full. Please increase your limit.\n");
+			}
+			else
+			{
+				CALL_REAL_POSIX_SYNC(fprintf)
+				(stderr,
+				 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
+				assert(0);
+			}
+		}
+		else
+		{
+			if (bytes_sent < bytes_to_send)
+			{
+				bytes_to_send -= bytes_sent;
+				message_to_send += bytes_sent;
+			}
+			else
+			{
+				bytes_to_send = 0;
+			}
+		}
+	}
+}
+
 int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 {
 
@@ -862,70 +912,31 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			if (at[length - 1] == '1')
 			{
 				toggle_event_wrapper(functionname, 1);
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "Wrapper toggled: %s, 1\n", functionname);
+//				CALL_REAL_POSIX_SYNC(fprintf)
+//				(stderr,
+//				 "Wrapper toggled: %s, 1\n", functionname);
 			}
 			else
 			{
 				toggle_event_wrapper(functionname, 0);
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "Wrapper toggled: %s, 0\n", functionname);
+//				CALL_REAL_POSIX_SYNC(fprintf)
+//				(stderr,
+//				 "Wrapper toggled: %s, 0\n", functionname);
 			}
-			char message_200[] = "HTTP/1.1 200 OK\n\n\n";
-			size_t bytes_to_send = strlen(message_200);
-			char *message_to_send = message_200;
-
-			while (bytes_to_send > 0)
-			{
-				int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
-
-				if (-1 == bytes_sent)
-				{
-					if (errno == EWOULDBLOCK || errno == EAGAIN)
-					{
-						CALL_REAL_POSIX_SYNC(fprintf)
-						(stderr,
-						 "Send buffer is full. Please increase your limit. Data is lost.\n");
-					}
-					else
-					{
-
-						CALL_REAL_POSIX_SYNC(fprintf)
-						(stderr,
-						 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
-						assert(0);
-					}
-				}
-				else
-				{
-					if (bytes_sent < bytes_to_send)
-					{
-						bytes_to_send -= bytes_sent;
-						message_to_send += bytes_sent;
-					}
-					else
-					{
-						bytes_to_send = 0;
-					}
-				}
-			}
+			send_data("HTTP/1.1 204 No Content\n\n\n", socket_peer);
 		}
 		else
 		{
-			//malformed URL
+			send_data("HTTP/1.1 400 Bad Request\n\n\n", socket_peer);
 		}
 	}
 	else if (parser->method == HTTP_GET)
 	{
 		char message[400 + json_struct_max_size_wrapper_status() + 1];
 
-		//buffer fuer body
+		// buffer for body
 		char buf[json_struct_max_size_wrapper_status() + 1];
 		int ret = json_struct_print_wrapper_status(buf, sizeof(buf), &active_wrapper_status);
-		//buf[strlen(buf) - 1] = '\0'; /*remove last comma*/
-
 		if (0 > ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
@@ -936,43 +947,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 
 		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
 
-		char *message_to_send = message;
-		size_t bytes_to_send = strlen(message);
-
-		while (bytes_to_send > 0)
-		{
-			int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
-
-			if (-1 == bytes_sent)
-			{
-				if (errno == EWOULDBLOCK || errno == EAGAIN)
-				{
-					CALL_REAL_POSIX_SYNC(fprintf)
-					(stderr,
-					 "Send buffer is full. Please increase your limit. Data is lost.\n");
-				}
-				else
-				{
-
-					CALL_REAL_POSIX_SYNC(fprintf)
-					(stderr,
-					 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
-					assert(0);
-				}
-			}
-			else
-			{
-				if (bytes_sent < bytes_to_send)
-				{
-					bytes_to_send -= bytes_sent;
-					message_to_send += bytes_sent;
-				}
-				else
-				{
-					bytes_to_send = 0;
-				}
-			}
-		}
+		send_data(message, socket_peer);
 	}
 
 	return 0;
@@ -992,7 +967,7 @@ void *recvData(void *arg)
 
 	llhttp_init(&parser, HTTP_BOTH, &settings);
 
-	//Open Socket to receive control information
+	// Open Socket to receive control information
 	struct sockaddr_in addr;
 	socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
 	if (socket_control < 0)
@@ -1005,14 +980,14 @@ void *recvData(void *arg)
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	//Look up free ports in specific range
+	// Look up free ports in specific range and bind socket to free port
 	int i;
 	for (i = PORT_RANGE_MIN; i <= PORT_RANGE_MAX; i++)
 	{
 		addr.sin_port = htons(i);
 		if (!CALL_REAL_POSIX_SYNC(bind)(socket_control, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)))
 		{
-			//Write PORT and IP for control commands
+			//Write PORT and IP for control commands to file
 			struct ifreq ifreqs[20];
 			struct ifconf ic;
 
@@ -1073,7 +1048,7 @@ void *recvData(void *arg)
 		assert(0);
 	}
 
-	//Listen to socket
+	// Listen to socket
 	int ret = listen(socket_control, 10);
 	if (0 > ret)
 	{
@@ -1086,7 +1061,7 @@ void *recvData(void *arg)
 	}
 	// Now wait for connection in select below
 
-	//Read messages from influx and read control messages
+	// Read responses from influxdb and read control messages
 	while (!event_cleanup_done)
 	{
 		fd_set fd_recv_sockets;
@@ -1119,7 +1094,7 @@ void *recvData(void *arg)
 		}
 
 		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, NULL);
-		//Select: At least one socket is ready to be processed
+		// Select: At least one socket is ready to be processed
 		if (-1 == ret)
 		{
 			CALL_REAL_POSIX_SYNC(fprintf)
@@ -1129,6 +1104,8 @@ void *recvData(void *arg)
 			 errno);
 			break;
 		}
+
+		// receive responses from influxdb
 		pthread_mutex_lock(&socket_lock);
 		for (int i = 0; i < recv_sockets_len; i++)
 		{
@@ -1147,6 +1124,7 @@ void *recvData(void *arg)
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
+
 		// If socket to establish new connections is ready
 		if (FD_ISSET(socket_control, &fd_recv_sockets))
 		{
@@ -1162,16 +1140,14 @@ void *recvData(void *arg)
 				assert(0);
 			}
 			//Connection established; write all established sockets in array
-			save_socket(socket, &socket_control_lock, &open_control_sockets_len, &open_control_sockets);
+			save_socket(socket, NULL, &open_control_sockets_len, &open_control_sockets);
 			// CALL_REAL_POSIX_SYNC(fprintf)
 			// (stderr,
 			//  "Socket: (%d).\n",
 			//  socket);
 		}
 
-		// CALL_REAL_POSIX_SYNC(fprintf)
-		// (stderr,
-		//  "open_control_sockets_len %d\n", open_control_sockets_len);
+		// receive control requests
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
 			//Which sockets are ready to read
@@ -1183,7 +1159,7 @@ void *recvData(void *arg)
 				{
 					//Socket is destroyed or closed by peer
 					close(open_control_sockets[i]);
-					delete_socket(open_control_sockets[i], &socket_control_lock, &open_control_sockets_len, &open_control_sockets);
+					delete_socket(open_control_sockets[i], NULL, &open_control_sockets_len, &open_control_sockets);
 					i--;
 				}
 				else
@@ -1457,7 +1433,6 @@ void init_basic()
 
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);
-		pthread_mutex_init(&socket_control_lock, NULL);
 
 		pthread_atfork(NULL, NULL, clear_init);
 
@@ -1631,13 +1606,12 @@ void pushData(struct basic *data)
 	{
 		return;
 	}
-	//printf("Ich lauf rein\n");
-	//riesen buffer fuer alles
 
+	//buffer all (header + body)
 	char message[400 + json_struct_push_max_size_basic(0) + 1];
 
-	//buffer fuer body
-	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character   Funktion wird von Markos gebaut   Groesse vom Body zum senden*/
+	//buffer for body
+	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character (function build by macros; gives length of body to send) */
 	int ret = json_struct_push_basic(buf, sizeof(buf), data, "");
 	buf[strlen(buf) - 1] = '\0'; /*remove last comma*/
 
@@ -1648,7 +1622,7 @@ void pushData(struct basic *data)
 		 "In function %s: json_struct_push_basic() returned %d.\n", __func__, ret);
 		assert(0);
 	}
-	//printf("Testlauf 1\n");
+
 	char labels[200];
 	char short_log_name[50];
 	strncpy(short_log_name, log_name, sizeof(short_log_name));
@@ -1661,65 +1635,8 @@ void pushData(struct basic *data)
 	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=hsebucket&precision=ns&org=hse HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
 									   "Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
 			 influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
-	//printf("Testlauf 2\n");
 
-	// CALL_REAL_POSIX_SYNC(fprintf)
-	// 		(stderr,
-	// 		 "Socket: %d\n", socket_peer);
-	// CALL_REAL_POSIX_SYNC(fprintf)
-	// (stderr,
-	//  "Message content: %s\n", message);
-
-	char *message_to_send = message;
-	size_t bytes_to_send = strlen(message);
-
-	while (bytes_to_send > 0)
-	{
-		//u_int64_t starttime = gettime();
-		int bytes_sent = send(socket_peer, message_to_send, bytes_to_send, 0);
-		//starttime = gettime() - starttime;
-
-		// CALL_REAL_POSIX_SYNC(fprintf)
-		// (stderr,
-		//  "Send time: %lu\n", starttime);
-
-		if (-1 == bytes_sent)
-		{
-			if (errno == EWOULDBLOCK || errno == EAGAIN)
-			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "Send buffer is full. Please increase your limit. Data is lost.\n");
-			}
-			else
-			{
-
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
-				assert(0);
-			}
-		}
-		else
-		{
-			if (bytes_sent < bytes_to_send)
-			{
-				// CALL_REAL_POSIX_SYNC(fprintf)
-				// (stderr,
-				//  "Seems that send doesn't return enough bytes.....\n");
-				// CALL_REAL_POSIX_SYNC(fflush)
-				// (stderr);
-				bytes_to_send -= bytes_sent;
-				message_to_send += bytes_sent;
-			}
-			else
-			{
-				bytes_to_send = 0;
-			}
-		}
-		//printf("errno:%d\n", errno);
-		//printf("Sent %d bytes.\n", bytes_sent);
-	}
+	send_data(message, socket_peer);
 }
 
 void writeData(struct basic *data)
@@ -1839,7 +1756,6 @@ void cleanup()
 
 	pthread_mutex_destroy(&lock);
 	pthread_mutex_destroy(&socket_lock);
-	pthread_mutex_destroy(&socket_control_lock);
 }
 
 #ifndef IO_LIB_STATIC

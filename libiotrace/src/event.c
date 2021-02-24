@@ -70,6 +70,7 @@
 #define MAX_EXEC_ARRAY_LENGTH 1000
 #endif
 
+/* defines for influxdb connection */
 #ifndef MAX_INFLUX_TOKEN
 #define MAX_INFLUX_TOKEN 200
 #endif
@@ -82,6 +83,7 @@
 #define MAX_DATABASE_PORT 200
 #endif
 
+/* defines for control connection */
 #ifndef PORT_RANGE_MIN
 #define PORT_RANGE_MIN 50000
 #endif
@@ -372,7 +374,7 @@ void init_wrapper()
 }
 #endif
 
-//Create socket per thread
+// Create socket per thread
 void prepare_socket()
 {
 #ifdef WITH_POSIX_IO
@@ -529,7 +531,16 @@ int libiotrace_get_stacktrace_depth()
 	return stacktrace_depth;
 }
 
-void get_filesystem()
+/**
+ * Prints the filesystem to a file.
+ *
+ * The file is given in the global variable #filesystem_log_name which is
+ * set from environment variable #env_log_name. Each mount point is printed
+ * on a new line. The printed line shows the device, the mount point, the
+ * file-system type and the mount options, the dump frequency in days and
+ * the mount passno as a json object.
+ */
+void print_filesystem()
 {
 	FILE *file;
 #ifdef HAVE_GETMNTENT_R
@@ -673,7 +684,15 @@ void get_file_id_by_path(const char *filename, struct file_id *data)
 	data->inode_nr = stat_data.st_ino;
 }
 
-void get_directories()
+/**
+ * Prints the working dir of the actual process to a file.
+ *
+ * The file is given in the global variable #working_dir_log_name which is
+ * set from environment variable #env_log_name. The working dir is printed
+ * on a new line. The printed line shows the working dir, a timestamp, the
+ * hostname and the process id as a json object.
+ */
+void print_working_directory()
 {
 	char buf_working_dir[json_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
 	struct working_dir working_dir_data;
@@ -725,7 +744,14 @@ void get_directories()
 	(fd);
 }
 
-void clear_init()
+/**
+ * Reset values in forked process before forked process starts.
+ *
+ * If a process forks another process the new process is a copy of the old
+ * process. The copy inherits all values from the old process. Some values
+ * are only valid for the old process. These values must be reset.
+ */
+void reset_values_in_forked_process()
 {
 	init_done = 0;
 	tid = -1;
@@ -802,7 +828,7 @@ void init_on_load()
 
 	WRAPPER_TIME_START(data)
 
-	init_basic();
+	init_process();
 
 #ifdef LOG_WRAPPER_TIME
 	get_basic(&data);
@@ -875,16 +901,10 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			if (at[length - 1] == '1')
 			{
 				toggle_event_wrapper(functionname, 1);
-//				CALL_REAL_POSIX_SYNC(fprintf)
-//				(stderr,
-//				 "Wrapper toggled: %s, 1\n", functionname);
 			}
 			else
 			{
 				toggle_event_wrapper(functionname, 0);
-//				CALL_REAL_POSIX_SYNC(fprintf)
-//				(stderr,
-//				 "Wrapper toggled: %s, 0\n", functionname);
 			}
 			send_data("HTTP/1.1 204 No Content\n\n\n", socket_peer);
 		}
@@ -911,6 +931,10 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
 
 		send_data(message, socket_peer);
+	}
+	else
+	{
+		send_data("HTTP/1.1 405 Method Not Allowed\n\n\n", socket_peer);
 	}
 
 	return 0;
@@ -1127,13 +1151,14 @@ void *recvData(void *arg)
 				}
 				else
 				{
-					socket_peer = open_control_sockets[i];
+					socket_peer = open_control_sockets[i]; // is needed by callback => must be set before llhttp_execute()
 					enum llhttp_errno err = llhttp_execute(&parser, read, bytes_received);
 					if (err != HPE_OK)
 					{
-						CALL_REAL_POSIX_SYNC(fprintf)
-						(stderr, "Parse error: %s %s\n", llhttp_errno_name(err),
-						 parser.reason);
+						const char* errno_text = llhttp_errno_name(err);
+						snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request\nContent-Length: %ld\nContent-Type: application/json\n\n%s: %s",
+								strlen(errno_text) + 2 + strlen(parser.reason), errno_text, parser.reason);
+						send_data(read, socket_peer);
 					}
 				}
 			}
@@ -1148,7 +1173,7 @@ void *recvData(void *arg)
 }
 
 char init_done = 0;
-void init_basic()
+void init_process()
 {
 	char *log;
 	int length;
@@ -1397,10 +1422,10 @@ void init_basic()
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);
 
-		pthread_atfork(NULL, NULL, clear_init);
+		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
 
-		get_filesystem();
-		get_directories();
+		print_filesystem();
+		print_working_directory();
 
 #ifdef WITH_STD_IO
 		open_std_fd(STDIN_FILENO);
@@ -1485,13 +1510,17 @@ void get_stacktrace(struct basic *data)
 	}
 }
 
+void init_thread() {
+	tid = iotrace_gettid();
+	prepare_socket();
+}
+
 void get_basic(struct basic *data)
 {
 	// lock write on tid
 	if (tid == -1)
 	{
-		tid = iotrace_gettid();
-		prepare_socket();
+		init_thread();
 	}
 
 	data->process_id = pid;

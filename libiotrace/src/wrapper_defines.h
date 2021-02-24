@@ -147,16 +147,16 @@
                          errno_data.errno_value = errno; \
                          WRAPPER_TIME_START(data) \
                          if (!init_done) { \
-                             init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-                                           /* init_basic() must be called first */ \
+                             init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                               /* init_process() must be called first */ \
                          }
 #define WRAP_MPI_START(data) int errno_value; \
                              struct errno_detail errno_data; \
                              errno_value = errno; \
                              WRAPPER_TIME_START(data) \
                              if (!init_done) { \
-                                 init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-                                               /* init_basic() must be called first */ \
+                                 init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                                 /* init_process() must be called first */ \
                              }
 //ToDo: use kcmp() with KCMP_FILE as type to check if file descriptor is STDIN_FILENO, STDOUT_FILENO or STDERR_FILENO
 //kcmp() is linux-specific! But without kcmp() a duped descriptor will not be recognized! That will lead to problems by following analysis of written data!

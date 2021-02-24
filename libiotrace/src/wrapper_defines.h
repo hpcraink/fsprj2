@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <dlfcn.h>
+#include "error.h"
 #include "json_include_struct.h"
 
 #ifdef ALL_WRAPPERS_ACTIVE
@@ -26,7 +27,9 @@
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
                                  __real_##function = dlsym(RTLD_NEXT, #function); \
                                  char * dlsym_dlerror_##function = dlerror(); \
-                                 assert(NULL == dlsym_dlerror_##function); \
+                                 if (NULL != dlsym_dlerror_##function) { \
+                                     LIBIOTRACE_ERROR("dlsym error (%s)", dlsym_dlerror_##function); \
+                                 } \
                                } while (0)
 #else
 #  error "Function dlsym without macro _GNU_SOURCE not usable!"

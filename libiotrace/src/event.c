@@ -29,7 +29,6 @@
 #include <net/if.h>
 
 //##################
-#include <assert.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -54,6 +53,8 @@
 #include <fcntl.h>
 
 #include <execinfo.h>
+
+#include "error.h"
 
 #include "llhttp/llhttp.h"
 
@@ -215,10 +216,8 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 	ret = realloc(*array, sizeof(SOCKET) * (*len));
 	if (NULL == ret)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr, "realloc() failed.\n");
 		free(*array);
-		assert(0);
+		LIBIOTRACE_ERROR("realloc() failed");
 	}
 	*array = ret;
 	(*array)[*len - 1] = socket;
@@ -251,10 +250,8 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 		}
 		else if (NULL == ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "realloc() failed.\n");
 			free(*array);
-			assert(0);
+			LIBIOTRACE_ERROR("realloc() failed");
 		}
 		else
 		{
@@ -282,10 +279,8 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 		}
 		else if (NULL == ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "realloc() failed.\n");
 			free(*array);
-			assert(0);
+			LIBIOTRACE_ERROR("realloc() failed");
 		}
 		else
 		{
@@ -566,21 +561,14 @@ void print_filesystem()
 		}
 		else
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: open() returned %d.\n", __func__, fd);
-			assert(0);
+			LIBIOTRACE_ERROR("open() returned %d", fd);
 		}
 	}
 
 	file = setmntent("/proc/mounts", "r");
 	if (NULL == file)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: setmntent() returned NULL with errno=%d.\n",
-		 __func__, errno);
-		assert(0);
+		LIBIOTRACE_ERROR("setmntent() returned NULL with errno=%d", errno);
 	}
 
 #ifdef HAVE_GETMNTENT_R
@@ -594,11 +582,7 @@ void print_filesystem()
 		ret = strlen(filesystem_entry_ptr->mnt_dir);
 		if (MAXFILENAME < ret + 4)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: getmntent() returned mnt_dir too long (%d bytes) for buffer.\n",
-			 __func__, ret);
-			assert(0);
+			LIBIOTRACE_ERROR("getmntent() returned mnt_dir too long (%d bytes) for buffer", ret);
 		}
 		strcpy(mount_point, filesystem_entry_ptr->mnt_dir);
 		// get mounted directory, not the mount point in parent filesystem
@@ -624,11 +608,7 @@ void print_filesystem()
 		ret = dprintf(fd, "%s\n", buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 		if (0 > ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: dprintf() returned %d with errno=%d.\n",
-			 __func__, ret, errno);
-			assert(0);
+			LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret, errno);
 		}
 	}
 
@@ -653,11 +633,7 @@ void get_file_id(int fd, struct file_id *data)
 		ret = fstat(fd, &stat_data);
 		if (0 > ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: fstat() returned %d with errno=%d.\n",
-			 __func__, ret, errno);
-			assert(0);
+			LIBIOTRACE_ERROR("fstat() returned %d with errno=%d", ret, errno);
 		}
 
 		data->device_id = stat_data.st_dev;
@@ -673,11 +649,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data)
 	ret = stat(filename, &stat_data);
 	if (0 > ret)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: stat() returned %d with errno=%d.\n", __func__,
-		 ret, errno);
-		assert(0);
+		LIBIOTRACE_ERROR("stat() returned %d with errno=%d", ret, errno);
 	}
 
 	data->device_id = stat_data.st_dev;
@@ -704,11 +676,7 @@ void print_working_directory()
 	ret = getcwd(cwd, sizeof(cwd));
 	if (NULL == ret)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: getcwd() returned NULL with errno=%d.\n",
-		 __func__, errno);
-		assert(0);
+		LIBIOTRACE_ERROR("getcwd() returned NULL with errno=%d", errno);
 	}
 
 	working_dir_data.time = gettime();
@@ -721,11 +689,7 @@ void print_working_directory()
 									S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: open() of file %s returned %d.\n", __func__,
-		 working_dir_log_name, fd);
-		assert(0);
+		LIBIOTRACE_ERROR("open() of file %s returned %d", working_dir_log_name, fd);
 	}
 
 	json_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
@@ -733,11 +697,7 @@ void print_working_directory()
 	ret_int = dprintf(fd, "%s\n", buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 	if (0 > ret_int)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: dprintf() returned %d with errno=%d.\n",
-		 __func__, ret_int, errno);
-		assert(0);
+		LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret_int, errno);
 	}
 
 	CALL_REAL_POSIX_SYNC(close)
@@ -863,10 +823,7 @@ void send_data(const char* message, SOCKET socket) {
 			}
 			else
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: send() returned %d, errno: %d.\n", __func__, bytes_sent, errno);
-				assert(0);
+				LIBIOTRACE_ERROR("send() returned %d, errno: %d", bytes_sent, errno);
 			}
 		}
 		else
@@ -922,10 +879,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 		int ret = json_struct_print_wrapper_status(buf, sizeof(buf), &active_wrapper_status);
 		if (0 > ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: json_struct_print_wrapper_status() returned %d.\n", __func__, ret);
-			assert(0);
+			LIBIOTRACE_ERROR("json_struct_print_wrapper_status() returned %d", ret);
 		}
 
 		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
@@ -959,10 +913,7 @@ void *recvData(void *arg)
 	socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
 	if (socket_control < 0)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "Could not open socket (%d).\n", errno);
-		assert(0);
+		LIBIOTRACE_ERROR("could not open socket, errno %d", errno);
 	}
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -983,13 +934,7 @@ void *recvData(void *arg)
 
 			if (ioctl(socket_control, SIOCGIFCONF, &ic) < 0)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: ioctl returned -1 (%d).\n",
-				 __func__,
-				 errno);
-				perror("SIOCGIFCONF");
-				assert(0);
+				LIBIOTRACE_ERROR("ioctl returned -1, errno %d", errno);
 			}
 
 			int fd = CALL_REAL_POSIX_SYNC(open)(control_log_name,
@@ -997,11 +942,7 @@ void *recvData(void *arg)
 												S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 			if (-1 == fd)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: open() of file %s returned %d.\n", __func__,
-				 control_log_name, fd);
-				assert(0);
+				LIBIOTRACE_ERROR("open() of file %s returned %d", control_log_name, fd);
 			}
 
 			for (int l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
@@ -1011,11 +952,7 @@ void *recvData(void *arg)
 
 				if (0 > ret)
 				{
-					CALL_REAL_POSIX_SYNC(fprintf)
-					(stderr,
-					 "In function %s: dprintf() returned %d with errno=%d.\n",
-					 __func__, ret, errno);
-					assert(0);
+					LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret, errno);
 				}
 			}
 
@@ -1027,24 +964,18 @@ void *recvData(void *arg)
 	}
 	if (i > PORT_RANGE_MAX)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "Unable to bind socket.\n");
 		CALL_REAL_POSIX_SYNC(close)
-		(socket_control);
-		assert(0);
+				(socket_control);
+		LIBIOTRACE_ERROR("unable to bind socket");
 	}
 
 	// Listen to socket
 	int ret = listen(socket_control, 10);
 	if (0 > ret)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "Unable to listen to socket (%d).\n", errno);
 		CALL_REAL_POSIX_SYNC(close)
-		(socket_control);
-		assert(0);
+				(socket_control);
+		LIBIOTRACE_ERROR("unable to listen to socket, errno=%d", errno);
 	}
 	// Now wait for connection in select below
 
@@ -1119,19 +1050,10 @@ void *recvData(void *arg)
 			SOCKET socket = accept(socket_control, NULL, NULL);
 			if (0 > socket)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: Accept returned -1 (%d).\n",
-				 __func__,
-				 errno);
-				assert(0);
+				LIBIOTRACE_ERROR("accept returned -1, errno=%d", errno);
 			}
 			//Connection established; write all established sockets in array
 			save_socket(socket, NULL, &open_control_sockets_len, &open_control_sockets);
-			// CALL_REAL_POSIX_SYNC(fprintf)
-			// (stderr,
-			//  "Socket: (%d).\n",
-			//  socket);
 		}
 
 		// receive control requests
@@ -1207,20 +1129,12 @@ void init_process()
 		log = getenv(env_log_name);
 		if (NULL == log)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: function getenv(\"%s\") returned NULL.\n",
-			 __func__, env_log_name);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_log_name);
 		}
 		length = strlen(log);
 		if (MAXFILENAME < length + 17 + strlen(hostname))
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
-			 __func__, env_log_name, length);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_log_name, length);
 		}
 		strcpy(log_name, log);
 		strcpy(filesystem_log_name, log);
@@ -1242,20 +1156,12 @@ void init_process()
 		log = getenv(env_influx_token);
 		if (NULL == log)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: function getenv(\"%s\") returned NULL.\n",
-			 __func__, env_influx_token);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_influx_token);
 		}
 		length = strlen(log);
 		if (MAX_INFLUX_TOKEN < length)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
-			 __func__, env_influx_token, length);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_influx_token, length);
 		}
 		strcpy(influx_token, log);
 
@@ -1269,20 +1175,12 @@ void init_process()
 		log = getenv(env_database_ip);
 		if (NULL == log)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: function getenv(\"%s\") returned NULL.\n",
-			 __func__, env_database_ip);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_database_ip);
 		}
 		length = strlen(log);
 		if (MAX_DATABASE_IP < length)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
-			 __func__, env_database_ip, length);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_database_ip, length);
 		}
 		strcpy(database_ip, log);
 
@@ -1295,20 +1193,12 @@ void init_process()
 		log = getenv(env_database_port);
 		if (NULL == log)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: function getenv(\"%s\") returned NULL.\n",
-			 __func__, env_database_port);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_database_port);
 		}
 		length = strlen(log);
 		if (MAX_DATABASE_IP < length)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
-			 __func__, env_database_port, length);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_database_port, length);
 		}
 		strcpy(database_port, log);
 #ifndef IO_LIB_STATIC
@@ -1323,11 +1213,7 @@ void init_process()
 			length = strlen(log);
 			if (MAXFILENAME < length)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: getenv() returned %s too long (%d bytes) for buffer.\n",
-				 __func__, env_wrapper_whitelist, length);
-				assert(0);
+				LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_wrapper_whitelist, length);
 			}
 			strcpy(whitelist, log);
 #ifndef IO_LIB_STATIC
@@ -1345,11 +1231,7 @@ void init_process()
 			stream = CALL_REAL_POSIX_SYNC(fopen)(whitelist, "r");
 			if (stream == NULL)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: fopen() failed (ERRNO: %d)\n",
-				 __func__, errno);
-				assert(0);
+				LIBIOTRACE_ERROR("fopen() failed, errno=%d", errno);
 			}
 
 			while ((nread = CALL_REAL_POSIX_SYNC(getline)(&line, &len, stream)) != -1)
@@ -1391,17 +1273,16 @@ void init_process()
 		}
 
 #ifndef IO_LIB_STATIC
-
 		log = getenv(env_ld_preload);
 		if (NULL == log)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: function getenv(\"%s\") returned NULL.\n",
-			 __func__, env_ld_preload);
-			assert(0);
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_ld_preload);
 		}
 		length = strlen(env_ld_preload);
+		if (MAXFILENAME < length)
+		{
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_ld_preload, length);
+		}
 		strcpy(ld_preload, env_ld_preload);
 		strcpy(ld_preload + length, "=");
 		strcpy(ld_preload + length + 1, log);
@@ -1411,10 +1292,7 @@ void init_process()
 		int errret = sysinfo(&info);
 		if (errret != 0)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: sysinfo() returned %d.\n", __func__, errret);
-			assert(0);
+			LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
 		}
 		time_t current_time = time(NULL);
 		system_start_time = (current_time - info.uptime) * 1000000000;
@@ -1459,19 +1337,13 @@ void get_stacktrace(struct basic *data)
 
 	if (NULL == trace)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: malloc() returned NULL.\n", __func__);
-		assert(0);
+		LIBIOTRACE_ERROR("malloc() returned NULL");
 	}
 
 	size = backtrace(trace, stacktrace_depth + 3);
 	if (0 >= size)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: backtrace() returned %d.\n", __func__, size);
-		assert(0);
+		LIBIOTRACE_ERROR("backtrace() returned %d", size);
 	}
 
 	if (stacktrace_ptr)
@@ -1489,11 +1361,7 @@ void get_stacktrace(struct basic *data)
 		messages = backtrace_symbols(trace, size);
 		if (NULL == messages)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: backtrace_symbols() returned NULL with errno=%d.\n",
-			 __func__, errno);
-			assert(0);
+			LIBIOTRACE_ERROR("backtrace_symbols() returned NULL with errno=%d", errno);
 		}
 
 		JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace_symbols,
@@ -1560,11 +1428,7 @@ void printData()
 									S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: open() of file %s returned %d.\n", __func__,
-		 log_name, fd);
-		assert(0);
+		LIBIOTRACE_ERROR("open() of file %s returned %d", log_name, fd);
 	}
 
 	for (int i = 0; i < count_basic; i++)
@@ -1575,10 +1439,7 @@ void printData()
 		ret = dprintf(fd, "%s\n", buf);						   //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 		if (0 > ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: dprintf() returned %d.\n", __func__, ret);
-			assert(0);
+			LIBIOTRACE_ERROR("dprintf() returned %d", ret);
 		}
 		ret = json_struct_sizeof_basic(data);
 
@@ -1609,10 +1470,7 @@ void pushData(struct basic *data)
 
 	if (0 > ret)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: json_struct_push_basic() returned %d.\n", __func__, ret);
-		assert(0);
+		LIBIOTRACE_ERROR("json_struct_push_basic() returned %d", ret);
 	}
 
 	char labels[200];
@@ -1653,12 +1511,8 @@ void writeData(struct basic *data)
 	}
 	if (pos + length > endpos)
 	{
-		// ToDo: solve circular dependency
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: buffer (%ld bytes) not big enough for even one struct basic (%d bytes).\n",
-		 __func__, sizeof(data_buffer), length);
-		assert(0);
+		// ToDo: solve circular dependency of fprintf
+		LIBIOTRACE_ERROR("buffer (%ld bytes) not big enough for even one struct basic (%d bytes)", sizeof(data_buffer), length);
 	}
 
 #ifdef LOG_WRAPPER_TIME
@@ -1777,24 +1631,14 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 
 	if (!envp_null)
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr,
-		 "In function %s: envp[] has more elements then buffer (%d).\n",
-		 func,
-		 MAX_EXEC_ARRAY_LENGTH);
-		assert(0);
+		LIBIOTRACE_ERROR("envp[] has more elements then buffer (%d)", MAX_EXEC_ARRAY_LENGTH);
 	}
 
 	if (!has_ld_preload)
 	{
 		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 6)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: envp[] with added libiotrace-variables has more elements then buffer (%d).\n",
-			 func,
-			 MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
+			LIBIOTRACE_ERROR("envp[] with added libiotrace-variables has more elements then buffer (%d)", MAX_EXEC_ARRAY_LENGTH);
 		}
 		env[env_element] = &ld_preload[0];
 		env[++env_element] = &log_name_env[0];
@@ -1889,11 +1733,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */)
 	{
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: buffer (%d elements) not big enough for argument array.\n",
-			 __func__, MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
+			LIBIOTRACE_ERROR("buffer (%d elements) not big enough for argument array", MAX_EXEC_ARRAY_LENGTH);
 		}
 		argv[count] = element;
 		count++;
@@ -1966,11 +1806,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */)
 	{
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: buffer (%d elements) not big enough for argument array.\n",
-			 __func__, MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
+			LIBIOTRACE_ERROR("buffer (%d elements) not big enough for argument array", MAX_EXEC_ARRAY_LENGTH);
 		}
 		argv[count] = element;
 		count++;
@@ -2033,11 +1869,7 @@ int WRAP(execle)(const char *path, const char *arg,
 				 ... /*, (char *) NULL, char * const envp[] */)
 {
 #ifndef HAVE_EXECVPE
-	CALL_REAL_POSIX_SYNC(fprintf)
-	(stderr,
-	 "In function %s: wrapper needs function execvpe() to work properly.\n",
-	 __func__);
-	assert(0);
+	LIBIOTRACE_ERROR("wrapper needs function execvpe() to work properly");
 #endif
 	int ret;
 	struct basic data;
@@ -2060,11 +1892,7 @@ int WRAP(execle)(const char *path, const char *arg,
 	{
 		if (count >= MAX_EXEC_ARRAY_LENGTH - 1)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: buffer (%d elements) not big enough for argument array.\n",
-			 __func__, MAX_EXEC_ARRAY_LENGTH);
-			assert(0);
+			LIBIOTRACE_ERROR("buffer (%d elements) not big enough for argument array", MAX_EXEC_ARRAY_LENGTH);
 		}
 		argv[count] = element;
 		count++;

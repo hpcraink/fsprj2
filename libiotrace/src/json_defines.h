@@ -4,7 +4,6 @@
 #include <sys/un.h>
 #include <string.h>
 #include <limits.h>
-#include <assert.h>
 #include <math.h>
 #include "posix_io.h"
 
@@ -30,12 +29,9 @@
 /* #defines for error handling */
 #ifndef JSON_STRUCT_ERROR
 #  define JSON_STRUCT_ERROR
-#  define JSON_STRUCT_ENUM_ERROR(value) CALL_REAL_POSIX_SYNC(fprintf)(stderr, "Unknown value \"%d\" of enum in function %s.\n", value, __func__); \
-                                        /* ToDo: __func__ dependencies (like in posix_io.c) */ \
-                                        assert(0);
+#  define JSON_STRUCT_ENUM_ERROR(value) LIBIOTRACE_ERROR("unknown value \"%d\" of enum", value);
 #  define JSON_STRUCT_SIZE_ERROR(ret, size) if (ret >= size) { \
-                                                CALL_REAL_POSIX_SYNC(fprintf)(stderr, "Output buffer in function %s not big enough.\n", __func__); \
-                                                assert(0); \
+                                                LIBIOTRACE_ERROR("output buffer not big enough"); \
                                             }
 #endif
 
@@ -1204,8 +1200,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 
 
 #  define JSON_STRUCT_SIZE_ERROR(ret, size) if (ret >= size) { \
-                                                CALL_REAL_POSIX_SYNC(fprintf)(stderr, "Output buffer in function %s not big enough.\n", __func__); \
-                                                assert(0); \
+                                                LIBIOTRACE_ERROR("output buffer not big enough"); \
                                             }
 
 

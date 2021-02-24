@@ -7,7 +7,6 @@
 #include <unistd.h>
 #endif
 
-#include <assert.h>
 #include <wchar.h>
 #include <stdio.h>
 #include <stdio_ext.h>

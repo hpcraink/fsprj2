@@ -872,7 +872,9 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 	}
 	else if (parser->method == HTTP_GET)
 	{
-		char message[400 + json_struct_max_size_wrapper_status() + 1];
+                const char * message_header = "HTTP/1.1 200 OK\r\nContent-Length: 0123456789\r\nContent-Type: application/json\r\n\r\n";
+                const int message_header_len = strlen(message_header);
+		char message[message_header_len + json_struct_max_size_wrapper_status() + 1];
 
 		// buffer for body
 		char buf[json_struct_max_size_wrapper_status() + 1];
@@ -882,7 +884,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			LIBIOTRACE_ERROR("json_struct_print_wrapper_status() returned %d", ret);
 		}
 
-		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
+		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\r\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
 
 		send_data(message, socket_peer);
 	}

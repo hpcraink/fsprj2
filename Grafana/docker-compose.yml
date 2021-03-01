@@ -12,12 +12,18 @@ services:
    
 
         influxdb:
-                image: quay.io/influxdb/influxdb:v2.0.2
+                image: quay.io/influxdb/influxdb:v2.0.3
                 ports:
                         - "8086:8086"
                 volumes:
                         - './influxdb:/var/lib/influxdb'
-                environment: 
-                        - INFLUXDB_ADMIN_USER=admin
-                        - INFLUXDB_ADMIN_PASSWORD=test12345678
-                        - INFLUXDB_HTTP_AUTH_ENABLED=true
+        influxdb_cli:
+                links:
+                        - influxdb
+                image: quay.io/influxdb/influxdb:v2.0.3
+# Use these same configurations parameters in your telegraf configuration, mytelegraf.conf.
+                entrypoint: influx setup --bucket hsebucket -t OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -o hse --username=admin --password=test12345678 --host=http://influxdb:8086 -f
+      # Wait for the influxd service in the influxdb container has fully bootstrapped before trying to setup an influxdb instance with the influxdb_cli service. 
+                restart: on-failure:10
+                depends_on:
+                        - influxdb

@@ -644,7 +644,7 @@ JSON_STRUCT_START(dlopen_function)
   JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 JSON_STRUCT_START(so_namespace_id)
   JSON_STRUCT_LMID_T(id)
 JSON_STRUCT_END
@@ -661,7 +661,7 @@ JSON_STRUCT_START(so_namespace_mode)
 JSON_STRUCT_END
 
 /* struct for file dlmopen */
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 JSON_STRUCT_START(dlmopen_function)
   JSON_STRUCT_VOID_P_START(so_namespace)
     JSON_STRUCT_VOID_P_ELEMENT(so_namespace, so_namespace_id)
@@ -996,7 +996,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_cancel_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_init_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dlopen_function)
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dlmopen_function)
 #endif
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dup_function)

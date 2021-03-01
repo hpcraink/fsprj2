@@ -14,6 +14,8 @@
 
 BEGIN_C_DECLS
 
-extern pid_t iotrace_gettid();
+extern pid_t iotrace_get_tid();
+
+extern u_int64_t iotrace_get_boot_time();
 
 END_C_DECLS

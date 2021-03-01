@@ -5,7 +5,6 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
-#include "posix_io.h"
 
 /*
  * To add a new data-type for generating the struct and the json-cstring seven lines
@@ -125,7 +124,7 @@
 #undef JSON_STRUCT_VOID_P
 #undef JSON_STRUCT_VOID_P_CONST
 #undef JSON_STRUCT_FD_SET_P
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #  undef JSON_STRUCT_LMID_T
 #endif
 #undef JSON_STRUCT_SHORT
@@ -186,7 +185,7 @@
 #  define JSON_STRUCT_VOID_P(name) void *name;
 #  define JSON_STRUCT_VOID_P_CONST(name) const void *name;
 #  define JSON_STRUCT_FD_SET_P(name) fd_set *name;
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name) Lmid_t name;
 #  endif
 #  define JSON_STRUCT_SHORT(name) short name;
@@ -460,7 +459,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                        } \
                                        JSON_STRUCT_WRITE("],") \
                                      }
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name) JSON_STRUCT_ELEMENT(name, %ld, json_struct_data->name)
 #  endif
 #  define JSON_STRUCT_SHORT(name) JSON_STRUCT_ELEMENT(name, %d, json_struct_data->name)
@@ -655,7 +654,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
                                                                      * FD_SETSIZE) \
                                                                     - 1  /* for last comma */ \
                                                                     + 2) /* for brackets [] */
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name) JSON_STRUCT_ELEMENT_SIZE(name, JSON_STRUCT_TYPE_SIZE_DEC(Lmid_t) \
                                                                     + 1) /* for sign (-) */
 #  endif
@@ -768,7 +767,7 @@ int json_struct_write(char* json_struct_buf, size_t json_struct_size, const char
 #  define JSON_STRUCT_FD_SET_P(name) if (NULL != json_struct_data->name) { \
                                        json_struct_size += sizeof(fd_set); \
                                      }
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
 #  define JSON_STRUCT_SHORT(name)
@@ -916,7 +915,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
                                        json_struct_copy->name = (fd_set *)json_struct_buf; \
                                        json_struct_buf += sizeof(fd_set); \
                                      }
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
 #  define JSON_STRUCT_SHORT(name)
@@ -1076,7 +1075,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_VOID_P(name)
 #  define JSON_STRUCT_VOID_P_CONST(name)
 #  define JSON_STRUCT_FD_SET_P(name)
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
 #  define JSON_STRUCT_SHORT(name)
@@ -1161,7 +1160,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_VOID_P(name)
 #  define JSON_STRUCT_VOID_P_CONST(name)
 #  define JSON_STRUCT_FD_SET_P(name)
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
 #  define JSON_STRUCT_SHORT(name)
@@ -1271,7 +1270,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 #  define JSON_STRUCT_VOID_P(name)
 #  define JSON_STRUCT_VOID_P_CONST(name)
 #  define JSON_STRUCT_FD_SET_P(name)
-#  ifdef HAVE_DLMOPEN
+#  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define JSON_STRUCT_LMID_T(name)
 #  endif
 #  define JSON_STRUCT_SHORT(name)

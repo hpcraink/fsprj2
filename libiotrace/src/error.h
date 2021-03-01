@@ -1,6 +1,14 @@
 #ifndef LIBIOTRACE_ERROR_H
 #define LIBIOTRACE_ERROR_H
 
+#include <stdlib.h>
+
+#include "wrapper_defines.h"
+
+#ifdef WITH_POSIX_IO
+#include "posix_io.h"
+#endif
+
 //#ifdef HAVE_ERRNO_H
 //#  include "errno.h"
 //#endif

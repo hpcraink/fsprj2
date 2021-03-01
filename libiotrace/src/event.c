@@ -882,6 +882,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			{
 				toggle_event_wrapper(functionname, 0);
 			}
+			// TODO: \r\n instead of \n
 			send_data("HTTP/1.1 204 No Content\n\n\n", socket_peer);
 		}
 		else
@@ -903,6 +904,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			LIBIOTRACE_ERROR("json_struct_print_wrapper_status() returned %d", ret);
 		}
 
+		// TODO: use message_header instead of string
 		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\r\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
 
 		send_data(message, socket_peer);
@@ -1115,6 +1117,30 @@ void *recvData(void *arg)
 	return NULL;
 }
 
+int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const char error_if_not_exists) {
+	char *log;
+	int length;
+
+	log = getenv(env_name);
+	if (NULL == log)
+	{
+		if (error_if_not_exists) {
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_name);
+		} else {
+			return 0;
+		}
+	}
+	length = strlen(log);
+	if (max_len < length)
+	{
+		LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_name, length);
+	}
+
+	strcpy(dst, log);
+
+	return length;
+}
+
 char init_done = 0;
 void init_process()
 {
@@ -1147,45 +1173,27 @@ void init_process()
 		pid = getpid();
 		gethostname(hostname, HOST_NAME_MAX);
 
-		log = getenv(env_log_name);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_log_name);
-		}
-		length = strlen(log);
-		if (MAXFILENAME < length + 17 + strlen(hostname))
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_log_name, length);
-		}
-		strcpy(log_name, log);
-		strcpy(filesystem_log_name, log);
-		strcpy(working_dir_log_name, log);
-		strcpy(control_log_name, log);
+		char filesystem_postfix[] = "_filesystem_";
+		char filesystem_extension[] = ".log";
+		length = libiotrace_get_env(env_log_name, log_name, MAXFILENAME - strlen(filesystem_extension) - strlen(filesystem_postfix) - strlen(hostname), 1);
+		strcpy(filesystem_log_name, log_name);
+		strcpy(working_dir_log_name, log_name);
+		strcpy(control_log_name, log_name);
 		strcpy(log_name + length, "_iotrace.log");
-		strcpy(filesystem_log_name + length, "_filesystem_");
-		strcpy(filesystem_log_name + length + 12, hostname);
-		strcpy(filesystem_log_name + length + 12 + strlen(hostname), ".log");
+		strcpy(filesystem_log_name + length, filesystem_postfix);
+		strcpy(filesystem_log_name + length + strlen(filesystem_postfix), hostname);
+		strcpy(filesystem_log_name + length + strlen(filesystem_postfix) + strlen(hostname), filesystem_extension);
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 		strcpy(control_log_name + length, "_control.log");
 
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);
 		strcpy(log_name_env + length, "=");
-		strcpy(log_name_env + length + 1, log);
+		strcpy(log_name_env + length + 1, log_name);
 #endif
 
 		// get token from environment
-		log = getenv(env_influx_token);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_influx_token);
-		}
-		length = strlen(log);
-		if (MAX_INFLUX_TOKEN < length)
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_influx_token, length);
-		}
-		strcpy(influx_token, log);
+		length = libiotrace_get_env(env_influx_token, influx_token, MAX_INFLUX_TOKEN, 1);
 
 #ifndef IO_LIB_STATIC
 		strcpy(influx_token_env, env_influx_token);
@@ -1194,17 +1202,7 @@ void init_process()
 #endif
 
 		// get bucket name from environment
-		log = getenv(env_influx_bucket);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_influx_bucket);
-		}
-		length = strlen(log);
-		if (MAX_INFLUX_TOKEN < length)
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_influx_bucket, length);
-		}
-		strcpy(influx_bucket, log);
+		length = libiotrace_get_env(env_influx_bucket, influx_bucket, MAX_INFLUX_BUCKET, 1);
 
 #ifndef IO_LIB_STATIC
 		strcpy(influx_bucket_env, env_influx_bucket);
@@ -1213,17 +1211,7 @@ void init_process()
 #endif
 
 		// get organization name from environment
-		log = getenv(env_influx_organization);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_influx_organization);
-		}
-		length = strlen(log);
-		if (MAX_INFLUX_TOKEN < length)
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_influx_organization, length);
-		}
-		strcpy(influx_organization, log);
+		length = libiotrace_get_env(env_influx_organization, influx_organization, MAX_INFLUX_ORGANIZATION, 1);
 
 #ifndef IO_LIB_STATIC
 		strcpy(influx_organization_env, env_influx_organization);
@@ -1232,17 +1220,7 @@ void init_process()
 #endif
 
 		// get database ip from environment
-		log = getenv(env_database_ip);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_database_ip);
-		}
-		length = strlen(log);
-		if (MAX_DATABASE_IP < length)
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_database_ip, length);
-		}
-		strcpy(database_ip, log);
+		length = libiotrace_get_env(env_database_ip, database_ip, MAX_DATABASE_IP, 1);
 
 #ifndef IO_LIB_STATIC
 		strcpy(database_ip_env, env_database_ip);
@@ -1250,32 +1228,17 @@ void init_process()
 		strcpy(database_ip_env + length + 1, database_ip);
 #endif
 		// get database port from environment
-		log = getenv(env_database_port);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_database_port);
-		}
-		length = strlen(log);
-		if (MAX_DATABASE_IP < length)
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_database_port, length);
-		}
-		strcpy(database_port, log);
+		length = libiotrace_get_env(env_database_port, database_port, MAX_DATABASE_PORT, 1);
+
 #ifndef IO_LIB_STATIC
 		strcpy(database_port_env, env_database_port);
 		strcpy(database_port_env + length, "=");
 		strcpy(database_port_env + length + 1, database_port);
 #endif
 		// Path to wrapper whitelist
-		log = getenv(env_wrapper_whitelist);
-		if (NULL != log)
+		length = libiotrace_get_env(env_wrapper_whitelist, whitelist, MAXFILENAME, 0);
+		if (0 != length)
 		{
-			length = strlen(log);
-			if (MAXFILENAME < length)
-			{
-				LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_wrapper_whitelist, length);
-			}
-			strcpy(whitelist, log);
 #ifndef IO_LIB_STATIC
 			strcpy(whitelist_env, env_wrapper_whitelist);
 			strcpy(whitelist_env + length, "=");
@@ -1333,19 +1296,10 @@ void init_process()
 		}
 
 #ifndef IO_LIB_STATIC
-		log = getenv(env_ld_preload);
-		if (NULL == log)
-		{
-			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_ld_preload);
-		}
 		length = strlen(env_ld_preload);
-		if (MAXFILENAME < length)
-		{
-			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_ld_preload, length);
-		}
 		strcpy(ld_preload, env_ld_preload);
 		strcpy(ld_preload + length, "=");
-		strcpy(ld_preload + length + 1, log);
+		length = libiotrace_get_env(env_ld_preload, ld_preload + length + 1, MAXFILENAME, 1);
 #endif
 
 		// TODO: time() - uptime is false if there was a sleep
@@ -1711,6 +1665,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 		env[++env_element] = &database_port_env[0];
 		env[++env_element] = &influx_token_env[0];
 		env[++env_element] = &whitelist_env[0];
+		// TODO: influx organization and bucket
 		env[++env_element] = NULL;
 	}
 }

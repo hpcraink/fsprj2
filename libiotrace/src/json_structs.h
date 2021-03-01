@@ -644,7 +644,7 @@ JSON_STRUCT_START(dlopen_function)
   JSON_STRUCT_STRUCT(file_id, id)
 JSON_STRUCT_END
 
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 JSON_STRUCT_START(so_namespace_id)
   JSON_STRUCT_LMID_T(id)
 JSON_STRUCT_END
@@ -661,7 +661,7 @@ JSON_STRUCT_START(so_namespace_mode)
 JSON_STRUCT_END
 
 /* struct for file dlmopen */
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 JSON_STRUCT_START(dlmopen_function)
   JSON_STRUCT_VOID_P_START(so_namespace)
     JSON_STRUCT_VOID_P_ELEMENT(so_namespace, so_namespace_id)
@@ -996,7 +996,7 @@ JSON_STRUCT_START(basic)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_cancel_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, asynchronous_init_function)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dlopen_function)
-#ifdef HAVE_DLMOPEN
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dlmopen_function)
 #endif
     JSON_STRUCT_VOID_P_ELEMENT(function_data, dup_function)
@@ -1037,6 +1037,25 @@ JSON_STRUCT_START(working_dir)
   JSON_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
   JSON_STRUCT_PID_T(process_id)
   JSON_STRUCT_CSTRING_P(dir, MAXFILENAME)
+JSON_STRUCT_END
+
+
+JSON_STRUCT_START(wrapper_status)
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_JSON_STRUCT
+#include "event_wrapper.h"
+#ifdef WITH_POSIX_IO
+#include "posix_io_wrapper.h"
+#endif
+#ifdef WITH_MPI_AIO
+#include "posix_aio_wrapper.h"
+#endif
+#ifdef WITH_DL_IO
+#include "dl_io_wrapper.h"
+#endif
+#ifdef WITH_MPI_IO
+#include "mpi_io_wrapper.h"
+#endif
 JSON_STRUCT_END
 
 #endif

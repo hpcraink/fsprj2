@@ -347,13 +347,32 @@ So this char shows some optimization potential.
 ![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_1.gif "&lt;prefix-for-log-names&gt;_1.mp4")
 
 
-## Grafana and Prometheus
-To use Grafana and Prometheus for real-time tracing from libiotrace execute the following commands:
+
+## Live-Tracing
+
+To use Grafana and InfluxDB to trace every function call in real-time and write its values in the databse you have to do the following:
 
 1. Go to the fsprj2 root directory
-2. `cd Grafana`
-3. `sudo docker-compose up -d`
+2. `cd libiotrace/build`
+3. `ccmake ..`
+4. Turn the option "SENDING" on
+5. `cd ../../Grafana`
+6. `sudo docker-compose up -d`
 
-Prometheus is now acessible on http://localhost:9090 and fetches data from the Prometheus Pushgateway on http://localhost:9091. Libiotrace sends its live data via HTTP to the Pushgateway.
+InfluxDB is now available under http://localhost:8086 (username: admin password: test12345678) and grafana under http://localhost:3000 (username: admin password: admin). 
 
-Grafana is accessible on http://localhost:3000 and is preconfigured with the Prometheus database.
+Now you can use libiotrace like in the following example to send live data to InfluxDB. The Token is preconfigured with docker-compose and doesn't have to be changed. If you change token, organization name or bucket name you have to reconfigure the data sources in Grafana.
+
+You can use a whitelist to specify which wrappers should be traced when "ALL_WRAPPERS_ACTIVE" in cmake is turned off.
+
+To trace MPI File-I/O wrappers you have to turn on "WITH_MPI_IO" in ccmake.
+
+### Example to use Live-Tracing for MPI with libiotrace
+`mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=/home/julian/Projects/fsprj2/libiotrace/build/src/libiotrace_shared.so mpi_program_to_be_observed`
+
+### Activate and deactivate specific wrappers at runtime
+When libiotrace is running in Live Tracing mode it is possible to activate and deactivate wrappers at runtime with HTTP. Each process writes its IP addresses and ports in the "MPI_read_test2_control.log" logfile. 
+
+With this information HTTP-POST requests can be send to each process. E.g. "172.16.244.1:50003/MPI_Waitall/0" will deactivate the Live-Tracing of "MPI_Waitall" at one process. Sending ""172.16.244.1:50003/MPI_Waitall/1" will reactivate this.
+
+Each process can also send a json list with the current status (active or incactive) of each wrapper. To get this information you have to send a HTTP-GET request to each process like "172.16.244.1:50003".

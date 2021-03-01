@@ -17,13 +17,19 @@
 #ifdef WITH_DL_IO
 #  include "dl_io.h"
 #endif
+#ifdef WITH_MPI_IO
+#  include "mpi_io.h"
+#endif
+
 
 #include "json_include_struct.h"
 
 BEGIN_C_DECLS
 
+extern struct wrapper_status active_wrapper_status;
+
 extern char init_done;
-void init_basic();
+void init_process();
 
 void get_basic(struct basic *data);
 
@@ -34,6 +40,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data);
 u_int64_t gettime(void);
 
 void writeData(struct basic *data);
+void pushData(struct basic *data);
 void freeMemory(struct basic *data);
 
 

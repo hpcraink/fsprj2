@@ -3,7 +3,18 @@
 
 #include <errno.h>
 #include <dlfcn.h>
+#include "error.h"
 #include "json_include_struct.h"
+
+#ifdef ALL_WRAPPERS_ACTIVE
+#  define WRAPPER_ACTIVE 1
+#else
+#  define WRAPPER_ACTIVE 0
+#endif
+
+#define WRAPPER_ACTIVATE(cmp_string, function, toggle) else if (!strcmp(cmp_string, #function)) { \
+                                                  active_wrapper_status.function = toggle; \
+                                               }
 
 #ifdef WITH_POSIX_IO
 #  define CALL_REAL_POSIX_SYNC(function) CALL_REAL(function)
@@ -16,7 +27,9 @@
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
                                  __real_##function = dlsym(RTLD_NEXT, #function); \
                                  char * dlsym_dlerror_##function = dlerror(); \
-                                 assert(NULL == dlsym_dlerror_##function); \
+                                 if (NULL != dlsym_dlerror_##function) { \
+                                     LIBIOTRACE_ERROR("dlsym error (%s)", dlsym_dlerror_##function); \
+                                 } \
                                } while (0)
 #else
 #  error "Function dlsym without macro _GNU_SOURCE not usable!"
@@ -98,7 +111,7 @@
                                                                     data.time_end = gettime();
 #define __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) data.time_start = gettime(); \
                                                                               data.time_end = gettime(); \
-                                                                              WRAP_END(data) \
+                                                                              WRAP_END(data, function) \
                                                                               cleanup(); \
                                                                               errno = errno_data.errno_value; \
                                                                               return_value = CALL_REAL(function)(__VA_ARGS__); \
@@ -110,7 +123,7 @@
                                                   data.time_end = gettime();
 #define __CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) data.time_start = gettime(); \
                                                             data.time_end = gettime(); \
-                                                            WRAP_END(data) \
+                                                            WRAP_END(data, function) \
                                                             cleanup(); \
                                                             errno = errno_data.errno_value; \
                                                             CALL_REAL(function)(__VA_ARGS__); \
@@ -137,22 +150,24 @@
                          errno_data.errno_value = errno; \
                          WRAPPER_TIME_START(data) \
                          if (!init_done) { \
-                             init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-                                           /* init_basic() must be called first */ \
+                             init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                               /* init_process() must be called first */ \
                          }
 #define WRAP_MPI_START(data) int errno_value; \
                              struct errno_detail errno_data; \
                              errno_value = errno; \
                              WRAPPER_TIME_START(data) \
                              if (!init_done) { \
-                                 init_basic(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-                                               /* init_basic() must be called first */ \
+                                 init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+                                                 /* init_process() must be called first */ \
                              }
 //ToDo: use kcmp() with KCMP_FILE as type to check if file descriptor is STDIN_FILENO, STDOUT_FILENO or STDERR_FILENO
 //kcmp() is linux-specific! But without kcmp() a duped descriptor will not be recognized! That will lead to problems by following analysis of written data!
 //ToDo: check for which file_type should not be written instead of which should be written
+#define WRAP_END(data, functionname) __WRAP_END(data, functionname)
+
 #ifndef WITH_STD_IO
-#  define WRAP_END(data) GET_ERRNO(data) \
+#  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          if(data.file_type == NULL || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
@@ -167,18 +182,27 @@
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
-                           writeData(&data); \
+                            if(active_wrapper_status.functionname){ \
+                              pushData(&data); \
+                              writeData(&data); \
+                            } \
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #else
-#  define WRAP_END(data) GET_ERRNO(data) \
-                         writeData(&data); \
+#  define __WRAP_END(data, functionname) GET_ERRNO(data) \
+                         if(active_wrapper_status.functionname){ \
+                           pushData(&data); \
+                           writeData(&data); \
+                         } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
-#define WRAP_MPI_END(data) GET_MPI_ERRNO(data) \
-                           writeData(&data); \
+#define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
+                           if(active_wrapper_status.functionname){ \
+                             pushData(&data); \
+                             writeData(&data); \
+                           } \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

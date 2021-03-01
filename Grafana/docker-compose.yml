@@ -1,24 +1,29 @@
 version: '3'
 services:
-        prometheus:
-                image: 'prom/prometheus'
-                volumes:
-                        - './prometheus.yml:/etc/prometheus/prometheus.yml'
-                ports:
-                        - "9090:9090"
-        push-gateway:
-                image: 'prom/pushgateway'
-                ports:
-                        - "9091:9091"
         grafana:
                 image: 'grafana/grafana'
                 ports:
                         - "3000:3000"
                 depends_on:
-                        - prometheus
+                        - influxdb
                 volumes:
                         - ./provisioning:/etc/grafana/provisioning
-        node-exporter:
-                image: 'prom/node-exporter'
+                        - ./config/grafana.ini:/etc/grafana/grafana.ini
+   
+
+        influxdb:
+                image: quay.io/influxdb/influxdb:v2.0.3
                 ports:
-                        - "9100:9100"
+                        - "8086:8086"
+                volumes:
+                        - './influxdb:/var/lib/influxdb'
+        influxdb_cli:
+                links:
+                        - influxdb
+                image: quay.io/influxdb/influxdb:v2.0.3
+# Use these same configurations parameters in your telegraf configuration, mytelegraf.conf.
+                entrypoint: influx setup --bucket hsebucket -t OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -o hse --username=admin --password=test12345678 --host=http://influxdb:8086 -f
+      # Wait for the influxd service in the influxdb container has fully bootstrapped before trying to setup an influxdb instance with the influxdb_cli service. 
+                restart: on-failure:10
+                depends_on:
+                        - influxdb

@@ -16,14 +16,6 @@
 
 #define LIBIOTRACE_LIBRARY_VERSION "libIOtrace " # LIBIOTRACE_VERSION_MAJOR # "." # LIBIOTRACE_VERSION_MINOR
 
-#ifndef FATAL_ERROR
-#define FATAL_ERROR(func,errno) do { \
-    __real_fprintf(stderr, "(FILE:%s:%d) func:%s with errno:%d\n", \
-                   __FILE__, __LINE__, (func), (errno)); \
-    exit(errno); \
-} while(0)
-#endif
-
 BEGIN_C_DECLS
 
 /*********************** DATA STRUCTURES ***************************/
@@ -40,6 +32,16 @@ void libiotrace_start_log();
  * End logging in actual thread.
  */
 void libiotrace_end_log();
+
+/**
+ * Start sending log in actual thread.
+ */
+void libiotrace_start_send();
+
+/**
+ * End sending log in actual thread.
+ */
+void libiotrace_end_send();
 
 /**
  * Start logging of stacktrace pointer in actual thread

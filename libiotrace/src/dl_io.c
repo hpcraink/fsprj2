@@ -10,6 +10,8 @@
 #include "wrapper_defines.h"
 #include "dl_io.h"
 
+#include "wrapper_name.h"
+
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlopen)(const char *filename, int flags) REAL_DEFINITION_INIT;
 #ifdef HAVE_DLMOPEN
@@ -17,16 +19,32 @@ REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlmopen)(Lmid_t lmid, const char *fi
 #endif
 #endif
 
+char toggle_dl_wrapper(char *line, char toggle)
+{
+	char ret = 1;
+
+	if (!strcmp(line, "")) {
+		ret = 0;
+	}
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
+#include "dl_io_wrapper.h"
+	else
+	{
+		ret = 0;
+	}
+	return ret;
+}
+
 #ifndef IO_LIB_STATIC
 char dl_io_init_done = 0;
 /* Initialize pointers for dl functions. */
 void dl_io_init() {
 	if (!dl_io_init_done) {
 
-		DLSYM(dlopen);
-#ifdef HAVE_DLMOPEN
-		DLSYM(dlmopen);
-#endif
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_DLSYM
+#include "dl_io_wrapper.h"
 
 		dl_io_init_done = 1;
 	}

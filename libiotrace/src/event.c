@@ -4,7 +4,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/sysinfo.h>
 #include <time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -477,15 +476,14 @@ void prepare_socket()
 
 	if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
 	{
-		CALL_REAL_POSIX_SYNC(fprintf)
-		(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		LIBIOTRACE_WARN("connect() failed. (%d)", GETSOCKETERRNO());
 		return;
 	}
 #else
 	if (connect(socket_peer,
 				peer_address->ai_addr, peer_address->ai_addrlen))
 	{
-		fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+		LIBIOTRACE_WARN("connect() failed. (%d)", GETSOCKETERRNO());
 		return;
 	}
 	freeaddrinfo(peer_address);
@@ -1304,24 +1302,10 @@ void init_process()
 		length = strlen(env_ld_preload);
 		strcpy(ld_preload, env_ld_preload);
 		strcpy(ld_preload + length, "=");
-		printf("Test");
 		length = libiotrace_get_env(env_ld_preload, ld_preload + length + 1, MAXFILENAME, 1);
-		printf("Test2");
 #endif
 
-		// TODO: time() - uptime is false if there was a sleep
-		// instead read /var/run/utmp as sequence of utmp sturcts from the newest to the oldest entry
-		// until ut_type has the value BOOT_TIME => in the last struct ut_tv holds the boot_time
-		// see https://stackoverflow.com/questions/26333279/reading-the-linux-utmp-file-without-using-fopen-and-fread
-		struct sysinfo info;
-		int errret = sysinfo(&info);
-		if (errret != 0)
-		{
-			LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
-		}
-		time_t current_time = time(NULL);
-		system_start_time = (current_time - info.uptime) * 1000000000;
-		//system_start_time = iotrace_get_boot_time();
+		system_start_time = iotrace_get_boot_time();
 
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);

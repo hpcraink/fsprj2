@@ -45,14 +45,14 @@ u_int64_t iotrace_get_boot_time() {
 	ssize_t bytes;
 	int offset = 0;
 
-	file = open(utmp, O_RDONLY);
+	file = CALL_REAL_POSIX_SYNC(open)(utmp, O_RDONLY);
 	if (0 > file) {
 		LIBIOTRACE_ERROR("open of %s failed, errno=%d", utmp, errno);
 	}
 
 	// read until EOF
 	do {
-		bytes = read(file, (char *)(&(log)) + offset, sizeof(log) - offset);
+		bytes = CALL_REAL_POSIX_SYNC(read)(file, (char *)(&(log)) + offset, sizeof(log) - offset);
 		if (0 > bytes) {
 			if (EINTR == errno) {
 				// read interrupted by signal: try again
@@ -84,7 +84,7 @@ u_int64_t iotrace_get_boot_time() {
 		}
 	} while (0 != bytes); // until EOF
 
-	close(file);
+	CALL_REAL_POSIX_SYNC(close)(file);
 
 	if (0 == boot_time) {
 		LIBIOTRACE_ERROR("boot entry in %s not found", utmp);

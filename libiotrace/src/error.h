@@ -26,4 +26,9 @@
 		exit(EXIT_FAILURE); \
 	} while(0)
 
+#define LIBIOTRACE_WARN(format, ...) \
+	do { \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "In function %s (file %s, line %d): " format ".\n", __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+	} while(0)
+
 #endif /* LIBIOTRACE_ERROR_H */

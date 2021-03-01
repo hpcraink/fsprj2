@@ -76,6 +76,14 @@
 #define MAX_INFLUX_TOKEN 200
 #endif
 
+#ifndef MAX_INFLUX_BUCKET
+#define MAX_INFLUX_BUCKET 200
+#endif
+
+#ifndef MAX_INFLUX_ORGANIZATION
+#define MAX_INFLUX_ORGANIZATION 200
+#endif
+
 #ifndef MAX_DATABSE_IP
 #define MAX_DATABASE_IP 200
 #endif
@@ -141,6 +149,8 @@ static pthread_mutex_t socket_lock;
 /* environment variables */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
 static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
+static const char *env_influx_organization = "IOTRACE_INFLUX_ORGANIZATION";
+static const char *env_influx_bucket = "IOTRACE_INFLUX_BUCKET";
 static const char *env_database_ip = "IOTRACE_DATABASE_IP";
 static const char *env_database_port = "IOTRACE_DATABASE_PORT";
 static const char *env_wrapper_whitelist = "IOTRACE_WHITELIST";
@@ -156,6 +166,8 @@ static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
 static char control_log_name[MAXFILENAME];
 static char influx_token[MAX_INFLUX_TOKEN];
+static char influx_organization[MAX_INFLUX_ORGANIZATION];
+static char influx_bucket[MAX_INFLUX_BUCKET];
 static char database_ip[MAX_DATABASE_IP];
 static char database_port[MAX_DATABASE_PORT];
 static char whitelist[MAXFILENAME];
@@ -164,8 +176,10 @@ static char event_cleanup_done = 0;
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
 static char database_port_env[MAX_DATABASE_PORT + sizeof(env_database_port)];
-static char database_ip_env[MAX_DATABASE_PORT + sizeof(env_database_ip)];
-static char influx_token_env[MAX_DATABASE_PORT + sizeof(env_influx_token)];
+static char database_ip_env[MAX_DATABASE_IP + sizeof(env_database_ip)];
+static char influx_token_env[MAX_INFLUX_TOKEN + sizeof(env_influx_token)];
+static char influx_organization_env[MAX_INFLUX_ORGANIZATION + sizeof(env_influx_organization)];
+static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(env_influx_bucket)];
 static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 #endif
 static long long system_start_time;
@@ -208,7 +222,8 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
 
-	if (NULL != lock) {
+	if (NULL != lock)
+	{
 		pthread_mutex_lock(lock);
 	}
 
@@ -222,7 +237,8 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 	*array = ret;
 	(*array)[*len - 1] = socket;
 
-	if (NULL != lock) {
+	if (NULL != lock)
+	{
 		pthread_mutex_unlock(lock);
 	}
 }
@@ -231,7 +247,8 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 {
 	void *ret;
 
-	if (NULL != lock) {
+	if (NULL != lock)
+	{
 		pthread_mutex_lock(lock);
 	}
 
@@ -288,7 +305,8 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 		}
 	}
 
-	if (NULL != lock) {
+	if (NULL != lock)
+	{
 		pthread_mutex_unlock(lock);
 	}
 }
@@ -805,7 +823,8 @@ void init_on_load()
 #endif
 }
 
-void send_data(const char* message, SOCKET socket) {
+void send_data(const char *message, SOCKET socket)
+{
 	size_t bytes_to_send = strlen(message);
 	const char *message_to_send = message;
 
@@ -872,8 +891,8 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 	}
 	else if (parser->method == HTTP_GET)
 	{
-                const char * message_header = "HTTP/1.1 200 OK\r\nContent-Length: 0123456789\r\nContent-Type: application/json\r\n\r\n";
-                const int message_header_len = strlen(message_header);
+		const char *message_header = "HTTP/1.1 200 OK\r\nContent-Length: 0123456789\r\nContent-Type: application/json\r\n\r\n";
+		const int message_header_len = strlen(message_header);
 		char message[message_header_len + json_struct_max_size_wrapper_status() + 1];
 
 		// buffer for body
@@ -967,7 +986,7 @@ void *recvData(void *arg)
 	if (i > PORT_RANGE_MAX)
 	{
 		CALL_REAL_POSIX_SYNC(close)
-				(socket_control);
+		(socket_control);
 		LIBIOTRACE_ERROR("unable to bind socket");
 	}
 
@@ -976,7 +995,7 @@ void *recvData(void *arg)
 	if (0 > ret)
 	{
 		CALL_REAL_POSIX_SYNC(close)
-				(socket_control);
+		(socket_control);
 		LIBIOTRACE_ERROR("unable to listen to socket, errno=%d", errno);
 	}
 	// Now wait for connection in select below
@@ -1079,9 +1098,9 @@ void *recvData(void *arg)
 					enum llhttp_errno err = llhttp_execute(&parser, read, bytes_received);
 					if (err != HPE_OK)
 					{
-						const char* errno_text = llhttp_errno_name(err);
+						const char *errno_text = llhttp_errno_name(err);
 						snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request\nContent-Length: %ld\nContent-Type: application/json\n\n%s: %s",
-								strlen(errno_text) + 2 + strlen(parser.reason), errno_text, parser.reason);
+								 strlen(errno_text) + 2 + strlen(parser.reason), errno_text, parser.reason);
 						send_data(read, socket_peer);
 					}
 				}
@@ -1149,12 +1168,13 @@ void init_process()
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 		strcpy(control_log_name + length, "_control.log");
 
-		// get token from environment
 #ifndef IO_LIB_STATIC
 		strcpy(log_name_env, env_log_name);
 		strcpy(log_name_env + length, "=");
 		strcpy(log_name_env + length + 1, log);
 #endif
+
+		// get token from environment
 		log = getenv(env_influx_token);
 		if (NULL == log)
 		{
@@ -1171,6 +1191,44 @@ void init_process()
 		strcpy(influx_token_env, env_influx_token);
 		strcpy(influx_token_env + length, "=");
 		strcpy(influx_token_env + length + 1, influx_token);
+#endif
+
+		// get bucket name from environment
+		log = getenv(env_influx_bucket);
+		if (NULL == log)
+		{
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_influx_bucket);
+		}
+		length = strlen(log);
+		if (MAX_INFLUX_TOKEN < length)
+		{
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_influx_bucket, length);
+		}
+		strcpy(influx_bucket, log);
+
+#ifndef IO_LIB_STATIC
+		strcpy(influx_bucket_env, env_influx_bucket);
+		strcpy(influx_bucket_env + length, "=");
+		strcpy(influx_bucket_env + length + 1, influx_bucket);
+#endif
+
+		// get organization name from environment
+		log = getenv(env_influx_organization);
+		if (NULL == log)
+		{
+			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_influx_organization);
+		}
+		length = strlen(log);
+		if (MAX_INFLUX_TOKEN < length)
+		{
+			LIBIOTRACE_ERROR("getenv() returned %s too long (%d bytes) for buffer", env_influx_organization, length);
+		}
+		strcpy(influx_organization, log);
+
+#ifndef IO_LIB_STATIC
+		strcpy(influx_organization_env, env_influx_organization);
+		strcpy(influx_organization_env + length, "=");
+		strcpy(influx_organization_env + length + 1, influx_organization);
 #endif
 
 		// get database ip from environment
@@ -1380,7 +1438,8 @@ void get_stacktrace(struct basic *data)
 	}
 }
 
-void init_thread() {
+void init_thread()
+{
 	tid = iotrace_gettid();
 	prepare_socket();
 }
@@ -1484,9 +1543,9 @@ void pushData(struct basic *data)
 
 	snprintf(timestamp, sizeof(timestamp), "%lld", system_start_time + data->time_end);
 
-	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=hsebucket&precision=ns&org=hse HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
+	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
 									   "Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
-			 influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
+			 influx_bucket, influx_organization, influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 
 	send_data(message, socket_peer);
 }

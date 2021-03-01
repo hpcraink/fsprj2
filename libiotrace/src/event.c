@@ -4,7 +4,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/sysinfo.h>
+//#include <sys/sysinfo.h>
 #include <time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -182,7 +182,7 @@ static char influx_organization_env[MAX_INFLUX_ORGANIZATION + sizeof(env_influx_
 static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(env_influx_bucket)];
 static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 #endif
-static long long system_start_time;
+static u_int64_t system_start_time;
 static SOCKET *recv_sockets = NULL;
 static int recv_sockets_len = 0;
 static SOCKET *open_control_sockets = NULL;
@@ -1348,14 +1348,19 @@ void init_process()
 		strcpy(ld_preload + length + 1, log);
 #endif
 
-		struct sysinfo info;
-		int errret = sysinfo(&info);
-		if (errret != 0)
-		{
-			LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
-		}
-		time_t current_time = time(NULL);
-		system_start_time = (current_time - info.uptime) * 1000000000;
+		// TODO: time() - uptime is false if there was a sleep
+		// instead read /var/run/utmp as sequence of utmp sturcts from the newest to the oldest entry
+		// until ut_type has the value BOOT_TIME => in the last struct ut_tv holds the boot_time
+		// see https://stackoverflow.com/questions/26333279/reading-the-linux-utmp-file-without-using-fopen-and-fread
+//		struct sysinfo info;
+//		int errret = sysinfo(&info);
+//		if (errret != 0)
+//		{
+//			LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
+//		}
+//		time_t current_time = time(NULL);
+//		system_start_time = (current_time - info.uptime) * 1000000000;
+		system_start_time = iotrace_get_boot_time();
 
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);
@@ -1438,9 +1443,8 @@ void get_stacktrace(struct basic *data)
 	}
 }
 
-void init_thread()
-{
-	tid = iotrace_gettid();
+void init_thread() {
+	tid = iotrace_get_tid();
 	prepare_socket();
 }
 

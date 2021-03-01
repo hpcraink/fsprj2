@@ -1655,7 +1655,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 
 	if (!has_ld_preload)
 	{
-		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 6)
+		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 8)
 		{
 			LIBIOTRACE_ERROR("envp[] with added libiotrace-variables has more elements then buffer (%d)", MAX_EXEC_ARRAY_LENGTH);
 		}
@@ -1665,7 +1665,8 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 		env[++env_element] = &database_port_env[0];
 		env[++env_element] = &influx_token_env[0];
 		env[++env_element] = &whitelist_env[0];
-		// TODO: influx organization and bucket
+		env[++env_element] = &influx_bucket_env[0];
+		env[++env_element] = &influx_organization_env[0];
 		env[++env_element] = NULL;
 	}
 }

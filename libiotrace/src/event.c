@@ -4,7 +4,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-//#include <sys/sysinfo.h>
+#include <sys/sysinfo.h>
 #include <time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -14,6 +14,7 @@
 #include <netinet/tcp.h>
 #include <limits.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
 #define CLOSESOCKET(s)          \
@@ -1117,16 +1118,20 @@ void *recvData(void *arg)
 	return NULL;
 }
 
-int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const char error_if_not_exists) {
+int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const char error_if_not_exists)
+{
 	char *log;
 	int length;
 
 	log = getenv(env_name);
 	if (NULL == log)
 	{
-		if (error_if_not_exists) {
+		if (error_if_not_exists)
+		{
 			LIBIOTRACE_ERROR("getenv(\"%s\") returned NULL", env_name);
-		} else {
+		}
+		else
+		{
 			return 0;
 		}
 	}
@@ -1299,22 +1304,24 @@ void init_process()
 		length = strlen(env_ld_preload);
 		strcpy(ld_preload, env_ld_preload);
 		strcpy(ld_preload + length, "=");
+		printf("Test");
 		length = libiotrace_get_env(env_ld_preload, ld_preload + length + 1, MAXFILENAME, 1);
+		printf("Test2");
 #endif
 
 		// TODO: time() - uptime is false if there was a sleep
 		// instead read /var/run/utmp as sequence of utmp sturcts from the newest to the oldest entry
 		// until ut_type has the value BOOT_TIME => in the last struct ut_tv holds the boot_time
 		// see https://stackoverflow.com/questions/26333279/reading-the-linux-utmp-file-without-using-fopen-and-fread
-//		struct sysinfo info;
-//		int errret = sysinfo(&info);
-//		if (errret != 0)
-//		{
-//			LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
-//		}
-//		time_t current_time = time(NULL);
-//		system_start_time = (current_time - info.uptime) * 1000000000;
-		system_start_time = iotrace_get_boot_time();
+				struct sysinfo info;
+				int errret = sysinfo(&info);
+				if (errret != 0)
+				{
+					LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
+				}
+				time_t current_time = time(NULL);
+				system_start_time = (current_time - info.uptime) * 1000000000;
+		//system_start_time = iotrace_get_boot_time();
 
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);
@@ -1397,7 +1404,8 @@ void get_stacktrace(struct basic *data)
 	}
 }
 
-void init_thread() {
+void init_thread()
+{
 	tid = iotrace_get_tid();
 	prepare_socket();
 }
@@ -1479,9 +1487,6 @@ void pushData(struct basic *data)
 		return;
 	}
 
-	//buffer all (header + body)
-	char message[400 + json_struct_push_max_size_basic(0) + 1];
-
 	//buffer for body
 	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character (function build by macros; gives length of body to send) */
 	int ret = json_struct_push_basic(buf, sizeof(buf), data, "");
@@ -1499,11 +1504,14 @@ void pushData(struct basic *data)
 
 	char timestamp[50];
 
-	snprintf(timestamp, sizeof(timestamp), "%lld", system_start_time + data->time_end);
+	snprintf(timestamp, sizeof(timestamp), "%"PRIu64, system_start_time + data->time_end);
+	char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
+					"Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s";
+	int length = strlen(header) + strlen(influx_bucket) + strlen(influx_organization) + strlen(influx_token) + strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp);
 
-	snprintf(message, sizeof(message), "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
-									   "Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s",
-			 influx_bucket, influx_organization, influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
+	//buffer all (header + body)
+	char message[length + 1];
+	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
 
 	send_data(message, socket_peer);
 }

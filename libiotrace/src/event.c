@@ -893,9 +893,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 	}
 	else if (parser->method == HTTP_GET)
 	{
-		const char *message_header = "HTTP/1.1 200 OK\r\nContent-Length: 0123456789\r\nContent-Type: application/json\r\n\r\n";
-		const int message_header_len = strlen(message_header);
-		char message[message_header_len + json_struct_max_size_wrapper_status() + 1];
+		const char *message_header = "HTTP/1.1 200 OK\r\nContent-Length: %ld\r\nContent-Type: application/json\r\n\r\n%s";
 
 		// buffer for body
 		char buf[json_struct_max_size_wrapper_status() + 1];
@@ -905,8 +903,10 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			LIBIOTRACE_ERROR("json_struct_print_wrapper_status() returned %d", ret);
 		}
 
-		// TODO: use message_header instead of string
-		snprintf(message, sizeof(message), "HTTP/1.1 200 OK\r\nContent-Length: %ld\nContent-Type: application/json\n\n%s", strlen(buf), buf);
+		const int message_len = strlen(message_header) + 10 + ret;
+		char message[message_len + 1];
+
+		snprintf(message, sizeof(message), message_header, ret, buf);
 
 		send_data(message, socket_peer);
 	}
@@ -1313,14 +1313,14 @@ void init_process()
 		// instead read /var/run/utmp as sequence of utmp sturcts from the newest to the oldest entry
 		// until ut_type has the value BOOT_TIME => in the last struct ut_tv holds the boot_time
 		// see https://stackoverflow.com/questions/26333279/reading-the-linux-utmp-file-without-using-fopen-and-fread
-				struct sysinfo info;
-				int errret = sysinfo(&info);
-				if (errret != 0)
-				{
-					LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
-				}
-				time_t current_time = time(NULL);
-				system_start_time = (current_time - info.uptime) * 1000000000;
+		struct sysinfo info;
+		int errret = sysinfo(&info);
+		if (errret != 0)
+		{
+			LIBIOTRACE_ERROR("sysinfo() returned %d", errret);
+		}
+		time_t current_time = time(NULL);
+		system_start_time = (current_time - info.uptime) * 1000000000;
 		//system_start_time = iotrace_get_boot_time();
 
 		pthread_mutex_init(&lock, NULL);
@@ -1504,10 +1504,10 @@ void pushData(struct basic *data)
 
 	char timestamp[50];
 
-	snprintf(timestamp, sizeof(timestamp), "%"PRIu64, system_start_time + data->time_end);
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + data->time_end);
 	char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
 					"Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s";
-	int length = strlen(header) + strlen(influx_bucket) + strlen(influx_organization) + strlen(influx_token) + strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp);
+	int length = strlen(header) + strlen(influx_bucket) + strlen(influx_organization) + strlen(influx_token) + strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp) + 10 /*content length*/;
 
 	//buffer all (header + body)
 	char message[length + 1];

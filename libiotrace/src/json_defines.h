@@ -1132,7 +1132,7 @@ int json_struct_copy_cstring_p(char *json_struct_to, const char *json_struct_fro
 
 //Jede Struktur beginnt mit diesem Makro
 #  define JSON_STRUCT_START(name) int json_struct_push_max_size_##name(size_t prefix_length) { /* prefix zb. file_type -- prefix nur fuer basic 0 */ \
-                                    /* char json_struct_hasElements = 0; /* Merken ob in Struktur ueberhaupt was drin ist - nicht benoetigt weil letztes Element auch \n hat */ \
+                                    /* char json_struct_hasElements = 0; */ /* Merken ob in Struktur ueberhaupt was drin ist - nicht benoetigt weil letztes Element auch \n hat */ \
                                     int json_struct_size_void_p; /* Nur fuer eingehaengte Strukuten... Merken welche eingeh. Strkt. am groessten */ \
                                     int json_struct_size_void_p_tmp; \
                                     size_t json_struct_size = 0; /* Start with 0 -- no parentheses like json */

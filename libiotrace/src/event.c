@@ -400,7 +400,7 @@ void prepare_socket()
 	struct addrinfo *peer_address;
 	if (getaddrinfo(database_ip, database_port, &hints, &peer_address))
 	{
-		fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
+		LIBIOTRACE_WARN("getaddrinfo() failed. (%d)", GETSOCKETERRNO());
 		return;
 	}
 	socket_peer = CALL_REAL_POSIX_SYNC(socket)(peer_address->ai_family,
@@ -410,7 +410,7 @@ void prepare_socket()
 
 	if (!ISVALIDSOCKET(socket_peer))
 	{
-		fprintf(stderr, "socket() failed. (%d)\n", GETSOCKETERRNO());
+		LIBIOTRACE_WARN("socket() failed. (%d)", GETSOCKETERRNO());
 		return;
 	}
 
@@ -622,7 +622,7 @@ void print_filesystem()
 			filesystem_entry_ptr->mnt_passno;
 		json_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
 									 &filesystem_data);
-		ret = dprintf(fd, "%s\n", buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+		ret = dprintf(fd, "%s" LINE_BREAK, buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 		if (0 > ret)
 		{
 			LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret, errno);
@@ -711,7 +711,7 @@ void print_working_directory()
 
 	json_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
 								  &working_dir_data);
-	ret_int = dprintf(fd, "%s\n", buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+	ret_int = dprintf(fd, "%s" LINE_BREAK, buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 	if (0 > ret_int)
 	{
 		LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret_int, errno);
@@ -835,9 +835,7 @@ void send_data(const char *message, SOCKET socket)
 		{
 			if (errno == EWOULDBLOCK || errno == EAGAIN)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "Send buffer is full. Please increase your limit.\n");
+				LIBIOTRACE_WARN("Send buffer is full. Please increase your limit.");
 			}
 			else
 			{
@@ -881,17 +879,16 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 			{
 				toggle_event_wrapper(functionname, 0);
 			}
-			// TODO: \r\n instead of \n
-			send_data("HTTP/1.1 204 No Content\n\n\n", socket_peer);
+			send_data("HTTP/1.1 204 No Content" LINE_BREAK LINE_BREAK LINE_BREAK, socket_peer);
 		}
 		else
 		{
-			send_data("HTTP/1.1 400 Bad Request\n\n\n", socket_peer);
+			send_data("HTTP/1.1 400 Bad Request" LINE_BREAK LINE_BREAK LINE_BREAK, socket_peer);
 		}
 	}
 	else if (parser->method == HTTP_GET)
 	{
-		const char *message_header = "HTTP/1.1 200 OK\r\nContent-Length: %ld\r\nContent-Type: application/json\r\n\r\n%s";
+		const char *message_header = "HTTP/1.1 200 OK" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s";
 
 		// buffer for body
 		char buf[json_struct_max_size_wrapper_status() + 1];
@@ -910,7 +907,7 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 	}
 	else
 	{
-		send_data("HTTP/1.1 405 Method Not Allowed\n\n\n", socket_peer);
+		send_data("HTTP/1.1 405 Method Not Allowed" LINE_BREAK LINE_BREAK LINE_BREAK, socket_peer);
 	}
 
 	return 0;
@@ -969,7 +966,7 @@ void *recvData(void *arg)
 
 			for (int l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
 			{
-				int ret = dprintf(fd, "(%u) %s: %s:%d\n", pid, ifreqs[l].ifr_name,
+				int ret = dprintf(fd, "(%u) %s: %s:%d" LINE_BREAK, pid, ifreqs[l].ifr_name,
 								  inet_ntoa(((struct sockaddr_in *)&ifreqs[l].ifr_addr)->sin_addr), i);
 
 				if (0 > ret)
@@ -1037,11 +1034,7 @@ void *recvData(void *arg)
 		// Select: At least one socket is ready to be processed
 		if (-1 == ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr,
-			 "In function %s: Select returned -1 (%d).\n",
-			 __func__,
-			 errno);
+			LIBIOTRACE_WARN("select() returned -1, errno=%d.", errno);
 			break;
 		}
 
@@ -1100,7 +1093,7 @@ void *recvData(void *arg)
 					if (err != HPE_OK)
 					{
 						const char *errno_text = llhttp_errno_name(err);
-						snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request\nContent-Length: %ld\nContent-Type: application/json\n\n%s: %s",
+						snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s: %s",
 								 strlen(errno_text) + 2 + strlen(parser.reason), errno_text, parser.reason);
 						send_data(read, socket_peer);
 					}
@@ -1269,6 +1262,10 @@ void init_process()
 				{
 					line[byte_count - 1] = '\0';
 				}
+				if (byte_count > 0 && line[byte_count - 2] == '\r')
+				{
+					line[byte_count - 2] = '\0';
+				}
 				clean_line = line;
 
 				// remove leading spaces
@@ -1331,8 +1328,7 @@ void init_process()
 		int ret = pthread_create(&recv_thread, NULL, recvData, NULL);
 		if (0 != ret)
 		{
-			CALL_REAL_POSIX_SYNC(fprintf)
-			(stderr, "pthread_create() failed. (%d)\n", ret);
+			LIBIOTRACE_WARN("pthread_create() failed. (%d)", ret);
 			return;
 		}
 		init_done = 1;
@@ -1447,7 +1443,7 @@ void printData()
 		data = (struct basic *)((void *)pos);
 
 		ret = json_struct_print_basic(buf, sizeof(buf), data); //Function is present at runtime, built with macros from json_defines.h
-		ret = dprintf(fd, "%s\n", buf);						   //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+		ret = dprintf(fd, "%s" LINE_BREAK, buf);						   //TODO: CALL_REAL_POSIX_SYNC(dprintf)
 		if (0 > ret)
 		{
 			LIBIOTRACE_ERROR("dprintf() returned %d", ret);
@@ -1489,8 +1485,8 @@ void pushData(struct basic *data)
 	char timestamp[50];
 
 	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + data->time_end);
-	char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1\nHost: localhost:8086\nAccept: */*\n"
-					"Authorization: Token %s\nContent-Length: %ld\nContent-Type: application/x-www-form-urlencoded\n\n%s %s %s";
+	char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK "Host: localhost:8086" LINE_BREAK "Accept: */*" LINE_BREAK
+					"Authorization: Token %s" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/x-www-form-urlencoded" LINE_BREAK LINE_BREAK "%s %s %s";
 	int length = strlen(header) + strlen(influx_bucket) + strlen(influx_organization) + strlen(influx_token) + strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp) + 10 /*content length*/;
 
 	//buffer all (header + body)
@@ -1589,11 +1585,7 @@ void cleanup()
 			int ret = CALL_REAL_POSIX_SYNC(select)(recv_sockets[i] + 1, &reads, NULL, NULL, NULL);
 			if (-1 == ret)
 			{
-				CALL_REAL_POSIX_SYNC(fprintf)
-				(stderr,
-				 "In function %s: Select returned -1 (%d).\n",
-				 __func__,
-				 errno);
+				LIBIOTRACE_WARN("select() returned -1, errno=%d.", errno);
 				break;
 			}
 			if (FD_ISSET(recv_sockets[i], &reads))
@@ -1602,7 +1594,7 @@ void cleanup()
 				int bytes_received = recv(recv_sockets[i], read, 4096, 0);
 				if (bytes_received < 1)
 				{
-					//printf("Connection closed by peer...\n");
+					// Connection closed by peer
 					break;
 				}
 			}

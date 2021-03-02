@@ -6,6 +6,8 @@
 #include "error.h"
 #include "json_include_struct.h"
 
+#define LINE_BREAK "\r\n"
+
 #ifdef ALL_WRAPPERS_ACTIVE
 #  define WRAPPER_ACTIVE 1
 #else

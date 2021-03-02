@@ -357,6 +357,12 @@ JSON_STRUCT_ENUM_START(async_cancel_state)
   JSON_STRUCT_ENUM_ELEMENT(unknown_async_cancel_state)
 JSON_STRUCT_ENUM_END
 
+#ifdef true
+#  undef true
+#endif
+#ifdef false
+#  undef false
+#endif
 JSON_STRUCT_ENUM_START(boolean)
   JSON_STRUCT_ENUM_ELEMENT(true)
   JSON_STRUCT_ENUM_ELEMENT(false)

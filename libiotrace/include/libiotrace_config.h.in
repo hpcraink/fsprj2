@@ -522,8 +522,14 @@
 /* Define to 1 if parameter type timespec for function recvmmsg is const. */
 #cmakedefine HAVE_RECVMMSG_CONST_TIMESPEC 1
 
-/*  Define to 1 if limits.h has HOST_NAME_MAX. */
+/* Define to 1 if limits.h has HOST_NAME_MAX. */
 #cmakedefine HAVE_HOST_NAME_MAX 1
+
+/* Define to 1 if limits.h has _POSIX_HOST_NAME_MAX */
+#cmakedefine HAVE__POSIX_HOST_NAME_MAX
+
+/*  Define to 1 if string.h has memrchr(). */
+#cmakedefine HAVE_MEMRCHR 1
 
 /*****************************************************************************/
 /*  Following is not dependent on cmake; rather evaluates from the previous  */

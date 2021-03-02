@@ -113,3 +113,24 @@ u_int64_t iotrace_get_boot_time() {
 
 	return boot_time;
 }
+
+
+#if !defined(HAVE_MEMRCHR)
+/**
+ * Replacement for memrchr function on OS, that don't define this.
+ * Searches for character c in a String of length n starting from the right.
+ */
+void *memrchr(const void *s, int c, size_t n)
+{
+	char * tmp;
+
+	// In case size_t is *not* unsigned int
+	if (n < 0)
+		return NULL;
+	for (tmp = (char*)s; tmp[n] != c && n > 0; n--) /* Just loop */ ;
+
+	if (0 == n)
+		return NULL;
+	return &(tmp[n]);
+}
+#endif

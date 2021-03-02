@@ -141,7 +141,7 @@ static int count_basic;
 
 // Todo: multiple definition of host_name_max in libiotrace_config.h and here?
 #if !defined(HAVE_HOST_NAME_MAX)
-static int host_name_max;
+int host_name_max;
 #endif
 
 /* Mutex */
@@ -162,7 +162,7 @@ static const char *env_ld_preload = "LD_PRELOAD";
 
 // once per process
 static pid_t pid;
-static char hostname[HOST_NAME_MAX];
+static char hostname[];
 static char log_name[MAXFILENAME];
 static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
@@ -554,6 +554,7 @@ int libiotrace_get_stacktrace_depth()
  * file-system type and the mount options, the dump frequency in days and
  * the mount passno as a json object.
  */
+#if 0 // RAY MacOS
 void print_filesystem()
 {
 	FILE *file;
@@ -636,6 +637,7 @@ void print_filesystem()
 	CALL_REAL_POSIX_SYNC(close)
 	(fd);
 }
+#endif
 
 void get_file_id(int fd, struct file_id *data)
 {
@@ -1164,11 +1166,17 @@ void init_process()
 		init_wrapper();
 #endif
 
-#if !defined(HAVE_HOST_NAME_MAX)
-		host_name_max = sysconf(POSIX_HOST_NAME_MAX);
+#if defined(HAVE__POSIX_HOST_NAME_MAX)
+		host_name_max = _POSIX_HOST_NAME_MAX;
+#elif !defined(HAVE_HOST_NAME_MAX)
+		host_name_max = sysconf(_SC_HOST_NAME_MAX);
 #endif
 
 		pid = getpid();
+		hostname = malloc (host_mame_max);
+		if (NULL == hostname)
+			LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
+
 		gethostname(hostname, HOST_NAME_MAX);
 
 		char filesystem_postfix[] = "_filesystem_";
@@ -1310,8 +1318,9 @@ void init_process()
 		pthread_mutex_init(&socket_lock, NULL);
 
 		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
-
+#if 0 // RAY MacOS
 		print_filesystem();
+#endif
 		print_working_directory();
 
 #ifdef WITH_STD_IO

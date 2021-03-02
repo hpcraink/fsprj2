@@ -18,4 +18,8 @@ extern pid_t iotrace_get_tid();
 
 extern u_int64_t iotrace_get_boot_time();
 
+#if !defined(HAVE_MEMRCHR)
+void *memrchr(const void *s, int c, size_t n);
+#endif
+
 END_C_DECLS

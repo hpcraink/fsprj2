@@ -111,6 +111,7 @@ check_symbol_exists(clone "sched.h" HAVE_CLONE)
 check_symbol_exists(dirfd "dirent.h" HAVE_DIRFD)
 check_symbol_exists(sendmmsg "sys/socket.h" HAVE_SENDMMSG)
 check_symbol_exists(recvmmsg "sys/socket.h" HAVE_RECVMMSG)
+check_symbol_exists(memrchr "string.h" HAVE_MEMRCHR)
 
 check_symbol_exists(execvpe "unistd.h" HAVE_EXECVPE)
 #check_symbol_exists(_Exit "stdlib.h" HAVE_EXIT)
@@ -177,6 +178,7 @@ check_symbol_exists(SEEK_HOLE "unistd.h" HAVE_SEEK_HOLE)
 
 
 check_symbol_exists(HOST_NAME_MAX "limits.h" HAVE_HOST_NAME_MAX)
+check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 
 # Please keep in alphabetical order
 set(SOURCE

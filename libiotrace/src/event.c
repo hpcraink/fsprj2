@@ -48,7 +48,9 @@
 #endif
 
 #include <stdio.h>
-#include <mntent.h>
+#ifdef HAVE_MNTENT_H
+#  include <mntent.h>
+#endif
 #include <stdarg.h>
 #include <fcntl.h>
 

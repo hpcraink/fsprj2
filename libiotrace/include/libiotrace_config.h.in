@@ -5,6 +5,11 @@
 #define LIBIOTRACE_VERSION_MAJOR @LIBIOTRACE_VERSION_MAJOR@
 #define LIBIOTRACE_VERSION_MINOR @LIBIOTRACE_VERSION_MINOR@
 
+/***************** First the definitions for Header files *****************/
+
+/* Define to 1 if system has <mntent.h> header file. */
+#cmakedefine HAVE_MNTENT_H 1
+
 /* Define to 1 if system has <pthread.h> header file. */
 #cmakedefine HAVE_PTHREAD_H 1
 
@@ -41,6 +46,13 @@
 /* Define to 1 if system has <sched.h> header file. */
 #cmakedefine HAVE_SCHED_H 1
 
+/* Define to 1 if system has <utmp.h> header file. */
+#cmakedefine HAVE_UTMP_H 1
+
+/* Define to 1 if system has <utmpx.h> header file. */
+#cmakedefine HAVE_UTMPX_H 1
+
+/***************** First the definitions for system functions *****************/
 /* Define to 1 if system supports open64(). */
 #cmakedefine HAVE_OPEN64 1
 
@@ -558,7 +570,7 @@
 
 #if !defined(HAVE_HOST_NAME_MAX)
 extern int host_name_max;
-#    define HOST_NAME_MAX host_name_max;
+#    define HOST_NAME_MAX host_name_max
 #endif
 
 #undef BEGIN_C_DECLS

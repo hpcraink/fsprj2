@@ -6,7 +6,12 @@
 #  include <sys/types.h>
 #endif
 
-#include <utmp.h>
+#ifdef HAVE_UTMP_H
+#  include <utmp.h>
+#endif
+#ifdef HAVE_UTMPX_H
+#  include <utmpx.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -89,6 +94,13 @@ u_int64_t iotrace_get_boot_time() {
 	if (0 == boot_time) {
 		LIBIOTRACE_ERROR("boot entry in %s not found", utmp);
 	}
+#elif defined(__APPLE__) || defined(__OSX__)
+	struct utmpx * utxent;
+	struct utmpx utx_boottime;
+	utx_boottime.ut_type = BOOT_TIME;
+
+	utxent = getutxid(&utx_boottime);
+	boot_time = (u_int64_t)utxent.ut_tv.tv_sec * 1000000000ll + (u_int64_t)utxent.ut_tv.tv_usec * 1000ll;
 #else
 #   error "iotrace_get_boot_time has not been defined for this OS."
 #endif

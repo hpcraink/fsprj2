@@ -570,7 +570,7 @@
 
 #if !defined(HAVE_HOST_NAME_MAX)
 extern int host_name_max;
-#    define HOST_NAME_MAX host_name_max;
+#    define HOST_NAME_MAX host_name_max
 #endif
 
 #undef BEGIN_C_DECLS

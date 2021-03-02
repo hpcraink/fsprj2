@@ -12,6 +12,7 @@ check_include_files("pthread.h" HAVE_PTHREAD_H)
 check_include_files("aio.h" HAVE_AIO_H)
 check_include_files("getmnt.h" HAVE_GETMNT_H)
 check_include_files("sched.h" HAVE_SCHED_H)
+check_include_files("mntent.h" HAVE_MNTENT_H)
 check_include_files("utmp.h" HAVE_UTMP_H)
 check_include_files("utmpx.h" HAVE_UTMPX_H)
 

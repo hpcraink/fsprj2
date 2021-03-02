@@ -1,3 +1,5 @@
+#include "libiotrace_config.h"
+
 #ifdef HAVE_SYS_SYSCALL_H
 #  include <sys/syscall.h>
 #endif
@@ -38,6 +40,10 @@ inline pid_t iotrace_get_tid() {
     return tmp;
 }
 
+/**
+ * Get the boot time
+ * @return Returns the boot time.
+ */
 u_int64_t iotrace_get_boot_time() {
 	u_int64_t boot_time = 0;
 

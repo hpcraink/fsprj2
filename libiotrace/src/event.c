@@ -162,7 +162,7 @@ static const char *env_ld_preload = "LD_PRELOAD";
 
 // once per process
 static pid_t pid;
-static char hostname[];
+static char *hostname;
 static char log_name[MAXFILENAME];
 static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
@@ -1166,18 +1166,20 @@ void init_process()
 		init_wrapper();
 #endif
 
+#if !defined(HAVE_HOST_NAME_MAX)
 #if defined(HAVE__POSIX_HOST_NAME_MAX)
 		host_name_max = _POSIX_HOST_NAME_MAX;
-#elif !defined(HAVE_HOST_NAME_MAX)
+#else
 		host_name_max = sysconf(_SC_HOST_NAME_MAX);
+#endif
 #endif
 
 		pid = getpid();
-		hostname = malloc (host_mame_max);
+		hostname = malloc(HOST_NAME_MAX);
 		if (NULL == hostname)
 			LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
 
-		gethostname(hostname, host_name_max);
+		gethostname(hostname, HOST_NAME_MAX);
 
 		char filesystem_postfix[] = "_filesystem_";
 		char filesystem_extension[] = ".log";

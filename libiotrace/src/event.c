@@ -130,7 +130,7 @@ static ATTRIBUTE_THREAD char stacktrace_symbol = STACKTRACE_SYMBOL;
 static ATTRIBUTE_THREAD char stacktrace_symbol = 0;
 #endif
 
-/* Buffer */
+/* log file write Buffer */
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE 1048576 // 1 MB
 #endif
@@ -139,7 +139,6 @@ static const char *endpos = data_buffer + BUFFER_SIZE;
 static char *pos;
 static int count_basic;
 
-// Todo: multiple definition of host_name_max in libiotrace_config.h and here?
 #if !defined(HAVE_HOST_NAME_MAX)
 int host_name_max;
 #endif
@@ -220,6 +219,27 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 
 struct wrapper_status active_wrapper_status;
 
+/**
+ * Save a socket in a global array.
+ *
+ * Adds "socket" to "array". If "array" is NULL and "len" points to
+ * the value 0 a new array with length 1 is allocated. Else the
+ * existing array is increased by 1. "*len" is incremented by 1 and
+ * the "socket" is added to "array" as a new element.
+ *
+ * @param[in] socket    The socket to save
+ * @param[in] lock      Mutex used to make the array manipulation
+ *                      thread safe, or NULL if no concurrent access
+ *                      is possible
+ * @param[in,out] len   Pointer to count of sockets in "array". Is
+ *                      incremented by 1 after function returns.
+ * @param[in,out] array Pointer to dynamically allocated array of
+ *                      sockets with length "*len", or NULL if array
+ *                      should be created during function call.
+ *                      After function call "array" is increased by
+ *                      one element. This new element holds the
+ *                      value of "socket".
+ */
 void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
@@ -245,9 +265,27 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 	}
 }
 
+/**
+ * Delete a socket from a global array.
+ *
+ * Removes "socket" from "array". If "socket" was not found in
+ * "array" the array is left untouched.
+ *
+ * @param[in] socket    The socket to delete
+ * @param[in] lock      Mutex used to make the array manipulation
+ *                      thread safe, or NULL if no concurrent access
+ *                      is possible
+ * @param[in,out] len   Pointer to count of sockets in "array". Is
+ *                      decremented by 1 after function returns.
+ * @param[in,out] array Pointer to dynamically allocated array of
+ *                      sockets with length "*len".
+ *                      After function call "array" is decreased by
+ *                      one element (if "socket" was in "array").
+ */
 void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 {
 	void *ret;
+	int i;
 
 	if (NULL != lock)
 	{
@@ -279,13 +317,18 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 	}
 	else
 	{
-		for (int i = 0; i < *len; i++)
+		for (i = 0; i < *len; i++)
 		{
 			if ((*array)[i] == socket)
 			{
 				(*array)[i] = (*array)[*len];
 				break;
 			}
+		}
+		if (i >= *len)
+		{
+			// socket not found
+			return;
 		}
 		ret = realloc(*array, sizeof(SOCKET) * (*len));
 		if (*len == 0)
@@ -316,7 +359,11 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 #ifndef IO_LIB_STATIC
 static char event_init_done = 0;
 
-/* Initialize pointers for glibc functions. */
+/**
+ *  Initialize pointers for glibc functions.
+ *
+ *  Wrappers use them to call the real functions.
+ */
 void event_init()
 {
 	if (!event_init_done)

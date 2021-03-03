@@ -1141,7 +1141,72 @@ int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const
 	return length;
 }
 
+void read_whitelist() {
+	FILE *stream;
+	char *line = NULL;
+	char *clean_line = NULL;
+	char *end_clean_line = NULL;
+	size_t len = 0;
+	ssize_t nread;
+	stream = CALL_REAL_POSIX_SYNC(fopen)(whitelist, "r");
+	if (stream == NULL)
+	{
+		LIBIOTRACE_ERROR("fopen() failed, errno=%d", errno);
+	}
+
+	while ((nread = CALL_REAL_POSIX_SYNC(getline)(&line, &len, stream)) != -1)
+	{
+		size_t byte_count = strlen(line);
+
+		// remove trailing linebreak
+		if (byte_count > 0 && line[byte_count - 1] == '\n')
+		{
+			line[byte_count - 1] = '\0';
+		}
+		if (byte_count > 0 && line[byte_count - 2] == '\r')
+		{
+			line[byte_count - 2] = '\0';
+		}
+		clean_line = line;
+
+		// remove leading spaces
+		while (isspace((unsigned char)*clean_line))
+		{
+			clean_line++;
+		}
+
+		// not a comment and not only spaces
+		if (*clean_line != '#' && *clean_line != '\0')
+		{
+			end_clean_line = clean_line + strlen(clean_line) - 1;
+
+			// remove trailing spaces
+			while (end_clean_line > clean_line && isspace((unsigned char)*end_clean_line))
+			{
+				end_clean_line--;
+			}
+			end_clean_line[1] = '\0';
+
+			toggle_event_wrapper(clean_line, 1);
+		}
+	}
+
+	free(line);
+	CALL_REAL_POSIX_SYNC(fclose)
+	(stream);
+}
+
 char init_done = 0;
+/**
+ * Initialize libiotrace for current process.
+ *
+ * Is called from init_on_load() out of the ctor section before main() is called.
+ * If another ctor entry calls a wrapper before init_on_load() was called, the
+ * wrapper calls init_process(). So init_process() is called before the first
+ * wrapper starts collecting data.
+ * Because init_process() is called before main() is called, no other thread then
+ * the process itself is running => no synchronization is needed.
+ */
 void init_process()
 {
 	char *log;
@@ -1252,59 +1317,8 @@ void init_process()
 			strcpy(whitelist_env + length, "=");
 			strcpy(whitelist_env + length + 1, whitelist);
 #endif
-			//Hier Auslesen der Whitelist
-			FILE *stream;
-			char *line = NULL;
-			char *clean_line = NULL;
-			char *end_clean_line = NULL;
-			size_t len = 0;
-			ssize_t nread;
-			stream = CALL_REAL_POSIX_SYNC(fopen)(whitelist, "r");
-			if (stream == NULL)
-			{
-				LIBIOTRACE_ERROR("fopen() failed, errno=%d", errno);
-			}
 
-			while ((nread = CALL_REAL_POSIX_SYNC(getline)(&line, &len, stream)) != -1)
-			{
-				size_t byte_count = strlen(line);
-
-				// remove trailing linebreak
-				if (byte_count > 0 && line[byte_count - 1] == '\n')
-				{
-					line[byte_count - 1] = '\0';
-				}
-				if (byte_count > 0 && line[byte_count - 2] == '\r')
-				{
-					line[byte_count - 2] = '\0';
-				}
-				clean_line = line;
-
-				// remove leading spaces
-				while (isspace((unsigned char)*clean_line))
-				{
-					clean_line++;
-				}
-
-				// not a comment and not only spaces
-				if (*clean_line != '#' && *clean_line != '\0')
-				{
-					end_clean_line = clean_line + strlen(clean_line) - 1;
-
-					// remove trailing spaces
-					while (end_clean_line > clean_line && isspace((unsigned char)*end_clean_line))
-					{
-						end_clean_line--;
-					}
-					end_clean_line[1] = '\0';
-
-					toggle_event_wrapper(clean_line, 1);
-				}
-			}
-
-			free(line);
-			CALL_REAL_POSIX_SYNC(fclose)
-			(stream);
+			read_whitelist();
 		}
 
 #ifndef IO_LIB_STATIC
@@ -1397,6 +1411,11 @@ void get_stacktrace(struct basic *data)
 	}
 }
 
+/**
+ * Initialize libiotrace for current thread.
+ *
+ * Is called from get_basic() during first call of a wrapper in a thread.
+ */
 void init_thread()
 {
 	tid = iotrace_get_tid();

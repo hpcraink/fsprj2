@@ -1450,7 +1450,8 @@ inline u_int64_t gettime(void)
 {
 	struct timespec t;
 	u_int64_t time;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+	//clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+	clock_gettime(CLOCK_BOOTTIME, &t);
 	time = t.tv_sec * (1000 * 1000 * 1000) + t.tv_nsec;
 	return time;
 }

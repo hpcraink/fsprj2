@@ -1177,7 +1177,7 @@ void init_process()
 		if (NULL == hostname)
 			LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
 
-		gethostname(hostname, HOST_NAME_MAX);
+		gethostname(hostname, host_name_max);
 
 		char filesystem_postfix[] = "_filesystem_";
 		char filesystem_extension[] = ".log";

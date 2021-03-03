@@ -1092,9 +1092,15 @@ enum boolean is_connection_based(int type)
 	{
 	case SOCK_STREAM:
 	case SOCK_SEQPACKET:
+#pragma push_macro("true")
+#undef true
 		return true;
+#pragma pop_macro("true")
 	default:
+#pragma push_macro("false")
+#undef false
 		return false;
+#pragma pop_macro("false")
 	}
 }
 
@@ -5637,11 +5643,17 @@ int WRAP(feof)(FILE *stream)
 	data.return_state = ok;
 	if (ret == 0)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, feof)
@@ -5669,11 +5681,17 @@ int WRAP(feof_unlocked)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, feof_unlocked)
@@ -5701,11 +5719,17 @@ int WRAP(ferror)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, ferror)
@@ -5733,11 +5757,17 @@ int WRAP(ferror_unlocked)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, ferror_unlocked)
@@ -6465,11 +6495,17 @@ int WRAP(__freadable)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, __freadable)
@@ -6496,11 +6532,17 @@ int WRAP(__fwritable)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, __fwritable)
@@ -6527,11 +6569,17 @@ int WRAP(__freading)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, __freading)
@@ -6558,11 +6606,17 @@ int WRAP(__fwriting)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, __fwriting)
@@ -6652,11 +6706,17 @@ int WRAP(__flbf)(FILE *stream)
 	data.return_state = ok;
 	if (0 == ret)
 	{
+#pragma push_macro("false")
+#undef false
 		information_data.return_bool = false;
+#pragma pop_macro("false")
 	}
 	else
 	{
+#pragma push_macro("true")
+#undef true
 		information_data.return_bool = true;
+#pragma pop_macro("true")
 	}
 
 	WRAP_END(data, __flbf)

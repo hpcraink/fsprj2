@@ -351,22 +351,28 @@ JSON_STRUCT_ENUM_START(async_sync_mode)
 JSON_STRUCT_ENUM_END
 
 JSON_STRUCT_ENUM_START(async_cancel_state)
-  JSON_STRUCT_ENUM_ELEMENT(is_canceled)     //AIO_CANCELED
-  JSON_STRUCT_ENUM_ELEMENT(not_canceled) //AIO_NOTCANCELED
-  JSON_STRUCT_ENUM_ELEMENT(allready_done)     //AIO_ALLDONE
+  JSON_STRUCT_ENUM_ELEMENT(is_canceled)   //AIO_CANCELED
+  JSON_STRUCT_ENUM_ELEMENT(not_canceled)  //AIO_NOTCANCELED
+  JSON_STRUCT_ENUM_ELEMENT(allready_done) //AIO_ALLDONE
   JSON_STRUCT_ENUM_ELEMENT(unknown_async_cancel_state)
 JSON_STRUCT_ENUM_END
 
-#ifdef true
-#  undef true
-#endif
-#ifdef false
-#  undef false
-#endif
+#pragma push_macro("true")
+#pragma push_macro("false")
+#undef true
+#undef false
+//#ifdef true
+//#  undef true
+//#endif
+//#ifdef false
+//#  undef false
+//#endif
 JSON_STRUCT_ENUM_START(boolean)
   JSON_STRUCT_ENUM_ELEMENT(true)
   JSON_STRUCT_ENUM_ELEMENT(false)
 JSON_STRUCT_ENUM_END
+#pragma pop_macro("true")
+#pragma pop_macro("false")
 
 /* struct for timeval */
 JSON_STRUCT_START(json_timeval)

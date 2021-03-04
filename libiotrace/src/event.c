@@ -199,7 +199,7 @@ static ATTRIBUTE_THREAD pid_t tid = -1;
 static ATTRIBUTE_THREAD SOCKET socket_peer;
 
 void cleanup() ATTRIBUTE_DESTRUCTOR;
-void *recvData(void *arg);
+void *communication_thread(void *arg);
 
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(execve)(const char *filename, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
@@ -912,7 +912,7 @@ void send_data(const char *message, SOCKET socket)
 	}
 }
 
-int my_url_callback(llhttp_t *parser, const char *at, size_t length)
+int url_callback(llhttp_t *parser, const char *at, size_t length)
 {
 
 	if (parser->method == HTTP_POST)
@@ -968,7 +968,36 @@ int my_url_callback(llhttp_t *parser, const char *at, size_t length)
 	return 0;
 }
 
-void *recvData(void *arg)
+/**
+ * Thread for reading answers from influxdb and receiving commands
+ * from http connections (WebServices).
+ *
+ * Started as a separate thread via "pthread_create" during call
+ * of "init_process".
+ *
+ * Checks for responses from influxdb on existing connections
+ * (each thread of the monitored program opens a new socket to
+ * communicate with influxdb during call of "init_thread" with the
+ * function "prepare_socket"; each such thread uses it's socket to
+ * send data to influxdb but doesn't wait for an response;
+ * responses are read in this separate thread).
+ *
+ * Also waits for incoming connections on a additional socket.
+ * Each such connection is handled inside this separate thread and
+ * enables controlling which wrapper is active. The additional
+ * socket for incoming connections is bound to a PORT in the range
+ * from PORT_RANGE_MIN to PORT_RANGE_MAX. Which port is bound is
+ * written to a file. Incoming http requests are handled via
+ * callback function "url_callback".
+ *
+ * This thread runs and reads/listens the multiple sockets until
+ * "event_cleanup_done" is set to "true". This is done during call
+ * of "cleanup" if the program exits.
+ *
+ * @param[in] arg Not used.
+ * @return Not used (allways NULL)
+ */
+void *communication_thread(void *arg)
 {
 
 	llhttp_t parser;
@@ -1104,6 +1133,8 @@ void *recvData(void *arg)
 				ssize_t bytes_received = recv(recv_sockets[i], read, 4096, 0);
 				if (1 > bytes_received)
 				{
+					// TODO: parse/interpret responses (each socket needs it's own llhttp_t parser)
+
 					//Socket is destroyed or closed by peer
 					//close(recv_sockets[i]);
 					//delete_socket(recv_sockets[i]);
@@ -1164,6 +1195,21 @@ void *recvData(void *arg)
 	return NULL;
 }
 
+/**
+ * Reads an environment variable.
+ *
+ * @param[in]  env_name            Name of the environment variable to
+ *                                 read as "\0" terminated char array.
+ * @param[out] dst                 Pointer to a buffer in which the read
+ *                                 environment variable is stored.
+ * @param[in]  max_len             Length of the buffer "dst".
+ * @param[in]  error_if_not_exists If set to "true" and if no variable
+ *                                 with "env_name" as a name was found
+ *                                 an error is printed and "exit" is
+ *                                 called.
+ * @return The length of the read variable (without the terminating
+ *         "\0") or 0 if no variable with "env_name" as name was found.
+ */
 int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const char error_if_not_exists)
 {
 	char *log;
@@ -1192,6 +1238,19 @@ int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const
 	return length;
 }
 
+/**
+ * Reads a whitelist from a file.
+ *
+ * If a environment variable holds the path of a whitelist
+ * this path is set to the variable "whitelist" and this
+ * function is called. This function reads every line of
+ * the file and interprets each line not starting with "#"
+ * as the name of a function (leading and trailing white
+ * spaces are removed). For each function name the function
+ * "toggle_event_wrapper" is called. If a wrapper for a
+ * function with a corresponding name exists that wrapper
+ * is set to active. An active wrapper logs/sends his data.
+ */
 void read_whitelist() {
 	FILE *stream;
 	char *line = NULL;
@@ -1276,6 +1335,24 @@ void init_process()
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
 #include "mpi_io_wrapper.h"
+#endif
+
+#ifdef WITH_POSIX_IO
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "posix_io_wrapper.h"
+#endif
+
+#ifdef WITH_POSIX_AIO
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "posix_aio_wrapper.h"
+#endif
+
+#ifdef WITH_DL_IO
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "dl_io_wrapper.h"
 #endif
 
 #if !defined(IO_LIB_STATIC)
@@ -1411,7 +1488,7 @@ void init_process()
 		//Create receive thread per process
 		pthread_t recv_thread;
 
-		int ret = pthread_create(&recv_thread, NULL, recvData, NULL);
+		int ret = pthread_create(&recv_thread, NULL, communication_thread, NULL);
 		if (0 != ret)
 		{
 			LIBIOTRACE_WARN("pthread_create() failed. (%d)", ret);
@@ -1421,6 +1498,11 @@ void init_process()
 	}
 }
 
+/**
+ * Fills stacktrace information to given struct basic.
+ *
+ * @param[out] data A pointer to a struct basic structure
+ */
 void get_stacktrace(struct basic *data)
 {
 	int size;
@@ -1481,11 +1563,24 @@ void init_thread()
 	prepare_socket();
 }
 
+/**
+ * Sets some basic information to the given structure.
+ *
+ * Fills the "process_id", "thread_id", "hostname" and if
+ * needed the stacktrace with the current values.
+ * If "get_basic" is called for the first time in a new
+ * thread the "init_thread" function is called to
+ * initialize libiotrace for the current thread.
+ *
+ * @param[out] data A pointer to a struct basic structure
+ */
 void get_basic(struct basic *data)
 {
-	// lock write on tid
+	/* tid is thread local storage => no synchronization with
+	 * other threads is needed */
 	if (tid == -1)
 	{
+		/* call once per new thread */
 		init_thread();
 	}
 
@@ -1505,6 +1600,11 @@ void get_basic(struct basic *data)
 	}
 }
 
+/**
+ * Gets actual time in nano seconds.
+ *
+ * @return time in nano seconds
+ */
 inline u_int64_t gettime(void)
 {
 	struct timespec t;
@@ -1515,6 +1615,15 @@ inline u_int64_t gettime(void)
 	return time;
 }
 
+/**
+ * Prints all structures from buffer to file.
+ *
+ * Each structure is serialized to json and written to
+ * a file. After that the buffer is empty. Serialization
+ * and clearing of the buffer is not synchronized with
+ * other threads. So "print_buffer" should only be
+ * called from a synchronized code.
+ */
 void print_buffer()
 {
 	struct basic *data;

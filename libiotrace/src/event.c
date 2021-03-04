@@ -167,8 +167,11 @@ static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
 static char control_log_name[MAXFILENAME];
 static char influx_token[MAX_INFLUX_TOKEN];
+static int influx_token_len;
 static char influx_organization[MAX_INFLUX_ORGANIZATION];
+static int influx_organization_len;
 static char influx_bucket[MAX_INFLUX_BUCKET];
+static int influx_bucket_len;
 static char database_ip[MAX_DATABASE_IP];
 static char database_port[MAX_DATABASE_PORT];
 static char whitelist[MAXFILENAME];
@@ -812,7 +815,7 @@ void open_std_fd(int fd)
 	data.return_state = ok;
 	data.return_state_detail = NULL;
 
-	writeData(&data);
+	write_into_buffer(&data);
 	WRAP_FREE(&data)
 }
 
@@ -837,7 +840,7 @@ void open_std_file(FILE *file)
 	data.return_state = ok;
 	data.return_state_detail = NULL;
 
-	writeData(&data);
+	write_into_buffer(&data);
 	WRAP_FREE(&data)
 }
 
@@ -869,7 +872,7 @@ void init_on_load()
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-	writeData(&data);
+	write_into_buffer(&data);
 	WRAP_FREE(&data)
 #endif
 }
@@ -1315,6 +1318,7 @@ void init_process()
 
 		// get token from environment
 		length = libiotrace_get_env(env_influx_token, influx_token, MAX_INFLUX_TOKEN, 1);
+		influx_token_len = strlen(influx_token);
 
 #ifndef IO_LIB_STATIC
 		strcpy(influx_token_env, env_influx_token);
@@ -1324,6 +1328,7 @@ void init_process()
 
 		// get bucket name from environment
 		length = libiotrace_get_env(env_influx_bucket, influx_bucket, MAX_INFLUX_BUCKET, 1);
+		influx_bucket_len = strlen(influx_bucket);
 
 #ifndef IO_LIB_STATIC
 		strcpy(influx_bucket_env, env_influx_bucket);
@@ -1333,6 +1338,7 @@ void init_process()
 
 		// get organization name from environment
 		length = libiotrace_get_env(env_influx_organization, influx_organization, MAX_INFLUX_ORGANIZATION, 1);
+		influx_organization_len = strlen(influx_organization);
 
 #ifndef IO_LIB_STATIC
 		strcpy(influx_organization_env, env_influx_organization);
@@ -1509,7 +1515,7 @@ inline u_int64_t gettime(void)
 	return time;
 }
 
-void printData()
+void print_buffer()
 {
 	struct basic *data;
 	int ret;
@@ -1546,7 +1552,12 @@ void printData()
 	count_basic = 0;
 }
 
-void pushData(struct basic *data)
+/**
+ * Sends a struct basic to influxdb.
+ *
+ * @param[in] data Pointer to struct basic
+ */
+void write_into_influxdb(struct basic *data)
 {
 	if (event_cleanup_done || no_sending)
 	{
@@ -1554,35 +1565,74 @@ void pushData(struct basic *data)
 	}
 
 	//buffer for body
-	char buf[json_struct_push_max_size_basic(0) + 1]; /* +1 for trailing null character (function build by macros; gives length of body to send) */
-	int ret = json_struct_push_basic(buf, sizeof(buf), data, "");
-	buf[strlen(buf) - 1] = '\0'; /*remove last comma*/
-
-	if (0 > ret)
+	int body_length = json_struct_push_max_size_basic(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
+	char body[body_length];
+	body_length = json_struct_push_basic(body, body_length, data, "");
+	if (0 > body_length)
 	{
-		LIBIOTRACE_ERROR("json_struct_push_basic() returned %d", ret);
+		LIBIOTRACE_ERROR("json_struct_push_basic() returned %d", body_length);
 	}
+	body_length--; /*last comma in ret*/
+	body[body_length] = '\0'; /*remove last comma*/
 
-	char labels[200];
 	char short_log_name[50];
 	strncpy(short_log_name, log_name, sizeof(short_log_name));
-	snprintf(labels, sizeof(labels), "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u,functionname=%s", short_log_name, data->hostname, data->process_id, data->thread_id, data->function_name);
 
-	char timestamp[50];
+	const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u,functionname=%s";
+	int body_labels_length = strlen(labels)
+			+ sizeof(short_log_name) /* jobname */
+			+ HOST_NAME_MAX /* hostname */
+			+ (COUNT_DEC_AS_CHAR(pid_t) * 2) /* processid + thread */
+			+ MAX_FUNCTION_NAME; /* functionname */
+	char body_labels[body_labels_length];
+	snprintf(body_labels, sizeof(body_labels), labels, short_log_name, data->hostname, data->process_id, data->thread_id, data->function_name);
+	body_labels_length = strlen(body_labels);
 
+	int timestamp_length = COUNT_DEC_AS_CHAR(u_int64_t);
+	char timestamp[timestamp_length];
 	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + data->time_end);
-	char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK "Host: localhost:8086" LINE_BREAK "Accept: */*" LINE_BREAK
-					"Authorization: Token %s" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/x-www-form-urlencoded" LINE_BREAK LINE_BREAK "%s %s %s";
-	int length = strlen(header) + strlen(influx_bucket) + strlen(influx_organization) + strlen(influx_token) + strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp) + 10 /*content length*/;
+	timestamp_length = strlen(timestamp);
+
+	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
+			"Host: localhost:8086" LINE_BREAK
+			"Accept: */*" LINE_BREAK
+			"Authorization: Token %s" LINE_BREAK
+			"Content-Length: %ld" LINE_BREAK
+			"Content-Type: application/x-www-form-urlencoded" LINE_BREAK
+			LINE_BREAK
+			"%s %s %s";
+	int message_length = strlen(header)
+			+ influx_bucket_len
+			+ influx_organization_len
+			+ influx_token_len
+			+ COUNT_DEC_AS_CHAR(int) /* Content-Length */
+			+ body_labels_length
+			+ body_length
+			+ timestamp_length;
+
+	int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	//buffer all (header + body)
-	char message[length + 1];
-	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, influx_token, strlen(labels) + 1 /*space*/ + ret - 1 /*last comma in ret*/ + 1 + strlen(timestamp), labels, buf, timestamp);
+	char message[message_length + 1];
+	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, influx_token,
+			content_length, body_labels, body, timestamp);
 
 	send_data(message, socket_peer);
 }
 
-void writeData(struct basic *data)
+/**
+ * Writes a struct basic to the buffer for this process.
+ *
+ * A deep copy of all values from "data" and all in "data"
+ * referenced structures and arrays is synchronized written
+ * to the central buffer.
+ * If the buffer hasn't enough free space for the deep copy
+ * the buffer is cleared with a call to "print_buffer"
+ * first.
+ *
+ * @param[in] data Pointer to struct basic
+ */
+void write_into_buffer(struct basic *data)
 {
 #ifdef LOG_WRAPPER_TIME
 	static char *old_pos;
@@ -1600,7 +1650,7 @@ void writeData(struct basic *data)
 
 	if (pos + length > endpos)
 	{
-		printData();
+		print_buffer();
 	}
 	if (pos + length > endpos)
 	{
@@ -1619,11 +1669,23 @@ void writeData(struct basic *data)
 	pthread_mutex_unlock(&lock);
 }
 
-void freeMemory(struct basic *data)
+/**
+ * Free's dynamically allocated memory in struct basic
+ *
+ * @aram[in] data Pointer to struct basic
+ */
+void free_memory(struct basic *data)
 {
 	json_struct_free_basic(data);
 }
 
+/**
+ * Write buffer and close sockets before process terminates.
+ *
+ * Is called after main() via "dtor" section or during a call of a
+ * wrapper of a "exit*" function. Writes buffer contents to file,
+ * closes open connections (sockets) and destroys mutexes.
+ */
 void cleanup()
 {
 	event_cleanup_done = 1;
@@ -1638,7 +1700,7 @@ void cleanup()
 	WRAPPER_TIME_START(data)
 
 	pthread_mutex_lock(&lock);
-	printData();
+	print_buffer();
 	pthread_mutex_unlock(&lock);
 
 #ifdef LOG_WRAPPER_TIME
@@ -1651,9 +1713,9 @@ void cleanup()
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-	writeData(&data);
+	write_into_buffer(&data);
 	pthread_mutex_lock(&lock);
-	printData();
+	print_buffer();
 	pthread_mutex_unlock(&lock);
 	WRAP_FREE(&data)
 #endif
@@ -1769,6 +1831,9 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 	}
 }
 #endif
+
+/*******************************************************************************/
+/* exec and exit function wrapper                                              */
 
 int WRAP(execve)(const char *filename, char *const argv[], char *const envp[])
 {

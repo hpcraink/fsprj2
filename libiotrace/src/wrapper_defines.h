@@ -185,8 +185,8 @@
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
                             if(active_wrapper_status.functionname){ \
-                              pushData(&data); \
-                              writeData(&data); \
+                              write_into_influxdb(&data); \
+                              write_into_buffer(&data); \
                             } \
                          } \
                          WRAP_FREE(&data) \
@@ -194,16 +194,16 @@
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          if(active_wrapper_status.functionname){ \
-                           pushData(&data); \
-                           writeData(&data); \
+                           write_into_influxdb(&data); \
+                           write_into_buffer(&data); \
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
                            if(active_wrapper_status.functionname){ \
-                             pushData(&data); \
-                             writeData(&data); \
+                             write_into_influxdb(&data); \
+                             write_into_buffer(&data); \
                            } \
                            WRAP_FREE(&data) \
                            errno = errno_value;
@@ -211,6 +211,6 @@
 #define WRAP_END_WITHOUT_WRITE(data) WRAP_FREE(&data) \
                                      errno = errno_data.errno_value;
 
-#define WRAP_FREE(data) freeMemory(data);
+#define WRAP_FREE(data) free_memory(data);
 
 #endif /* LIBIOTRACE_WRAPPER_DEFINES_H */

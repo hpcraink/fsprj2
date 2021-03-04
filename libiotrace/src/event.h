@@ -39,9 +39,9 @@ void get_file_id_by_path(const char *filename, struct file_id *data);
 // ToDo: as macro with return value?
 u_int64_t gettime(void);
 
-void writeData(struct basic *data);
-void pushData(struct basic *data);
-void freeMemory(struct basic *data);
+void write_into_buffer(struct basic *data);
+void write_into_influxdb(struct basic *data);
+void free_memory(struct basic *data);
 
 
 /* All exec-functions replace the current process image without calling __attribute__((destructor)).

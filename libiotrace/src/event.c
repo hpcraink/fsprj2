@@ -877,6 +877,15 @@ void init_on_load()
 #endif
 }
 
+/**
+ * Sends a "message" to the "socket".
+ *
+ * Returns if the whole "message" is send to "socket".
+ * Does not wait for or check responses.
+ *
+ * @param[in] message "\0" terminated message to send.
+ * @param[in] socket  Socket to send to.
+ */
 void send_data(const char *message, SOCKET socket)
 {
 	size_t bytes_to_send = strlen(message);
@@ -912,6 +921,40 @@ void send_data(const char *message, SOCKET socket)
 	}
 }
 
+/**
+ * Callback for each http request to control libiotrace.
+ *
+ * If a complete URL is read this callback is called. It accepts
+ * the following requests:
+ *
+ * POST: An "/" followed by a function name, followed by a "/",
+ *       followed by a "1" or a "0".
+ *       If the last sign in the URL is a "1" and a wrapper for
+ *       the function name exists this wrapper is set to active.
+ *       Else if the function name exists the wrapper is set to
+ *       inactive.
+ * GET:  Requests an json object with all known wrappers as keys
+ *       and the status (active/inactive) as value (1/0).
+ *
+ * The responses to the requests are send to the connection the
+ * request came in. For that the global thread local variable
+ * "socket_peer" has to be set to the corresponding socket
+ * before the http parser calls this callback.
+ * The callback is only used inside "communication_thread" which
+ * exists once per process. So the "socket_peer" is unique and
+ * thread safe.
+ *
+ * @param[in] parser A pointer to the parser which has called
+ *                   this callback. Gives access to the parser
+ *                   state (like method of the request).
+ * @param[in] at     Start pointer of the parsed URL as a char
+ *                   array. The array is not terminated by "\0"
+ *                   (see "length").
+ * @param[in] length Count of chars in the URL (in the array
+ *                   given by "at").
+ *
+ * @return Error state of the callback (not used; gives "0" back).
+ */
 int url_callback(llhttp_t *parser, const char *at, size_t length)
 {
 
@@ -943,7 +986,11 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
 	}
 	else if (parser->method == HTTP_GET)
 	{
-		const char *message_header = "HTTP/1.1 200 OK" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s";
+		const char *message_header = "HTTP/1.1 200 OK" LINE_BREAK
+				"Content-Length: %ld" LINE_BREAK
+				"Content-Type: application/json" LINE_BREAK
+				LINE_BREAK
+				"%s";
 
 		// buffer for body
 		char buf[json_struct_max_size_wrapper_status() + 1];
@@ -953,7 +1000,7 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
 			LIBIOTRACE_ERROR("json_struct_print_wrapper_status() returned %d", ret);
 		}
 
-		const int message_len = strlen(message_header) + 10 + ret;
+		const int message_len = strlen(message_header) + COUNT_DEC_AS_CHAR(ret) + ret;
 		char message[message_len + 1];
 
 		snprintf(message, sizeof(message), message_header, ret, buf);
@@ -1007,7 +1054,7 @@ void *communication_thread(void *arg)
 	llhttp_settings_init(&settings);
 
 	/* Set user callback */
-	settings.on_url = my_url_callback;
+	settings.on_url = url_callback;
 
 	llhttp_init(&parser, HTTP_BOTH, &settings);
 
@@ -1691,16 +1738,19 @@ void write_into_influxdb(struct basic *data)
 	int body_labels_length = strlen(labels)
 			+ sizeof(short_log_name) /* jobname */
 			+ HOST_NAME_MAX /* hostname */
-			+ (COUNT_DEC_AS_CHAR(pid_t) * 2) /* processid + thread */
+			+ COUNT_DEC_AS_CHAR(data->process_id) /* processid */
+			+ COUNT_DEC_AS_CHAR(data->thread_id) /* thread */
 			+ MAX_FUNCTION_NAME; /* functionname */
 	char body_labels[body_labels_length];
 	snprintf(body_labels, sizeof(body_labels), labels, short_log_name, data->hostname, data->process_id, data->thread_id, data->function_name);
 	body_labels_length = strlen(body_labels);
 
-	int timestamp_length = COUNT_DEC_AS_CHAR(u_int64_t);
+	int timestamp_length = COUNT_DEC_AS_CHAR(system_start_time);
 	char timestamp[timestamp_length];
 	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + data->time_end);
 	timestamp_length = strlen(timestamp);
+
+	int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
 			"Host: localhost:8086" LINE_BREAK
@@ -1714,12 +1764,10 @@ void write_into_influxdb(struct basic *data)
 			+ influx_bucket_len
 			+ influx_organization_len
 			+ influx_token_len
-			+ COUNT_DEC_AS_CHAR(int) /* Content-Length */
+			+ COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
 			+ body_labels_length
 			+ body_length
 			+ timestamp_length;
-
-	int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	//buffer all (header + body)
 	char message[message_length + 1];

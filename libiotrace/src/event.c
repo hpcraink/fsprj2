@@ -182,6 +182,7 @@ static char influx_token_env[MAX_INFLUX_TOKEN + sizeof(env_influx_token)];
 static char influx_organization_env[MAX_INFLUX_ORGANIZATION + sizeof(env_influx_organization)];
 static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(env_influx_bucket)];
 static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
+static char has_whitelist;
 #endif
 static u_int64_t system_start_time;
 static SOCKET *recv_sockets = NULL;
@@ -672,7 +673,7 @@ void print_filesystem()
 			filesystem_entry_ptr->mnt_passno;
 		json_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
 									 &filesystem_data);
-		ret = dprintf(fd, "%s" LINE_BREAK, buf_filesystem); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+		ret = dprintf(fd, "%s" LINE_BREAK, buf_filesystem);
 		if (0 > ret)
 		{
 			LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret, errno);
@@ -762,7 +763,7 @@ void print_working_directory()
 
 	json_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
 								  &working_dir_data);
-	ret_int = dprintf(fd, "%s" LINE_BREAK, buf_working_dir); //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+	ret_int = dprintf(fd, "%s" LINE_BREAK, buf_working_dir);
 	if (0 > ret_int)
 	{
 		LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret_int, errno);
@@ -1360,12 +1361,17 @@ void init_process()
 		if (0 != length)
 		{
 #ifndef IO_LIB_STATIC
+			has_whitelist = 1;
 			strcpy(whitelist_env, env_wrapper_whitelist);
 			strcpy(whitelist_env + length, "=");
 			strcpy(whitelist_env + length + 1, whitelist);
 #endif
 
 			read_whitelist();
+		} else {
+#ifndef IO_LIB_STATIC
+			has_whitelist = 0;
+#endif
 		}
 
 #ifndef IO_LIB_STATIC
@@ -1523,7 +1529,7 @@ void printData()
 		data = (struct basic *)((void *)pos);
 
 		ret = json_struct_print_basic(buf, sizeof(buf), data); //Function is present at runtime, built with macros from json_defines.h
-		ret = dprintf(fd, "%s" LINE_BREAK, buf);						   //TODO: CALL_REAL_POSIX_SYNC(dprintf)
+		ret = dprintf(fd, "%s" LINE_BREAK, buf);
 		if (0 > ret)
 		{
 			LIBIOTRACE_ERROR("dprintf() returned %d", ret);
@@ -1688,6 +1694,25 @@ void cleanup()
 }
 
 #ifndef IO_LIB_STATIC
+/**
+ * Ensure that an array of environment variables contains all libiotrace variables.
+ *
+ * A call to an "exec*" function can manipulate the environment variables. To ensure
+ * that all new processes are under the control of libiotrace the manipulated
+ * environment variables must contain all necessary variables.
+ * The given array "envp" is checked for LD_PRELOAD. If LD_PRELOAD isn't contained
+ * in "envp" all variables from "envp" and all variables used by libiotrace are
+ * added to "env". Else "env" is a copy of "envp".
+ *
+ * @param[in,out] env  An empty array of char arrays as input. Is filled with all
+ *                     variables from "envp", all missing necessary variables
+ *                     used by libiotrace and a terminating NULL as last array
+ *                     during function call of "check_ld_preload".
+ * @param[in]     envp Environment variables of the new process as a NULL
+ *                     terminated array of strings ("\0" terminated char arrays)
+ * @param[in]     func Function name of the calling function as "\0" terminated
+ *                     char array. Used for error handling.
+ */
 void check_ld_preload(char *env[], char *const envp[], const char *func)
 {
 	int env_element;
@@ -1714,21 +1739,30 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 
 	if (!envp_null)
 	{
-		LIBIOTRACE_ERROR("envp[] has more elements then buffer (%d)", MAX_EXEC_ARRAY_LENGTH);
+		LIBIOTRACE_ERROR("during call of %s envp[] has more elements then buffer (%d)", func, MAX_EXEC_ARRAY_LENGTH);
 	}
 
 	if (!has_ld_preload)
 	{
-		if (MAX_EXEC_ARRAY_LENGTH <= env_element + 8)
+		int count_libiotrace_env = 7;
+		if (has_whitelist)
 		{
-			LIBIOTRACE_ERROR("envp[] with added libiotrace-variables has more elements then buffer (%d)", MAX_EXEC_ARRAY_LENGTH);
+			count_libiotrace_env++;
+		}
+
+		if (MAX_EXEC_ARRAY_LENGTH <= env_element + count_libiotrace_env)
+		{
+			LIBIOTRACE_ERROR("during call if %s envp[] with added libiotrace-variables has more elements then buffer (%d)", func, MAX_EXEC_ARRAY_LENGTH);
 		}
 		env[env_element] = &ld_preload[0];
 		env[++env_element] = &log_name_env[0];
 		env[++env_element] = &database_ip_env[0];
 		env[++env_element] = &database_port_env[0];
 		env[++env_element] = &influx_token_env[0];
-		env[++env_element] = &whitelist_env[0];
+		if (has_whitelist)
+		{
+			env[++env_element] = &whitelist_env[0];
+		}
 		env[++env_element] = &influx_bucket_env[0];
 		env[++env_element] = &influx_organization_env[0];
 		env[++env_element] = NULL;

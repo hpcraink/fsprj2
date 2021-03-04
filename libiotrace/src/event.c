@@ -793,6 +793,16 @@ void reset_values_in_forked_process()
 	open_control_sockets_len = 0;
 }
 
+/**
+ * Adds an simulated wrapper call for opening "fd" to the central buffer.
+ *
+ * Is used for STDIN_FILENO, STDOUT_FILENO and STDERR_FILENO. These three
+ * file descriptors are already open as the process is started. The
+ * simulated wrapper call enables handling of these descriptors without
+ * additional logic during reading of the log file.
+ *
+ * @param[in] fd File descriptor to add simulated open for.
+ */
 void open_std_fd(int fd)
 {
 	struct basic data;
@@ -819,6 +829,16 @@ void open_std_fd(int fd)
 	WRAP_FREE(&data)
 }
 
+/**
+ * Adds an simulated wrapper call for opening "file" to the central buffer.
+ *
+ * Is used for stdin, stdout and stderr. These three file streams
+ * are already open as the process is started. The simulated wrapper
+ * call enables handling of these streams without additional logic
+ * during reading of the log file.
+ *
+ * @param[in] file File stream to add simulated open for.
+ */
 void open_std_file(FILE *file)
 {
 	struct basic data;
@@ -844,10 +864,14 @@ void open_std_file(FILE *file)
 	WRAP_FREE(&data)
 }
 
-//Compiler --> Add this function to CTOR section in elf binary
-// Execute this function before main() of program observing
 void init_on_load() ATTRIBUTE_CONSTRUCTOR;
 
+/**
+ * Calls "init_process" during execution of "ctor" section.
+ *
+ * Guarantees that "init_process" is called before main() of
+ * the observed program is started.
+ */
 void init_on_load()
 {
 #ifdef LOG_WRAPPER_TIME

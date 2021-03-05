@@ -6,11 +6,11 @@
 #include <aio.h>
 #include <fcntl.h>
 
-#include "json_include_struct.h"
 #include "event.h"
 #include "wrapper_defines.h"
 #include "posix_aio.h"
 
+#include "libiotrace_include_struct.h"
 #include "wrapper_name.h"
 
 #ifndef IO_LIB_STATIC
@@ -152,11 +152,11 @@ int WRAP(aio_read)(struct aiocb *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_read_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_read_function,
 			asynchronous_read_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = aiocbp->aio_fildes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_read_function_data.async = aiocbp;
 	asynchronous_read_function_data.bytes_to_read = aiocbp->aio_nbytes;
@@ -184,11 +184,11 @@ int WRAP(aio_read64)(struct aiocb64 *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_read_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_read_function,
 			asynchronous_read_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = aiocbp->aio_fildes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_read_function_data.async = aiocbp;
 	asynchronous_read_function_data.bytes_to_read = aiocbp->aio_nbytes;
@@ -216,11 +216,11 @@ int WRAP(aio_write)(struct aiocb *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_write_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_write_function,
 			asynchronous_write_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = aiocbp->aio_fildes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_write_function_data.async = aiocbp;
 	asynchronous_write_function_data.bytes_to_write = aiocbp->aio_nbytes;
@@ -248,11 +248,11 @@ int WRAP(aio_write64)(struct aiocb64 *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_write_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_write_function,
 			asynchronous_write_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = aiocbp->aio_fildes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_write_function_data.async = aiocbp;
 	asynchronous_write_function_data.bytes_to_write = aiocbp->aio_nbytes;
@@ -283,10 +283,10 @@ int WRAP(lio_listio)(int mode, struct aiocb * const list[], int nent,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_listio_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_listio_function,
 			asynchronous_listio_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_listio_function_data.mode = get_listio_mode(mode);
 
@@ -305,7 +305,7 @@ int WRAP(lio_listio)(int mode, struct aiocb * const list[], int nent,
 					list[i]->aio_lio_opcode);
 			switch (asynchronous_listio_function_data.opcode) {
 			case lio_write:
-				JSON_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
+				LIBIOTRACE_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
 						request_data, asynchronous_write_function,
 						asynchronous_write_function_data)
 				asynchronous_write_function_data.async = list[i];
@@ -317,7 +317,7 @@ int WRAP(lio_listio)(int mode, struct aiocb * const list[], int nent,
 				WRAP_END(data)
 				break;
 			case lio_read:
-				JSON_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
+				LIBIOTRACE_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
 						request_data, asynchronous_read_function,
 						asynchronous_read_function_data)
 				asynchronous_read_function_data.async = list[i];
@@ -349,10 +349,10 @@ int WRAP(lio_listio64)(int mode, struct aiocb64 *const list[], int nent, struct 
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_listio_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_listio_function,
 			asynchronous_listio_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_listio_function_data.mode = get_listio_mode(mode);
 
@@ -371,7 +371,7 @@ int WRAP(lio_listio64)(int mode, struct aiocb64 *const list[], int nent, struct 
 					list[i]->aio_lio_opcode);
 			switch (asynchronous_listio_function_data.opcode) {
 				case lio_write:
-				JSON_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
+				LIBIOTRACE_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
 						request_data, asynchronous_write_function,
 						asynchronous_write_function_data)
 				asynchronous_write_function_data.async = list[i];
@@ -383,7 +383,7 @@ int WRAP(lio_listio64)(int mode, struct aiocb64 *const list[], int nent, struct 
 				WRAP_END(data)
 				break;
 				case lio_read:
-				JSON_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
+				LIBIOTRACE_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
 						request_data, asynchronous_read_function,
 						asynchronous_read_function_data)
 				asynchronous_read_function_data.async = list[i];
@@ -413,11 +413,11 @@ int WRAP(aio_error)(const struct aiocb *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_error_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_error_function,
 			asynchronous_error_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_async_data.async = aiocbp;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, aio_error, aiocbp)
 
@@ -441,11 +441,11 @@ int WRAP(aio_error64)(const struct aiocb64 *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_error_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_error_function,
 			asynchronous_error_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_async_data.async = aiocbp;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, aio_error64, aiocbp)
 
@@ -469,11 +469,11 @@ ssize_t WRAP(aio_return)(struct aiocb *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_return_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_return_function,
 			asynchronous_return_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_async_data.async = aiocbp;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, aio_return, aiocbp)
 
@@ -497,11 +497,11 @@ ssize_t WRAP(aio_return64)(struct aiocb64 *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_return_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_return_function,
 			asynchronous_return_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_async_data.async = aiocbp;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, aio_return64, aiocbp)
 
@@ -525,11 +525,11 @@ int WRAP(aio_fsync)(int op, struct aiocb *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_sync_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_sync_function,
 			asynchronous_sync_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_async_data.async = aiocbp;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 	asynchronous_sync_function_data.sync_mode = get_async_sync_mode(op);
 
 	CALL_REAL_FUNCTION_RET(data, ret, aio_fsync, op, aiocbp)
@@ -553,11 +553,11 @@ int WRAP(aio_fsync64)(int op, struct aiocb64 *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_sync_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_sync_function,
 			asynchronous_sync_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_async_data.async = aiocbp;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 	asynchronous_sync_function_data.sync_mode = get_async_sync_mode(op);
 
 	CALL_REAL_FUNCTION_RET(data, ret, aio_fsync64, op, aiocbp)
@@ -582,10 +582,10 @@ int WRAP(aio_suspend)(const struct aiocb * const list[], int nent,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_suspend_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_suspend_function,
 			asynchronous_suspend_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 	asynchronous_suspend_function_data.timeout.sec = timeout->tv_sec;
 	asynchronous_suspend_function_data.timeout.nano_sec = timeout->tv_nsec;
 
@@ -616,10 +616,10 @@ int WRAP(aio_suspend64)(const struct aiocb64 *const list[], int nent, const stru
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_suspend_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_suspend_function,
 			asynchronous_suspend_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_async, file_async_data)
 	asynchronous_suspend_function_data.timeout.sec = timeout->tv_sec;
 	asynchronous_suspend_function_data.timeout.nano_sec = timeout->tv_nsec;
 
@@ -650,11 +650,11 @@ int WRAP(aio_cancel)(int fildes, struct aiocb *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_cancel_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_cancel_function,
 			asynchronous_cancel_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fildes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_cancel_function_data.async = aiocbp;
 
@@ -680,11 +680,11 @@ int WRAP(aio_cancel64)(int fildes, struct aiocb64 *aiocbp) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_cancel_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_cancel_function,
 			asynchronous_cancel_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fildes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 	asynchronous_cancel_function_data.async = aiocbp;
 
@@ -709,10 +709,10 @@ void WRAP(aio_init)(const struct aioinit *init) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, asynchronous_init_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, asynchronous_init_function,
 			asynchronous_init_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 	asynchronous_init_function_data.max_threads = init->aio_threads;
 	asynchronous_init_function_data.max_simultaneous_requests = init->aio_num;
 	asynchronous_init_function_data.seconds_idle_before_terminate = init->aio_idle_time;
@@ -731,9 +731,9 @@ int WRAP(shm_open)(const char *name, int oflag, mode_t mode) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 			file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, shm_open, name, oflag, mode)

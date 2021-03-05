@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include "error.h"
-#include "json_include_struct.h"
+#include "libiotrace_include_struct.h"
 
 #define LINE_BREAK "\r\n"
 

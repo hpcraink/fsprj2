@@ -3,8 +3,8 @@
  */
 #include "libiotrace_config.h"
 
-#include "json_include_struct.h"
 #include "event.h"
+#include "libiotrace_include_struct.h"
 #include "wrapper_defines.h"
 #include "mpi.h"
 
@@ -118,10 +118,10 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 	open_data.mode = get_access_amode(amode);
 	get_creation_amode(amode, &open_data.creation);
 	get_status_amode(amode, &open_data.status);
@@ -140,7 +140,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_open, comm, filename, amode,
 							   info, fh)
 
-	JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(open_data, file_hints)
+	LIBIOTRACE_STRUCT_SET_KEY_VALUE_ARRAY_NULL(open_data, file_hints)
 
 	if (MPI_INFO_NULL != info)
 	{
@@ -155,7 +155,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 
 		if (count_elements >= 1)
 		{
-			JSON_STRUCT_INIT_KEY_VALUE_ARRAY(open_data, file_hints, keys,
+			LIBIOTRACE_STRUCT_INIT_KEY_VALUE_ARRAY(open_data, file_hints, keys,
 											 values)
 
 			for (int i = 0; i < count_elements && i < MAX_MPI_FILE_HINTS; i++)
@@ -164,7 +164,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 				MPI_Info_get(info, key_strings[i], MPI_MAX_INFO_VAL - 1,
 							 value_strings[i], &flag);
 
-				JSON_STRUCT_ADD_KEY_VALUE(open_data, file_hints, key_strings[i],
+				LIBIOTRACE_STRUCT_ADD_KEY_VALUE(open_data, file_hints, key_strings[i],
 										  value_strings[i])
 			}
 		}
@@ -204,9 +204,9 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -252,9 +252,9 @@ int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype dataty
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -287,9 +287,9 @@ int MPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype da
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -325,9 +325,9 @@ int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype dat
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -377,9 +377,9 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -427,9 +427,9 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -462,9 +462,9 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -500,9 +500,9 @@ int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, 
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -548,9 +548,9 @@ int MPI_File_close(MPI_File *fh)
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(*fh);
 
@@ -583,9 +583,9 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -630,9 +630,9 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -684,9 +684,9 @@ int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int c
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -738,9 +738,9 @@ int MPI_File_read_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_D
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -792,9 +792,9 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, M
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 	MPI_Type_size(datatype, &datatype_size);
@@ -843,9 +843,9 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -880,9 +880,9 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, 
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -917,9 +917,9 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -954,9 +954,9 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int 
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -990,9 +990,9 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 
@@ -1027,10 +1027,10 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_wait, mpi_wait_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_wait, mpi_wait_data)
 
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, request_mpi, request_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, request_mpi, request_mpi_data)
 
 	request_mpi_data.request_id = MPI_Request_c2f(*request);
 
@@ -1086,10 +1086,10 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_waitall, mpi_waitall_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_waitall, mpi_waitall_data)
 
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	if (MPI_STATUSES_IGNORE == array_of_statuses)
 	{
@@ -1107,7 +1107,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 	if (ret != MPI_SUCCESS)
 	{
 		data.return_state = error;
-		JSON_STRUCT_SET_STRUCT_ARRAY_NULL(mpi_waitall_data, requests)
+		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY_NULL(mpi_waitall_data, requests)
 		SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
 	}
 	else
@@ -1138,7 +1138,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 			mpi_waitall_element_data_pointer[i] = &(mpi_waitall_element_data[i]);
 		}
 
-		JSON_STRUCT_SET_STRUCT_ARRAY(mpi_waitall_data, requests, mpi_waitall_element_data_pointer,
+		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mpi_waitall_data, requests, mpi_waitall_element_data_pointer,
 									 count)
 	}
 
@@ -1160,14 +1160,14 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, mpi_delete_function, mpi_delete_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_delete_function, mpi_delete_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	mpi_delete_data.file_name = filename;
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_delete, filename, info)
 
-	JSON_STRUCT_SET_KEY_VALUE_ARRAY_NULL(mpi_delete_data, file_hints)
+	LIBIOTRACE_STRUCT_SET_KEY_VALUE_ARRAY_NULL(mpi_delete_data, file_hints)
 
 	if (MPI_INFO_NULL != info)
 	{
@@ -1182,7 +1182,7 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 
 		if (count_elements >= 1)
 		{
-			JSON_STRUCT_INIT_KEY_VALUE_ARRAY(mpi_delete_data, file_hints, keys,
+			LIBIOTRACE_STRUCT_INIT_KEY_VALUE_ARRAY(mpi_delete_data, file_hints, keys,
 											 values)
 
 			for (int i = 0; i < count_elements && i < MAX_MPI_FILE_HINTS; i++)
@@ -1191,7 +1191,7 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 				MPI_Info_get(info, key_strings[i], MPI_MAX_INFO_VAL - 1,
 							 value_strings[i], &flag);
 
-				JSON_STRUCT_ADD_KEY_VALUE(mpi_delete_data, file_hints, key_strings[i],
+				LIBIOTRACE_STRUCT_ADD_KEY_VALUE(mpi_delete_data, file_hints, key_strings[i],
 										  value_strings[i])
 			}
 		}
@@ -1226,9 +1226,9 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
 	WRAP_MPI_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
 
 	file_mpi_data.mpi_file = MPI_File_c2f(fh);
 

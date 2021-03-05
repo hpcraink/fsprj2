@@ -31,7 +31,7 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include "json_include_struct.h"
+#include "libiotrace_include_struct.h"
 #include "event.h"
 #include "wrapper_defines.h"
 #include "posix_io.h"
@@ -1193,7 +1193,7 @@ int WRAP(open)(const char *filename, int flags, mode_t mode)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = get_access_mode(flags);
@@ -1233,7 +1233,7 @@ int WRAP(open)(const char *filename, int flags, mode_t mode)
 
 	file_descriptor_data.descriptor = ret;
 	get_file_id(ret, &(open_data.id));
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	WRAP_END(data, open)
@@ -1255,7 +1255,7 @@ int WRAP(open64)(const char *filename, int flags, mode_t mode)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = get_access_mode(flags);
@@ -1295,7 +1295,7 @@ int WRAP(open64)(const char *filename, int flags, mode_t mode)
 
 	file_descriptor_data.descriptor = ret;
 	get_file_id(ret, &(open_data.id));
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	WRAP_END(data, open64)
@@ -1318,7 +1318,7 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, mode_t mode)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, openat_function, openat_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, openat_function, openat_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	openat_data.file_name = pathname;
 	openat_data.mode = get_access_mode(flags);
@@ -1367,7 +1367,7 @@ int WRAP(openat)(int dirfd, const char *pathname, int flags, mode_t mode)
 
 	file_descriptor_data.descriptor = ret;
 	get_file_id(ret, &(openat_data.id));
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	WRAP_END(data, openat)
@@ -1385,7 +1385,7 @@ int WRAP(creat)(const char *filename, mode_t mode)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = get_access_mode(flags);
@@ -1406,7 +1406,7 @@ int WRAP(creat)(const char *filename, mode_t mode)
 
 	file_descriptor_data.descriptor = ret;
 	get_file_id(ret, &(open_data.id));
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	WRAP_END(data, creat)
@@ -1424,7 +1424,7 @@ int WRAP(creat64)(const char *filename, mode_t mode)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = get_access_mode(flags);
@@ -1445,7 +1445,7 @@ int WRAP(creat64)(const char *filename, mode_t mode)
 
 	file_descriptor_data.descriptor = ret;
 	get_file_id(ret, &(open_data.id));
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	WRAP_END(data, creat64)
@@ -1461,10 +1461,10 @@ int WRAP(close)(int filedes)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, close, filedes)
@@ -1491,10 +1491,10 @@ ssize_t WRAP(read)(int filedes, void *buffer, size_t size)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, read, filedes, buffer, size)
@@ -1529,10 +1529,10 @@ ssize_t WRAP(pread)(int filedes, void *buffer, size_t size, off_t offset)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pread_data.position = offset;
 
@@ -1569,10 +1569,10 @@ ssize_t WRAP(pread64)(int filedes, void *buffer, size_t size, off64_t offset)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pread_data.position = offset;
 
@@ -1608,10 +1608,10 @@ ssize_t WRAP(write)(int filedes, const void *buffer, size_t size)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, write, filedes, buffer, size)
@@ -1641,10 +1641,10 @@ ssize_t WRAP(pwrite)(int filedes, const void *buffer, size_t size, off_t offset)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pwrite_data.position = offset;
 
@@ -1677,10 +1677,10 @@ ssize_t WRAP(pwrite64)(int filedes, const void *buffer, size_t size,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pwrite_data.position = offset;
 
@@ -1711,11 +1711,11 @@ off_t WRAP(lseek)(int filedes, off_t offset, int whence)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, lpositioning_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, lpositioning_function,
 						   lpositioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, lseek, filedes, offset, whence)
@@ -1746,11 +1746,11 @@ off64_t WRAP(lseek64)(int filedes, off64_t offset, int whence)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, lpositioning_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, lpositioning_function,
 						   lpositioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, lseek64, filedes, offset, whence)
@@ -1782,10 +1782,10 @@ ssize_t WRAP(readv)(int filedes, const struct iovec *vector, int count)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, readv, filedes, vector, count)
@@ -1821,10 +1821,10 @@ ssize_t WRAP(writev)(int filedes, const struct iovec *vector, int count)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, writev, filedes, vector, count)
@@ -1855,10 +1855,10 @@ ssize_t WRAP(preadv)(int fd, const struct iovec *iov, int iovcnt, off_t offset)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pread_data.position = offset;
 
@@ -1896,10 +1896,10 @@ ssize_t WRAP(preadv64)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pread_data.position = offset;
 
@@ -1936,10 +1936,10 @@ ssize_t WRAP(pwritev)(int fd, const struct iovec *iov, int iovcnt, off_t offset)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pwrite_data.position = offset;
 
@@ -1972,10 +1972,10 @@ ssize_t WRAP(pwritev64)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pwrite_data.position = offset;
 
@@ -2008,10 +2008,10 @@ ssize_t WRAP(preadv2)(int fd, const struct iovec *iov, int iovcnt, off_t offset,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread2_function, pread2_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread2_function, pread2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pread2_data.position = offset;
 	get_rwf_flags(flags, &pread2_data.flags);
@@ -2050,10 +2050,10 @@ ssize_t WRAP(preadv64v2)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pread2_function, pread2_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread2_function, pread2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pread2_data.position = offset;
 	get_rwf_flags(flags, &pread2_data.flags);
@@ -2093,10 +2093,10 @@ ssize_t WRAP(pwritev2)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite2_function, pwrite2_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite2_function, pwrite2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pwrite2_data.position = offset;
 	get_rwf_flags(flags, &pwrite2_data.flags);
@@ -2130,10 +2130,10 @@ ssize_t WRAP(pwritev64v2)(int fd, const struct iovec *iov, int iovcnt,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, pwrite2_function, pwrite2_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite2_function, pwrite2_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	pwrite2_data.position = offset;
 	get_rwf_flags(flags, &pwrite2_data.flags);
@@ -2217,15 +2217,15 @@ ssize_t WRAP(copy_file_range)(int inputfd, off64_t *inputpos, int outputfd,
 	}
 
 	file_descriptor_read_data.descriptor = inputfd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_read_data)
-	JSON_STRUCT_SET_VOID_P(data, function_data, copy_read_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, copy_read_function,
 						   copy_read_data)
 	WRAP_END(data, copy_file_range)
 	file_descriptor_write_data.descriptor = outputfd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_write_data)
-	JSON_STRUCT_SET_VOID_P(data, function_data, copy_write_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, copy_write_function,
 						   copy_write_data)
 	WRAP_END(data, copy_file_range)
 	return ret;
@@ -2243,11 +2243,11 @@ void *WRAP(mmap)(void *address, size_t length, int protect, int flags,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
 						   memory_map_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	get_memory_protection_flags(protect, &memory_map_data.protection_flags);
 	get_memory_map_flags(flags, &memory_map_data.map_flags);
@@ -2283,11 +2283,11 @@ void *WRAP(mmap64)(void *address, size_t length, int protect, int flags,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, memory_map_function,
 						   memory_map_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	get_memory_protection_flags(protect, &memory_map_data.protection_flags);
 	get_memory_map_flags(flags, &memory_map_data.map_flags);
@@ -2321,9 +2321,9 @@ int WRAP(munmap)(void *addr, size_t length)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
 	file_memory_data.length = length;
 	file_memory_data.address = addr;
 
@@ -2353,10 +2353,10 @@ int WRAP(msync)(void *address, size_t length, int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, memory_sync_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, memory_sync_function,
 						   memory_sync_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
 	get_memory_sync_flags(flags, &memory_sync_data.sync_flags);
 	file_memory_data.length = length;
 	file_memory_data.address = address;
@@ -2388,10 +2388,10 @@ void *WRAP(mremap)(void *old_address, size_t old_length, size_t new_length,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, memory_remap_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, memory_remap_function,
 						   memory_remap_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
 	get_memory_remap_flags(flags, &memory_remap_data.remap_flags);
 	file_memory_data.length = old_length;
 	file_memory_data.address = old_address;
@@ -2438,10 +2438,10 @@ int WRAP(madvise)(void *addr, size_t length, int advice)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, memory_madvise_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, memory_madvise_function,
 						   memory_madvise_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
 	memory_madvise_data.advice = get_madvice_advice(advice);
 	file_memory_data.length = length;
 	file_memory_data.address = addr;
@@ -2472,10 +2472,10 @@ int WRAP(posix_madvise)(void *addr, size_t len, int advice)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, memory_posix_madvise_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, memory_posix_madvise_function,
 						   memory_posix_madvise_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
 	memory_posix_madvise_function_data.advice = get_posix_madvice_advice(
 		advice);
 	file_memory_data.length = len;
@@ -2512,10 +2512,10 @@ int WRAP(select)(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, select_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, select_function,
 						   select_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 	select_function_data.timeout.sec = timeout->tv_sec;
 	select_function_data.timeout.micro_sec = timeout->tv_usec;
 	if (NULL != readfds)
@@ -2599,9 +2599,9 @@ void WRAP(sync)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION(data, sync)
 
@@ -2621,10 +2621,10 @@ int WRAP(syncfs)(int fd)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, syncfs, fd)
@@ -2652,10 +2652,10 @@ int WRAP(fsync)(int fd)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsync, fd)
@@ -2683,10 +2683,10 @@ int WRAP(fdatasync)(int fd)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fdatasync, fd)
@@ -2714,10 +2714,10 @@ int WRAP(dup)(int oldfd)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dup_function, dup_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, dup_function, dup_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = oldfd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, dup, oldfd)
@@ -2745,10 +2745,10 @@ int WRAP(dup2)(int oldfd, int newfd)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dup_function, dup_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, dup_function, dup_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = oldfd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, dup2, oldfd, newfd)
@@ -2777,10 +2777,10 @@ int WRAP(dup3)(int oldfd, int newfd, int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dup3_function, dup3_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, dup3_function, dup3_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = oldfd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	get_creation_flags(flags, &dup3_data.creation);
 
@@ -2826,11 +2826,11 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, fcntl_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fcntl_function,
 						   fcntl_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_descriptor_data.descriptor = fd;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	fcntl_function_data.cmd = get_fcntl_cmd(cmd);
 
@@ -2842,14 +2842,14 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		dup_function_data.new_descriptor = ret;
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, dup_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, dup_function,
 							   dup_function_data)
 		break;
 	case setfd:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		get_file_descriptor_flags(arg_int, &fcntl_fd_function_data.fd_flags);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fd_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fd_function,
 							   fcntl_fd_function_data)
 		break;
 	case setfl:
@@ -2858,7 +2858,7 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		fcntl_fl_function_data.mode = get_access_mode(arg_int);
 		get_creation_flags(arg_int, &fcntl_fl_function_data.creation);
 		get_status_flags(arg_int, &fcntl_fl_function_data.status);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fl_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fl_function,
 							   fcntl_fl_function_data)
 		break;
 	case setown:
@@ -2874,35 +2874,35 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 			fcntl_own_data.type = owner_process_group;
 			fcntl_own_data.id = arg_int * -1;
 		}
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_own,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_own,
 							   fcntl_own_data)
 		break;
 	case setsig:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		fcntl_sig_data.signal = ret;
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_sig,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_sig,
 							   fcntl_sig_data)
 		break;
 	case setlease:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		fcntl_lease_data.type = get_lease_type(arg_int);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_lease,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_lease,
 							   fcntl_lease_data)
 		break;
 	case notify:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		get_directory_notify_flags(arg_int, &fcntl_dnotify_data.flags);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_dnotify,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_dnotify,
 							   fcntl_dnotify_data)
 		break;
 	case setpipe_sz:
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		fcntl_pipe_size_data.bytes = ret;
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_pipe_size,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_pipe_size,
 							   fcntl_pipe_size_data)
 		break;
 #ifdef F_ADD_SEALS
@@ -2910,14 +2910,14 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		arg_int = va_arg(ap, int);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_int)
 		get_seal_flags(arg_int, &fcntl_seal_data.flags);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
 							   fcntl_seal_data)
 		break;
 #endif
 	case getfd:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		get_file_descriptor_flags(ret, &fcntl_fd_function_data.fd_flags);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fd_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fd_function,
 							   fcntl_fd_function_data)
 		break;
 	case getfl:
@@ -2925,7 +2925,7 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		fcntl_fl_function_data.mode = get_access_mode(ret);
 		get_creation_flags(ret, &fcntl_fl_function_data.creation);
 		get_status_flags(ret, &fcntl_fl_function_data.status);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fl_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_fl_function,
 							   fcntl_fl_function_data)
 		break;
 	case getown:
@@ -2940,32 +2940,32 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 			fcntl_own_data.type = owner_process_group;
 			fcntl_own_data.id = ret * -1;
 		}
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_own,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_own,
 							   fcntl_own_data)
 		break;
 	case getsig:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		fcntl_sig_data.signal = ret;
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_sig,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_sig,
 							   fcntl_sig_data)
 		break;
 	case getlease:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		fcntl_lease_data.type = get_lease_type(ret);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_lease,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_lease,
 							   fcntl_lease_data)
 		break;
 	case getpipe_sz:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		fcntl_pipe_size_data.bytes = ret;
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_pipe_size,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_pipe_size,
 							   fcntl_pipe_size_data)
 		break;
 #ifdef F_GET_SEALS
 	case get_seals:
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd)
 		get_seal_flags(ret, &fcntl_seal_data.flags);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_seal,
 							   fcntl_seal_data)
 		break;
 #endif
@@ -2989,7 +2989,7 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		{
 			fcntl_flock_data.pid = 0;
 		}
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_flock,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_flock,
 							   fcntl_flock_data)
 		break;
 	case getown_ex:
@@ -2998,7 +2998,7 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_f_owner_ex)
 		fcntl_own_data.type = get_owner_type(arg_f_owner_ex->type);
 		fcntl_own_data.id = arg_f_owner_ex->pid;
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_own,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_own,
 							   fcntl_own_data)
 		break;
 	case get_rw_hint:
@@ -3009,7 +3009,7 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 		arg_uint64_t = va_arg(ap, uint64_t *);
 		CALL_REAL_FUNCTION_RET(data, ret, fcntl, fd, cmd, arg_uint64_t)
 		fcntl_hint_data.hint = get_hint_write_life(*arg_uint64_t);
-		JSON_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_hint,
+		LIBIOTRACE_STRUCT_SET_VOID_P(fcntl_function_data, cmd_data, fcntl_hint,
 							   fcntl_hint_data)
 #endif
 		break;
@@ -3038,10 +3038,10 @@ int WRAP(socket)(int domain, int type, int protocol)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, socket_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, socket_function,
 						   socket_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	socket_function_data.connection_based = is_connection_based(type);
 
@@ -3070,10 +3070,10 @@ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, accept_function,
 						   accept_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, accept, sockfd, addr, addrlen)
@@ -3104,10 +3104,10 @@ int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, accept_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, accept_function,
 						   accept_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, accept4, sockfd, addr, addrlen, flags)
@@ -3136,10 +3136,10 @@ int WRAP(socketpair)(int domain, int type, int protocol, int sv[2])
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, socketpair_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, socketpair_function,
 						   socketpair_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 	socketpair_function_data.connection_based = is_connection_based(type);
 
 	CALL_REAL_FUNCTION_RET(data, ret, socketpair, domain, type, protocol, sv)
@@ -3171,10 +3171,10 @@ int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, sockaddr_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, sockaddr_function,
 						   sockaddr_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	file_descriptor_data.descriptor = sockfd;
 	get_sockaddr(addr, &sockaddr_data, addrlen, hex_addr);
@@ -3204,10 +3204,10 @@ int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, sockaddr_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, sockaddr_function,
 						   sockaddr_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	file_descriptor_data.descriptor = sockfd;
 	get_sockaddr(addr, &sockaddr_data, addrlen, hex_addr);
@@ -3235,9 +3235,9 @@ int WRAP(pipe)(int pipefd[2])
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, file_pair, file_pair_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, file_pair, file_pair_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, pipe, pipefd)
 
@@ -3265,9 +3265,9 @@ int WRAP(pipe2)(int pipefd[2], int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, file_pair, file_pair_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, file_pair, file_pair_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, pipe2, pipefd, flags)
 
@@ -3296,9 +3296,9 @@ int WRAP(memfd_create)(const char *name, unsigned int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, memfd_create, name, flags)
@@ -3327,9 +3327,9 @@ int WRAP(epoll_create)(int size)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, epoll_create, size)
@@ -3358,9 +3358,9 @@ int WRAP(epoll_create1)(int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, epoll_create1, flags)
@@ -3391,9 +3391,9 @@ int WRAP(mkstemp)(char *template)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
@@ -3431,9 +3431,9 @@ int WRAP(mkostemp)(char *template, int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
@@ -3471,9 +3471,9 @@ int WRAP(mkstemps)(char *template, int suffixlen)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
@@ -3511,9 +3511,9 @@ int WRAP(mkostemps)(char *template, int suffixlen, int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	open_data.mode = get_access_mode(tmpflags);
 	get_creation_flags(tmpflags, &open_data.creation);
@@ -3549,9 +3549,9 @@ int WRAP(eventfd)(unsigned int initval, int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, eventfd, initval, flags)
@@ -3580,9 +3580,9 @@ int WRAP(inotify_init)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, inotify_init)
@@ -3611,9 +3611,9 @@ int WRAP(inotify_init1)(int flags)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, inotify_init1, flags)
@@ -3642,10 +3642,10 @@ struct dirent *WRAP(readdir)(DIR *dirp)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, readdir_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, readdir_function,
 						   readdir_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_dir, file_dir_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_dir, file_dir_data)
 	file_dir_data.directory_stream = dirp;
 
 	CALL_REAL_FUNCTION_RET(data, ret, readdir, dirp)
@@ -3675,10 +3675,10 @@ int WRAP(dirfd)(DIR *dirp)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dirfd_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, dirfd_function,
 						   dirfd_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_dir, file_dir_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_dir, file_dir_data)
 	file_dir_data.directory_stream = dirp;
 
 	CALL_REAL_FUNCTION_RET(data, ret, dirfd, dirp)
@@ -3718,10 +3718,10 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags)
 
 	if (-1 != ret)
 	{
-		JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, msg_function,
 							   msg_function_data)
 		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 							   file_descriptor_data)
 		file_descriptor_data.descriptor = sockfd;
 		data.return_state = ok;
@@ -3743,7 +3743,7 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags)
 				}
 
 				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				JSON_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
+				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
 										  (int *)CMSG_DATA(cmsg), fd_count)
 
 				WRAP_END(data, sendmsg)
@@ -3775,10 +3775,10 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags)
 
 	if (-1 != ret)
 	{
-		JSON_STRUCT_SET_VOID_P(data, function_data, msg_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, msg_function,
 							   msg_function_data)
 		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 							   file_descriptor_data)
 		file_descriptor_data.descriptor = sockfd;
 		data.return_state = ok;
@@ -3800,7 +3800,7 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags)
 				}
 
 				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				JSON_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
+				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
 										  (int *)CMSG_DATA(cmsg), fd_count)
 
 				WRAP_END(data, recvmsg)
@@ -3860,7 +3860,7 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
 				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				JSON_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
 										  descriptors, (int *)CMSG_DATA(cmsg), fd_count)
 
 				sockaddr_count++;
@@ -3871,12 +3871,12 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 	if (sockaddr_count > 0)
 	{
-		JSON_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
 							   mmsg_function_data)
-		JSON_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
 									 sockaddr_count)
 		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 							   file_descriptor_data)
 		file_descriptor_data.descriptor = sockfd;
 		data.return_state = ok;
@@ -3943,7 +3943,7 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
 				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				JSON_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
 										  descriptors, (int *)CMSG_DATA(cmsg), fd_count)
 
 				sockaddr_count++;
@@ -3954,12 +3954,12 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 	if (sockaddr_count > 0)
 	{
-		JSON_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
 							   mmsg_function_data)
-		JSON_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
 									 sockaddr_count)
 		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 							   file_descriptor_data)
 		file_descriptor_data.descriptor = sockfd;
 		data.return_state = ok;
@@ -3982,7 +3982,7 @@ FILE *WRAP(fopen)(const char *filename, const char *opentype)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = check_mode(opentype, &open_data.creation,
@@ -4005,7 +4005,7 @@ FILE *WRAP(fopen)(const char *filename, const char *opentype)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, fopen)
 	return file;
@@ -4021,7 +4021,7 @@ FILE *WRAP(fopen64)(const char *filename, const char *opentype)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = check_mode(opentype, &open_data.creation,
@@ -4044,7 +4044,7 @@ FILE *WRAP(fopen64)(const char *filename, const char *opentype)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, fopen64)
 	return file;
@@ -4060,7 +4060,7 @@ FILE *WRAP(freopen)(const char *filename, const char *opentype, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = check_mode(opentype, &open_data.creation,
@@ -4083,7 +4083,7 @@ FILE *WRAP(freopen)(const char *filename, const char *opentype, FILE *stream)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, freopen)
 	return file;
@@ -4099,7 +4099,7 @@ FILE *WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = filename;
 	open_data.mode = check_mode(opentype, &open_data.creation,
@@ -4122,7 +4122,7 @@ FILE *WRAP(freopen64)(const char *filename, const char *opentype, FILE *stream)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, freopen64)
 	return file;
@@ -4139,7 +4139,7 @@ FILE *WRAP(fdopen)(int fd, const char *opentype)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, fdopen_function, fdopen_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fdopen_function, fdopen_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	fdopen_data.descriptor = fd;
 	fdopen_data.mode = check_mode(opentype, &fdopen_data.creation,
@@ -4157,7 +4157,7 @@ FILE *WRAP(fdopen)(int fd, const char *opentype)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, fdopen)
 	return file;
@@ -4172,10 +4172,10 @@ int WRAP(fclose)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fclose, stream)
 
@@ -4200,9 +4200,9 @@ int WRAP(fcloseall)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fcloseall)
 
@@ -4228,10 +4228,10 @@ void WRAP(flockfile)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, flockfile, stream)
 
@@ -4251,10 +4251,10 @@ int WRAP(ftrylockfile)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftrylockfile, stream)
 
@@ -4280,10 +4280,10 @@ void WRAP(funlockfile)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, funlockfile, stream)
 
@@ -4304,12 +4304,12 @@ int WRAP(fwide)(FILE *stream, int mode)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, orientation_mode_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, orientation_mode_function,
 						   orientation_mode_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	orientation_mode_data.set_mode = get_orientation_mode(mode, 1);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fwide, stream, mode)
 
@@ -4330,10 +4330,10 @@ int WRAP(fputc)(int c, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputc, c, stream)
 
@@ -4360,10 +4360,10 @@ wint_t WRAP(fputwc)(wchar_t wc, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputwc, wc, stream)
 
@@ -4391,10 +4391,10 @@ int WRAP(fputc_unlocked)(int c, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputc_unlocked, c, stream)
 
@@ -4423,10 +4423,10 @@ wint_t WRAP(fputwc_unlocked)(wchar_t wc, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputwc_unlocked, wc, stream)
 
@@ -4454,10 +4454,10 @@ int WRAP(putc_MACRO)(int c, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "putc");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putc_MACRO, c, stream)
 
@@ -4484,10 +4484,10 @@ wint_t WRAP(putwc_MACRO)(wchar_t wc, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "putwc");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putwc_MACRO, wc, stream)
 
@@ -4515,10 +4515,10 @@ int WRAP(putc_unlocked_MACRO)(int c, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "putc_unlocked");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putc_unlocked_MACRO, c, stream)
 
@@ -4547,10 +4547,10 @@ wint_t WRAP(putwc_unlocked_MACRO)(wchar_t wc, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "putwc_unlocked");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putwc_unlocked_MACRO, wc, stream)
 
@@ -4578,10 +4578,10 @@ int WRAP(fputs)(const char *s, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputs, s, stream)
 
@@ -4608,10 +4608,10 @@ int WRAP(fputws)(const wchar_t *ws, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputws, ws, stream)
 
@@ -4640,10 +4640,10 @@ int WRAP(fputs_unlocked)(const char *s, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputs_unlocked, s, stream)
 
@@ -4672,10 +4672,10 @@ int WRAP(fputws_unlocked)(const wchar_t *ws, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fputws_unlocked, ws, stream)
 
@@ -4705,10 +4705,10 @@ int WRAP(putw)(int w, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, putw, w, stream)
 
@@ -4737,10 +4737,10 @@ int WRAP(fgetc)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetc, stream)
 
@@ -4767,10 +4767,10 @@ wint_t WRAP(fgetwc)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetwc, stream)
 
@@ -4798,10 +4798,10 @@ int WRAP(fgetc_unlocked)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetc_unlocked, stream)
 
@@ -4830,10 +4830,10 @@ wint_t WRAP(fgetwc_unlocked)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetwc_unlocked, stream)
 
@@ -4861,10 +4861,10 @@ int WRAP(getc_MACRO)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "getc");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getc_MACRO, stream)
 
@@ -4891,10 +4891,10 @@ wint_t WRAP(getwc_MACRO)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "getwc");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getwc_MACRO, stream)
 
@@ -4922,10 +4922,10 @@ int WRAP(getc_unlocked_MACRO)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "getc_unlocked");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getc_unlocked_MACRO, stream)
 
@@ -4954,10 +4954,10 @@ wint_t WRAP(getwc_unlocked_MACRO)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME_STRING(data.function_name, "getwc_unlocked");
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getwc_unlocked_MACRO, stream)
 
@@ -4986,10 +4986,10 @@ int WRAP(getw)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getw, stream)
 
@@ -5018,10 +5018,10 @@ ssize_t WRAP(getline)(char **lineptr, size_t *n, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getline, lineptr, n, stream)
 
@@ -5051,10 +5051,10 @@ ssize_t WRAP(getdelim)(char **lineptr, size_t *n, int delimiter, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, getdelim, lineptr, n, delimiter, stream)
 
@@ -5083,10 +5083,10 @@ char *WRAP(fgets)(char *s, int count, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgets, s, count, stream)
 
@@ -5114,10 +5114,10 @@ wchar_t *WRAP(fgetws)(wchar_t *ws, int count, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetws, ws, count, stream)
 
@@ -5146,10 +5146,10 @@ char *WRAP(fgets_unlocked)(char *s, int count, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgets_unlocked, s, count, stream)
 
@@ -5179,10 +5179,10 @@ wchar_t *WRAP(fgetws_unlocked)(wchar_t *ws, int count, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetws_unlocked, ws, count, stream)
 
@@ -5211,10 +5211,10 @@ int WRAP(ungetc)(int c, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, unget_function, unget_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, unget_function, unget_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ungetc, c, stream)
 
@@ -5241,10 +5241,10 @@ wint_t WRAP(ungetwc)(wint_t wc, FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, unget_function, unget_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, unget_function, unget_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ungetwc, wc, stream)
 
@@ -5271,10 +5271,10 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream)
 	WRAP_START(_data)
 
 	get_basic(&_data);
-	JSON_STRUCT_SET_VOID_P(_data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fread, data, size, count, stream)
 
@@ -5303,10 +5303,10 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 	WRAP_START(_data)
 
 	get_basic(&_data);
-	JSON_STRUCT_SET_VOID_P(_data, function_data, read_function, read_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked, data, size, count,
 						   stream)
@@ -5336,10 +5336,10 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream)
 	WRAP_START(_data)
 
 	get_basic(&_data);
-	JSON_STRUCT_SET_VOID_P(_data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fwrite, data, size, count, stream)
 
@@ -5369,10 +5369,10 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 	WRAP_START(_data)
 
 	get_basic(&_data);
-	JSON_STRUCT_SET_VOID_P(_data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(_data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(_data, ret, fwrite_unlocked, data, size, count,
 						   stream)
@@ -5403,10 +5403,10 @@ int WRAP(fprintf)(FILE *stream, const char *template, ...)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfprintf, stream, template, ap)
@@ -5438,10 +5438,10 @@ int WRAP(fwprintf)(FILE *stream, const wchar_t *template, ...)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfwprintf, stream, template, ap)
@@ -5472,10 +5472,10 @@ int WRAP(vfprintf)(FILE *stream, const char *template, va_list ap)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfprintf, stream, template, ap)
 
@@ -5504,10 +5504,10 @@ int WRAP(vfwprintf)(FILE *stream, const wchar_t *template, va_list ap)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfwprintf, stream, template, ap)
 
@@ -5536,10 +5536,10 @@ int WRAP(fscanf)(FILE *stream, const char *template, ...)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfscanf, stream, template, ap)
@@ -5561,10 +5561,10 @@ int WRAP(fwscanf)(FILE *stream, const wchar_t *template, ...)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	va_start(ap, template);
 	CALL_REAL_FUNCTION_RET(data, ret, vfwscanf, stream, template, ap)
@@ -5586,10 +5586,10 @@ int WRAP(vfscanf)(FILE *stream, const char *template, va_list ap)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfscanf, stream, template, ap)
 
@@ -5609,10 +5609,10 @@ int WRAP(vfwscanf)(FILE *stream, const wchar_t *template, va_list ap)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfwscanf, stream, template, ap)
 
@@ -5632,11 +5632,11 @@ int WRAP(feof)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, feof, stream)
 
@@ -5670,11 +5670,11 @@ int WRAP(feof_unlocked)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, feof_unlocked, stream)
 
@@ -5708,11 +5708,11 @@ int WRAP(ferror)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ferror, stream)
 
@@ -5746,11 +5746,11 @@ int WRAP(ferror_unlocked)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ferror_unlocked, stream)
 
@@ -5782,10 +5782,10 @@ void WRAP(clearerr)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, clearerr, stream)
 
@@ -5803,10 +5803,10 @@ void WRAP(clearerr_unlocked)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, clearerr_unlocked, stream)
 
@@ -5826,11 +5826,11 @@ long int WRAP(ftell)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, position_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, position_function,
 						   position_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftell, stream)
 
@@ -5859,11 +5859,11 @@ off_t WRAP(ftello)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, position_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, position_function,
 						   position_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftello, stream)
 
@@ -5893,11 +5893,11 @@ off64_t WRAP(ftello64)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, position_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, position_function,
 						   position_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, ftello64, stream)
 
@@ -5926,11 +5926,11 @@ int WRAP(fseek)(FILE *stream, long int offset, int whence)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 						   positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseek, stream, offset, whence)
 
@@ -5964,11 +5964,11 @@ int WRAP(fseeko)(FILE *stream, off_t offset, int whence)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 						   positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseeko, stream, offset, whence)
 
@@ -6003,11 +6003,11 @@ int WRAP(fseeko64)(FILE *stream, off64_t offset, int whence)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 						   positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fseeko64, stream, offset, whence)
 
@@ -6040,11 +6040,11 @@ void WRAP(rewind)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, positioning_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function,
 						   positioning_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, rewind, stream)
 
@@ -6064,10 +6064,10 @@ int WRAP(fgetpos)(FILE *stream, fpos_t *position)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetpos, stream, position)
 
@@ -6093,10 +6093,10 @@ int WRAP(fgetpos64)(FILE *stream, fpos64_t *position)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fgetpos64, stream, position)
 
@@ -6122,10 +6122,10 @@ int WRAP(fsetpos)(FILE *stream, const fpos_t *position)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsetpos, stream, position)
 
@@ -6151,10 +6151,10 @@ int WRAP(fsetpos64)(FILE *stream, const fpos64_t *position)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fsetpos64, stream, position)
 
@@ -6180,10 +6180,10 @@ int WRAP(fflush)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fflush, stream)
 
@@ -6202,10 +6202,10 @@ int WRAP(fflush_unlocked)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fflush_unlocked, stream)
 
@@ -6225,10 +6225,10 @@ int WRAP(setvbuf)(FILE *stream, char *buf, int mode, size_t size)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, setvbuf, stream, buf, mode, size)
 
@@ -6255,10 +6255,10 @@ void WRAP(setbuf)(FILE *stream, char *buf)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, setbuf, stream, buf)
 
@@ -6288,10 +6288,10 @@ void WRAP(setbuffer)(FILE *stream, char *buf, size_t size)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, setbuffer, stream, buf, size)
 
@@ -6322,10 +6322,10 @@ void WRAP(setlinebuf)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, buffer_function, buffer_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, setlinebuf, stream)
 
@@ -6348,10 +6348,10 @@ int WRAP(fileno)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, fileno_function, fileno_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fileno_function, fileno_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fileno, stream)
 
@@ -6379,7 +6379,7 @@ FILE *WRAP(tmpfile)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = "";
 	open_data.mode = check_mode("w+b", &open_data.creation, &open_data.status);
@@ -6401,7 +6401,7 @@ FILE *WRAP(tmpfile)(void)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, tmpfile)
 	return file;
@@ -6417,7 +6417,7 @@ FILE *WRAP(tmpfile64)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	open_data.file_name = "";
 	open_data.mode = check_mode("w+b", &open_data.creation, &open_data.status);
@@ -6439,7 +6439,7 @@ FILE *WRAP(tmpfile64)(void)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, tmpfile64)
 	return file;
@@ -6454,7 +6454,7 @@ FILE *WRAP(popen)(const char *command, const char *type)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 
 	CALL_REAL_FUNCTION_RET(data, file, popen, command, type)
@@ -6469,7 +6469,7 @@ FILE *WRAP(popen)(const char *command, const char *type)
 	}
 
 	file_stream_data.stream = file;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	WRAP_END(data, popen)
 	return file;
@@ -6484,11 +6484,11 @@ int WRAP(__freadable)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __freadable, stream)
 
@@ -6521,11 +6521,11 @@ int WRAP(__fwritable)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fwritable, stream)
 
@@ -6558,11 +6558,11 @@ int WRAP(__freading)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __freading, stream)
 
@@ -6595,11 +6595,11 @@ int WRAP(__fwriting)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fwriting, stream)
 
@@ -6632,12 +6632,12 @@ int WRAP(__fsetlocking)(FILE *stream, int type)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, lock_mode_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, lock_mode_function,
 						   lock_mode_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	lock_mode_data.set_mode = get_lock_mode(type);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fsetlocking, stream, type)
 
@@ -6654,9 +6654,9 @@ void WRAP(_flushlbf)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION(data, _flushlbf)
 
@@ -6673,10 +6673,10 @@ void WRAP(__fpurge)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION(data, __fpurge, stream)
 
@@ -6695,11 +6695,11 @@ int WRAP(__flbf)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, information_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, information_function,
 						   information_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __flbf, stream)
 
@@ -6732,10 +6732,10 @@ size_t WRAP(__fbufsize)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, bufsize_function, bufsize_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, bufsize_function, bufsize_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fbufsize, stream)
 
@@ -6755,10 +6755,10 @@ size_t WRAP(__fpending)(FILE *stream)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, bufsize_function, bufsize_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, bufsize_function, bufsize_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	file_stream_data.stream = stream;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 
 	CALL_REAL_FUNCTION_RET(data, ret, __fpending, stream)
 
@@ -6777,10 +6777,10 @@ pid_t WRAP(fork)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, fork_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fork_function,
 						   fork_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, fork)
 
@@ -6807,10 +6807,10 @@ pid_t WRAP(vfork)(void)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, fork_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fork_function,
 						   fork_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	CALL_REAL_FUNCTION_RET(data, ret, vfork)
 
@@ -6842,10 +6842,10 @@ int WRAP(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... 
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, fork_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fork_function,
 						   fork_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	va_start(ap, arg);
 	if (CLONE_PARENT_SETTID & flags || CLONE_SETTLS & flags || CLONE_CHILD_CLEARTID & flags || CLONE_CHILD_SETTID & flags)

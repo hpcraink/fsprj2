@@ -22,7 +22,7 @@
 #endif
 
 
-#include "json_include_struct.h"
+#include "libiotrace_include_struct.h"
 
 BEGIN_C_DECLS
 

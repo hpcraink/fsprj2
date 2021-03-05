@@ -5,11 +5,11 @@
 
 #include <dlfcn.h>
 
-#include "json_include_struct.h"
 #include "event.h"
 #include "wrapper_defines.h"
 #include "dl_io.h"
 
+#include "libiotrace_include_struct.h"
 #include "wrapper_name.h"
 
 #ifndef IO_LIB_STATIC
@@ -82,10 +82,10 @@ void * WRAP(dlopen)(const char *filename, int flags) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dlopen_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, dlopen_function,
 			dlopen_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, shared_library, shared_library_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, shared_library, shared_library_data)
 	dlopen_function_data.file_name = filename;
 	get_dlopen_flags(flags, &dlopen_function_data.dl_flags);
 
@@ -117,20 +117,20 @@ void * WRAP(dlmopen)(Lmid_t lmid, const char *filename, int flags) {
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P(data, function_data, dlmopen_function,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, dlmopen_function,
 			dlmopen_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, shared_library, shared_library_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, shared_library, shared_library_data)
 	dlmopen_function_data.file_name = filename;
 	get_dlopen_flags(flags, &dlmopen_function_data.dl_flags);
 	enum so_namespace_mode_enum mode = get_so_namespace_mode_enum(lmid);
 	if (unknown_so_namespace_mode == mode) {
 		so_namespace_id_data.id = lmid;
-		JSON_STRUCT_SET_VOID_P(dlmopen_function_data, so_namespace,
+		LIBIOTRACE_STRUCT_SET_VOID_P(dlmopen_function_data, so_namespace,
 				so_namespace_id, so_namespace_id_data)
 	} else {
 		so_namespace_mode_data.mode = mode;
-		JSON_STRUCT_SET_VOID_P(dlmopen_function_data, so_namespace,
+		LIBIOTRACE_STRUCT_SET_VOID_P(dlmopen_function_data, so_namespace,
 				so_namespace_mode, so_namespace_mode_data)
 	}
 

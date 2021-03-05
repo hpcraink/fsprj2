@@ -64,7 +64,7 @@
 #include "event.h"
 
 #include "libiotrace.h"
-#include "json_include_function.h"
+#include "libiotrace_include_function.h"
 
 #include "wrapper_name.h"
 
@@ -223,13 +223,19 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 
 struct wrapper_status active_wrapper_status;
 
+//typedef struct libiotrace_sockets {
+//	SOCKET socket;
+//	llhttp_t parser;
+//} libiotrace_socket;
+
 /**
  * Save a socket in a global array.
  *
  * Adds "socket" to "array". If "array" is NULL and "len" points to
  * the value 0 a new array with length 1 is allocated. Else the
- * existing array is increased by 1. "*len" is incremented by 1 and
- * the "socket" is added to "array" as a new element.
+ * existing array is increased by 1. In both cases "*len" is
+ * incremented by 1 and the "socket" is added to "array" as a new
+ * element.
  *
  * @param[in] socket    The socket to save
  * @param[in] lock      Mutex used to make the array manipulation
@@ -245,6 +251,7 @@ struct wrapper_status active_wrapper_status;
  *                      value of "socket".
  */
 void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
+//void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, libiotrace_socket *array[])
 {
 	void *ret;
 
@@ -382,6 +389,19 @@ void event_init()
 }
 #endif
 
+/**
+ * Changes the status of the wrapper for a function
+ * with name equals "line" to "toggle"
+ *
+ * An active wrapper logs/sends collected data an inactive
+ * wrapper doesn't.
+ * Status of a wrapper (active/inactive) is saved per process.
+ * Changing the status affects all threads in the process.
+ *
+ * @param[in] line   "\0" terminated name of the wrapped function.
+ * @param[in] toggle 1 for set wrapper active
+ *                   0 for set wrapper inactive
+ */
 void toggle_wrapper(const char *line, const char toggle)
 {
 	char ret = 1;
@@ -424,6 +444,13 @@ void toggle_wrapper(const char *line, const char toggle)
 }
 
 #ifndef IO_LIB_STATIC
+/**
+ * Initializes all needed function pointers.
+ *
+ * Each wrapper needs a function pointer to the
+ * wrapped function. "dlsym" is used to get
+ * these pointers.
+ */
 void init_wrapper()
 {
 	event_init();
@@ -440,9 +467,30 @@ void init_wrapper()
 }
 #endif
 
-// Create socket per thread
+/**
+ * Creates a new socket for sending data to influxdb.
+ *
+ * Is called once per thread. Creates a new socket and stores
+ * it in the thread local storage "socket_peer". The new
+ * socket is additionally stored in the array "recv_sockets".
+ * "socket_peer" is used inside each wrapper to send data
+ * to influxdb. Because each thread has it's own socket
+ * inside "socket_peer" no synchronization between calls of
+ * send function is needed. The responses from influxdb are
+ * read inside "communication_thread" from all sockets
+ * stored in the array "recv_sockets".
+ */
 void prepare_socket()
 {
+	/* Call of getaddrinfo calls other posix functions. These other
+	 * functions could be wrapped. Call of a wrapper out of getaddrinfo
+	 * is done during initialization of a thread (because
+	 * prepare_socket is only called during initialization of the
+	 * thread). Because at this time the thread is not initialized
+	 * the call of the wrapper calls prepare_socket. Now we have a
+	 * endless recursion of function calls that exceeds the stack size.
+	 * => getaddrinfo should only be called if POSIX wrapper are not
+	 *    build */
 #ifdef WITH_POSIX_IO
 	socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
 #else
@@ -622,7 +670,7 @@ void print_filesystem()
 	char buf[4 * MAXFILENAME];
 #endif
 	struct mntent *filesystem_entry_ptr;
-	char buf_filesystem[json_struct_max_size_filesystem() + 1]; /* +1 for trailing null character */
+	char buf_filesystem[libiotrace_struct_max_size_filesystem() + 1]; /* +1 for trailing null character */
 	struct filesystem filesystem_data;
 	struct stat stat_data;
 	char mount_point[MAXFILENAME];
@@ -682,7 +730,7 @@ void print_filesystem()
 		filesystem_data.dump_frequency_in_days = filesystem_entry_ptr->mnt_freq;
 		filesystem_data.pass_number_on_parallel_fsck =
 			filesystem_entry_ptr->mnt_passno;
-		json_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
+		libiotrace_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
 									 &filesystem_data);
 		ret = dprintf(fd, "%s" LINE_BREAK, buf_filesystem);
 		if (0 > ret)
@@ -762,7 +810,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data)
  */
 void print_working_directory()
 {
-	char buf_working_dir[json_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
+	char buf_working_dir[libiotrace_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
 	struct working_dir working_dir_data;
 	char cwd[MAXFILENAME];
 	char *ret;
@@ -788,7 +836,7 @@ void print_working_directory()
 		LIBIOTRACE_ERROR("open() of file %s returned %d", working_dir_log_name, fd);
 	}
 
-	json_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
+	libiotrace_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
 								  &working_dir_data);
 	ret_int = dprintf(fd, "%s" LINE_BREAK, buf_working_dir);
 	if (0 > ret_int)
@@ -833,9 +881,9 @@ void open_std_fd(int fd)
 	struct file_descriptor file_descriptor_data;
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 						   file_descriptor_data)
 	file_descriptor_data.descriptor = fd;
 
@@ -869,9 +917,9 @@ void open_std_file(FILE *file)
 	struct file_stream file_stream_data;
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_stream, file_stream_data)
 	file_stream_data.stream = file;
 
 	data.time_start = gettime();
@@ -912,9 +960,9 @@ void init_on_load()
 
 #ifdef LOG_WRAPPER_TIME
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 #endif
 
 	WRAPPER_TIME_END(data);
@@ -1041,11 +1089,11 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
 				"%s";
 
 		// buffer for body
-		char buf[json_struct_max_size_wrapper_status() + 1];
-		int ret = json_struct_print_wrapper_status(buf, sizeof(buf), &active_wrapper_status);
+		char buf[libiotrace_struct_max_size_wrapper_status() + 1];
+		int ret = libiotrace_struct_print_wrapper_status(buf, sizeof(buf), &active_wrapper_status);
 		if (0 > ret)
 		{
-			LIBIOTRACE_ERROR("json_struct_print_wrapper_status() returned %d", ret);
+			LIBIOTRACE_ERROR("libiotrace_struct_print_wrapper_status() returned %d", ret);
 		}
 
 		const int message_len = strlen(message_header) + COUNT_DEC_AS_CHAR(ret) + ret;
@@ -1270,6 +1318,7 @@ void *communication_thread(void *arg)
 				else
 				{
 					socket_peer = open_control_sockets[i]; // is needed by callback => must be set before llhttp_execute()
+					// TODO: to handle more than one connection a separate parser for each socket/connection is needed
 					enum llhttp_errno err = llhttp_execute(&parser, read, bytes_received);
 					if (err != HPE_OK)
 					{
@@ -1401,6 +1450,24 @@ void read_whitelist() {
 	(stream);
 }
 
+/**
+ * Generates environment variable from "key" and "value".
+ *
+ * @param[out] env       Pointer to buffer in which environment variable
+ *                       is stored. Buffer must have sufficient length
+ *                       (strlen(key) + strlen(value) + 2).
+ * @param[in] key        "\0" terminated key of the environment variable.
+ * @param[in] key_length Char count of "key" excluding terminating "\0"
+ *                       (strlen(key)).
+ * @param[in] value      "\0" terminated value of the environment
+ *                       variable.
+ */
+void generate_env(char *env, const char *key, const int key_length, const char *value) {
+	strcpy(env, key);
+	strcpy(env + key_length, "=");
+	strcpy(env + key_length + 1, value);
+}
+
 char init_done = 0;
 /**
  * Initialize libiotrace for current process.
@@ -1483,9 +1550,7 @@ void init_process()
 		strcpy(control_log_name + length, "_control.log");
 
 #ifndef IO_LIB_STATIC
-		strcpy(log_name_env, env_log_name);
-		strcpy(log_name_env + length, "=");
-		strcpy(log_name_env + length + 1, log_name);
+		generate_env(log_name_env, env_log_name, length, log_name);
 #endif
 
 		// get token from environment
@@ -1493,9 +1558,7 @@ void init_process()
 		influx_token_len = strlen(influx_token);
 
 #ifndef IO_LIB_STATIC
-		strcpy(influx_token_env, env_influx_token);
-		strcpy(influx_token_env + length, "=");
-		strcpy(influx_token_env + length + 1, influx_token);
+		generate_env(influx_token_env, env_influx_token, length, influx_token);
 #endif
 
 		// get bucket name from environment
@@ -1503,9 +1566,7 @@ void init_process()
 		influx_bucket_len = strlen(influx_bucket);
 
 #ifndef IO_LIB_STATIC
-		strcpy(influx_bucket_env, env_influx_bucket);
-		strcpy(influx_bucket_env + length, "=");
-		strcpy(influx_bucket_env + length + 1, influx_bucket);
+		generate_env(influx_bucket_env, env_influx_bucket, length, influx_bucket);
 #endif
 
 		// get organization name from environment
@@ -1513,26 +1574,20 @@ void init_process()
 		influx_organization_len = strlen(influx_organization);
 
 #ifndef IO_LIB_STATIC
-		strcpy(influx_organization_env, env_influx_organization);
-		strcpy(influx_organization_env + length, "=");
-		strcpy(influx_organization_env + length + 1, influx_organization);
+		generate_env(influx_organization_env, env_influx_organization, length, influx_organization);
 #endif
 
 		// get database ip from environment
 		length = libiotrace_get_env(env_database_ip, database_ip, MAX_DATABASE_IP, 1);
 
 #ifndef IO_LIB_STATIC
-		strcpy(database_ip_env, env_database_ip);
-		strcpy(database_ip_env + length, "=");
-		strcpy(database_ip_env + length + 1, database_ip);
+		generate_env(database_ip_env, env_database_ip, length, database_ip);
 #endif
 		// get database port from environment
 		length = libiotrace_get_env(env_database_port, database_port, MAX_DATABASE_PORT, 1);
 
 #ifndef IO_LIB_STATIC
-		strcpy(database_port_env, env_database_port);
-		strcpy(database_port_env + length, "=");
-		strcpy(database_port_env + length + 1, database_port);
+		generate_env(database_port_env, env_database_port, length, database_port);
 #endif
 		// Path to wrapper whitelist
 		length = libiotrace_get_env(env_wrapper_whitelist, whitelist, MAXFILENAME, 0);
@@ -1540,9 +1595,7 @@ void init_process()
 		{
 #ifndef IO_LIB_STATIC
 			has_whitelist = 1;
-			strcpy(whitelist_env, env_wrapper_whitelist);
-			strcpy(whitelist_env + length, "=");
-			strcpy(whitelist_env + length + 1, whitelist);
+			generate_env(whitelist_env, env_wrapper_whitelist, length, whitelist);
 #endif
 
 			read_whitelist();
@@ -1617,12 +1670,12 @@ void get_stacktrace(struct basic *data)
 
 	if (stacktrace_ptr)
 	{
-		JSON_STRUCT_SET_MALLOC_PTR_ARRAY((*data), stacktrace_pointer, trace, 3,
+		LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY((*data), stacktrace_pointer, trace, 3,
 										 size)
 	}
 	else
 	{
-		JSON_STRUCT_SET_MALLOC_PTR_ARRAY_NULL((*data), stacktrace_pointer)
+		LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY_NULL((*data), stacktrace_pointer)
 	}
 
 	if (stacktrace_symbol)
@@ -1633,12 +1686,12 @@ void get_stacktrace(struct basic *data)
 			LIBIOTRACE_ERROR("backtrace_symbols() returned NULL with errno=%d", errno);
 		}
 
-		JSON_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace_symbols,
+		LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY((*data), stacktrace_symbols,
 											messages, 3, size)
 	}
 	else
 	{
-		JSON_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace_symbols)
+		LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace_symbols)
 	}
 
 	if (!stacktrace_ptr)
@@ -1690,8 +1743,8 @@ void get_basic(struct basic *data)
 	}
 	else
 	{
-		JSON_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace_symbols)
-		JSON_STRUCT_SET_MALLOC_PTR_ARRAY_NULL((*data), stacktrace_pointer)
+		LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY_NULL((*data), stacktrace_symbols)
+		LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY_NULL((*data), stacktrace_pointer)
 	}
 }
 
@@ -1723,7 +1776,7 @@ void print_buffer()
 {
 	struct basic *data;
 	int ret;
-	char buf[json_struct_max_size_basic() + 1]; /* +1 for trailing null character */
+	char buf[libiotrace_struct_max_size_basic() + 1]; /* +1 for trailing null character */
 	int fd;
 	pos = data_buffer;
 
@@ -1738,13 +1791,13 @@ void print_buffer()
 	{
 		data = (struct basic *)((void *)pos);
 
-		ret = json_struct_print_basic(buf, sizeof(buf), data); //Function is present at runtime, built with macros from json_defines.h
+		ret = libiotrace_struct_print_basic(buf, sizeof(buf), data); //Function is present at runtime, built with macros from libiotrace_defines.h
 		ret = dprintf(fd, "%s" LINE_BREAK, buf);
 		if (0 > ret)
 		{
 			LIBIOTRACE_ERROR("dprintf() returned %d", ret);
 		}
-		ret = json_struct_sizeof_basic(data);
+		ret = libiotrace_struct_sizeof_basic(data);
 
 		pos += ret;
 	}
@@ -1769,12 +1822,12 @@ void write_into_influxdb(struct basic *data)
 	}
 
 	//buffer for body
-	int body_length = json_struct_push_max_size_basic(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
+	int body_length = libiotrace_struct_push_max_size_basic(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
 	char body[body_length];
-	body_length = json_struct_push_basic(body, body_length, data, "");
+	body_length = libiotrace_struct_push_basic(body, body_length, data, "");
 	if (0 > body_length)
 	{
-		LIBIOTRACE_ERROR("json_struct_push_basic() returned %d", body_length);
+		LIBIOTRACE_ERROR("libiotrace_struct_push_basic() returned %d", body_length);
 	}
 	body_length--; /*last comma in ret*/
 	body[body_length] = '\0'; /*remove last comma*/
@@ -1851,7 +1904,7 @@ void write_into_buffer(struct basic *data)
 	/* write (synchronized) */
 	pthread_mutex_lock(&lock);
 
-	int length = json_struct_sizeof_basic(data);
+	int length = libiotrace_struct_sizeof_basic(data);
 
 	if (pos + length > endpos)
 	{
@@ -1866,7 +1919,7 @@ void write_into_buffer(struct basic *data)
 #ifdef LOG_WRAPPER_TIME
 	old_pos = pos;
 #endif
-	pos = (void *)json_struct_copy_basic((void *)pos, data);
+	pos = (void *)libiotrace_struct_copy_basic((void *)pos, data);
 	count_basic++;
 	// insert end time for wrapper in buffer
 	WRAPPER_TIME_END((*((struct basic *)((void *)old_pos))))
@@ -1881,7 +1934,7 @@ void write_into_buffer(struct basic *data)
  */
 void free_memory(struct basic *data)
 {
-	json_struct_free_basic(data);
+	libiotrace_struct_free_basic(data);
 }
 
 /**
@@ -1910,9 +1963,9 @@ void cleanup()
 
 #ifdef LOG_WRAPPER_TIME
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 #endif
 
 	WRAPPER_TIME_END(data);
@@ -2047,9 +2100,9 @@ int WRAP(execve)(const char *filename, char *const argv[], char *const envp[])
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 #ifndef IO_LIB_STATIC
@@ -2080,9 +2133,9 @@ int WRAP(execv)(const char *path, char *const argv[])
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execv, path, argv)
@@ -2111,9 +2164,9 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	va_start(ap, arg);
@@ -2153,9 +2206,9 @@ int WRAP(execvp)(const char *file, char *const argv[])
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	CALL_REAL_FUNCTION_RET_NO_RETURN(data, ret, execvp, file, argv)
@@ -2184,9 +2237,9 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	va_start(ap, arg);
@@ -2227,9 +2280,9 @@ int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[])
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 #ifndef IO_LIB_STATIC
@@ -2270,9 +2323,9 @@ int WRAP(execle)(const char *path, const char *arg,
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	va_start(ap, arg);
@@ -2319,9 +2372,9 @@ void WRAP(_exit)(int status)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	CALL_REAL_FUNCTION_NO_RETURN(data, _exit, status)
@@ -2334,9 +2387,9 @@ void WRAP(_Exit)(int status)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	CALL_REAL_FUNCTION_NO_RETURN(data, _Exit, status)
@@ -2350,9 +2403,9 @@ void WRAP(exit_group)(int status)
 	WRAP_START(data)
 
 	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	JSON_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 
 	data.return_state = ok;
 	CALL_REAL_FUNCTION_NO_RETURN(data, exit_group, status)

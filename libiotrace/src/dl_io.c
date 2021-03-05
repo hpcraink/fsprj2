@@ -19,7 +19,7 @@ REAL_DEFINITION_TYPE void * REAL_DEFINITION(dlmopen)(Lmid_t lmid, const char *fi
 #endif
 #endif
 
-char toggle_dl_wrapper(char *line, char toggle)
+char toggle_dl_wrapper(const char *line, const char toggle)
 {
 	char ret = 1;
 

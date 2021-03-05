@@ -68,7 +68,7 @@ void libiotrace_end_stacktrace_symbol();
 /**
  * Set stacktrace depth for logging in actual thread.
  *
- * @param[in] depth           The stacktrace depth (if set to 0 no stacktrace is logged)
+ * @param[in] depth The stacktrace depth (if set to 0 no stacktrace is logged)
  */
 void libiotrace_set_stacktrace_depth(int depth);
 
@@ -79,6 +79,28 @@ void libiotrace_set_stacktrace_depth(int depth);
  * @return stacktrace depth
  */
 int libiotrace_get_stacktrace_depth();
+
+/**
+ * Set wrapper for a function with name equals "wrapper" active.
+ *
+ * An active wrapper logs/sends collected data.
+ * Status of a wrapper (active/inactive) is saved per process.
+ * Changing the status affects all threads in the process.
+ *
+ * @param[in] wrapper "\0" terminated name of the wrapped function.
+ */
+void libiotrace_set_wrapper_active(const char *wrapper);
+
+/**
+ * Set wrapper for a function with name equals "wrapper" inactive.
+ *
+ * An inactive wrapper doesn't logs/sends collected data.
+ * Status of a wrapper (active/inactive) is saved per process.
+ * Changing the status affects all threads in the process.
+ *
+ * @param[in] wrapper "\0" terminated name of the wrapped function.
+ */
+void libiotrace_set_wrapper_inactive(const char *wrapper);
 
 END_C_DECLS
 

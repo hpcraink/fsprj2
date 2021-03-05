@@ -382,7 +382,7 @@ void event_init()
 }
 #endif
 
-void toggle_event_wrapper(char *line, char toggle)
+void toggle_wrapper(const char *line, const char toggle)
 {
 	char ret = 1;
 
@@ -596,6 +596,14 @@ int libiotrace_get_stacktrace_depth()
 	return stacktrace_depth;
 }
 
+void libiotrace_set_wrapper_active(const char *wrapper) {
+	toggle_wrapper(wrapper, 1);
+}
+
+void libiotrace_set_wrapper_inactive(const char *wrapper) {
+	toggle_wrapper(wrapper, 0);
+}
+
 /**
  * Prints the filesystem to a file.
  *
@@ -690,6 +698,14 @@ void print_filesystem()
 }
 #endif
 
+/**
+ * Get "device_id" and "inode_nr" for given file descriptor "fd".
+ *
+ * @param[in]  filename File descriptor of a file.
+ * @param[out] data     Pointer to a struct file_id. Function fills
+ *                      "device_id" and "inode_nr" of "fd" into
+ *                      this struct.
+ */
 void get_file_id(int fd, struct file_id *data)
 {
 	struct stat stat_data;
@@ -713,6 +729,14 @@ void get_file_id(int fd, struct file_id *data)
 	}
 }
 
+/**
+ * Get "device_id" and "inode_nr" for given path "filename".
+ *
+ * @param[in]  filename Pointer to a "\0" terminated path to a file.
+ * @param[out] data     Pointer to a struct file_id. Function fills
+ *                      "device_id" and "inode_nr" of "filename"
+ *                      into this struct.
+ */
 void get_file_id_by_path(const char *filename, struct file_id *data)
 {
 	struct stat stat_data;
@@ -995,11 +1019,11 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
 			functionname[slash2 - slash1 - 1] = '\0';
 			if (at[length - 1] == '1')
 			{
-				toggle_event_wrapper(functionname, 1);
+				toggle_wrapper(functionname, 1);
 			}
 			else
 			{
-				toggle_event_wrapper(functionname, 0);
+				toggle_wrapper(functionname, 0);
 			}
 			send_data("HTTP/1.1 204 No Content" LINE_BREAK LINE_BREAK LINE_BREAK, socket_peer);
 		}
@@ -1368,7 +1392,7 @@ void read_whitelist() {
 			}
 			end_clean_line[1] = '\0';
 
-			toggle_event_wrapper(clean_line, 1);
+			toggle_wrapper(clean_line, 1);
 		}
 	}
 

@@ -3,7 +3,7 @@
 
 BEGIN_C_DECLS
 
-char toggle_mpi_wrapper(char *line, char toggle);
+char toggle_mpi_wrapper(const char *line, const char toggle);
 
 END_C_DECLS
 

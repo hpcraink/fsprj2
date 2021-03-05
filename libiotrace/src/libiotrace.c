@@ -39,3 +39,11 @@ void libiotrace_set_stacktrace_depth(int depth) {
 int libiotrace_get_stacktrace_depth() {
 	return 0;
 }
+
+void libiotrace_set_wrapper_active(const char *wrapper) {
+	return;
+}
+
+void libiotrace_set_wrapper_inactive(const char *wrapper) {
+	return;
+}

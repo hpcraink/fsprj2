@@ -19,6 +19,8 @@ REAL_TYPE void * REAL(dlmopen)(Lmid_t lmid, const char *filename, int flags) REA
 void dl_io_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
 
+char toggle_dl_wrapper(const char *line, const char toggle);
+
 END_C_DECLS
 
 #endif /* LIBIOTRACE_LD_IO_H */

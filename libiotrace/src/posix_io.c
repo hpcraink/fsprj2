@@ -421,7 +421,7 @@ void posix_io_init()
 }
 #endif
 
-char toggle_posix_wrapper(char *line, char toggle)
+char toggle_posix_wrapper(const char *line, const char toggle)
 {
 	char ret = 1;
 

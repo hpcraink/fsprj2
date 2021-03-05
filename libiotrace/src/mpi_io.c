@@ -10,7 +10,7 @@
 
 #include "wrapper_name.h"
 
-char toggle_mpi_wrapper(char *line, char toggle)
+char toggle_mpi_wrapper(const char *line, const char toggle)
 {
 	char ret = 1;
 

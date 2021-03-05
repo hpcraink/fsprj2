@@ -52,6 +52,8 @@ REAL_TYPE int REAL(shm_open)(const char *name, int oflag, mode_t mode) REAL_INIT
 void posix_aio_init() ATTRIBUTE_CONSTRUCTOR;
 #endif
 
+char toggle_posix_aio_wrapper(const char *line, const char toggle);
+
 END_C_DECLS
 
 #endif /* LIBIOTRACE_POSIX_AIO_H */

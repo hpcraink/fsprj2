@@ -67,7 +67,7 @@ void posix_aio_init() {
 }
 #endif
 
-char toggle_posix_aio_wrapper(char *line, toggle)
+char toggle_posix_aio_wrapper(const char *line, const char toggle)
 {
 	char ret = 1;
 

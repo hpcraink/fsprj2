@@ -143,6 +143,11 @@ static int count_basic;
 int host_name_max;
 #endif
 
+typedef struct libiotrace_sockets {
+	SOCKET socket;
+	llhttp_t parser;
+} libiotrace_socket;
+
 /* Mutex */
 static pthread_mutex_t lock;
 static pthread_mutex_t socket_lock;
@@ -188,11 +193,13 @@ static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 static char has_whitelist;
 #endif
 static u_int64_t system_start_time;
-static SOCKET *recv_sockets = NULL;
+static libiotrace_socket *recv_sockets = NULL;
 static int recv_sockets_len = 0;
-static SOCKET *open_control_sockets = NULL;
+static libiotrace_socket *open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
 static SOCKET socket_control;
+static llhttp_settings_t settings;
+struct wrapper_status active_wrapper_status;
 
 // once per thread
 static ATTRIBUTE_THREAD pid_t tid = -1;
@@ -221,12 +228,19 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #endif
 #endif
 
-struct wrapper_status active_wrapper_status;
+libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
+	libiotrace_socket *socket = malloc(sizeof(libiotrace_socket));
+	if (NULL == socket)
+	{
+		LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
+	}
 
-//typedef struct libiotrace_sockets {
-//	SOCKET socket;
-//	llhttp_t parser;
-//} libiotrace_socket;
+	socket->socket = s;
+
+	llhttp_init(&(socket->parser), type, &settings);
+
+	return socket;
+}
 
 /**
  * Save a socket in a global array.
@@ -237,7 +251,8 @@ struct wrapper_status active_wrapper_status;
  * incremented by 1 and the "socket" is added to "array" as a new
  * element.
  *
- * @param[in] socket    The socket to save
+ * @param[in] socket    The socket to save (a pointer to
+ *                      "libiotrace_socket")
  * @param[in] lock      Mutex used to make the array manipulation
  *                      thread safe, or NULL if no concurrent access
  *                      is possible
@@ -250,8 +265,7 @@ struct wrapper_status active_wrapper_status;
  *                      one element. This new element holds the
  *                      value of "socket".
  */
-void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
-//void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, libiotrace_socket *array[])
+void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, libiotrace_socket *(*array)[])
 {
 	void *ret;
 
@@ -261,7 +275,7 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
 	}
 
 	(*len)++;
-	ret = realloc(*array, sizeof(SOCKET) * (*len));
+	ret = realloc(*array, sizeof(libiotrace_socket*) * (*len));
 	if (NULL == ret)
 	{
 		free(*array);
@@ -280,7 +294,9 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
  * Delete a socket from a global array.
  *
  * Removes "socket" from "array". If "socket" was not found in
- * "array" the array is left untouched.
+ * "array" the array is left untouched. Deletes only the pointer
+ * to "libiotrace_socket" from the array. The "libiotrace_socket"
+ * itself is left untouched.
  *
  * @param[in] socket    The socket to delete
  * @param[in] lock      Mutex used to make the array manipulation
@@ -293,7 +309,7 @@ void save_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
  *                      After function call "array" is decreased by
  *                      one element (if "socket" was in "array").
  */
-void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **array)
+void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_socket *(*array)[])
 {
 	void *ret;
 	int i;
@@ -304,10 +320,10 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 	}
 
 	(*len)--;
-	if ((*array)[*len] == socket)
+	if ((*array)[*len]->socket == socket)
 	{
 		//Delete last element if last element is current socket
-		ret = realloc(*array, sizeof(SOCKET) * (*len));
+		ret = realloc(*array, sizeof(libiotrace_socket*) * (*len));
 		if (*len == 0)
 		{
 			if (ret != NULL)
@@ -330,7 +346,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 	{
 		for (i = 0; i < *len; i++)
 		{
-			if ((*array)[i] == socket)
+			if ((*array)[i]->socket == socket)
 			{
 				(*array)[i] = (*array)[*len];
 				break;
@@ -341,7 +357,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, SOCKET **arra
 			// socket not found
 			return;
 		}
-		ret = realloc(*array, sizeof(SOCKET) * (*len));
+		ret = realloc(*array, sizeof(libiotrace_socket*) * (*len));
 		if (*len == 0)
 		{
 			if (ret != NULL)
@@ -590,8 +606,9 @@ void prepare_socket()
 	freeaddrinfo(peer_address);
 #endif
 
-	// save socket globally to create thread that listens to all sockets
-	save_socket(socket_peer, &socket_lock, &recv_sockets_len, &recv_sockets);
+	// save socket globally to create thread that listens to / reads from all sockets
+	libiotrace_socket *socket = create_libiotrace_socket(socket_peer, HTTP_RESPONSE);
+	save_socket(socket, &socket_lock, &recv_sockets_len, &recv_sockets);
 }
 
 void libiotrace_start_log()
@@ -1250,10 +1267,10 @@ void *communication_thread(void *arg)
 		//Add active control connections to fd_set
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
-			FD_SET(open_control_sockets[i], &fd_recv_sockets);
-			if (open_control_sockets[i] > socket_max)
+			FD_SET(open_control_sockets[i].socket, &fd_recv_sockets);
+			if (open_control_sockets[i].socket > socket_max)
 			{
-				socket_max = open_control_sockets[i];
+				socket_max = open_control_sockets[i].socket;
 			}
 		}
 
@@ -1297,29 +1314,32 @@ void *communication_thread(void *arg)
 				LIBIOTRACE_ERROR("accept returned -1, errno=%d", errno);
 			}
 			//Connection established; write all established sockets in array
-			save_socket(socket, NULL, &open_control_sockets_len, &open_control_sockets);
+			libiotrace_socket *s = create_libiotrace_socket(socket, HTTP_REQUEST);
+			save_socket(s, NULL, &open_control_sockets_len, &open_control_sockets);
 		}
 
 		// receive control requests
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
 			//Which sockets are ready to read
-			if (FD_ISSET(open_control_sockets[i], &fd_recv_sockets))
+			if (FD_ISSET(open_control_sockets[i].socket, &fd_recv_sockets))
 			{
 				char read[4096];
-				ssize_t bytes_received = recv(open_control_sockets[i], read, 4096, 0);
+				ssize_t bytes_received = recv(open_control_sockets[i].socket, read, 4096, 0);
 				if (1 > bytes_received)
 				{
 					//Socket is destroyed or closed by peer
-					close(open_control_sockets[i]);
-					delete_socket(open_control_sockets[i], NULL, &open_control_sockets_len, &open_control_sockets);
+					CLOSESOCKET(open_control_sockets[i].socket);
+					libiotrace_socket *s = open_control_sockets[i];
+					delete_socket(open_control_sockets[i].socket, NULL, &open_control_sockets_len, &open_control_sockets);
+					free(s);
 					i--;
 				}
 				else
 				{
-					socket_peer = open_control_sockets[i]; // is needed by callback => must be set before llhttp_execute()
+					socket_peer = open_control_sockets[i].socket; // is needed by callback => must be set before llhttp_execute()
 					// TODO: to handle more than one connection a separate parser for each socket/connection is needed
-					enum llhttp_errno err = llhttp_execute(&parser, read, bytes_received);
+					enum llhttp_errno err = llhttp_execute(&(open_control_sockets[i].parser), read, bytes_received);
 					if (err != HPE_OK)
 					{
 						const char *errno_text = llhttp_errno_name(err);
@@ -1334,8 +1354,10 @@ void *communication_thread(void *arg)
 	CLOSESOCKET(socket_control);
 	for (int i = 0; i < open_control_sockets_len; i++)
 	{
-		CLOSESOCKET(open_control_sockets[i]);
+		CLOSESOCKET(open_control_sockets[i].socket);
+		free(open_control_sockets[i]);
 	}
+	free(open_control_sockets);
 	return NULL;
 }
 
@@ -1632,6 +1654,11 @@ void init_process()
 		open_std_file(stdout);
 		open_std_file(stderr);
 #endif
+
+		/* Initialize user callbacks and settings */
+		llhttp_settings_init(&settings);
+		/* Set user callback */
+		settings.on_url = url_callback;
 
 		//Create receive thread per process
 		pthread_t recv_thread;

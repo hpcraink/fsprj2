@@ -1034,9 +1034,27 @@ void send_data(const char *message, SOCKET socket)
 	}
 }
 
+/**
+ * Callback for each http response from influxdb
+ *
+ * Only checks if status was 204.
+ *
+ * @param[in] parser A pointer to the parser which has called
+ *                   this callback. Gives access to the parser
+ *                   state (like method of the request).
+ * @param[in] at     Start pointer of the parsed status as a char
+ *                   array. The array is not terminated by "\0"
+ *                   (see "length").
+ * @param[in] length Count of chars in the status (in the array
+ *                   given by "at").
+ *
+ * @return Error state of the callback (not used; gives "0" back).
+ */
 int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
 	if (parser->status_code != 204) {
 		LIBIOTRACE_WARN("unknown status (%d) in response from influxdb", parser->status_code);
+	} else {
+		//LIBIOTRACE_WARN("known status (%d) in response from influxdb", parser->status_code);
 	}
 
 	return 0;
@@ -1137,7 +1155,7 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 /**
  * Callback for each http request/response.
  *
- * If a complete URL is read this callback is called. It calls
+ * If a complete URL/status is read this callback is called. It calls
  * for responses
  *     url_callback_responses
  * and for requests
@@ -1146,10 +1164,10 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
  * @param[in] parser A pointer to the parser which has called
  *                   this callback. Gives access to the parser
  *                   state (like method of the request).
- * @param[in] at     Start pointer of the parsed URL as a char
+ * @param[in] at     Start pointer of the parsed URL/status as a char
  *                   array. The array is not terminated by "\0"
  *                   (see "length").
- * @param[in] length Count of chars in the URL (in the array
+ * @param[in] length Count of chars in the URL/status (in the array
  *                   given by "at").
  *
  * @return Error state of the callback (not used; gives "0" back).
@@ -1201,18 +1219,6 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
  */
 void *communication_thread(void *arg)
 {
-
-	llhttp_t parser;
-	llhttp_settings_t settings;
-
-	/* Initialize user callbacks and settings */
-	llhttp_settings_init(&settings);
-
-	/* Set user callback */
-	settings.on_url = url_callback;
-
-	llhttp_init(&parser, HTTP_BOTH, &settings);
-
 	// Open Socket to receive control information
 	struct sockaddr_in addr;
 	socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
@@ -1335,18 +1341,18 @@ void *communication_thread(void *arg)
 				ssize_t bytes_received = recv(recv_sockets[i]->socket, read, 4096, 0);
 				if (1 > bytes_received)
 				{
+					//Socket is destroyed or closed by peer
+					//close(recv_sockets[i]);
+					//delete_socket(recv_sockets[i]);
+					//i--;
+				} else {
 					// TODO: parse/interpret responses (each socket needs it's own llhttp_t parser)
 					enum llhttp_errno err = llhttp_execute(&(recv_sockets[i]->parser), read, bytes_received);
 					if (err != HPE_OK)
 					{
 						const char *errno_text = llhttp_errno_name(err);
-						LIBIOTRACE_ERROR("error parsing influxdb response: %s: %s", errno_text, parser.reason);
+						LIBIOTRACE_ERROR("error parsing influxdb response: %s: %s", errno_text, recv_sockets[i]->parser.reason);
 					}
-
-					//Socket is destroyed or closed by peer
-					//close(recv_sockets[i]);
-					//delete_socket(recv_sockets[i]);
-					//i--;
 				}
 			}
 		}
@@ -1392,7 +1398,7 @@ void *communication_thread(void *arg)
 					{
 						const char *errno_text = llhttp_errno_name(err);
 						snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s: %s",
-								 strlen(errno_text) + 2 + strlen(parser.reason), errno_text, parser.reason);
+								 strlen(errno_text) + 2 + strlen(open_control_sockets[i]->parser.reason), errno_text, open_control_sockets[i]->parser.reason);
 						send_data(read, socket_peer);
 					}
 				}
@@ -1706,7 +1712,9 @@ void init_process()
 		/* Initialize user callbacks and settings */
 		llhttp_settings_init(&settings);
 		/* Set user callback */
+		//TODO: direct call of url_callback_responses and url_callback_requests
 		settings.on_url = url_callback;
+		settings.on_status = url_callback;
 
 		//Create receive thread per process
 		pthread_t recv_thread;

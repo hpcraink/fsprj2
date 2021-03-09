@@ -193,9 +193,9 @@ static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 static char has_whitelist;
 #endif
 static u_int64_t system_start_time;
-static libiotrace_socket *recv_sockets = NULL;
+static libiotrace_socket **recv_sockets = NULL;
 static int recv_sockets_len = 0;
-static libiotrace_socket *open_control_sockets = NULL;
+static libiotrace_socket **open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
 static SOCKET socket_control;
 static llhttp_settings_t settings;
@@ -265,7 +265,7 @@ libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
  *                      one element. This new element holds the
  *                      value of "socket".
  */
-void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, libiotrace_socket *(*array)[])
+void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, libiotrace_socket ***array)
 {
 	void *ret;
 
@@ -309,7 +309,7 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, lib
  *                      After function call "array" is decreased by
  *                      one element (if "socket" was in "array").
  */
-void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_socket *(*array)[])
+void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_socket ***array)
 {
 	void *ret;
 	int i;
@@ -1034,6 +1034,14 @@ void send_data(const char *message, SOCKET socket)
 	}
 }
 
+int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
+	if (parser->status_code != 204) {
+		LIBIOTRACE_WARN("unknown status (%d) in response from influxdb", parser->status_code);
+	}
+
+	return 0;
+}
+
 /**
  * Callback for each http request to control libiotrace.
  *
@@ -1068,9 +1076,7 @@ void send_data(const char *message, SOCKET socket)
  *
  * @return Error state of the callback (not used; gives "0" back).
  */
-int url_callback(llhttp_t *parser, const char *at, size_t length)
-{
-
+int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 	if (parser->method == HTTP_POST)
 	{
 		char *slash1 = NULL;
@@ -1123,6 +1129,42 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
 	else
 	{
 		send_data("HTTP/1.1 405 Method Not Allowed" LINE_BREAK LINE_BREAK LINE_BREAK, socket_peer);
+	}
+
+	return 0;
+}
+
+/**
+ * Callback for each http request/response.
+ *
+ * If a complete URL is read this callback is called. It calls
+ * for responses
+ *     url_callback_responses
+ * and for requests
+ *     url_callback_requests
+ *
+ * @param[in] parser A pointer to the parser which has called
+ *                   this callback. Gives access to the parser
+ *                   state (like method of the request).
+ * @param[in] at     Start pointer of the parsed URL as a char
+ *                   array. The array is not terminated by "\0"
+ *                   (see "length").
+ * @param[in] length Count of chars in the URL (in the array
+ *                   given by "at").
+ *
+ * @return Error state of the callback (not used; gives "0" back).
+ */
+int url_callback(llhttp_t *parser, const char *at, size_t length)
+{
+	switch(parser->type) {
+	case HTTP_RESPONSE:
+		url_callback_responses(parser, at, length);
+		break;
+	case HTTP_REQUEST:
+		url_callback_requests(parser, at, length);
+		break;
+	default:
+		LIBIOTRACE_ERROR("unknown parser type");
 	}
 
 	return 0;
@@ -1251,10 +1293,10 @@ void *communication_thread(void *arg)
 		pthread_mutex_lock(&socket_lock);
 		for (int i = 0; i < recv_sockets_len; i++)
 		{
-			FD_SET(recv_sockets[i], &fd_recv_sockets);
-			if (recv_sockets[i] > socket_max)
+			FD_SET(recv_sockets[i]->socket, &fd_recv_sockets);
+			if (recv_sockets[i]->socket > socket_max)
 			{
-				socket_max = recv_sockets[i];
+				socket_max = recv_sockets[i]->socket;
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
@@ -1267,10 +1309,10 @@ void *communication_thread(void *arg)
 		//Add active control connections to fd_set
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
-			FD_SET(open_control_sockets[i].socket, &fd_recv_sockets);
-			if (open_control_sockets[i].socket > socket_max)
+			FD_SET(open_control_sockets[i]->socket, &fd_recv_sockets);
+			if (open_control_sockets[i]->socket > socket_max)
 			{
-				socket_max = open_control_sockets[i].socket;
+				socket_max = open_control_sockets[i]->socket;
 			}
 		}
 
@@ -1287,13 +1329,19 @@ void *communication_thread(void *arg)
 		for (int i = 0; i < recv_sockets_len; i++)
 		{
 			//Which sockets are ready to read
-			if (FD_ISSET(recv_sockets[i], &fd_recv_sockets))
+			if (FD_ISSET(recv_sockets[i]->socket, &fd_recv_sockets))
 			{
 				char read[4096];
-				ssize_t bytes_received = recv(recv_sockets[i], read, 4096, 0);
+				ssize_t bytes_received = recv(recv_sockets[i]->socket, read, 4096, 0);
 				if (1 > bytes_received)
 				{
 					// TODO: parse/interpret responses (each socket needs it's own llhttp_t parser)
+					enum llhttp_errno err = llhttp_execute(&(recv_sockets[i]->parser), read, bytes_received);
+					if (err != HPE_OK)
+					{
+						const char *errno_text = llhttp_errno_name(err);
+						LIBIOTRACE_ERROR("error parsing influxdb response: %s: %s", errno_text, parser.reason);
+					}
 
 					//Socket is destroyed or closed by peer
 					//close(recv_sockets[i]);
@@ -1322,24 +1370,24 @@ void *communication_thread(void *arg)
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
 			//Which sockets are ready to read
-			if (FD_ISSET(open_control_sockets[i].socket, &fd_recv_sockets))
+			if (FD_ISSET(open_control_sockets[i]->socket, &fd_recv_sockets))
 			{
 				char read[4096];
-				ssize_t bytes_received = recv(open_control_sockets[i].socket, read, 4096, 0);
+				ssize_t bytes_received = recv(open_control_sockets[i]->socket, read, 4096, 0);
 				if (1 > bytes_received)
 				{
 					//Socket is destroyed or closed by peer
-					CLOSESOCKET(open_control_sockets[i].socket);
+					CLOSESOCKET(open_control_sockets[i]->socket);
 					libiotrace_socket *s = open_control_sockets[i];
-					delete_socket(open_control_sockets[i].socket, NULL, &open_control_sockets_len, &open_control_sockets);
+					delete_socket(open_control_sockets[i]->socket, NULL, &open_control_sockets_len, &open_control_sockets);
 					free(s);
 					i--;
 				}
 				else
 				{
-					socket_peer = open_control_sockets[i].socket; // is needed by callback => must be set before llhttp_execute()
+					socket_peer = open_control_sockets[i]->socket; // is needed by callback => must be set before llhttp_execute()
 					// TODO: to handle more than one connection a separate parser for each socket/connection is needed
-					enum llhttp_errno err = llhttp_execute(&(open_control_sockets[i].parser), read, bytes_received);
+					enum llhttp_errno err = llhttp_execute(&(open_control_sockets[i]->parser), read, bytes_received);
 					if (err != HPE_OK)
 					{
 						const char *errno_text = llhttp_errno_name(err);
@@ -1354,7 +1402,7 @@ void *communication_thread(void *arg)
 	CLOSESOCKET(socket_control);
 	for (int i = 0; i < open_control_sockets_len; i++)
 	{
-		CLOSESOCKET(open_control_sockets[i].socket);
+		CLOSESOCKET(open_control_sockets[i]->socket);
 		free(open_control_sockets[i]);
 	}
 	free(open_control_sockets);
@@ -2008,23 +2056,23 @@ void cleanup()
 	pthread_mutex_lock(&socket_lock);
 	for (int i = 0; i < recv_sockets_len; i++)
 	{
-		shutdown(recv_sockets[i], SHUT_WR);
+		shutdown(recv_sockets[i]->socket, SHUT_WR);
 		while (1)
 		{
 			fd_set reads;
 			FD_ZERO(&reads);
-			FD_SET(recv_sockets[i], &reads);
+			FD_SET(recv_sockets[i]->socket, &reads);
 
-			int ret = CALL_REAL_POSIX_SYNC(select)(recv_sockets[i] + 1, &reads, NULL, NULL, NULL);
+			int ret = CALL_REAL_POSIX_SYNC(select)(recv_sockets[i]->socket + 1, &reads, NULL, NULL, NULL);
 			if (-1 == ret)
 			{
 				LIBIOTRACE_WARN("select() returned -1, errno=%d.", errno);
 				break;
 			}
-			if (FD_ISSET(recv_sockets[i], &reads))
+			if (FD_ISSET(recv_sockets[i]->socket, &reads))
 			{
 				char read[4096];
-				int bytes_received = recv(recv_sockets[i], read, 4096, 0);
+				int bytes_received = recv(recv_sockets[i]->socket, read, 4096, 0);
 				if (bytes_received < 1)
 				{
 					// Connection closed by peer
@@ -2032,7 +2080,7 @@ void cleanup()
 				}
 			}
 		}
-		CLOSESOCKET(recv_sockets[i]);
+		CLOSESOCKET(recv_sockets[i]->socket);
 	}
 	pthread_mutex_unlock(&socket_lock);
 

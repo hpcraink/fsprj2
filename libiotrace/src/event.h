@@ -21,8 +21,8 @@
 #  include "mpi_io.h"
 #endif
 
-
 #include "libiotrace_include_struct.h"
+#include "wrapper_defines.h"
 
 BEGIN_C_DECLS
 

@@ -1841,8 +1841,10 @@ inline u_int64_t gettime(void)
 	struct timespec t;
 	u_int64_t time;
 	//clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-	clock_gettime(CLOCK_BOOTTIME, &t);
-	time = t.tv_sec * (1000 * 1000 * 1000) + t.tv_nsec;
+	//clock_gettime(CLOCK_BOOTTIME, &t);
+	clock_gettime(CLOCK_REALTIME, &t);
+	//time = t.tv_sec * (1000 * 1000 * 1000) + t.tv_nsec;
+	time = (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
 	return time;
 }
 
@@ -1931,7 +1933,7 @@ void write_into_influxdb(struct basic *data)
 
 	int timestamp_length = COUNT_DEC_AS_CHAR(system_start_time);
 	char timestamp[timestamp_length];
-	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + data->time_end);
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, /*system_start_time +*/ data->time_end);
 	timestamp_length = strlen(timestamp);
 
 	int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;

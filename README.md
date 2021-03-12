@@ -33,6 +33,8 @@ To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ 
 
 BSD 3-Clause
 
+llhttp source https://github.com/nodejs/llhttp: MIT License
+
 #### Tools needed to build _libiotrace_
 
 CMake and ccmake: OSI-approved BSD 3-Clause License (see [CMake](https://cmake.org/))

@@ -23,6 +23,7 @@ option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
+option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
 
 set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
 set(MAX_FUNCTION_NAME "40" CACHE STRING "max length of function names")

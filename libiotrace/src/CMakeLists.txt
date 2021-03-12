@@ -229,6 +229,10 @@ if(ALL_WRAPPERS_ACTIVE)
     list(APPEND OPTIONS -DALL_WRAPPERS_ACTIVE=${ALL_WRAPPERS_ACTIVE})
 endif()
 
+if(REALTIME)
+    list(APPEND OPTIONS -DREALTIME=${REALTIME})
+endif()
+
 list(APPEND OPTIONS -DSTACKTRACE_DEPTH=${STACKTRACE_DEPTH})
 
 #compile using cmake -DSTACKTRACE_PTR for writing stacktrace pointer to log

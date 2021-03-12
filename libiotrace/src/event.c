@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #endif
 
+#include <sys/sysinfo.h>
 #include <sys/syscall.h>
 #include <sys/stat.h>
 
@@ -192,7 +193,9 @@ static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(env_influx_bucket)];
 static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 static char has_whitelist;
 #endif
+#ifndef REALTIME
 static u_int64_t system_start_time;
+#endif
 static libiotrace_socket **recv_sockets = NULL;
 static int recv_sockets_len = 0;
 static libiotrace_socket **open_control_sockets = NULL;
@@ -1688,7 +1691,9 @@ void init_process()
 		length = libiotrace_get_env(env_ld_preload, ld_preload + length + 1, MAXFILENAME, 1);
 #endif
 
+#ifndef REALTIME
 		system_start_time = iotrace_get_boot_time();
+#endif
 
 		pthread_mutex_init(&lock, NULL);
 		pthread_mutex_init(&socket_lock, NULL);
@@ -1840,10 +1845,11 @@ inline u_int64_t gettime(void)
 {
 	struct timespec t;
 	u_int64_t time;
-	//clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-	//clock_gettime(CLOCK_BOOTTIME, &t);
+#ifdef REALTIME
 	clock_gettime(CLOCK_REALTIME, &t);
-	//time = t.tv_sec * (1000 * 1000 * 1000) + t.tv_nsec;
+#else
+	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+#endif
 	time = (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
 	return time;
 }
@@ -1931,9 +1937,13 @@ void write_into_influxdb(struct basic *data)
 	snprintf(body_labels, sizeof(body_labels), labels, short_log_name, data->hostname, data->process_id, data->thread_id, data->function_name);
 	body_labels_length = strlen(body_labels);
 
-	int timestamp_length = COUNT_DEC_AS_CHAR(system_start_time);
+	int timestamp_length = COUNT_DEC_AS_CHAR(data->time_end);
 	char timestamp[timestamp_length];
-	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, /*system_start_time +*/ data->time_end);
+#ifdef REALTIME
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, data->time_end);
+#else
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + data->time_end);
+#endif
 	timestamp_length = strlen(timestamp);
 
 	int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;

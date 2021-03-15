@@ -390,7 +390,23 @@ You can use a whitelist to specify which wrappers should be traced when "ALL_WRA
 To trace MPI File-I/O wrappers you have to turn on "WITH_MPI_IO" in ccmake.
 
 ### Example to use Live-Tracing for MPI with libiotrace
-`mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=/home/julian/Projects/fsprj2/libiotrace/build/src/libiotrace_shared.so mpi_program_to_be_observed`
+`mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=/path/to/libiotrace_shared.so mpi_program_to_be_observed`
+
+### Example to use Live-Tracing for a program without MPI
+`IOTRACE_LOG_NAME=MPI_read_test2 IOTRACE_DATABASE_IP=127.0.0.1  IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== IOTRACE_WHITELIST=./whitelist LD_PRELOAD=/path/to/libiotrace_shared.so program_to_be_observed`
+
+### How to use Flux query language to show data in Grafana
+To show the live data from libiotrace in Grafana the Flux query language needs to be used. 
+
+`from(bucket: "hsebucket")`<br>
+  `|> range(start: -5m, stop: now())` <br>
+  `|> filter(fn: (r) => r["_measurement"] == "libiotrace")`
+  `|> filter(fn: (r) => r["_field"] == "function_data_written_bytes")`<br>
+  `|> filter(fn: (r) => r["functionname"] == "MPI_File_write")`<br>
+  `|> aggregateWindow(every: 1s, fn: sum, createEmpty: false)`<br>
+  `|> yield(name: "sum")`
+
+This example will use the measurement _libiotrace_ from the _hsebucket_ and show all bytes written by _MPI_File_write_ in the last 5 minutes. Grafana will show the data of different processes in different colors. Data is aggregated by 1s per process. This can be changed to e.g. 1ms. 
 
 ### Activate and deactivate specific wrappers at runtime
 When libiotrace is running in Live Tracing mode it is possible to activate and deactivate wrappers at runtime with HTTP. Each process writes its IP addresses and ports in the "MPI_read_test2_control.log" logfile. 

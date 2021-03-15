@@ -378,7 +378,14 @@ Now you can use libiotrace like in the following example to send live data to In
 
 When _WITH_POSIX_IO_ is activated in cmake you can only use IPv4 addresses for _IOTRACE_DATABASE_IP_. When it is disabled name resolution is possible.
 
-You can use a whitelist to specify which wrappers should be traced when "ALL_WRAPPERS_ACTIVE" in cmake is turned off.
+You can use a whitelist to specify which wrappers should be traced when "ALL_WRAPPERS_ACTIVE" in cmake is turned off. You have to create a new file called _whitelist_ in the directory of the program that should be traced. The whitelist file contains in each line the name of exactly one function. This could look like:
+
+`MPI_File_open`<br>
+`MPI_File_write`<br>
+`MPI_File_read` <br>
+`fopen` <br>
+`fclose` <br>
+
 
 To trace MPI File-I/O wrappers you have to turn on "WITH_MPI_IO" in ccmake.
 

@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #endif
 
-#include <sys/sysinfo.h>
 #include <sys/syscall.h>
 #include <sys/stat.h>
 
@@ -1662,12 +1661,14 @@ void init_process()
 #ifndef IO_LIB_STATIC
 		generate_env(database_ip_env, env_database_ip, length, database_ip);
 #endif
+
 		// get database port from environment
 		length = libiotrace_get_env(env_database_port, database_port, MAX_DATABASE_PORT, 1);
 
 #ifndef IO_LIB_STATIC
 		generate_env(database_port_env, env_database_port, length, database_port);
 #endif
+
 		// Path to wrapper whitelist
 		length = libiotrace_get_env(env_wrapper_whitelist, whitelist, MAXFILENAME, 0);
 		if (0 != length)
@@ -1946,7 +1947,7 @@ void write_into_influxdb(struct basic *data)
 #endif
 	timestamp_length = strlen(timestamp);
 
-	int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
+	const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
 			"Host: localhost:8086" LINE_BREAK
@@ -1956,7 +1957,7 @@ void write_into_influxdb(struct basic *data)
 			"Content-Type: application/x-www-form-urlencoded" LINE_BREAK
 			LINE_BREAK
 			"%s %s %s";
-	int message_length = strlen(header)
+	const int message_length = strlen(header)
 			+ influx_bucket_len
 			+ influx_organization_len
 			+ influx_token_len
@@ -2023,7 +2024,7 @@ void write_into_buffer(struct basic *data)
 }
 
 /**
- * Free's dynamically allocated memory in struct basic
+ * Frees dynamically allocated memory in struct basic
  *
  * @aram[in] data Pointer to struct basic
  */

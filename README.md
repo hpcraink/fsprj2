@@ -376,6 +376,8 @@ InfluxDB is now available under http://localhost:8086 (username: admin password:
 
 Now you can use libiotrace like in the following example to send live data to InfluxDB. The Token is preconfigured with docker-compose and doesn't have to be changed. If you change token, organization name or bucket name you have to reconfigure the data sources in Grafana.
 
+When _WITH_POSIX_IO_ is activated in cmake you can only use IPv4 addresses for _IOTRACE_DATABASE_IP_. When it is disabled name resolution is possible.
+
 You can use a whitelist to specify which wrappers should be traced when "ALL_WRAPPERS_ACTIVE" in cmake is turned off.
 
 To trace MPI File-I/O wrappers you have to turn on "WITH_MPI_IO" in ccmake.

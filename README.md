@@ -363,6 +363,9 @@ So this char shows some optimization potential.
 
 ## Live-Tracing
 
+
+![alt text](https://github.com/hpcraink/fsprj2/blob/master/Grafana/screenshot_grafana.png?raw=true "&lt;live-tracing&gt;_1.png")
+
 To use Grafana and InfluxDB to trace every function call in real-time and write its values in the databse you have to do the following:
 
 1. Go to the fsprj2 root directory
@@ -406,7 +409,7 @@ To show the live data from libiotrace in Grafana the Flux query language needs t
   `|> aggregateWindow(every: 1s, fn: sum, createEmpty: false)`<br>
   `|> yield(name: "sum")`
 
-This example will use the measurement _libiotrace_ from the _hsebucket_ and show all bytes written by _MPI_File_write_ in the last 5 minutes. Grafana will show the data of different processes in different colors. Data is aggregated by 1s per process. This can be changed to e.g. 1ms. 
+This example will use the measurement _libiotrace_ from the _hsebucket_ and show all bytes written by _MPI_File_write_ in the last 5 minutes. Grafana will show the data of different processes in different colors. Data is aggregated by 1s per process. This can be changed to e.g. 1ms.
 
 ### Activate and deactivate specific wrappers at runtime
 When libiotrace is running in Live Tracing mode it is possible to activate and deactivate wrappers at runtime with HTTP. Each process writes its IP addresses and ports in the "MPI_read_test2_control.log" logfile. 

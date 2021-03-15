@@ -103,6 +103,9 @@ Steps to build _libiotrace_:
           Sets the maximum length of collected function names.
           Longer names get truncated.
         
+        * _MAX_INFLUX_TOKEN_:
+          Sets the maximum length for the InfluxDB token.
+
         * _MAX_MMSG_MESSAGES_:
         
           If the monitored program sends or receives multiple messages via call of function sendmmsg or recvmmsg this option sets the maximum count of collected messages in a single function call. 
@@ -120,7 +123,17 @@ Steps to build _libiotrace_:
         
           Sets maximum length of a single entry in a collected stack trace.
           Longer values are truncated.
-          
+
+        * _PORT_RANGE_MAX_:
+          When Live-Tracing is enabled wrappers can be enabled and disabled remotely at runtime per process. To receive the control information libiotrace has to use a port per process. This is the maximum port value for that libiotrace tries to get a port. 
+
+        * _PORT_RANGE_MIN_:
+          When Live-Tracing is enabled wrappers can be enabled and disabled remotely at runtime per process. To receive the control information libiotrace has to use a port per process. This is the minimum port value for that libiotrace tries to get a port. 
+
+
+        * _SENDING_:
+          When set to _ON_ each wrapper sends its data live to InfluxDB. Please look in section _Live-Tracing_ which parameteres are required to send data to InfluxDB.
+
         * _STACKTRACE_DEPTH_:
         
           Sets the maximum number of currently collected stack trace entries.
@@ -142,9 +155,7 @@ Steps to build _libiotrace_:
           
         * _WITH_MPI_IO_:
         
-          Don't change it, because it is not implemented.
-          In the future this option enables the monitoring of MPI (e.g. OpenMPI) functions.
-          This is the next step on our roadmap.
+          If set to _ON_ functions from _mpi_io.c_ are monitored
           
         * _WITH_POSIX_AIO_:
         

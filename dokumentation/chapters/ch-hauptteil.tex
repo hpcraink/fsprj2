@@ -1112,6 +1112,68 @@ Für das statische Linken muss beim Kompilieren des zu überwachenden Programms de
 Für dynamisches Linken kann dagegen das zu überwachende Programm unverändert genutzt werden. Vor dem Starten des Programms muss lediglich die dynamische Variante der Wrapper-Bibliothek (libiotrace\-\_\-shared.so) über die Umgebungsvariable LD\-\_\-PRE\-LOAD geladen sein. Heirdurch werden die Wrapper vor den überwachten Funktionen geladen. Folgend ein Beispiel für den Firefox als überwachtes Programm. In diesem Beispiel ist noch zusätzlich die Sandbox im Firefox über die Umgebungsvariable MOZ\-\_\-FAKE\-\_\-NO\-\_\-SAND\-BOX deaktiviert, da die aktivierte Sandbox das Ermitteln einer genauen Systemzeit über entsprechende Kernel-Funktionen verhindert, diese aber für das Loggen durch die Wrapper benötigt werden:
 \lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/Wrapper_Example_Aufruf.txt}
 
+\section{MPI File-I/O}
+Um zusätzlich zu POSIX-IO auch MPI File-I/O tracen zu können wurden zusätzliche Wrapper implementiert. Diese befinden sich in /libiotrace/src/mpi\_io.c. Derzeit werden folgende Wrapper getraced: MPI\_File\_open, MPI\_File\_write, MPI\_File\_iwrite,\\ MPI\_File\_iwrite\_all, MPI\_File\_write\_all, MPI\_File\_read, MPI\_File\_iread,\\ MPI\_File\_iread\_all, MPI\_File\_read\_all, MPI\_File\_close, MPI\_File\_seek,\\ MPI\_File\_write\_at, MPI\_File\_write\_at\_all, MPI\_File\_read\_at, MPI\_File\_read\_at\_all, MPI\_File\_iread\_at, MPI\_File\_iread\_at\_all, MPI\_File\_iwrite\_at, MPI\_File\_iwrite\_at\_all, MPI\_File\_read\_all\_begin, MPI\_Wait, MPI\_Waitall, MPI\_File\_delete und \\MPI\_File\_set\_view.
+
+Um MPI File-I/O zu aktivieren muss in ccmake die Option WITH\_MPI\_IO gesetzt sein.
+
+Wrapper die mit dem Buchstaben i beginnen zählen zu den immediate-Wrappern. Wird zum Beispiel MPI\_File\_iwrite aufgerufen, dann steht erst zu einem späteren Zeitpunkt (beim Aufruf von MPI\_Wait oder MPI\_Waitall) fest, wie viele Bytes tatsächlich geschrieben wurden. Diese Information wird im Java-Programm angezeigt, ist im Live-Tracing jedoch noch nicht verfügbar.
+
+
+\section{Live-Tracing}
+Live-Tracing ermöglicht das Senden der Daten jedes Wrappers zur Laufzeit des Programms. Die Funktionalität ist aktiv wenn SENDING im ccmake aktiviert ist. Hierfür wird zum Senden der Daten pro Thread des zu überwachenden Programms ein Socket geöffnet wie in Abbildung \ref{fig:sendtoinflux} zu sehen. Dies geschieht durch Aufruf der Funktion prepare\_socket() in der Funktion init\_thread(). Diese Funktion erstellt einen neuen Socket und benutzt hierfür die im Programmaufruf der libiotrace mitgegebenen Parameter für IP-Adresse und Port.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=12cm]{fig/send_to_influx.png}
+	\caption{Daten zu InfluxDB senden}
+	\label{fig:sendtoinflux}
+\end{figure}
+
+Ist die libiotrace so konfiguriert, dass POSIX-I/O mitgetraced wird, kann die Funktion getaddrinfo() nicht aufgerufen werden. Es ist also zwingend erforderlich eine gültige IPv4-Adresse mitzugeben. Wird POSIX-I/O nicht mitgetraced kann eine Namensauflösung mit einer übergebenen Domain statt einer IP-Adresse stattfinden.
+
+\subsection{Nutzen von Live-Tracing}
+Im Ordner Grafana befindet sich ein docker-compose-File. Mit einem \textbf{sudo docker compose-up} wird InfluxDB und Grafana gestartet und automatisch miteinander verbunden. InfluxDB ist nun auf Port 8086 (user: admin password: test12345678) verfügbar. Grafana ist unter Port 3000 (user: admin password: admin) erreichbar. INFLUX\_ORGANIZATION,\\ INFLUX\_BUCKET und INFLUX\_TOKEN werden über das Dockerfile vorkonfiguriert und können bei Bedarf geändert werden.
+
+Wenn SENDING in ccmake aktiviert ist, kann Live-Tracing nun folgendermaßen für ein MPI-Programm genutzt werden:
+
+\begin{lstlisting}[language=C,numbers=none,numberstyle=\tiny]
+mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=/path/to/libiotrace_shared.so mpi_program_to_be_observed
+\end{lstlisting}
+
+Für ein Programm welches kein MPI benutzt kann folgender Aufruf angepasst werden:
+
+\begin{lstlisting}[language=C,numbers=none,numberstyle=\tiny]
+IOTRACE_LOG_NAME=MPI_read_test2 IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== IOTRACE_WHITELIST=./whitelist LD_PRELOAD=/path/to/libiotrace_shared.so program_to_be_observed
+\end{lstlisting}
+
+\subsection{Whitelisting von Wrappern}
+Die libiotrace bietet die Möglichkeit beim Start der Anwendung eine Whitelist auszulesen und nur die in der Whitelist enthaltenen Wrapper zu tracen. Hierfür wird im aktuellen Verzeichnis ein File \textbf{whitelist} angelegt. Jede Zeile dieses Files enthält einen Wrappernamen der getraced werden soll. Die Funktion read\_whitelist() liest die Whitelist ein und setzt dementsprechend die Wrapper auf aktiv oder inaktiv.
+
+
+\subsection{Communication Thread}
+Für jeden Prozess des überwachten Anwendung wird ein Thread gestartet, der die Antworten der InfluxDB empfängt. Dieser Thread hat zusätzlich die Aufgabe Kontrollinformationen zu empfangen um pro Prozess zur Laufzeit die Möglichkeit zu bieten Wrapper an- und auszuschalten. Dieses Verhalten ist in Abbildung \ref{fig:communicationthread} dargestellt.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=12cm]{fig/communication_thread.png}
+	\caption{Communication-Thread}
+	\label{fig:communicationthread}
+\end{figure}
+
+
+\subsubsection{Empfangen von Antworten der sendenden Threads}
+Um die Antworten der InfluxDB für gesendete Daten empfangen zu können wird in der Funktion communication\_thread() mittels eines selects auf Sockets gewartet, die neue Informationen bereit haben. Ist dies der Fall, wird mittels llhttp\_execute() die HTTP-Response verarbeitet. 
+
+Dies ist möglich, da jedes neue Socket durch die Funktion save\_socket() in ein globales Array recv\_sockets gespeichert wird und dieses in communication\_thread() ausgewertet wird.  
+
+
+\subsubsection{Empfangen von Kontrollinformation}
+
+
+
+
+
 \chapter{Aktueller Stand}
 \label{sec:ergeb}
 

@@ -1223,8 +1223,6 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
 void *communication_thread(void *arg)
 {
 	struct timeval select_timeout;
-	select_timeout.tv_sec = 1; 
-	select_timeout.tv_usec = 0;
 
 	// Open Socket to receive control information
 	struct sockaddr_in addr;
@@ -1329,6 +1327,8 @@ void *communication_thread(void *arg)
 			}
 		}
 
+		select_timeout.tv_sec = 1;
+		select_timeout.tv_usec = 0;
 		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, &select_timeout);
 		// Select: At least one socket is ready to be processed
 		if (-1 == ret)

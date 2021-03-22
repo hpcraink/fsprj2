@@ -1953,7 +1953,7 @@ void write_into_influxdb(struct basic *data)
 			"Host: localhost:8086" LINE_BREAK
 			"Accept: */*" LINE_BREAK
 			"Authorization: Token %s" LINE_BREAK
-			"Content-Length: %ld" LINE_BREAK
+			"Content-Length: %d" LINE_BREAK
 			"Content-Type: application/x-www-form-urlencoded" LINE_BREAK
 			LINE_BREAK
 			"%s %s %s";

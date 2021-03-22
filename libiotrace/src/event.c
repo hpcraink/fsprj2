@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <sys/time.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
 #define CLOSESOCKET(s)          \
@@ -1221,6 +1222,10 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
  */
 void *communication_thread(void *arg)
 {
+	struct timeval select_timeout;
+	select_timeout.tv_sec = 1; 
+	select_timeout.tv_usec = 0;
+
 	// Open Socket to receive control information
 	struct sockaddr_in addr;
 	socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
@@ -1324,7 +1329,7 @@ void *communication_thread(void *arg)
 			}
 		}
 
-		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, NULL);
+		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, &select_timeout);
 		// Select: At least one socket is ready to be processed
 		if (-1 == ret)
 		{

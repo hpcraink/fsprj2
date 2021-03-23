@@ -1341,7 +1341,7 @@ void *communication_thread(void *arg)
 		select_timeout.tv_sec = SELECT_TIMEOUT_SECONDS;
 		select_timeout.tv_usec = 0;
 		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, &select_timeout);
-		if (-1 == ret)
+		if (-1 == ret && EINTR != errno) /* ignore interrupts via signal (they are not for us) */
 		{
 			LIBIOTRACE_WARN("select() returned -1, errno=%d.", errno);
 			break;

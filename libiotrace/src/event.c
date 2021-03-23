@@ -186,6 +186,7 @@ static int influx_bucket_len;
 static char database_ip[MAX_DATABASE_IP];
 static int database_ip_len;
 static char database_port[MAX_DATABASE_PORT];
+static int database_port_len;
 static char whitelist[MAXFILENAME];
 static char event_cleanup_done = 0;
 #ifndef IO_LIB_STATIC
@@ -1680,6 +1681,7 @@ void init_process()
 
 		// get database port from environment
 		length = libiotrace_get_env(env_database_port, database_port, MAX_DATABASE_PORT, 1);
+		database_port_len = strlen(database_port);
 
 #ifndef IO_LIB_STATIC
 		generate_env(database_port_env, env_database_port, length, database_port);
@@ -1966,7 +1968,7 @@ void write_into_influxdb(struct basic *data)
 	const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
-			"Host: %s:8086" LINE_BREAK
+			"Host: %s:%s" LINE_BREAK
 			"Accept: */*" LINE_BREAK
 			"Authorization: Token %s" LINE_BREAK
 			"Content-Length: %d" LINE_BREAK
@@ -1977,6 +1979,7 @@ void write_into_influxdb(struct basic *data)
 			+ influx_bucket_len
 			+ influx_organization_len
 			+ database_ip_len
+			+ database_port_len
 			+ influx_token_len
 			+ COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
 			+ body_labels_length
@@ -1985,7 +1988,7 @@ void write_into_influxdb(struct basic *data)
 
 	//buffer all (header + body)
 	char message[message_length + 1];
-	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, influx_token,
+	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
 			content_length, body_labels, body, timestamp);
 
 	send_data(message, socket_peer);

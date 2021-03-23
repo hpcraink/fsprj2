@@ -104,6 +104,11 @@
 #define PORT_RANGE_MAX 60000
 #endif
 
+/* defines for all connections */
+#ifndef SELECT_TIMEOUT_SECONDS
+#define SELECT_TIMEOUT_SECONDS 1
+#endif
+
 /* flags and values to control logging */
 #ifdef LOGGING
 static ATTRIBUTE_THREAD char no_logging = 0;
@@ -1327,7 +1332,7 @@ void *communication_thread(void *arg)
 			}
 		}
 
-		select_timeout.tv_sec = 1;
+		select_timeout.tv_sec = SELECT_TIMEOUT_SECONDS;
 		select_timeout.tv_usec = 0;
 		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, &select_timeout);
 		// Select: At least one socket is ready to be processed
@@ -1335,78 +1340,80 @@ void *communication_thread(void *arg)
 		{
 			LIBIOTRACE_WARN("select() returned -1, errno=%d.", errno);
 			break;
-		}
+		} else if (0 < ret) {
+			/* check which descriptor/socket is ready to read if there was new data before timeout expired */
 
-		// receive responses from influxdb
-		pthread_mutex_lock(&socket_lock);
-		for (int i = 0; i < recv_sockets_len; i++)
-		{
-			//Which sockets are ready to read
-			if (FD_ISSET(recv_sockets[i]->socket, &fd_recv_sockets))
+			// receive responses from influxdb
+			pthread_mutex_lock(&socket_lock);
+			for (int i = 0; i < recv_sockets_len; i++)
 			{
-				char read[4096];
-				ssize_t bytes_received = recv(recv_sockets[i]->socket, read, 4096, 0);
-				if (1 > bytes_received)
+				//Which sockets are ready to read
+				if (FD_ISSET(recv_sockets[i]->socket, &fd_recv_sockets))
 				{
-					//Socket is destroyed or closed by peer
-					//close(recv_sockets[i]);
-					//delete_socket(recv_sockets[i]);
-					//i--;
-				} else {
-					// TODO: parse/interpret responses (each socket needs it's own llhttp_t parser)
-					enum llhttp_errno err = llhttp_execute(&(recv_sockets[i]->parser), read, bytes_received);
-					if (err != HPE_OK)
+					char read[4096];
+					ssize_t bytes_received = recv(recv_sockets[i]->socket, read, 4096, 0);
+					if (1 > bytes_received)
 					{
-						const char *errno_text = llhttp_errno_name(err);
-						LIBIOTRACE_ERROR("error parsing influxdb response: %s: %s", errno_text, recv_sockets[i]->parser.reason);
+						//Socket is destroyed or closed by peer
+						//close(recv_sockets[i]);
+						//delete_socket(recv_sockets[i]);
+						//i--;
+					} else {
+						// TODO: parse/interpret responses (each socket needs it's own llhttp_t parser)
+						enum llhttp_errno err = llhttp_execute(&(recv_sockets[i]->parser), read, bytes_received);
+						if (err != HPE_OK)
+						{
+							const char *errno_text = llhttp_errno_name(err);
+							LIBIOTRACE_ERROR("error parsing influxdb response: %s: %s", errno_text, recv_sockets[i]->parser.reason);
+						}
 					}
 				}
 			}
-		}
-		pthread_mutex_unlock(&socket_lock);
+			pthread_mutex_unlock(&socket_lock);
 
-		// If socket to establish new connections is ready
-		if (FD_ISSET(socket_control, &fd_recv_sockets))
-		{
-			//Accept one new socket but more could be ready at this point
-			SOCKET socket = accept(socket_control, NULL, NULL);
-			if (0 > socket)
+			// If socket to establish new connections is ready
+			if (FD_ISSET(socket_control, &fd_recv_sockets))
 			{
-				LIBIOTRACE_ERROR("accept returned -1, errno=%d", errno);
-			}
-			//Connection established; write all established sockets in array
-			libiotrace_socket *s = create_libiotrace_socket(socket, HTTP_REQUEST);
-			save_socket(s, NULL, &open_control_sockets_len, &open_control_sockets);
-		}
-
-		// receive control requests
-		for (int i = 0; i < open_control_sockets_len; i++)
-		{
-			//Which sockets are ready to read
-			if (FD_ISSET(open_control_sockets[i]->socket, &fd_recv_sockets))
-			{
-				char read[4096];
-				ssize_t bytes_received = recv(open_control_sockets[i]->socket, read, 4096, 0);
-				if (1 > bytes_received)
+				//Accept one new socket but more could be ready at this point
+				SOCKET socket = accept(socket_control, NULL, NULL);
+				if (0 > socket)
 				{
-					//Socket is destroyed or closed by peer
-					CLOSESOCKET(open_control_sockets[i]->socket);
-					libiotrace_socket *s = open_control_sockets[i];
-					delete_socket(open_control_sockets[i]->socket, NULL, &open_control_sockets_len, &open_control_sockets);
-					free(s);
-					i--;
+					LIBIOTRACE_ERROR("accept returned -1, errno=%d", errno);
 				}
-				else
+				//Connection established; write all established sockets in array
+				libiotrace_socket *s = create_libiotrace_socket(socket, HTTP_REQUEST);
+				save_socket(s, NULL, &open_control_sockets_len, &open_control_sockets);
+			}
+
+			// receive control requests
+			for (int i = 0; i < open_control_sockets_len; i++)
+			{
+				//Which sockets are ready to read
+				if (FD_ISSET(open_control_sockets[i]->socket, &fd_recv_sockets))
 				{
-					socket_peer = open_control_sockets[i]->socket; // is needed by callback => must be set before llhttp_execute()
-					// TODO: to handle more than one connection a separate parser for each socket/connection is needed
-					enum llhttp_errno err = llhttp_execute(&(open_control_sockets[i]->parser), read, bytes_received);
-					if (err != HPE_OK)
+					char read[4096];
+					ssize_t bytes_received = recv(open_control_sockets[i]->socket, read, 4096, 0);
+					if (1 > bytes_received)
 					{
-						const char *errno_text = llhttp_errno_name(err);
-						snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s: %s",
-								 strlen(errno_text) + 2 + strlen(open_control_sockets[i]->parser.reason), errno_text, open_control_sockets[i]->parser.reason);
-						send_data(read, socket_peer);
+						//Socket is destroyed or closed by peer
+						CLOSESOCKET(open_control_sockets[i]->socket);
+						libiotrace_socket *s = open_control_sockets[i];
+						delete_socket(open_control_sockets[i]->socket, NULL, &open_control_sockets_len, &open_control_sockets);
+						free(s);
+						i--;
+					}
+					else
+					{
+						socket_peer = open_control_sockets[i]->socket; // is needed by callback => must be set before llhttp_execute()
+						// TODO: to handle more than one connection a separate parser for each socket/connection is needed
+						enum llhttp_errno err = llhttp_execute(&(open_control_sockets[i]->parser), read, bytes_received);
+						if (err != HPE_OK)
+						{
+							const char *errno_text = llhttp_errno_name(err);
+							snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s: %s",
+									strlen(errno_text) + 2 + strlen(open_control_sockets[i]->parser.reason), errno_text, open_control_sockets[i]->parser.reason);
+							send_data(read, socket_peer);
+						}
 					}
 				}
 			}
@@ -1955,7 +1962,7 @@ void write_into_influxdb(struct basic *data)
 	const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
-			"Host: localhost:8086" LINE_BREAK
+			"Host: localhost:8086" LINE_BREAK /* TODO: localhost vs. real host */
 			"Accept: */*" LINE_BREAK
 			"Authorization: Token %s" LINE_BREAK
 			"Content-Length: %d" LINE_BREAK

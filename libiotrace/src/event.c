@@ -1894,7 +1894,7 @@ void print_buffer()
 									S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd)
 	{
-		LIBIOTRACE_ERROR("open() of file %s returned %d", log_name, fd);
+		LIBIOTRACE_ERROR("open() of file %s returned %d with errno=%d", log_name, fd, errno);
 	}
 
 	for (int i = 0; i < count_basic; i++)

@@ -184,6 +184,7 @@ static int influx_organization_len;
 static char influx_bucket[MAX_INFLUX_BUCKET];
 static int influx_bucket_len;
 static char database_ip[MAX_DATABASE_IP];
+static int database_ip_len;
 static char database_port[MAX_DATABASE_PORT];
 static char whitelist[MAXFILENAME];
 static char event_cleanup_done = 0;
@@ -1306,6 +1307,8 @@ void *communication_thread(void *arg)
 		fd_set fd_recv_sockets;
 		FD_ZERO(&fd_recv_sockets);
 		SOCKET socket_max = -1;
+
+		// Add one connection to influxdb per open thread to fd_set
 		pthread_mutex_lock(&socket_lock);
 		for (int i = 0; i < recv_sockets_len; i++)
 		{
@@ -1316,13 +1319,15 @@ void *communication_thread(void *arg)
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
-		//Add listening socket for establishing control connections to fd_set
+
+		// Add listening socket for establishing control connections to fd_set
 		FD_SET(socket_control, &fd_recv_sockets);
 		if (socket_control > socket_max)
 		{
 			socket_max = socket_control;
 		}
-		//Add active control connections to fd_set
+
+		// Add active control connections to fd_set
 		for (int i = 0; i < open_control_sockets_len; i++)
 		{
 			FD_SET(open_control_sockets[i]->socket, &fd_recv_sockets);
@@ -1335,12 +1340,12 @@ void *communication_thread(void *arg)
 		select_timeout.tv_sec = SELECT_TIMEOUT_SECONDS;
 		select_timeout.tv_usec = 0;
 		int ret = CALL_REAL_POSIX_SYNC(select)(socket_max + 1, &fd_recv_sockets, NULL, NULL, &select_timeout);
-		// Select: At least one socket is ready to be processed
 		if (-1 == ret)
 		{
 			LIBIOTRACE_WARN("select() returned -1, errno=%d.", errno);
 			break;
 		} else if (0 < ret) {
+			/* Select: At least one socket is ready to be processed */
 			/* check which descriptor/socket is ready to read if there was new data before timeout expired */
 
 			// receive responses from influxdb
@@ -1359,7 +1364,6 @@ void *communication_thread(void *arg)
 						//delete_socket(recv_sockets[i]);
 						//i--;
 					} else {
-						// TODO: parse/interpret responses (each socket needs it's own llhttp_t parser)
 						enum llhttp_errno err = llhttp_execute(&(recv_sockets[i]->parser), read, bytes_received);
 						if (err != HPE_OK)
 						{
@@ -1405,7 +1409,6 @@ void *communication_thread(void *arg)
 					else
 					{
 						socket_peer = open_control_sockets[i]->socket; // is needed by callback => must be set before llhttp_execute()
-						// TODO: to handle more than one connection a separate parser for each socket/connection is needed
 						enum llhttp_errno err = llhttp_execute(&(open_control_sockets[i]->parser), read, bytes_received);
 						if (err != HPE_OK)
 						{
@@ -1669,6 +1672,7 @@ void init_process()
 
 		// get database ip from environment
 		length = libiotrace_get_env(env_database_ip, database_ip, MAX_DATABASE_IP, 1);
+		database_ip_len = strlen(database_ip);
 
 #ifndef IO_LIB_STATIC
 		generate_env(database_ip_env, env_database_ip, length, database_ip);
@@ -1962,7 +1966,7 @@ void write_into_influxdb(struct basic *data)
 	const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
 	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
-			"Host: localhost:8086" LINE_BREAK /* TODO: localhost vs. real host */
+			"Host: %s:8086" LINE_BREAK
 			"Accept: */*" LINE_BREAK
 			"Authorization: Token %s" LINE_BREAK
 			"Content-Length: %d" LINE_BREAK
@@ -1972,6 +1976,7 @@ void write_into_influxdb(struct basic *data)
 	const int message_length = strlen(header)
 			+ influx_bucket_len
 			+ influx_organization_len
+			+ database_ip_len
 			+ influx_token_len
 			+ COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
 			+ body_labels_length
@@ -1980,7 +1985,7 @@ void write_into_influxdb(struct basic *data)
 
 	//buffer all (header + body)
 	char message[message_length + 1];
-	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, influx_token,
+	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, influx_token,
 			content_length, body_labels, body, timestamp);
 
 	send_data(message, socket_peer);

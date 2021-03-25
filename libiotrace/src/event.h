@@ -39,8 +39,12 @@ void get_file_id_by_path(const char *filename, struct file_id *data);
 // ToDo: as macro with return value?
 u_int64_t gettime(void);
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 void write_into_buffer(struct basic *data);
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
 void write_into_influxdb(struct basic *data);
+#endif
 void free_memory(struct basic *data);
 
 

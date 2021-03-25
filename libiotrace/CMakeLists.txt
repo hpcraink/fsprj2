@@ -12,8 +12,8 @@ set(CMAKE_C_STANDARD 99)
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
 option (WITH_UNIT_TESTS "enable building unit tests" ON)
-option (LOGGING "write log (can be changed during execution with functions from libiotrace.h)" ON)
-option (SENDING "send log to influxdb (can be changed during execution with functions from libiotrace.h)" ON)
+option (LOGGING "write log (can be changed during execution with functions from libiotrace.h; is only used if ENABLE_OUTPUT is set to LOGFILE or LOGFILE_AND_INFLUXDB)" ON)
+option (SENDING "send log to influxdb (can be changed during execution with functions from libiotrace.h; is only used if ENABLE_OUTPUT is set to INFLUXDB or LOGFILE_AND_INFLUXDB)" ON)
 option (STACKTRACE_PTR "write stacktrace pointer to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (STACKTRACE_SYMBOL "write stacktrace symbols to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (LOG_WRAPPER_TIME "log start and end time of function wrappers" ON)
@@ -24,6 +24,7 @@ option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
+option (ENABLE_INPUT "enable input via REST-API" ON)
 
 set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
 set(MAX_FUNCTION_NAME "40" CACHE STRING "max length of function names")
@@ -44,6 +45,10 @@ set(SELECT_TIMEOUT_SECONDS "1" CACHE STRING "interval in which new threads are a
 set(STACKTRACE_DEPTH "0" CACHE STRING "stacktrace depth for logging (can be changed during execution with functions from libiotrace.h); value must be lower or equal than MAX_STACKTRACE_DEPTH")
 set(STACKTRACE_DEPTH_VALUES "0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32")
 set_property(CACHE STACKTRACE_DEPTH PROPERTY STRINGS ${STACKTRACE_DEPTH_VALUES})
+
+set(ENABLE_OUTPUT "LOGFILE_AND_INFLUXDB" CACHE STRING "include functions to write to one or multiple targets")
+set(ENABLE_OUTPUT_VALUES "LOGFILE_AND_INFLUXDB;LOGFILE;INFLUXDB")
+set_property(CACHE ENABLE_OUTPUT PROPERTY STRINGS ${ENABLE_OUTPUT_VALUES})
 
 
 

@@ -3,8 +3,26 @@
 
 #include <errno.h>
 #include <dlfcn.h>
+
+#include "libiotrace_config.h"
 #include "error.h"
 #include "libiotrace_include_struct.h"
+
+/* defines to compile only necessary functions */
+#define LOGFILE_AND_INFLUXDB 0
+#define LOGFILE 1
+#define INFLUXDB 2
+
+#if ENABLE_OUTPUT == LOGFILE_AND_INFLUXDB
+#  define IOTRACE_ENABLE_LOGFILE
+#  define IOTRACE_ENABLE_INFLUXDB
+#elif ENABLE_OUTPUT == LOGFILE
+#  define IOTRACE_ENABLE_LOGFILE
+#  undef IOTRACE_ENABLE_INFLUXDB
+#elif ENABLE_OUTPUT == INFLUXDB
+#  undef IOTRACE_ENABLE_LOGFILE
+#  define IOTRACE_ENABLE_INFLUXDB
+#endif
 
 #define LINE_BREAK "\r\n"
 
@@ -106,6 +124,12 @@
 #  define CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) __CALL_REAL_FUNCTION_NO_RETURN(data, function, __VA_ARGS__)
 #endif
 
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#  define CALL_CLEANUP() cleanup()
+#else
+#  define CALL_CLEANUP()
+#endif
+
 #define __CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
                                                                     errno = errno_data.errno_value; \
                                                                     return_value = CALL_REAL(function)(__VA_ARGS__); \
@@ -114,7 +138,7 @@
 #define __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) data.time_start = gettime(); \
                                                                               data.time_end = gettime(); \
                                                                               WRAP_END(data, function) \
-                                                                              cleanup(); \
+                                                                              CALL_CLEANUP(); \
                                                                               errno = errno_data.errno_value; \
                                                                               return_value = CALL_REAL(function)(__VA_ARGS__); \
                                                                               errno_data.errno_value = errno;
@@ -126,7 +150,7 @@
 #define __CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) data.time_start = gettime(); \
                                                             data.time_end = gettime(); \
                                                             WRAP_END(data, function) \
-                                                            cleanup(); \
+                                                            CALL_CLEANUP(); \
                                                             errno = errno_data.errno_value; \
                                                             CALL_REAL(function)(__VA_ARGS__); \
                                                             errno_data.errno_value = errno; \
@@ -153,7 +177,7 @@
                          WRAPPER_TIME_START(data) \
                          if (!init_done) { \
                              init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-                                               /* init_process() must be called first */ \
+                                             /* init_process() must be called first */ \
                          }
 #define WRAP_MPI_START(data) int errno_value; \
                              struct errno_detail errno_data; \
@@ -163,6 +187,19 @@
                                  init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
                                                  /* init_process() must be called first */ \
                              }
+
+#ifdef IOTRACE_ENABLE_INFLUXDB
+#  define CALL_WRITE_INTO_INFLUXDB(data) write_into_influxdb(&data)
+#else
+#  define CALL_WRITE_INTO_INFLUXDB(data)
+#endif
+
+#ifdef IOTRACE_ENABLE_LOGFILE
+#  define CALL_WRITE_INTO_BUFFER(data) write_into_buffer(&data)
+#else
+#  define CALL_WRITE_INTO_BUFFER(data)
+#endif
+
 //ToDo: use kcmp() with KCMP_FILE as type to check if file descriptor is STDIN_FILENO, STDOUT_FILENO or STDERR_FILENO
 //kcmp() is linux-specific! But without kcmp() a duped descriptor will not be recognized! That will lead to problems by following analysis of written data!
 //ToDo: check for which file_type should not be written instead of which should be written
@@ -185,8 +222,8 @@
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
                             if(active_wrapper_status.functionname){ \
-                              write_into_influxdb(&data); \
-                              write_into_buffer(&data); \
+                              CALL_WRITE_INTO_INFLUXDB(data); \
+                              CALL_WRITE_INTO_BUFFER(data); \
                             } \
                          } \
                          WRAP_FREE(&data) \
@@ -194,16 +231,16 @@
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          if(active_wrapper_status.functionname){ \
-                           write_into_influxdb(&data); \
-                           write_into_buffer(&data); \
+                           CALL_WRITE_INTO_INFLUXDB(data); \
+                           CALL_WRITE_INTO_BUFFER(data); \
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
                            if(active_wrapper_status.functionname){ \
-                             write_into_influxdb(&data); \
-                             write_into_buffer(&data); \
+                             CALL_WRITE_INTO_INFLUXDB(data); \
+                             CALL_WRITE_INTO_BUFFER(data); \
                            } \
                            WRAP_FREE(&data) \
                            errno = errno_value;

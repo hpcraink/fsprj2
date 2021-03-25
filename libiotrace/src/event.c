@@ -16,13 +16,6 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
-#define ISVALIDSOCKET(s) ((s) >= 0)
-#define CLOSESOCKET(s)          \
-	CALL_REAL_POSIX_SYNC(close) \
-	(s)
-#define SOCKET int
-#define GETSOCKETERRNO() (errno)
-
 #include <stdio.h>
 #include <string.h>
 
@@ -74,7 +67,19 @@
 #define MAX_EXEC_ARRAY_LENGTH 1000
 #endif
 
+/* defines for socket handling */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#define ISVALIDSOCKET(s) ((s) >= 0)
+#define CLOSESOCKET(s)          \
+	CALL_REAL_POSIX_SYNC(close) \
+	(s)
+#define SOCKET int
+#define GETSOCKETERRNO() (errno)
+#endif
+
 /* defines for influxdb connection */
+#ifdef IOTRACE_ENABLE_INFLUXDB
+
 #ifndef MAX_INFLUX_TOKEN
 #define MAX_INFLUX_TOKEN 200
 #endif
@@ -95,7 +100,11 @@
 #define MAX_DATABASE_PORT 200
 #endif
 
+#endif
+
 /* defines for control connection */
+#ifdef ENABLE_INPUT
+
 #ifndef PORT_RANGE_MIN
 #define PORT_RANGE_MIN 50000
 #endif
@@ -104,21 +113,29 @@
 #define PORT_RANGE_MAX 60000
 #endif
 
+#endif
+
 /* defines for all connections */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 #ifndef SELECT_TIMEOUT_SECONDS
 #define SELECT_TIMEOUT_SECONDS 1
 #endif
+#endif
 
 /* flags and values to control logging */
-#ifdef LOGGING
+#ifdef IOTRACE_ENABLE_LOGFILE
+#  ifdef LOGGING
 static ATTRIBUTE_THREAD char no_logging = 0;
-#else
+#  else
 static ATTRIBUTE_THREAD char no_logging = 1;
+#  endif
 #endif
-#ifdef SENDING
+#ifdef IOTRACE_ENABLE_INFLUXDB
+#  ifdef SENDING
 static ATTRIBUTE_THREAD char no_sending = 0;
-#else
+#  else
 static ATTRIBUTE_THREAD char no_sending = 1;
+#  endif
 #endif
 #ifdef STACKTRACE_DEPTH
 static ATTRIBUTE_THREAD int stacktrace_depth = STACKTRACE_DEPTH;
@@ -137,6 +154,8 @@ static ATTRIBUTE_THREAD char stacktrace_symbol = 0;
 #endif
 
 /* log file write Buffer */
+#ifdef IOTRACE_ENABLE_LOGFILE
+
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE 1048576 // 1 MB
 #endif
@@ -145,26 +164,42 @@ static const char *endpos = data_buffer + BUFFER_SIZE;
 static char *pos;
 static int count_basic;
 
+#endif
+
+/* max length host name */
 #if !defined(HAVE_HOST_NAME_MAX)
 int host_name_max;
 #endif
 
+/* struct for socket and corresponding parser */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 typedef struct libiotrace_sockets {
 	SOCKET socket;
 	llhttp_t parser;
 } libiotrace_socket;
+#endif
 
 /* Mutex */
+#ifdef IOTRACE_ENABLE_LOGFILE
 static pthread_mutex_t lock;
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
 static pthread_mutex_t socket_lock;
+#endif
 
 /* environment variables */
+#if defined(IOTRACE_ENABLE_LOGFILE) \
+	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
+	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
 static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
 static const char *env_influx_organization = "IOTRACE_INFLUX_ORGANIZATION";
 static const char *env_influx_bucket = "IOTRACE_INFLUX_BUCKET";
 static const char *env_database_ip = "IOTRACE_DATABASE_IP";
 static const char *env_database_port = "IOTRACE_DATABASE_PORT";
+#endif
 static const char *env_wrapper_whitelist = "IOTRACE_WHITELIST";
 #ifndef IO_LIB_STATIC
 static const char *env_ld_preload = "LD_PRELOAD";
@@ -173,10 +208,22 @@ static const char *env_ld_preload = "LD_PRELOAD";
 // once per process
 static pid_t pid;
 static char *hostname;
+
+#if defined(IOTRACE_ENABLE_LOGFILE) \
+	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
+	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static char log_name[MAXFILENAME];
+#endif
+#ifdef ENABLE_INPUT
+static char control_log_name[MAXFILENAME];
+#endif
+
+#ifdef IOTRACE_ENABLE_LOGFILE
 static char filesystem_log_name[MAXFILENAME];
 static char working_dir_log_name[MAXFILENAME];
-static char control_log_name[MAXFILENAME];
+#endif
+
+#ifdef IOTRACE_ENABLE_INFLUXDB
 static char influx_token[MAX_INFLUX_TOKEN];
 static int influx_token_len;
 static char influx_organization[MAX_INFLUX_ORGANIZATION];
@@ -187,36 +234,70 @@ static char database_ip[MAX_DATABASE_IP];
 static int database_ip_len;
 static char database_port[MAX_DATABASE_PORT];
 static int database_port_len;
+
+static libiotrace_socket **recv_sockets = NULL;
+static int recv_sockets_len = 0;
+#endif
+
 static char whitelist[MAXFILENAME];
+
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 static char event_cleanup_done = 0;
+#endif
+
 #ifndef IO_LIB_STATIC
+
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
+
+#if defined(IOTRACE_ENABLE_LOGFILE) \
+	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
+	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
+#endif
+
+#ifdef IOTRACE_ENABLE_INFLUXDB
 static char database_port_env[MAX_DATABASE_PORT + sizeof(env_database_port)];
 static char database_ip_env[MAX_DATABASE_IP + sizeof(env_database_ip)];
 static char influx_token_env[MAX_INFLUX_TOKEN + sizeof(env_influx_token)];
 static char influx_organization_env[MAX_INFLUX_ORGANIZATION + sizeof(env_influx_organization)];
 static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(env_influx_bucket)];
+#endif
+
 static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
 static char has_whitelist;
+
 #endif
+
 #ifndef REALTIME
 static u_int64_t system_start_time;
 #endif
-static libiotrace_socket **recv_sockets = NULL;
-static int recv_sockets_len = 0;
+
+#ifdef ENABLE_INPUT
 static libiotrace_socket **open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
 static SOCKET socket_control;
+#endif
+
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 static llhttp_settings_t settings;
+#endif
+
 struct wrapper_status active_wrapper_status;
 
 // once per thread
 static ATTRIBUTE_THREAD pid_t tid = -1;
-static ATTRIBUTE_THREAD SOCKET socket_peer;
 
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+static ATTRIBUTE_THREAD SOCKET socket_peer;
+#endif
+
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 void cleanup() ATTRIBUTE_DESTRUCTOR;
+#endif
+
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 void *communication_thread(void *arg);
+#endif
 
 #ifndef IO_LIB_STATIC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(execve)(const char *filename, char *const argv[], char *const envp[]) REAL_DEFINITION_INIT;
@@ -238,6 +319,20 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #endif
 #endif
 
+/**
+ * Create a new libiotrace_socket.
+ *
+ * Dynamically allocates a new libiotrace_socket. Saves the
+ * socket "s" and a new created parser for this socket in the
+ * new libiotrace_socket and returns it.
+ *
+ * @param[in] s    The socket to save in a new libiotrace_socket.
+ * @param[in] type llhttp_type_t for creating the new parser for "s".
+ *
+ * @return Pointer to a new created libiotrace_socket. Must be freed
+ *         with "free" if no longer used.
+ */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
 	libiotrace_socket *socket = malloc(sizeof(libiotrace_socket));
 	if (NULL == socket)
@@ -251,6 +346,7 @@ libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
 
 	return socket;
 }
+#endif
 
 /**
  * Save a socket in a global array.
@@ -265,7 +361,7 @@ libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
  *                      "libiotrace_socket")
  * @param[in] lock      Mutex used to make the array manipulation
  *                      thread safe, or NULL if no concurrent access
- *                      is possible
+ *                      is possible and no synchronization is needed
  * @param[in,out] len   Pointer to count of sockets in "array". Is
  *                      incremented by 1 after function returns.
  * @param[in,out] array Pointer to dynamically allocated array of
@@ -275,6 +371,7 @@ libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
  *                      one element. This new element holds the
  *                      value of "socket".
  */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, libiotrace_socket ***array)
 {
 	void *ret;
@@ -299,6 +396,7 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, lib
 		pthread_mutex_unlock(lock);
 	}
 }
+#endif
 
 /**
  * Delete a socket from a global array.
@@ -311,7 +409,7 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, lib
  * @param[in] socket    The socket to delete
  * @param[in] lock      Mutex used to make the array manipulation
  *                      thread safe, or NULL if no concurrent access
- *                      is possible
+ *                      is possible and no synchronization is needed
  * @param[in,out] len   Pointer to count of sockets in "array". Is
  *                      decremented by 1 after function returns.
  * @param[in,out] array Pointer to dynamically allocated array of
@@ -319,6 +417,7 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, lib
  *                      After function call "array" is decreased by
  *                      one element (if "socket" was in "array").
  */
+#ifdef ENABLE_INPUT
 void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_socket ***array)
 {
 	void *ret;
@@ -392,6 +491,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_so
 		pthread_mutex_unlock(lock);
 	}
 }
+#endif
 
 #ifndef IO_LIB_STATIC
 static char event_init_done = 0;
@@ -469,7 +569,6 @@ void toggle_wrapper(const char *line, const char toggle)
 #endif
 }
 
-#ifndef IO_LIB_STATIC
 /**
  * Initializes all needed function pointers.
  *
@@ -477,6 +576,7 @@ void toggle_wrapper(const char *line, const char toggle)
  * wrapped function. "dlsym" is used to get
  * these pointers.
  */
+#ifndef IO_LIB_STATIC
 void init_wrapper()
 {
 	event_init();
@@ -506,6 +606,7 @@ void init_wrapper()
  * read inside "communication_thread" from all sockets
  * stored in the array "recv_sockets".
  */
+#ifdef IOTRACE_ENABLE_INFLUXDB
 void prepare_socket()
 {
 	/* Call of getaddrinfo calls other posix functions. These other
@@ -620,25 +721,34 @@ void prepare_socket()
 	libiotrace_socket *socket = create_libiotrace_socket(socket_peer, HTTP_RESPONSE);
 	save_socket(socket, &socket_lock, &recv_sockets_len, &recv_sockets);
 }
+#endif
 
 void libiotrace_start_log()
 {
+#ifdef IOTRACE_ENABLE_LOGFILE
 	no_logging = 0;
+#endif
 }
 
 void libiotrace_end_log()
 {
+#ifdef IOTRACE_ENABLE_LOGFILE
 	no_logging = 1;
+#endif
 }
 
 void libiotrace_start_send()
 {
+#ifdef IOTRACE_ENABLE_INFLUXDB
 	no_sending = 0;
+#endif
 }
 
 void libiotrace_end_send()
 {
+#ifdef IOTRACE_ENABLE_INFLUXDB
 	no_sending = 1;
+#endif
 }
 
 void libiotrace_start_stacktrace_ptr()
@@ -688,7 +798,8 @@ void libiotrace_set_wrapper_inactive(const char *wrapper) {
  * file-system type and the mount options, the dump frequency in days and
  * the mount passno as a json object.
  */
-#if 0 // RAY MacOS
+#ifdef IOTRACE_ENABLE_LOGFILE
+#ifdef __linux__ // TODO: RAY MacOS; Windows?
 void print_filesystem()
 {
 	FILE *file;
@@ -709,13 +820,13 @@ void print_filesystem()
 									S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd)
 	{
-		if (errno == EEXIST)
+		if (errno == EEXIST) /* print filesystem only once */
 		{
 			return;
 		}
 		else
 		{
-			LIBIOTRACE_ERROR("open() returned %d", fd);
+			LIBIOTRACE_ERROR("open() returned %d with errno=%d", fd, errno);
 		}
 	}
 
@@ -771,6 +882,7 @@ void print_filesystem()
 	CALL_REAL_POSIX_SYNC(close)
 	(fd);
 }
+#endif
 #endif
 
 /**
@@ -835,6 +947,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data)
  * on a new line. The printed line shows the working dir, a timestamp, the
  * hostname and the process id as a json object.
  */
+#ifdef IOTRACE_ENABLE_LOGFILE
 void print_working_directory()
 {
 	char buf_working_dir[libiotrace_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
@@ -874,6 +987,7 @@ void print_working_directory()
 	CALL_REAL_POSIX_SYNC(close)
 	(fd);
 }
+#endif
 
 /**
  * Reset values in forked process before forked process starts.
@@ -886,10 +1000,14 @@ void reset_values_in_forked_process()
 {
 	init_done = 0;
 	tid = -1;
+#ifdef IOTRACE_ENABLE_INFLUXDB
 	recv_sockets = NULL;
 	recv_sockets_len = 0;
+#endif
+#ifdef ENABLE_INPUT
 	open_control_sockets = NULL;
 	open_control_sockets_len = 0;
+#endif
 }
 
 /**
@@ -924,7 +1042,12 @@ void open_std_fd(int fd)
 	data.return_state = ok;
 	data.return_state_detail = NULL;
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 	write_into_buffer(&data);
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
+	write_into_influxdb(&data);
+#endif
 	WRAP_FREE(&data)
 }
 
@@ -959,7 +1082,12 @@ void open_std_file(FILE *file)
 	data.return_state = ok;
 	data.return_state_detail = NULL;
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 	write_into_buffer(&data);
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
+	write_into_influxdb(&data);
+#endif
 	WRAP_FREE(&data)
 }
 
@@ -995,7 +1123,12 @@ void init_on_load()
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
+#  ifdef IOTRACE_ENABLE_LOGFILE
 	write_into_buffer(&data);
+#  endif
+#  ifdef IOTRACE_ENABLE_INFLUXDB
+	write_into_influxdb(&data);
+#  endif
 	WRAP_FREE(&data)
 #endif
 }
@@ -1009,6 +1142,7 @@ void init_on_load()
  * @param[in] message "\0" terminated message to send.
  * @param[in] socket  Socket to send to.
  */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 void send_data(const char *message, SOCKET socket)
 {
 	size_t bytes_to_send = strlen(message);
@@ -1043,6 +1177,7 @@ void send_data(const char *message, SOCKET socket)
 		}
 	}
 }
+#endif
 
 /**
  * Callback for each http response from influxdb
@@ -1060,6 +1195,7 @@ void send_data(const char *message, SOCKET socket)
  *
  * @return Error state of the callback (not used; gives "0" back).
  */
+#ifdef IOTRACE_ENABLE_INFLUXDB
 int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
 	if (parser->status_code != 204) {
 		LIBIOTRACE_WARN("unknown status (%d) in response from influxdb", parser->status_code);
@@ -1069,6 +1205,7 @@ int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
 
 	return 0;
 }
+#endif
 
 /**
  * Callback for each http request to control libiotrace.
@@ -1104,6 +1241,7 @@ int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
  *
  * @return Error state of the callback (not used; gives "0" back).
  */
+#ifdef ENABLE_INPUT
 int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 	if (parser->method == HTTP_POST)
 	{
@@ -1161,42 +1299,7 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 
 	return 0;
 }
-
-/**
- * Callback for each http request/response.
- *
- * If a complete URL/status is read this callback is called. It calls
- * for responses
- *     url_callback_responses
- * and for requests
- *     url_callback_requests
- *
- * @param[in] parser A pointer to the parser which has called
- *                   this callback. Gives access to the parser
- *                   state (like method of the request).
- * @param[in] at     Start pointer of the parsed URL/status as a char
- *                   array. The array is not terminated by "\0"
- *                   (see "length").
- * @param[in] length Count of chars in the URL/status (in the array
- *                   given by "at").
- *
- * @return Error state of the callback (not used; gives "0" back).
- */
-int url_callback(llhttp_t *parser, const char *at, size_t length)
-{
-	switch(parser->type) {
-	case HTTP_RESPONSE:
-		url_callback_responses(parser, at, length);
-		break;
-	case HTTP_REQUEST:
-		url_callback_requests(parser, at, length);
-		break;
-	default:
-		LIBIOTRACE_ERROR("unknown parser type");
-	}
-
-	return 0;
-}
+#endif
 
 /**
  * Thread for reading answers from influxdb and receiving commands
@@ -1227,9 +1330,12 @@ int url_callback(llhttp_t *parser, const char *at, size_t length)
  * @param[in] arg Not used.
  * @return Not used (allways NULL)
  */
-void *communication_thread(void *arg)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+void *communication_thread(__attribute__((unused)) void *arg)
 {
 	struct timeval select_timeout;
+
+#ifdef ENABLE_INPUT
 
 	// Open Socket to receive control information
 	struct sockaddr_in addr;
@@ -1301,6 +1407,7 @@ void *communication_thread(void *arg)
 		LIBIOTRACE_ERROR("unable to listen to socket, errno=%d", errno);
 	}
 	// Now wait for connection in select below
+#endif
 
 	// Read responses from influxdb and read control messages
 	while (!event_cleanup_done)
@@ -1309,6 +1416,7 @@ void *communication_thread(void *arg)
 		FD_ZERO(&fd_recv_sockets);
 		SOCKET socket_max = -1;
 
+#ifdef IOTRACE_ENABLE_INFLUXDB
 		// Add one connection to influxdb per open thread to fd_set
 		pthread_mutex_lock(&socket_lock);
 		for (int i = 0; i < recv_sockets_len; i++)
@@ -1320,7 +1428,9 @@ void *communication_thread(void *arg)
 			}
 		}
 		pthread_mutex_unlock(&socket_lock);
+#endif
 
+#ifdef ENABLE_INPUT
 		// Add listening socket for establishing control connections to fd_set
 		FD_SET(socket_control, &fd_recv_sockets);
 		if (socket_control > socket_max)
@@ -1337,6 +1447,7 @@ void *communication_thread(void *arg)
 				socket_max = open_control_sockets[i]->socket;
 			}
 		}
+#endif
 
 		select_timeout.tv_sec = SELECT_TIMEOUT_SECONDS;
 		select_timeout.tv_usec = 0;
@@ -1349,6 +1460,7 @@ void *communication_thread(void *arg)
 			/* Select: At least one socket is ready to be processed */
 			/* check which descriptor/socket is ready to read if there was new data before timeout expired */
 
+#ifdef IOTRACE_ENABLE_INFLUXDB
 			// receive responses from influxdb
 			pthread_mutex_lock(&socket_lock);
 			for (int i = 0; i < recv_sockets_len; i++)
@@ -1375,7 +1487,9 @@ void *communication_thread(void *arg)
 				}
 			}
 			pthread_mutex_unlock(&socket_lock);
+#endif
 
+#ifdef ENABLE_INPUT
 			// If socket to establish new connections is ready
 			if (FD_ISSET(socket_control, &fd_recv_sockets))
 			{
@@ -1421,8 +1535,11 @@ void *communication_thread(void *arg)
 					}
 				}
 			}
+#endif
 		}
 	}
+
+#ifdef ENABLE_INPUT
 	CLOSESOCKET(socket_control);
 	for (int i = 0; i < open_control_sockets_len; i++)
 	{
@@ -1430,8 +1547,11 @@ void *communication_thread(void *arg)
 		free(open_control_sockets[i]);
 	}
 	free(open_control_sockets);
+#endif
+
 	return NULL;
 }
+#endif
 
 /**
  * Reads an environment variable.
@@ -1575,13 +1695,14 @@ char init_done = 0;
  */
 void init_process()
 {
-	char *log;
 	int length;
 
 	if (!init_done)
 	{
+#ifdef IOTRACE_ENABLE_LOGFILE
 		pos = data_buffer;
 		count_basic = 0;
+#endif
 
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
@@ -1630,22 +1751,37 @@ void init_process()
 
 		gethostname(hostname, HOST_NAME_MAX);
 
+#if defined(IOTRACE_ENABLE_LOGFILE) \
+	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
+	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 		char filesystem_postfix[] = "_filesystem_";
 		char filesystem_extension[] = ".log";
 		length = libiotrace_get_env(env_log_name, log_name, MAXFILENAME - strlen(filesystem_extension) - strlen(filesystem_postfix) - strlen(hostname), 1);
+#endif
+
+#if !defined(IO_LIB_STATIC) && (defined(IOTRACE_ENABLE_LOGFILE) || defined(ENABLE_INPUT) || defined(IOTRACE_ENABLE_INFLUXDB))
+		generate_env(log_name_env, env_log_name, length, log_name);
+#endif
+
+#ifdef IOTRACE_ENABLE_LOGFILE
 		strcpy(filesystem_log_name, log_name);
 		strcpy(working_dir_log_name, log_name);
+#endif
+#ifdef ENABLE_INPUT
 		strcpy(control_log_name, log_name);
+#endif
+#ifdef IOTRACE_ENABLE_LOGFILE
 		strcpy(log_name + length, "_iotrace.log");
 		strcpy(filesystem_log_name + length, filesystem_postfix);
 		strcpy(filesystem_log_name + length + strlen(filesystem_postfix), hostname);
 		strcpy(filesystem_log_name + length + strlen(filesystem_postfix) + strlen(hostname), filesystem_extension);
 		strcpy(working_dir_log_name + length, "_working_dir.log");
-		strcpy(control_log_name + length, "_control.log");
-
-#ifndef IO_LIB_STATIC
-		generate_env(log_name_env, env_log_name, length, log_name);
 #endif
+#ifdef ENABLE_INPUT
+		strcpy(control_log_name + length, "_control.log");
+#endif
+
+#ifdef IOTRACE_ENABLE_INFLUXDB
 
 		// get token from environment
 		length = libiotrace_get_env(env_influx_token, influx_token, MAX_INFLUX_TOKEN, 1);
@@ -1687,6 +1823,8 @@ void init_process()
 		generate_env(database_port_env, env_database_port, length, database_port);
 #endif
 
+#endif
+
 		// Path to wrapper whitelist
 		length = libiotrace_get_env(env_wrapper_whitelist, whitelist, MAXFILENAME, 0);
 		if (0 != length)
@@ -1714,14 +1852,21 @@ void init_process()
 		system_start_time = iotrace_get_boot_time();
 #endif
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 		pthread_mutex_init(&lock, NULL);
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
 		pthread_mutex_init(&socket_lock, NULL);
+#endif
 
 		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
-#if 0 // RAY MacOS
+
+#ifdef IOTRACE_ENABLE_LOGFILE
+#ifdef __linux__ // TODO: RAY MacOS; Windows?
 		print_filesystem();
 #endif
 		print_working_directory();
+#endif
 
 #ifdef WITH_STD_IO
 		open_std_fd(STDIN_FILENO);
@@ -1734,12 +1879,19 @@ void init_process()
 #endif
 
 		/* Initialize user callbacks and settings */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 		llhttp_settings_init(&settings);
-		/* Set user callback */
-		//TODO: direct call of url_callback_responses and url_callback_requests
-		settings.on_url = url_callback;
-		settings.on_status = url_callback;
+#endif
 
+		/* Set user callback */
+#ifdef ENABLE_INPUT
+		settings.on_url = url_callback_requests;
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
+		settings.on_status = url_callback_responses;
+#endif
+
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 		//Create receive thread per process
 		pthread_t recv_thread;
 
@@ -1749,6 +1901,8 @@ void init_process()
 			LIBIOTRACE_WARN("pthread_create() failed. (%d)", ret);
 			return;
 		}
+#endif
+
 		init_done = 1;
 	}
 }
@@ -1815,7 +1969,9 @@ void get_stacktrace(struct basic *data)
 void init_thread()
 {
 	tid = iotrace_get_tid();
+#ifdef IOTRACE_ENABLE_INFLUXDB
 	prepare_socket();
+#endif
 }
 
 /**
@@ -1882,6 +2038,7 @@ inline u_int64_t gettime(void)
  * other threads. So "print_buffer" should only be
  * called from a synchronized code.
  */
+#ifdef IOTRACE_ENABLE_LOGFILE
 void print_buffer()
 {
 	struct basic *data;
@@ -1918,12 +2075,14 @@ void print_buffer()
 	pos = data_buffer;
 	count_basic = 0;
 }
+#endif
 
 /**
  * Sends a struct basic to influxdb.
  *
  * @param[in] data Pointer to struct basic
  */
+#ifdef IOTRACE_ENABLE_INFLUXDB
 void write_into_influxdb(struct basic *data)
 {
 	if (event_cleanup_done || no_sending)
@@ -1993,6 +2152,7 @@ void write_into_influxdb(struct basic *data)
 
 	send_data(message, socket_peer);
 }
+#endif
 
 /**
  * Writes a struct basic to the buffer for this process.
@@ -2006,6 +2166,7 @@ void write_into_influxdb(struct basic *data)
  *
  * @param[in] data Pointer to struct basic
  */
+#ifdef IOTRACE_ENABLE_LOGFILE
 void write_into_buffer(struct basic *data)
 {
 #ifdef LOG_WRAPPER_TIME
@@ -2042,6 +2203,7 @@ void write_into_buffer(struct basic *data)
 
 	pthread_mutex_unlock(&lock);
 }
+#endif
 
 /**
  * Frees dynamically allocated memory in struct basic
@@ -2060,9 +2222,13 @@ void free_memory(struct basic *data)
  * wrapper of a "exit*" function. Writes buffer contents to file,
  * closes open connections (sockets) and destroys mutexes.
  */
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 void cleanup()
 {
 	event_cleanup_done = 1;
+
+#ifdef IOTRACE_ENABLE_LOGFILE
+
 #ifdef LOG_WRAPPER_TIME
 	struct basic data;
 	data.time_start = 0;
@@ -2094,6 +2260,11 @@ void cleanup()
 	WRAP_FREE(&data)
 #endif
 
+	pthread_mutex_destroy(&lock);
+
+#endif
+
+#ifdef IOTRACE_ENABLE_INFLUXDB
 	pthread_mutex_lock(&socket_lock);
 	for (int i = 0; i < recv_sockets_len; i++)
 	{
@@ -2125,11 +2296,11 @@ void cleanup()
 	}
 	pthread_mutex_unlock(&socket_lock);
 
-	pthread_mutex_destroy(&lock);
 	pthread_mutex_destroy(&socket_lock);
+#endif
 }
+#endif
 
-#ifndef IO_LIB_STATIC
 /**
  * Ensure that an array of environment variables contains all libiotrace variables.
  *
@@ -2149,6 +2320,7 @@ void cleanup()
  * @param[in]     func Function name of the calling function as "\0" terminated
  *                     char array. Used for error handling.
  */
+#ifndef IO_LIB_STATIC
 void check_ld_preload(char *env[], char *const envp[], const char *func)
 {
 	int env_element;
@@ -2180,7 +2352,13 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 
 	if (!has_ld_preload)
 	{
-		int count_libiotrace_env = 7;
+		int count_libiotrace_env = 1;
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(ENABLE_INPUT) || defined(IOTRACE_ENABLE_INFLUXDB)
+		count_libiotrace_env++;
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
+		count_libiotrace_env += 5;
+#endif
 		if (has_whitelist)
 		{
 			count_libiotrace_env++;
@@ -2191,16 +2369,20 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 			LIBIOTRACE_ERROR("during call if %s envp[] with added libiotrace-variables has more elements then buffer (%d)", func, MAX_EXEC_ARRAY_LENGTH);
 		}
 		env[env_element] = &ld_preload[0];
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(ENABLE_INPUT) || defined(IOTRACE_ENABLE_INFLUXDB)
 		env[++env_element] = &log_name_env[0];
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
 		env[++env_element] = &database_ip_env[0];
 		env[++env_element] = &database_port_env[0];
 		env[++env_element] = &influx_token_env[0];
+		env[++env_element] = &influx_bucket_env[0];
+		env[++env_element] = &influx_organization_env[0];
+#endif
 		if (has_whitelist)
 		{
 			env[++env_element] = &whitelist_env[0];
 		}
-		env[++env_element] = &influx_bucket_env[0];
-		env[++env_element] = &influx_organization_env[0];
 		env[++env_element] = NULL;
 	}
 }

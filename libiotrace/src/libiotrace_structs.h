@@ -2,6 +2,22 @@
 
 #include "libiotrace_defines.h"
 
+/* defines to compile only necessary functions */
+#define LOGFILE_AND_INFLUXDB 0
+#define LOGFILE 1
+#define INFLUXDB 2
+
+#if ENABLE_OUTPUT == LOGFILE_AND_INFLUXDB
+#  define IOTRACE_ENABLE_LOGFILE
+#  define IOTRACE_ENABLE_INFLUXDB
+#elif ENABLE_OUTPUT == LOGFILE
+#  define IOTRACE_ENABLE_LOGFILE
+#  undef IOTRACE_ENABLE_INFLUXDB
+#elif ENABLE_OUTPUT == INFLUXDB
+#  undef IOTRACE_ENABLE_LOGFILE
+#  define IOTRACE_ENABLE_INFLUXDB
+#endif
+
 #ifdef LIBIOTRACE_STRUCT
 
 #define MAXFILENAME PATH_MAX /* get length filename from limits.h */
@@ -942,6 +958,9 @@ LIBIOTRACE_STRUCT_START(basic)
   LIBIOTRACE_STRUCT_CSTRING(function_name, MAX_FUNCTION_NAME)
   LIBIOTRACE_STRUCT_U_INT64_T(time_start)
   LIBIOTRACE_STRUCT_U_INT64_T(time_end)
+#ifdef IOTRACE_ENABLE_INFLUXDB
+  LIBIOTRACE_STRUCT_U_INT64_T(time_diff)
+#endif
   LIBIOTRACE_STRUCT_ENUM(read_write_state, return_state)
   LIBIOTRACE_STRUCT_STRUCT_P(errno_detail, return_state_detail)
   LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(stacktrace_symbols, MAX_STACKTRACE_DEPTH, MAX_STACKTRACE_ENTRY_LENGTH)

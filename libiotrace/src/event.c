@@ -276,6 +276,8 @@ static u_int64_t system_start_time;
 static libiotrace_socket **open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
 static SOCKET socket_control;
+
+static int libiotrace_control_port;
 #endif
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
@@ -594,21 +596,14 @@ void init_wrapper()
 #endif
 
 /**
- * Creates a new socket for sending data to influxdb.
+ * Creates a new socket to POST data to influxdb.
  *
- * Is called once per thread. Creates a new socket and stores
- * it in the thread local storage "socket_peer". The new
- * socket is additionally stored in the array "recv_sockets".
- * "socket_peer" is used inside each wrapper to send data
- * to influxdb. Because each thread has it's own socket
- * inside "socket_peer" no synchronization between calls of
- * send function is needed. The responses from influxdb are
- * read inside "communication_thread" from all sockets
- * stored in the array "recv_sockets".
+ * @return the newly created socket
  */
 #ifdef IOTRACE_ENABLE_INFLUXDB
-void prepare_socket()
+SOCKET create_socket()
 {
+	SOCKET new_socket = -1;
 	/* Call of getaddrinfo calls other posix functions. These other
 	 * functions could be wrapped. Call of a wrapper out of getaddrinfo
 	 * is done during initialization of a thread (because
@@ -619,7 +614,7 @@ void prepare_socket()
 	 * => getaddrinfo should only be called if POSIX wrapper are not
 	 *    build */
 #ifdef WITH_POSIX_IO
-	socket_peer = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
+	new_socket = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
 #else
 	//Configure remote address for socket
 	struct addrinfo hints;
@@ -629,22 +624,22 @@ void prepare_socket()
 	if (getaddrinfo(database_ip, database_port, &hints, &peer_address))
 	{
 		LIBIOTRACE_WARN("getaddrinfo() failed. (%d)", GETSOCKETERRNO());
-		return;
+		return new_socket;
 	}
-	socket_peer = CALL_REAL_POSIX_SYNC(socket)(peer_address->ai_family,
+	new_socket = CALL_REAL_POSIX_SYNC(socket)(peer_address->ai_family,
 											   peer_address->ai_socktype, peer_address->ai_protocol);
 
 #endif
 
-	if (!ISVALIDSOCKET(socket_peer))
+	if (!ISVALIDSOCKET(new_socket))
 	{
 		LIBIOTRACE_WARN("socket() failed. (%d)", GETSOCKETERRNO());
-		return;
+		return new_socket;
 	}
 
 	//Set socket option TCP_NODELAY
 	// int option = 0;
-	// if (setsockopt(socket_peer, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
+	// if (setsockopt(new_socket, IPPROTO_TCP, TCP_NODELAY, (void *)&option, sizeof(option)))
 	// {
 	// 	CALL_REAL_POSIX_SYNC(fprintf)
 	// 	(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
@@ -653,7 +648,7 @@ void prepare_socket()
 
 	//Set socket option REUSEADDR
 	// int option2 = 0;
-	// if (setsockopt(socket_peer, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
+	// if (setsockopt(new_socket, SOL_SOCKET, SO_REUSEADDR, (void *)&option2, sizeof(option2)))
 	// {
 	// 	CALL_REAL_POSIX_SYNC(fprintf)
 	// 	(stderr, "setsockopt() failed. (%d)\n", GETSOCKETERRNO());
@@ -702,20 +697,42 @@ void prepare_socket()
 	own_ai_addr.sa_data[13] = 0x00;
 	own_ai_addr.sa_family = 2;
 
-	if (CALL_REAL_POSIX_SYNC(connect)(socket_peer, &own_ai_addr, 16))
+	if (CALL_REAL_POSIX_SYNC(connect)(new_socket, &own_ai_addr, 16))
 	{
 		LIBIOTRACE_WARN("connect() failed. (%d)", GETSOCKETERRNO());
-		return;
+		return new_socket;
 	}
 #else
-	if (connect(socket_peer,
+	if (connect(new_socket,
 				peer_address->ai_addr, peer_address->ai_addrlen))
 	{
 		LIBIOTRACE_WARN("connect() failed. (%d)", GETSOCKETERRNO());
-		return;
+		return new_socket;
 	}
 	freeaddrinfo(peer_address);
 #endif
+
+	return new_socket;
+}
+#endif
+
+/**
+ * Creates a new socket for sending data to influxdb.
+ *
+ * Is called once per thread. Creates a new socket and stores
+ * it in the thread local storage "socket_peer". The new
+ * socket is additionally stored in the array "recv_sockets".
+ * "socket_peer" is used inside each wrapper to send data
+ * to influxdb. Because each thread has it's own socket
+ * inside "socket_peer" no synchronization between calls of
+ * send function is needed. The responses from influxdb are
+ * read inside "communication_thread" from all sockets
+ * stored in the array "recv_sockets".
+ */
+#ifdef IOTRACE_ENABLE_INFLUXDB
+void prepare_socket()
+{
+	socket_peer = create_socket();
 
 	// save socket globally to create thread that listens to / reads from all sockets
 	libiotrace_socket *socket = create_libiotrace_socket(socket_peer, HTTP_RESPONSE);
@@ -1301,6 +1318,24 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 }
 #endif
 
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+void write_metadata_into_influxdb()
+{
+	struct sockaddr_in local_addr;
+	char local_ip[16];
+	memset(&local_addr, 0, sizeof(local_addr));
+	socklen_t len = sizeof(local_addr);
+	if (0 > getsockname(socket_peer, (struct sockaddr *) &local_addr, &len)) {
+		LIBIOTRACE_WARN("getsockname returned -1, errno %d", errno);
+	}
+	if (NULL == inet_ntop(AF_INET, &local_addr.sin_addr, local_ip, sizeof(local_ip))) {
+		LIBIOTRACE_WARN("inet_ntop returned NULL, errno %d", errno);
+	}
+
+	printf("ip:port:thread %s:%d:%d\n", local_ip, libiotrace_control_port, tid);
+}
+#endif
+
 /**
  * Thread for reading answers from influxdb and receiving commands
  * from http connections (WebServices).
@@ -1354,6 +1389,12 @@ void *communication_thread(__attribute__((unused)) void *arg)
 		addr.sin_port = htons(i);
 		if (!CALL_REAL_POSIX_SYNC(bind)(socket_control, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)))
 		{
+
+//			if (ioctl(socket_control, SIOCGIFCONF) < 0)
+//			{
+//				LIBIOTRACE_ERROR("ioctl returned -1, errno %d", errno);
+//			}
+
 			//Write PORT and IP for control commands to file
 			struct ifreq ifreqs[20];
 			struct ifconf ic;
@@ -1397,6 +1438,7 @@ void *communication_thread(__attribute__((unused)) void *arg)
 		(socket_control);
 		LIBIOTRACE_ERROR("unable to bind socket");
 	}
+	libiotrace_control_port = i;
 
 	// Listen to socket
 	int ret = listen(socket_control, 10);
@@ -1971,6 +2013,9 @@ void init_thread()
 	tid = iotrace_get_tid();
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	prepare_socket();
+#ifdef ENABLE_INPUT
+	write_metadata_into_influxdb();
+#endif
 #endif
 }
 

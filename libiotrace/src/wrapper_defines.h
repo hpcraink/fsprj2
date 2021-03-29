@@ -8,22 +8,6 @@
 #include "error.h"
 #include "libiotrace_include_struct.h"
 
-/* defines to compile only necessary functions */
-#define LOGFILE_AND_INFLUXDB 0
-#define LOGFILE 1
-#define INFLUXDB 2
-
-#if ENABLE_OUTPUT == LOGFILE_AND_INFLUXDB
-#  define IOTRACE_ENABLE_LOGFILE
-#  define IOTRACE_ENABLE_INFLUXDB
-#elif ENABLE_OUTPUT == LOGFILE
-#  define IOTRACE_ENABLE_LOGFILE
-#  undef IOTRACE_ENABLE_INFLUXDB
-#elif ENABLE_OUTPUT == INFLUXDB
-#  undef IOTRACE_ENABLE_LOGFILE
-#  define IOTRACE_ENABLE_INFLUXDB
-#endif
-
 #define LINE_BREAK "\r\n"
 
 #ifdef ALL_WRAPPERS_ACTIVE
@@ -189,7 +173,8 @@
                              }
 
 #ifdef IOTRACE_ENABLE_INFLUXDB
-#  define CALL_WRITE_INTO_INFLUXDB(data) write_into_influxdb(&data)
+#  define CALL_WRITE_INTO_INFLUXDB(data) data.time_diff = data.time_end - data.time_start; \
+                                         write_into_influxdb(&data)
 #else
 #  define CALL_WRITE_INTO_INFLUXDB(data)
 #endif

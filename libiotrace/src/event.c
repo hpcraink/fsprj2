@@ -189,7 +189,6 @@ static pthread_mutex_t socket_lock;
 
 /* environment variables */
 #if defined(IOTRACE_ENABLE_LOGFILE) \
-	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static const char *env_log_name = "IOTRACE_LOG_NAME";
 #endif
@@ -210,11 +209,10 @@ static pid_t pid;
 static char *hostname;
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
-	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static char log_name[MAXFILENAME];
 #endif
-#ifdef ENABLE_INPUT
+#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
 static char control_log_name[MAXFILENAME];
 #endif
 
@@ -250,7 +248,6 @@ static char event_cleanup_done = 0;
 static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
-	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
 #endif
@@ -1321,6 +1318,8 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 #if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
 void write_metadata_into_influxdb()
 {
+	struct influx_meta data;
+
 	struct sockaddr_in local_addr;
 	char local_ip[16];
 	memset(&local_addr, 0, sizeof(local_addr));
@@ -1332,7 +1331,70 @@ void write_metadata_into_influxdb()
 		LIBIOTRACE_WARN("inet_ntop returned NULL, errno %d", errno);
 	}
 
-	printf("ip:port:thread %s:%d:%d\n", local_ip, libiotrace_control_port, tid);
+	data.port = libiotrace_control_port;
+	data.ip = local_ip;
+
+	//buffer for body
+	int body_length = libiotrace_struct_push_max_size_influx_meta(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
+	char body[body_length];
+	body_length = libiotrace_struct_push_influx_meta(body, body_length, &data, "");
+	if (0 > body_length)
+	{
+		LIBIOTRACE_ERROR("libiotrace_struct_push_influx_meta() returned %d", body_length);
+	}
+	body_length--; /*last comma in ret*/
+	body[body_length] = '\0'; /*remove last comma*/
+
+	char short_log_name[50];
+	strncpy(short_log_name, log_name, sizeof(short_log_name));
+
+	const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u";
+	int body_labels_length = strlen(labels)
+			+ sizeof(short_log_name) /* jobname */
+			+ HOST_NAME_MAX /* hostname */
+			+ COUNT_DEC_AS_CHAR(pid) /* processid */
+			+ COUNT_DEC_AS_CHAR(tid); /* thread */
+	char body_labels[body_labels_length];
+	snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, pid, tid);
+	body_labels_length = strlen(body_labels);
+
+	u_int64_t current_time = gettime();
+	int timestamp_length = COUNT_DEC_AS_CHAR(current_time);
+	char timestamp[timestamp_length];
+#ifdef REALTIME
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, current_time);
+#else
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + current_time);
+#endif
+	timestamp_length = strlen(timestamp);
+
+	const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
+
+	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
+			"Host: %s:%s" LINE_BREAK
+			"Accept: */*" LINE_BREAK
+			"Authorization: Token %s" LINE_BREAK
+			"Content-Length: %d" LINE_BREAK
+			"Content-Type: application/x-www-form-urlencoded" LINE_BREAK
+			LINE_BREAK
+			"%s %s %s";
+	const int message_length = strlen(header)
+			+ influx_bucket_len
+			+ influx_organization_len
+			+ database_ip_len
+			+ database_port_len
+			+ influx_token_len
+			+ COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
+			+ body_labels_length
+			+ body_length
+			+ timestamp_length;
+
+	//buffer all (header + body)
+	char message[message_length + 1];
+	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
+			content_length, body_labels, body, timestamp);
+
+	send_data(message, socket_peer);
 }
 #endif
 
@@ -1390,6 +1452,7 @@ void *communication_thread(__attribute__((unused)) void *arg)
 		if (!CALL_REAL_POSIX_SYNC(bind)(socket_control, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)))
 		{
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 //			if (ioctl(socket_control, SIOCGIFCONF) < 0)
 //			{
 //				LIBIOTRACE_ERROR("ioctl returned -1, errno %d", errno);
@@ -1428,6 +1491,7 @@ void *communication_thread(__attribute__((unused)) void *arg)
 
 			CALL_REAL_POSIX_SYNC(close)
 			(fd);
+#endif
 
 			break;
 		}
@@ -1794,14 +1858,13 @@ void init_process()
 		gethostname(hostname, HOST_NAME_MAX);
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
-	|| defined(ENABLE_INPUT) /* log_name is also used to build control_log_name */ \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 		char filesystem_postfix[] = "_filesystem_";
 		char filesystem_extension[] = ".log";
 		length = libiotrace_get_env(env_log_name, log_name, MAXFILENAME - strlen(filesystem_extension) - strlen(filesystem_postfix) - strlen(hostname), 1);
 #endif
 
-#if !defined(IO_LIB_STATIC) && (defined(IOTRACE_ENABLE_LOGFILE) || defined(ENABLE_INPUT) || defined(IOTRACE_ENABLE_INFLUXDB))
+#if !defined(IO_LIB_STATIC) && (defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB))
 		generate_env(log_name_env, env_log_name, length, log_name);
 #endif
 
@@ -1809,7 +1872,7 @@ void init_process()
 		strcpy(filesystem_log_name, log_name);
 		strcpy(working_dir_log_name, log_name);
 #endif
-#ifdef ENABLE_INPUT
+#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
 		strcpy(control_log_name, log_name);
 #endif
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -1819,7 +1882,7 @@ void init_process()
 		strcpy(filesystem_log_name + length + strlen(filesystem_postfix) + strlen(hostname), filesystem_extension);
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 #endif
-#ifdef ENABLE_INPUT
+#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
 		strcpy(control_log_name + length, "_control.log");
 #endif
 
@@ -2398,7 +2461,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 	if (!has_ld_preload)
 	{
 		int count_libiotrace_env = 1;
-#if defined(IOTRACE_ENABLE_LOGFILE) || defined(ENABLE_INPUT) || defined(IOTRACE_ENABLE_INFLUXDB)
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB)
 		count_libiotrace_env++;
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -2414,7 +2477,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func)
 			LIBIOTRACE_ERROR("during call if %s envp[] with added libiotrace-variables has more elements then buffer (%d)", func, MAX_EXEC_ARRAY_LENGTH);
 		}
 		env[env_element] = &ld_preload[0];
-#if defined(IOTRACE_ENABLE_LOGFILE) || defined(ENABLE_INPUT) || defined(IOTRACE_ENABLE_INFLUXDB)
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB)
 		env[++env_element] = &log_name_env[0];
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB

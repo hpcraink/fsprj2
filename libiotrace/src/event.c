@@ -1038,6 +1038,10 @@ void open_std_fd(int fd)
 {
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
+	if (!init_done) {
+		init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+						/* init_process() must be called first */ \
+	}
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1079,6 +1083,10 @@ void open_std_file(FILE *file)
 {
 	struct basic data;
 	struct file_stream file_stream_data;
+	if (!init_done) {
+		init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
+						/* init_process() must be called first */ \
+	}
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1315,6 +1323,14 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 }
 #endif
 
+/**
+ * Sends meta data to influxdb.
+ *
+ * Sends ip and port of the control socket to influxdb. Must
+ * be called for each new thread. So for each thread in each
+ * process and host an entry in influxdb is made. This entry
+ * can be used to control the wrappers in the thread.
+ */
 #if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
 void write_metadata_into_influxdb()
 {

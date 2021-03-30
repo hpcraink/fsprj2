@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 2,
+  "iteration": 1617098145759,
   "links": [],
   "panels": [
     {
@@ -26,23 +26,10 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
-          "mappings": [],
+          "custom": {},
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": []
           }
         },
         "overrides": []
@@ -73,7 +60,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -169,23 +156,10 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
-          "mappings": [],
+          "custom": {},
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": []
           }
         },
         "overrides": []
@@ -216,7 +190,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -311,23 +285,10 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
-          "mappings": [],
+          "custom": {},
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": []
           }
         },
         "overrides": []
@@ -358,7 +319,7 @@
         "alertThreshold": true
       },
       "percentage": true,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -449,10 +410,7 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
+          "custom": {},
           "mappings": [],
           "max": 5000,
           "min": 0,
@@ -488,9 +446,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -550,23 +509,10 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
-          "mappings": [],
+          "custom": {},
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": []
           }
         },
         "overrides": []
@@ -597,7 +543,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
@@ -688,10 +634,7 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
+          "custom": {},
           "mappings": [],
           "max": 5000,
           "min": 0,
@@ -727,9 +670,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -789,10 +733,7 @@
       "datasource": "InfluxDB",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null,
-            "filterable": false
-          },
+          "custom": {},
           "mappings": [],
           "max": 5000,
           "min": 0,
@@ -828,9 +769,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -888,14 +830,288 @@
     }
   ],
   "refresh": "1s",
-  "schemaVersion": 26,
+  "schemaVersion": 27,
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "mpi_file_io_test2_iotrace.log"
+          ],
+          "value": [
+            "mpi_file_io_test2_iotrace.log"
+          ]
+        },
+        "datasource": null,
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"jobname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\n  start: -1d\n)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "jobname",
+        "options": [
+          {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "mpi_file_io_test1_iotrace.log",
+            "value": "mpi_file_io_test1_iotrace.log"
+          },
+          {
+            "selected": true,
+            "text": "mpi_file_io_test2_iotrace.log",
+            "value": "mpi_file_io_test2_iotrace.log"
+          }
+        ],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"jobname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\n  start: -1d\n)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "philkoe-ThinkPad-T490s"
+          ],
+          "value": [
+            "philkoe-ThinkPad-T490s"
+          ]
+        },
+        "datasource": null,
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"hostname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}),\n  start: -1d\n)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "host",
+        "options": [
+          {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": true,
+            "text": "philkoe-ThinkPad-T490s",
+            "value": "philkoe-ThinkPad-T490s"
+          }
+        ],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"hostname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}),\n  start: -1d\n)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": null,
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"processid\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}),\n  start: -1d\n)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "process",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "31170",
+            "value": "31170"
+          },
+          {
+            "selected": false,
+            "text": "31171",
+            "value": "31171"
+          },
+          {
+            "selected": false,
+            "text": "31172",
+            "value": "31172"
+          },
+          {
+            "selected": false,
+            "text": "31174",
+            "value": "31174"
+          }
+        ],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"processid\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}),\n  start: -1d\n)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "31170",
+            "31191"
+          ],
+          "value": [
+            "31170",
+            "31191"
+          ]
+        },
+        "datasource": null,
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"thread\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}) and contains(value: r[\"processid\"], set: ${process:json}),\n  start: -1d\n)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "thread",
+        "options": [
+          {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": true,
+            "text": "31170",
+            "value": "31170"
+          },
+          {
+            "selected": false,
+            "text": "31171",
+            "value": "31171"
+          },
+          {
+            "selected": false,
+            "text": "31172",
+            "value": "31172"
+          },
+          {
+            "selected": false,
+            "text": "31174",
+            "value": "31174"
+          },
+          {
+            "selected": false,
+            "text": "31188",
+            "value": "31188"
+          },
+          {
+            "selected": false,
+            "text": "31189",
+            "value": "31189"
+          },
+          {
+            "selected": false,
+            "text": "31190",
+            "value": "31190"
+          },
+          {
+            "selected": true,
+            "text": "31191",
+            "value": "31191"
+          }
+        ],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"thread\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}) and contains(value: r[\"processid\"], set: ${process:json}),\n  start: -1d\n)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": null,
+        "definition": "base_table = from(bucket: \"hsebucket\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => contains(value: r[\"jobname\"], set: ${jobname:json}))\n  |> filter(fn: (r) => contains(value: r[\"hostname\"], set: ${host:json}))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: ${process:json}))\n  |> filter(fn: (r) => contains(value: r[\"thread\"], set: ${thread:json}))\n  |> aggregateWindow(every: 1ns, fn: last, createEmpty: false)\n\nip = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"ip\")\n\nport = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"port\")\n\njoin(tables: {ip: ip, port: port}, on: [\"_time\", \"jobname\", \"hostname\", \"processid\", \"thread\"])\n  |> map(fn: (r) => ({\n//      ip: r[\"_value_ip\"],\n//      port: r[\"_value_port\"],\n      address: r[\"_value_ip\"] + \":\" + string(v: r[\"_value_port\"])\n    })\n  )",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "url",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:50000",
+            "value": "127.0.0.1:50000"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:50001",
+            "value": "127.0.0.1:50001"
+          }
+        ],
+        "query": "base_table = from(bucket: \"hsebucket\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => contains(value: r[\"jobname\"], set: ${jobname:json}))\n  |> filter(fn: (r) => contains(value: r[\"hostname\"], set: ${host:json}))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: ${process:json}))\n  |> filter(fn: (r) => contains(value: r[\"thread\"], set: ${thread:json}))\n  |> aggregateWindow(every: 1ns, fn: last, createEmpty: false)\n\nip = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"ip\")\n\nport = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"port\")\n\njoin(tables: {ip: ip, port: port}, on: [\"_time\", \"jobname\", \"hostname\", \"processid\", \"thread\"])\n  |> map(fn: (r) => ({\n//      ip: r[\"_value_ip\"],\n//      port: r[\"_value_port\"],\n      address: r[\"_value_ip\"] + \":\" + string(v: r[\"_value_port\"])\n    })\n  )",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -914,5 +1130,5 @@
   "timezone": "",
   "title": "libiotrace",
   "uid": "hf9ORu1Gk2",
-  "version": 6
+  "version": 1
 }

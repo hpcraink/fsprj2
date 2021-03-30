@@ -1080,7 +1080,7 @@ LIBIOTRACE_STRUCT_START(wrapper_status)
 #ifdef WITH_POSIX_IO
 #include "posix_io_wrapper.h"
 #endif
-#ifdef WITH_MPI_AIO
+#ifdef WITH_POSIX_AIO
 #include "posix_aio_wrapper.h"
 #endif
 #ifdef WITH_DL_IO

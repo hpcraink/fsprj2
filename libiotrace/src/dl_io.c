@@ -102,7 +102,7 @@ void * WRAP(dlopen)(const char *filename, int flags) {
 		get_file_id_by_path(filename, &(dlopen_function_data.id));
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, dlopen)
 	return ret;
 }
 
@@ -147,7 +147,7 @@ void * WRAP(dlmopen)(Lmid_t lmid, const char *filename, int flags) {
 		get_file_id_by_path(filename, &(dlmopen_function_data.id));
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, dlmopen)
 	return ret;
 }
 #endif

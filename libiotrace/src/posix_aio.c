@@ -171,7 +171,7 @@ int WRAP(aio_read)(struct aiocb *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_read)
 	return ret;
 }
 
@@ -203,7 +203,7 @@ int WRAP(aio_read64)(struct aiocb64 *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_read64)
 	return ret;
 }
 #endif
@@ -235,7 +235,7 @@ int WRAP(aio_write)(struct aiocb *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_write)
 	return ret;
 }
 
@@ -267,7 +267,7 @@ int WRAP(aio_write64)(struct aiocb64 *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_write64)
 	return ret;
 }
 #endif
@@ -314,7 +314,7 @@ int WRAP(lio_listio)(int mode, struct aiocb * const list[], int nent,
 				asynchronous_write_function_data.position = list[i]->aio_offset;
 				asynchronous_write_function_data.lower_prio =
 						list[i]->aio_reqprio;
-				WRAP_END(data)
+				WRAP_END(data, lio_listio)
 				break;
 			case lio_read:
 				LIBIOTRACE_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
@@ -326,7 +326,7 @@ int WRAP(lio_listio)(int mode, struct aiocb * const list[], int nent,
 				asynchronous_read_function_data.position = list[i]->aio_offset;
 				asynchronous_read_function_data.lower_prio =
 						list[i]->aio_reqprio;
-				WRAP_END(data)
+				WRAP_END(data, lio_listio)
 				break;
 			default:
 				/* ignore LIO_NOP */
@@ -380,7 +380,7 @@ int WRAP(lio_listio64)(int mode, struct aiocb64 *const list[], int nent, struct 
 				asynchronous_write_function_data.position = list[i]->aio_offset;
 				asynchronous_write_function_data.lower_prio =
 				list[i]->aio_reqprio;
-				WRAP_END(data)
+				WRAP_END(data, lio_listio64)
 				break;
 				case lio_read:
 				LIBIOTRACE_STRUCT_SET_VOID_P(asynchronous_listio_function_data,
@@ -392,7 +392,7 @@ int WRAP(lio_listio64)(int mode, struct aiocb64 *const list[], int nent, struct 
 				asynchronous_read_function_data.position = list[i]->aio_offset;
 				asynchronous_read_function_data.lower_prio =
 				list[i]->aio_reqprio;
-				WRAP_END(data)
+				WRAP_END(data, lio_listio64)
 				break;
 				default:
 				/* ignore LIO_NOP */
@@ -428,7 +428,7 @@ int WRAP(aio_error)(const struct aiocb *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_error)
 	return ret;
 }
 
@@ -456,7 +456,7 @@ int WRAP(aio_error64)(const struct aiocb64 *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_error64)
 	return ret;
 }
 #endif
@@ -484,7 +484,7 @@ ssize_t WRAP(aio_return)(struct aiocb *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_return)
 	return ret;
 }
 
@@ -512,7 +512,7 @@ ssize_t WRAP(aio_return64)(struct aiocb64 *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_return64)
 	return ret;
 }
 #endif
@@ -540,7 +540,7 @@ int WRAP(aio_fsync)(int op, struct aiocb *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_fsync)
 	return ret;
 }
 
@@ -568,7 +568,7 @@ int WRAP(aio_fsync64)(int op, struct aiocb64 *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_fsync64)
 	return ret;
 }
 #endif
@@ -600,7 +600,7 @@ int WRAP(aio_suspend)(const struct aiocb * const list[], int nent,
 	for (int i = 0; i < nent; i++) {
 		if (NULL != list[i]) {
 			file_async_data.async = list[i];
-			WRAP_END(data)
+			WRAP_END(data, aio_suspend)
 		}
 	}
 
@@ -634,7 +634,7 @@ int WRAP(aio_suspend64)(const struct aiocb64 *const list[], int nent, const stru
 	for (int i = 0; i < nent; i++) {
 		if (NULL != list[i]) {
 			file_async_data.async = list[i];
-			WRAP_END(data)
+			WRAP_END(data, aio_suspend64)
 		}
 	}
 
@@ -667,7 +667,7 @@ int WRAP(aio_cancel)(int fildes, struct aiocb *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_cancel)
 	return ret;
 }
 
@@ -697,7 +697,7 @@ int WRAP(aio_cancel64)(int fildes, struct aiocb64 *aiocbp) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, aio_cancel64)
 	return ret;
 }
 #endif
@@ -719,7 +719,7 @@ void WRAP(aio_init)(const struct aioinit *init) {
 
 	CALL_REAL_FUNCTION(data, aio_init, init)
 
-	WRAP_END(data)
+	WRAP_END(data, aio_init)
 	return;
 }
 #endif
@@ -745,6 +745,6 @@ int WRAP(shm_open)(const char *name, int oflag, mode_t mode) {
 		data.return_state = ok;
 	}
 
-	WRAP_END(data)
+	WRAP_END(data, shm_open)
 	return ret;
 }

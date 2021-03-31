@@ -74,6 +74,21 @@ enum so_namespace_mode_enum get_so_namespace_mode_enum(Lmid_t mode) {
 }
 #endif
 
+void get_dl_file_id_by_path(const char *filename, struct file_id *data) {
+	if (NULL == filename) {
+		// main program
+		data->device_id = 0;
+		data->inode_nr = 0;
+	} else if (NULL != strstr(filename, "/")) {
+		// pathname
+		get_file_id_by_path(filename, data);
+	} else {
+		// searched by dynamic linker
+		data->device_id = 0;
+		data->inode_nr = 0;
+	}
+}
+
 void * WRAP(dlopen)(const char *filename, int flags) {
 	void * ret;
 	struct basic data;
@@ -99,7 +114,7 @@ void * WRAP(dlopen)(const char *filename, int flags) {
 	} else {
 		data.return_state = ok;
 		shared_library_data.dl_handle = ret;
-		get_file_id_by_path(filename, &(dlopen_function_data.id));
+		get_dl_file_id_by_path(filename, &(dlopen_function_data.id));
 	}
 
 	WRAP_END(data, dlopen)
@@ -144,7 +159,7 @@ void * WRAP(dlmopen)(Lmid_t lmid, const char *filename, int flags) {
 	} else {
 		data.return_state = ok;
 		shared_library_data.dl_handle = ret;
-		get_file_id_by_path(filename, &(dlmopen_function_data.id));
+		get_dl_file_id_by_path(filename, &(dlmopen_function_data.id));
 	}
 
 	WRAP_END(data, dlmopen)

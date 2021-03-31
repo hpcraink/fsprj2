@@ -1038,10 +1038,6 @@ void open_std_fd(int fd)
 {
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
-	if (!init_done) {
-		init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-						/* init_process() must be called first */ \
-	}
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1083,10 +1079,6 @@ void open_std_file(FILE *file)
 {
 	struct basic data;
 	struct file_stream file_stream_data;
-	if (!init_done) {
-		init_process(); /* if some __attribute__((constructor))-function calls a wrapped function: */ \
-						/* init_process() must be called first */ \
-	}
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1994,16 +1986,6 @@ void init_process()
 		print_working_directory();
 #endif
 
-#ifdef WITH_STD_IO
-		open_std_fd(STDIN_FILENO);
-		open_std_fd(STDOUT_FILENO);
-		open_std_fd(STDERR_FILENO);
-
-		open_std_file(stdin);
-		open_std_file(stdout);
-		open_std_file(stderr);
-#endif
-
 		/* Initialize user callbacks and settings */
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 		llhttp_settings_init(&settings);
@@ -2027,6 +2009,21 @@ void init_process()
 			LIBIOTRACE_WARN("pthread_create() failed. (%d)", ret);
 			return;
 		}
+#endif
+
+#ifdef WITH_STD_IO
+		/* open_std* functions must be called after communication_thread
+		 * is created (because they can call init_thread which may call
+		 * write_metadata_into_influxdb which waits for binding of the
+		 * control socket in communication_thread). */
+
+		open_std_fd(STDIN_FILENO);
+		open_std_fd(STDOUT_FILENO);
+		open_std_fd(STDERR_FILENO);
+
+		open_std_file(stdin);
+		open_std_file(stdout);
+		open_std_file(stderr);
 #endif
 
 		init_done = 1;

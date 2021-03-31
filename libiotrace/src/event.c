@@ -274,7 +274,7 @@ static libiotrace_socket **open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
 static SOCKET socket_control;
 
-static int libiotrace_control_port;
+static int libiotrace_control_port = -1;
 #endif
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
@@ -1347,6 +1347,11 @@ void write_metadata_into_influxdb()
 		LIBIOTRACE_WARN("inet_ntop returned NULL, errno %d", errno);
 	}
 
+	// wait until communication_thread has bound control socket
+	// TODO: memory fence to allow different memory models
+	while (0 > libiotrace_control_port) {
+		sleep(1); // TODO: is there a better way (without busy loop)
+	}
 	data.port = libiotrace_control_port;
 	data.ip = local_ip;
 
@@ -1364,7 +1369,7 @@ void write_metadata_into_influxdb()
 	char short_log_name[50];
 	strncpy(short_log_name, log_name, sizeof(short_log_name));
 
-	const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u";
+	const char labels[] = "libiotrace_control,jobname=%s,hostname=%s,processid=%u,thread=%u";
 	int body_labels_length = strlen(labels)
 			+ sizeof(short_log_name) /* jobname */
 			+ HOST_NAME_MAX /* hostname */

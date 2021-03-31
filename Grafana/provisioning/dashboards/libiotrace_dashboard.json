@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1617098145759,
+  "iteration": 1617180423254,
   "links": [],
   "panels": [
     {
@@ -840,14 +840,14 @@
         "current": {
           "selected": true,
           "text": [
-            "mpi_file_io_test2_iotrace.log"
+            "mpi_file_io_test12_iotrace.log"
           ],
           "value": [
-            "mpi_file_io_test2_iotrace.log"
+            "mpi_file_io_test12_iotrace.log"
           ]
         },
         "datasource": null,
-        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"jobname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\n  start: -1d\n)",
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"jobname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\",\n  start: -1d\n)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -855,25 +855,9 @@
         "label": null,
         "multi": true,
         "name": "jobname",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "mpi_file_io_test1_iotrace.log",
-            "value": "mpi_file_io_test1_iotrace.log"
-          },
-          {
-            "selected": true,
-            "text": "mpi_file_io_test2_iotrace.log",
-            "value": "mpi_file_io_test2_iotrace.log"
-          }
-        ],
-        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"jobname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\n  start: -1d\n)",
-        "refresh": 0,
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"jobname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\",\n  start: -1d\n)",
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -895,7 +879,7 @@
           ]
         },
         "datasource": null,
-        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"hostname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}),\n  start: -1d\n)",
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"hostname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\" and contains(value: r[\"jobname\"], set: ${jobname:json}),\n  start: -1d\n)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -915,141 +899,7 @@
             "value": "philkoe-ThinkPad-T490s"
           }
         ],
-        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"hostname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}),\n  start: -1d\n)",
-        "refresh": 0,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allValue": null,
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": null,
-        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"processid\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}),\n  start: -1d\n)",
-        "description": null,
-        "error": null,
-        "hide": 0,
-        "includeAll": true,
-        "label": null,
-        "multi": true,
-        "name": "process",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "31170",
-            "value": "31170"
-          },
-          {
-            "selected": false,
-            "text": "31171",
-            "value": "31171"
-          },
-          {
-            "selected": false,
-            "text": "31172",
-            "value": "31172"
-          },
-          {
-            "selected": false,
-            "text": "31174",
-            "value": "31174"
-          }
-        ],
-        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"processid\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}),\n  start: -1d\n)",
-        "refresh": 0,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "31170",
-            "31191"
-          ],
-          "value": [
-            "31170",
-            "31191"
-          ]
-        },
-        "datasource": null,
-        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"thread\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}) and contains(value: r[\"processid\"], set: ${process:json}),\n  start: -1d\n)",
-        "description": null,
-        "error": null,
-        "hide": 0,
-        "includeAll": true,
-        "label": null,
-        "multi": true,
-        "name": "thread",
-        "options": [
-          {
-            "selected": false,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": true,
-            "text": "31170",
-            "value": "31170"
-          },
-          {
-            "selected": false,
-            "text": "31171",
-            "value": "31171"
-          },
-          {
-            "selected": false,
-            "text": "31172",
-            "value": "31172"
-          },
-          {
-            "selected": false,
-            "text": "31174",
-            "value": "31174"
-          },
-          {
-            "selected": false,
-            "text": "31188",
-            "value": "31188"
-          },
-          {
-            "selected": false,
-            "text": "31189",
-            "value": "31189"
-          },
-          {
-            "selected": false,
-            "text": "31190",
-            "value": "31190"
-          },
-          {
-            "selected": true,
-            "text": "31191",
-            "value": "31191"
-          }
-        ],
-        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"thread\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}) and contains(value: r[\"processid\"], set: ${process:json}),\n  start: -1d\n)",
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"hostname\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\" and contains(value: r[\"jobname\"], set: ${jobname:json}),\n  start: -1d\n)",
         "refresh": 0,
         "regex": "",
         "skipUrlSync": false,
@@ -1072,7 +922,143 @@
           ]
         },
         "datasource": null,
-        "definition": "base_table = from(bucket: \"hsebucket\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => contains(value: r[\"jobname\"], set: ${jobname:json}))\n  |> filter(fn: (r) => contains(value: r[\"hostname\"], set: ${host:json}))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: ${process:json}))\n  |> filter(fn: (r) => contains(value: r[\"thread\"], set: ${thread:json}))\n  |> aggregateWindow(every: 1ns, fn: last, createEmpty: false)\n\nip = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"ip\")\n\nport = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"port\")\n\njoin(tables: {ip: ip, port: port}, on: [\"_time\", \"jobname\", \"hostname\", \"processid\", \"thread\"])\n  |> map(fn: (r) => ({\n//      ip: r[\"_value_ip\"],\n//      port: r[\"_value_port\"],\n      address: r[\"_value_ip\"] + \":\" + string(v: r[\"_value_port\"])\n    })\n  )",
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"processid\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}),\n  start: -1d\n)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "process",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "12526",
+            "value": "12526"
+          },
+          {
+            "selected": false,
+            "text": "12527",
+            "value": "12527"
+          },
+          {
+            "selected": false,
+            "text": "12528",
+            "value": "12528"
+          },
+          {
+            "selected": false,
+            "text": "12531",
+            "value": "12531"
+          }
+        ],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"processid\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}),\n  start: -1d\n)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": null,
+        "definition": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"thread\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}) and contains(value: r[\"processid\"], set: ${process:json}),\n  start: -1d\n)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "thread",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "12526",
+            "value": "12526"
+          },
+          {
+            "selected": false,
+            "text": "12527",
+            "value": "12527"
+          },
+          {
+            "selected": false,
+            "text": "12528",
+            "value": "12528"
+          },
+          {
+            "selected": false,
+            "text": "12531",
+            "value": "12531"
+          },
+          {
+            "selected": false,
+            "text": "12542",
+            "value": "12542"
+          },
+          {
+            "selected": false,
+            "text": "12543",
+            "value": "12543"
+          },
+          {
+            "selected": false,
+            "text": "12544",
+            "value": "12544"
+          },
+          {
+            "selected": false,
+            "text": "12545",
+            "value": "12545"
+          }
+        ],
+        "query": "import \"influxdata/influxdb/schema\"\n\nschema.tagValues(\n  bucket: \"hsebucket\",\n  tag: \"thread\",\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace_control\" and contains(value: r[\"jobname\"], set: ${jobname:json}) and contains(value: r[\"hostname\"], set: ${host:json}) and contains(value: r[\"processid\"], set: ${process:json}),\n  start: -1d\n)",
+        "refresh": 0,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": null,
+        "definition": "base_table = from(bucket: \"hsebucket\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace_control\")\n  |> filter(fn: (r) => contains(value: r[\"jobname\"], set: ${jobname:json}))\n  |> filter(fn: (r) => contains(value: r[\"hostname\"], set: ${host:json}))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: ${process:json}))\n  |> filter(fn: (r) => contains(value: r[\"thread\"], set: ${thread:json}))\n  |> aggregateWindow(every: 1ns, fn: last, createEmpty: false)\n\nip = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"ip\")\n\nport = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"port\")\n\njoin(tables: {ip: ip, port: port}, on: [\"_time\", \"jobname\", \"hostname\", \"processid\", \"thread\"])\n  |> map(fn: (r) => ({\n//      ip: r[\"_value_ip\"],\n//      port: r[\"_value_port\"],\n      address: r[\"_value_ip\"] + \":\" + string(v: r[\"_value_port\"])\n    })\n  )",
         "description": null,
         "error": null,
         "hide": 0,
@@ -1093,11 +1079,26 @@
           },
           {
             "selected": false,
+            "text": "127.0.0.1:0",
+            "value": "127.0.0.1:0"
+          },
+          {
+            "selected": false,
             "text": "127.0.0.1:50001",
             "value": "127.0.0.1:50001"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:50002",
+            "value": "127.0.0.1:50002"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:50003",
+            "value": "127.0.0.1:50003"
           }
         ],
-        "query": "base_table = from(bucket: \"hsebucket\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => contains(value: r[\"jobname\"], set: ${jobname:json}))\n  |> filter(fn: (r) => contains(value: r[\"hostname\"], set: ${host:json}))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: ${process:json}))\n  |> filter(fn: (r) => contains(value: r[\"thread\"], set: ${thread:json}))\n  |> aggregateWindow(every: 1ns, fn: last, createEmpty: false)\n\nip = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"ip\")\n\nport = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"port\")\n\njoin(tables: {ip: ip, port: port}, on: [\"_time\", \"jobname\", \"hostname\", \"processid\", \"thread\"])\n  |> map(fn: (r) => ({\n//      ip: r[\"_value_ip\"],\n//      port: r[\"_value_port\"],\n      address: r[\"_value_ip\"] + \":\" + string(v: r[\"_value_port\"])\n    })\n  )",
+        "query": "base_table = from(bucket: \"hsebucket\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace_control\")\n  |> filter(fn: (r) => contains(value: r[\"jobname\"], set: ${jobname:json}))\n  |> filter(fn: (r) => contains(value: r[\"hostname\"], set: ${host:json}))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: ${process:json}))\n  |> filter(fn: (r) => contains(value: r[\"thread\"], set: ${thread:json}))\n  |> aggregateWindow(every: 1ns, fn: last, createEmpty: false)\n\nip = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"ip\")\n\nport = base_table\n  |> filter(fn: (r) => r[\"_field\"] == \"port\")\n\njoin(tables: {ip: ip, port: port}, on: [\"_time\", \"jobname\", \"hostname\", \"processid\", \"thread\"])\n  |> map(fn: (r) => ({\n//      ip: r[\"_value_ip\"],\n//      port: r[\"_value_port\"],\n      address: r[\"_value_ip\"] + \":\" + string(v: r[\"_value_port\"])\n    })\n  )",
         "refresh": 0,
         "regex": "",
         "skipUrlSync": false,

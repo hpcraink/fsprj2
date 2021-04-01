@@ -186,6 +186,9 @@ static pthread_mutex_t lock;
 #ifdef IOTRACE_ENABLE_INFLUXDB
 static pthread_mutex_t socket_lock;
 #endif
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+static pthread_mutex_t ip_lock;
+#endif
 
 /* environment variables */
 #if defined(IOTRACE_ENABLE_LOGFILE) \
@@ -270,11 +273,16 @@ static u_int64_t system_start_time;
 #endif
 
 #ifdef ENABLE_INPUT
+
 static libiotrace_socket **open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
 static SOCKET socket_control;
 
+#ifdef IOTRACE_ENABLE_INFLUXDB
 static int libiotrace_control_port = -1;
+static char local_ip[39] = "";
+#endif
+
 #endif
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
@@ -734,6 +742,24 @@ void prepare_socket()
 	// save socket globally to create thread that listens to / reads from all sockets
 	libiotrace_socket *socket = create_libiotrace_socket(socket_peer, HTTP_RESPONSE);
 	save_socket(socket, &socket_lock, &recv_sockets_len, &recv_sockets);
+
+#if defined(ENABLE_INPUT)
+	// save local ip (for sending ip to influx)
+	pthread_mutex_lock(&ip_lock);
+	if ('\0' == local_ip[0]) {
+		struct sockaddr_in local_addr;
+		memset(&local_addr, 0, sizeof(local_addr));
+		socklen_t len = sizeof(local_addr);
+		if (0 > getsockname(socket_peer, (struct sockaddr *) &local_addr, &len)) {
+			LIBIOTRACE_WARN("getsockname returned -1, errno %d", errno);
+		}
+		// TODO: AF_INET is IPv4, support AF_INET6 for IPv6
+		if (NULL == inet_ntop(AF_INET, &local_addr.sin_addr, local_ip, sizeof(local_ip))) {
+			LIBIOTRACE_WARN("inet_ntop returned NULL, errno %d", errno);
+		}
+	}
+	pthread_mutex_unlock(&ip_lock);
+#endif
 }
 #endif
 
@@ -1328,17 +1354,6 @@ void write_metadata_into_influxdb()
 {
 	struct influx_meta data;
 
-	struct sockaddr_in local_addr;
-	char local_ip[16];
-	memset(&local_addr, 0, sizeof(local_addr));
-	socklen_t len = sizeof(local_addr);
-	if (0 > getsockname(socket_peer, (struct sockaddr *) &local_addr, &len)) {
-		LIBIOTRACE_WARN("getsockname returned -1, errno %d", errno);
-	}
-	if (NULL == inet_ntop(AF_INET, &local_addr.sin_addr, local_ip, sizeof(local_ip))) {
-		LIBIOTRACE_WARN("inet_ntop returned NULL, errno %d", errno);
-	}
-
 	// wait until communication_thread has bound control socket
 	// TODO: memory fence to allow different memory models
 	while (0 > libiotrace_control_port) {
@@ -1346,6 +1361,7 @@ void write_metadata_into_influxdb()
 	}
 	data.port = libiotrace_control_port;
 	data.ip = local_ip;
+	data.wrapper = &active_wrapper_status;
 
 	//buffer for body
 	int body_length = libiotrace_struct_push_max_size_influx_meta(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
@@ -1515,7 +1531,10 @@ void *communication_thread(__attribute__((unused)) void *arg)
 		(socket_control);
 		LIBIOTRACE_ERROR("unable to bind socket");
 	}
+
+#ifdef IOTRACE_ENABLE_INFLUXDB
 	libiotrace_control_port = i;
+#endif
 
 	// Listen to socket
 	int ret = listen(socket_control, 10);
@@ -1976,6 +1995,9 @@ void init_process()
 #ifdef IOTRACE_ENABLE_INFLUXDB
 		pthread_mutex_init(&socket_lock, NULL);
 #endif
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+		pthread_mutex_init(&ip_lock, NULL);
+#endif
 
 		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
 
@@ -2423,6 +2445,10 @@ void cleanup()
 	pthread_mutex_unlock(&socket_lock);
 
 	pthread_mutex_destroy(&socket_lock);
+#endif
+
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+	pthread_mutex_destroy(&ip_lock);
 #endif
 }
 #endif

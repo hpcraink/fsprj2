@@ -1142,12 +1142,12 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 
 #  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length)
 
-#  define LIBIOTRACE_STRUCT_STRUCT_P(type, name)
+#  define LIBIOTRACE_STRUCT_STRUCT_P(type, name) libiotrace_struct_size += libiotrace_struct_push_max_size_##type(sizeof(#name) + prefix_length + 1 /*underscore*/);
 #  define LIBIOTRACE_STRUCT_STRUCT(type, name) libiotrace_struct_size += libiotrace_struct_push_max_size_##type(sizeof(#name) + prefix_length + 1 /*underscore*/);
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD(type, name)
 #  define LIBIOTRACE_STRUCT_ENUM(type, name)
 #  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(int))
-#  define LIBIOTRACE_STRUCT_CHAR(name)
+#  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(char))
 #  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(pid_t))
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, length + 2) /* +2 for "" in Strings --> Influx 2.X */
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_CSTRING(name, max_length)
@@ -1242,7 +1242,19 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 
 #  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length)
 
-#  define LIBIOTRACE_STRUCT_STRUCT_P(type, name)
+#  define LIBIOTRACE_STRUCT_STRUCT_P(type, name) if (NULL != libiotrace_struct_data->name) { \
+                                           char prefix_new_##name [strlen(prefix) + sizeof(#name) +1]; /*+1 for "_" */ \
+                                           if(*prefix == '\0') { \
+                                             snprintf(prefix_new_##name, sizeof(prefix_new_##name),"%s", #name); \
+                                           } else { \
+                                             snprintf(prefix_new_##name, sizeof(prefix_new_##name),"%s_%s", prefix, #name); \
+                                           } \
+                                           libiotrace_struct_ret = libiotrace_struct_push_##type(libiotrace_struct_buf, \
+                                                               libiotrace_struct_size, \
+                                                               libiotrace_struct_data->name, prefix_new_##name); \
+                                           libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
+                                           libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */ \
+                                         }
 #  define LIBIOTRACE_STRUCT_STRUCT(type, name) char prefix_new_##name [strlen(prefix) + sizeof(#name) +1]; /*+1 weil _ als Trennzeichen*/\
                                          if(*prefix == '\0') { \
                                            snprintf(prefix_new_##name, sizeof(prefix_new_##name),"%s", #name);\
@@ -1257,7 +1269,7 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD(type, name)
 #  define LIBIOTRACE_STRUCT_ENUM(type, name)
 #  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_CHAR(name)
+#  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %u, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)

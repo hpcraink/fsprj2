@@ -9,7 +9,8 @@ services:
                 volumes:
                         - ./provisioning:/etc/grafana/provisioning
                         - ./config/grafana.ini:/etc/grafana/grafana.ini
-   
+                environment:
+                        - GF_INSTALL_PLUGINS=cloudspout-button-panel
 
         influxdb:
                 image: quay.io/influxdb/influxdb:v2.0.3

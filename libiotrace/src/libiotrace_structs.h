@@ -1064,15 +1064,7 @@ LIBIOTRACE_STRUCT_START(working_dir)
   LIBIOTRACE_STRUCT_CSTRING_P(dir, MAXFILENAME)
 LIBIOTRACE_STRUCT_END
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
-/* influx meta data */
-LIBIOTRACE_STRUCT_START(influx_meta)
-  LIBIOTRACE_STRUCT_CSTRING_P(ip, 39)
-  LIBIOTRACE_STRUCT_INT(port)
-LIBIOTRACE_STRUCT_END
-#endif
-
-
+/* boolean for each wrapper (active/inactive) */
 LIBIOTRACE_STRUCT_START(wrapper_status)
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_LIBIOTRACE_STRUCT
@@ -1090,5 +1082,14 @@ LIBIOTRACE_STRUCT_START(wrapper_status)
 #include "mpi_io_wrapper.h"
 #endif
 LIBIOTRACE_STRUCT_END
+
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+/* influx meta data */
+LIBIOTRACE_STRUCT_START(influx_meta)
+  LIBIOTRACE_STRUCT_CSTRING_P(ip, 39)
+  LIBIOTRACE_STRUCT_INT(port)
+  LIBIOTRACE_STRUCT_STRUCT_P(wrapper_status, wrapper)
+LIBIOTRACE_STRUCT_END
+#endif
 
 #endif

@@ -938,8 +938,10 @@ LIBIOTRACE_STRUCT_START(mpi_waitall)
   LIBIOTRACE_STRUCT_STRUCT_ARRAY(mpi_waitall_element, requests, MAX_MPI_IMESSAGES)
 LIBIOTRACE_STRUCT_END
 
-
-
+/* struct for alloc */
+LIBIOTRACE_STRUCT_START(alloc_function)
+  LIBIOTRACE_STRUCT_SIZE_T(size)
+LIBIOTRACE_STRUCT_END
 
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
@@ -1042,6 +1044,7 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_delete_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate_at)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_waitall)
+	LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
   LIBIOTRACE_STRUCT_VOID_P_END(function_data)
 LIBIOTRACE_STRUCT_END
 
@@ -1069,6 +1072,7 @@ LIBIOTRACE_STRUCT_START(wrapper_status)
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_LIBIOTRACE_STRUCT
 #include "event_wrapper.h"
+#include "event_sim_wrapper.h"
 #ifdef WITH_POSIX_IO
 #include "posix_io_wrapper.h"
 #endif
@@ -1080,6 +1084,9 @@ LIBIOTRACE_STRUCT_START(wrapper_status)
 #endif
 #ifdef WITH_MPI_IO
 #include "mpi_io_wrapper.h"
+#endif
+#ifdef WITH_ALLOC
+#include "alloc_wrapper.h"
 #endif
 LIBIOTRACE_STRUCT_END
 

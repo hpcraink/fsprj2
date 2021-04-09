@@ -20,6 +20,9 @@
 #ifdef WITH_MPI_IO
 #  include "mpi_io.h"
 #endif
+#ifdef WITH_ALLOC
+#  include "alloc.h"
+#endif
 
 #include "libiotrace_include_struct.h"
 #include "wrapper_defines.h"

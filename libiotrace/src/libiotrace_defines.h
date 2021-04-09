@@ -1084,11 +1084,11 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 #  define LIBIOTRACE_STRUCT_DEV_T(name)
 #  define LIBIOTRACE_STRUCT_INO_T(name)
 #  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->name) { \
-                                                                                    free(libiotrace_struct_data->name); \
+                                                                                    CALL_REAL_ALLOC_SYNC(free)(libiotrace_struct_data->name); \
                                                                                     libiotrace_struct_data->name = NULL; \
                                                                                   }
 #  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
-                                                         free(libiotrace_struct_data->name); \
+                                                         CALL_REAL_ALLOC_SYNC(free)(libiotrace_struct_data->name); \
                                                          libiotrace_struct_data->name = NULL; \
                                                        }
 #  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size)

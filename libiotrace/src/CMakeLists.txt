@@ -284,6 +284,12 @@ if(WITH_DL_IO)
     list(APPEND OPTIONS -DWITH_DL_IO)
 endif()
 
+#compile using cmake -DWITH_ALLOC for memory allocations
+if(WITH_ALLOC)
+    list(APPEND SOURCE alloc.c)
+    list(APPEND OPTIONS -DWITH_ALLOC)
+endif()
+
 add_library(iotrace_shared SHARED ${SOURCE})
 
 add_library(iotrace_static STATIC ${SOURCE})

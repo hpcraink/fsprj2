@@ -214,6 +214,7 @@ static char *hostname;
 #if defined(IOTRACE_ENABLE_LOGFILE) \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 static char log_name[MAXFILENAME];
+static int log_name_len;
 #endif
 #if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
 static char control_log_name[MAXFILENAME];
@@ -341,7 +342,7 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
  */
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 libiotrace_socket *create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
-	libiotrace_socket *socket = malloc(sizeof(libiotrace_socket));
+	libiotrace_socket *socket = CALL_REAL_ALLOC_SYNC(malloc)(sizeof(libiotrace_socket));
 	if (NULL == socket)
 	{
 		LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
@@ -389,10 +390,10 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len, lib
 	}
 
 	(*len)++;
-	ret = realloc(*array, sizeof(libiotrace_socket*) * (*len));
+	ret = CALL_REAL_ALLOC_SYNC(realloc)(*array, sizeof(libiotrace_socket*) * (*len));
 	if (NULL == ret)
 	{
-		free(*array);
+		CALL_REAL_ALLOC_SYNC(free)(*array);
 		LIBIOTRACE_ERROR("realloc() failed");
 	}
 	*array = ret;
@@ -439,18 +440,18 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_so
 	if ((*array)[*len]->socket == socket)
 	{
 		//Delete last element if last element is current socket
-		ret = realloc(*array, sizeof(libiotrace_socket*) * (*len));
+		ret = CALL_REAL_ALLOC_SYNC(realloc)(*array, sizeof(libiotrace_socket*) * (*len));
 		if (*len == 0)
 		{
 			if (ret != NULL)
 			{
-				free(ret);
+				CALL_REAL_ALLOC_SYNC(free)(ret);
 			}
 			*array = NULL;
 		}
 		else if (NULL == ret)
 		{
-			free(*array);
+			CALL_REAL_ALLOC_SYNC(free)(*array);
 			LIBIOTRACE_ERROR("realloc() failed");
 		}
 		else
@@ -473,18 +474,18 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_so
 			// socket not found
 			return;
 		}
-		ret = realloc(*array, sizeof(libiotrace_socket*) * (*len));
+		ret = CALL_REAL_ALLOC_SYNC(realloc)(*array, sizeof(libiotrace_socket*) * (*len));
 		if (*len == 0)
 		{
 			if (ret != NULL)
 			{
-				free(ret);
+				CALL_REAL_ALLOC_SYNC(free)(ret);
 			}
 			*array = NULL;
 		}
 		else if (NULL == ret)
 		{
-			free(*array);
+			CALL_REAL_ALLOC_SYNC(free)(*array);
 			LIBIOTRACE_ERROR("realloc() failed");
 		}
 		else
@@ -546,6 +547,7 @@ void toggle_wrapper(const char *line, const char toggle)
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
 #include "event_wrapper.h"
+#include "event_sim_wrapper.h"
 	else
 	{
 		ret = 0;
@@ -574,6 +576,12 @@ void toggle_wrapper(const char *line, const char toggle)
 		ret = toggle_dl_wrapper(line, toggle);
 	}
 #endif
+#ifdef WITH_ALLOC
+	if (!ret)
+	{
+		ret = toggle_alloc_wrapper(line, toggle);
+	}
+#endif
 }
 
 /**
@@ -596,6 +604,9 @@ void init_wrapper()
 #endif
 #ifdef WITH_DL_IO
 	dl_io_init(); // initialize of function pointers is necessary
+#endif
+#ifdef WITH_ALLOC
+	alloc_init(); // initialize of function pointers is necessary
 #endif
 }
 #endif
@@ -660,7 +671,7 @@ SOCKET create_socket()
 	// 	return;
 	// }
 
-#ifdef WITH_POSIX_IO
+#if defined(WITH_POSIX_IO) || defined(WITH_ALLOC)
 	//MAP PORT FROM ENV TO SA_DATA(IPv4)
 	unsigned short database_port_short = (unsigned short)atoi(database_port);
 	unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
@@ -848,12 +859,13 @@ void print_filesystem()
 	char buf[4 * MAXFILENAME];
 #endif
 	struct mntent *filesystem_entry_ptr;
-	char buf_filesystem[libiotrace_struct_max_size_filesystem() + 1]; /* +1 for trailing null character */
+	char buf_filesystem[libiotrace_struct_max_size_filesystem() + sizeof(LINE_BREAK)];
 	struct filesystem filesystem_data;
 	struct stat stat_data;
 	char mount_point[MAXFILENAME];
 	int fd;
 	int ret;
+	int count;
 
 	fd = CALL_REAL_POSIX_SYNC(open)(filesystem_log_name,
 									O_WRONLY | O_CREAT | O_EXCL,
@@ -908,12 +920,16 @@ void print_filesystem()
 		filesystem_data.dump_frequency_in_days = filesystem_entry_ptr->mnt_freq;
 		filesystem_data.pass_number_on_parallel_fsck =
 			filesystem_entry_ptr->mnt_passno;
-		libiotrace_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
+		ret = libiotrace_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
 									 &filesystem_data);
-		ret = dprintf(fd, "%s" LINE_BREAK, buf_filesystem);
-		if (0 > ret)
-		{
-			LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret, errno);
+		strcpy(buf_filesystem + ret, LINE_BREAK);
+		count = ret + sizeof(LINE_BREAK) - 1;
+		ret = CALL_REAL_POSIX_SYNC(write)(fd, buf_filesystem, count);
+		if (0 > ret) {
+			LIBIOTRACE_ERROR("write() returned %d", ret);
+		}
+		if (ret < count) {
+			LIBIOTRACE_ERROR("incomplete write() occurred");
 		}
 	}
 
@@ -990,12 +1006,13 @@ void get_file_id_by_path(const char *filename, struct file_id *data)
 #ifdef IOTRACE_ENABLE_LOGFILE
 void print_working_directory()
 {
-	char buf_working_dir[libiotrace_struct_max_size_working_dir() + 1]; /* +1 for trailing null character */
+	char buf_working_dir[libiotrace_struct_max_size_working_dir() + sizeof(LINE_BREAK)];
 	struct working_dir working_dir_data;
 	char cwd[MAXFILENAME];
 	char *ret;
 	int fd;
 	int ret_int;
+	int count;
 
 	ret = getcwd(cwd, sizeof(cwd));
 	if (NULL == ret)
@@ -1016,12 +1033,16 @@ void print_working_directory()
 		LIBIOTRACE_ERROR("open() of file %s returned %d", working_dir_log_name, fd);
 	}
 
-	libiotrace_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
+	ret_int = libiotrace_struct_print_working_dir(buf_working_dir, sizeof(buf_working_dir),
 								  &working_dir_data);
-	ret_int = dprintf(fd, "%s" LINE_BREAK, buf_working_dir);
-	if (0 > ret_int)
-	{
-		LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret_int, errno);
+	strcpy(buf_working_dir + ret_int, LINE_BREAK);
+	count = ret_int + sizeof(LINE_BREAK) - 1;
+	ret_int = CALL_REAL_POSIX_SYNC(write)(fd, buf_working_dir, count);
+	if (0 > ret_int) {
+		LIBIOTRACE_ERROR("write() returned %d", ret_int);
+	}
+	if (ret_int < count) {
+		LIBIOTRACE_ERROR("incomplete write() occurred");
 	}
 
 	CALL_REAL_POSIX_SYNC(close)
@@ -1035,6 +1056,9 @@ void print_working_directory()
  * If a process forks another process the new process is a copy of the old
  * process. The copy inherits all values from the old process. Some values
  * are only valid for the old process. These values must be reset.
+ *
+ * Is registered by pthread_atfork. Must be async-signal-safe. Should only
+ * make assignments to constant values.
  */
 void reset_values_in_forked_process()
 {
@@ -1060,10 +1084,15 @@ void reset_values_in_forked_process()
  *
  * @param[in] fd File descriptor to add simulated open for.
  */
+#ifdef WITH_STD_IO
 void open_std_fd(int fd)
 {
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
+
+	if (!active_wrapper_status.open_std_fd) {
+		return;
+	}
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1090,6 +1119,7 @@ void open_std_fd(int fd)
 #endif
 	WRAP_FREE(&data)
 }
+#endif
 
 /**
  * Adds an simulated wrapper call for opening "file" to the central buffer.
@@ -1101,10 +1131,15 @@ void open_std_fd(int fd)
  *
  * @param[in] file File stream to add simulated open for.
  */
+#ifdef WITH_STD_IO
 void open_std_file(FILE *file)
 {
 	struct basic data;
 	struct file_stream file_stream_data;
+
+	if (!active_wrapper_status.open_std_file) {
+		return;
+	}
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1130,6 +1165,7 @@ void open_std_file(FILE *file)
 #endif
 	WRAP_FREE(&data)
 }
+#endif
 
 void init_on_load() ATTRIBUTE_CONSTRUCTOR;
 
@@ -1164,10 +1200,14 @@ void init_on_load()
 
 #ifdef LOG_WRAPPER_TIME
 #  ifdef IOTRACE_ENABLE_LOGFILE
-	write_into_buffer(&data);
+	if (active_wrapper_status.init_on_load) {
+		write_into_buffer(&data);
+	}
 #  endif
 #  ifdef IOTRACE_ENABLE_INFLUXDB
-	write_into_influxdb(&data);
+	if (active_wrapper_status.init_on_load) {
+		write_into_influxdb(&data);
+	}
 #  endif
 	WRAP_FREE(&data)
 #endif
@@ -1375,7 +1415,11 @@ void write_metadata_into_influxdb()
 	body[body_length] = '\0'; /*remove last comma*/
 
 	char short_log_name[50];
-	strncpy(short_log_name, log_name, sizeof(short_log_name));
+	if (log_name_len < sizeof(short_log_name)) {
+		strncpy(short_log_name, log_name, sizeof(short_log_name));
+	} else {
+		strncpy(short_log_name, log_name + (log_name_len - sizeof(short_log_name) + 1), sizeof(short_log_name));
+	}
 
 	const char labels[] = "libiotrace_control,jobname=%s,hostname=%s,processid=%u,thread=%u";
 	int body_labels_length = strlen(labels)
@@ -1656,7 +1700,7 @@ void *communication_thread(__attribute__((unused)) void *arg)
 						CLOSESOCKET(open_control_sockets[i]->socket);
 						libiotrace_socket *s = open_control_sockets[i];
 						delete_socket(open_control_sockets[i]->socket, NULL, &open_control_sockets_len, &open_control_sockets);
-						free(s);
+						CALL_REAL_ALLOC_SYNC(free)(s);
 						i--;
 					}
 					else
@@ -1682,9 +1726,9 @@ void *communication_thread(__attribute__((unused)) void *arg)
 	for (int i = 0; i < open_control_sockets_len; i++)
 	{
 		CLOSESOCKET(open_control_sockets[i]->socket);
-		free(open_control_sockets[i]);
+		CALL_REAL_ALLOC_SYNC(free)(open_control_sockets[i]);
 	}
-	free(open_control_sockets);
+	CALL_REAL_ALLOC_SYNC(free)(open_control_sockets);
 #endif
 
 	return NULL;
@@ -1735,6 +1779,51 @@ int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const
 }
 
 /**
+ * Get next line out of buffer buf.
+ *
+ * Each line break in buf is changed to '\0' and each call to read_line returns
+ * a pointer to the now '\0' terminated next line in buf.
+ *
+ * @param[in,out] buf  Pointer to '\0' terminated buffer. The pointer is const
+ *                     but the buffer itself will be manipulated (line breaks
+ *                     get changed to '\0').
+ * @param[in]     len  Length of buffer buf. Can but must not include the
+ *                     terminating '\0'.
+ * @param[in,out] pos  Pointer to a pointer to the current position in buf.
+ *                     *pos must be equal to buf for first call of read_line for
+ *                     one buffer. pos should not be changed outside of
+ *                     read_line between subsequent calls to read_line for one
+ *                     buffer.
+ * @return Pointer to next '\0' terminated line in buf or NULL if no next line
+ *         exists.
+ */
+char *read_line(const char *buf, const size_t len, char **pos) {
+	char *tmp_pos = *pos;
+
+	for (; *pos < buf + len; (*pos)++) {
+		if ('\r' == **pos) {
+			**pos = '\0';
+			(*pos)++;
+			if ('\n' == **pos) {
+				**pos = '\0';
+				(*pos)++;
+			}
+			return tmp_pos;
+		}
+		if ('\n' == **pos) {
+			**pos = '\0';
+			(*pos)++;
+			return tmp_pos;
+		}
+	}
+
+	if (tmp_pos < buf + len) {
+		return tmp_pos;
+	}
+	return NULL;
+}
+
+/**
  * Reads a whitelist from a file.
  *
  * If a environment variable holds the path of a whitelist
@@ -1748,31 +1837,65 @@ int libiotrace_get_env(const char *env_name, char *dst, const int max_len, const
  * is set to active. An active wrapper logs/sends his data.
  */
 void read_whitelist() {
-	FILE *stream;
+	int fd;
+	int ret;
+	struct stat statbuf;
+	char *buffer;
+	char *p;
 	char *line = NULL;
 	char *clean_line = NULL;
 	char *end_clean_line = NULL;
-	size_t len = 0;
-	ssize_t nread;
-	stream = CALL_REAL_POSIX_SYNC(fopen)(whitelist, "r");
-	if (stream == NULL)
+	__off_t toread;
+	__off_t file_len;
+
+	fd = CALL_REAL_POSIX_SYNC(open)(whitelist, O_RDONLY);
+	if (-1 == fd)
 	{
-		LIBIOTRACE_ERROR("fopen() failed, errno=%d", errno);
+		LIBIOTRACE_ERROR("open() failed, errno=%d", errno);
 	}
 
-	while ((nread = CALL_REAL_POSIX_SYNC(getline)(&line, &len, stream)) != -1)
+	ret = fstat(fd, &statbuf);
+	if (-1 == ret)
 	{
+		LIBIOTRACE_ERROR("fstat() failed, errno=%d", errno);
+	}
+
+	if (0 >= statbuf.st_size) {
+		// file exists but is empty
+		return;
+	}
+	file_len = statbuf.st_size;
+
+	buffer = (char*) CALL_REAL_ALLOC_SYNC(malloc)(file_len + 1); // +1 for terminating '\0'
+	if (NULL == buffer)
+	{
+		LIBIOTRACE_ERROR("malloc() failed");
+	}
+
+	// read whole file
+	for (p=buffer, toread = file_len; toread > 0; toread -= ret, p += ret) {
+	    ret = CALL_REAL_POSIX_SYNC(read)(fd, p, toread);
+	    if (0 > ret) {
+	    	LIBIOTRACE_ERROR("read() failed, errno=%d", errno);
+	    } else if (0 == ret) {
+	    	// signal interrupt of file changed?
+	    	if (-1 == fstat(fd, &statbuf))
+	    	{
+	    		LIBIOTRACE_ERROR("fstat() failed, errno=%d", errno);
+	    	}
+	    	if (file_len != statbuf.st_size) {
+	    		LIBIOTRACE_ERROR("whitelist got changed during read");
+	    	}
+	    }
+	}
+
+	// add terminating '\0'
+	buffer[file_len] = '\0';
+
+	p = buffer;
+	while (NULL != (line = read_line(buffer, file_len, &p))) {
 		size_t byte_count = strlen(line);
 
-		// remove trailing linebreak
-		if (byte_count > 0 && line[byte_count - 1] == '\n')
-		{
-			line[byte_count - 1] = '\0';
-		}
-		if (byte_count > 0 && line[byte_count - 2] == '\r')
-		{
-			line[byte_count - 2] = '\0';
-		}
 		clean_line = line;
 
 		// remove leading spaces
@@ -1797,9 +1920,7 @@ void read_whitelist() {
 		}
 	}
 
-	free(line);
-	CALL_REAL_POSIX_SYNC(fclose)
-	(stream);
+	ret = CALL_REAL_POSIX_SYNC(close)(fd);
 }
 
 /**
@@ -1829,7 +1950,8 @@ char init_done = 0;
  * wrapper calls init_process(). So init_process() is called before the first
  * wrapper starts collecting data.
  * Because init_process() is called before main() is called, no other thread then
- * the process itself is running => no synchronization is needed.
+ * the process itself is running => no synchronization is needed (if a program
+ * uses ctor to start threads/processes this will lead to errors).
  */
 void init_process()
 {
@@ -1845,6 +1967,7 @@ void init_process()
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
 #include "event_wrapper.h"
+#include "event_sim_wrapper.h"
 
 #ifdef WITH_MPI_IO
 #undef WRAPPER_NAME_TO_SOURCE
@@ -1870,6 +1993,12 @@ void init_process()
 #include "dl_io_wrapper.h"
 #endif
 
+#ifdef WITH_ALLOC
+#undef WRAPPER_NAME_TO_SOURCE
+#define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
+#include "alloc_wrapper.h"
+#endif
+
 #if !defined(IO_LIB_STATIC)
 		init_wrapper();
 #endif
@@ -1883,7 +2012,7 @@ void init_process()
 #endif
 
 		pid = getpid();
-		hostname = malloc(HOST_NAME_MAX);
+		hostname = CALL_REAL_ALLOC_SYNC(malloc)(HOST_NAME_MAX);
 		if (NULL == hostname)
 			LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
 
@@ -1891,9 +2020,10 @@ void init_process()
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
-		char filesystem_postfix[] = "_filesystem_";
-		char filesystem_extension[] = ".log";
+		const char filesystem_postfix[] = "_filesystem_";
+		const char filesystem_extension[] = ".log";
 		length = libiotrace_get_env(env_log_name, log_name, MAXFILENAME - strlen(filesystem_extension) - strlen(filesystem_postfix) - strlen(hostname), 1);
+		log_name_len = length;
 #endif
 
 #if !defined(IO_LIB_STATIC) && (defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB))
@@ -1908,7 +2038,9 @@ void init_process()
 		strcpy(control_log_name, log_name);
 #endif
 #ifdef IOTRACE_ENABLE_LOGFILE
-		strcpy(log_name + length, "_iotrace.log");
+		const char log_name_postfix[] = "_iotrace.log";
+		strcpy(log_name + length, log_name_postfix);
+		log_name_len += sizeof(log_name_postfix);
 		strcpy(filesystem_log_name + length, filesystem_postfix);
 		strcpy(filesystem_log_name + length + strlen(filesystem_postfix), hostname);
 		strcpy(filesystem_log_name + length + strlen(filesystem_postfix) + strlen(hostname), filesystem_extension);
@@ -1999,15 +2131,6 @@ void init_process()
 		pthread_mutex_init(&ip_lock, NULL);
 #endif
 
-		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
-
-#ifdef IOTRACE_ENABLE_LOGFILE
-#ifdef __linux__ // TODO: RAY MacOS; Windows?
-		print_filesystem();
-#endif
-		print_working_directory();
-#endif
-
 		/* Initialize user callbacks and settings */
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 		llhttp_settings_init(&settings);
@@ -2021,16 +2144,35 @@ void init_process()
 		settings.on_status = url_callback_responses;
 #endif
 
+		/* at this point all preparations necessary for a wrapper call
+		 * are done: set corresponding flag */
+		init_done = 1;
+
+		/* pthread_atfork uses malloc. malloc could be wrapped (see
+		 * alloc.h and alloc.c). The call of pthread_atfork must be
+		 * done after init_done is set to prevent a recursion between
+		 * pthread_atfork, malloc and init_process. */
+		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
+
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 		//Create receive thread per process
 		pthread_t recv_thread;
 
+		/* pthread_create uses malloc. Call must be done after
+		 * init_done is set (see pthread_atfork call for details). */
 		int ret = pthread_create(&recv_thread, NULL, communication_thread, NULL);
 		if (0 != ret)
 		{
 			LIBIOTRACE_WARN("pthread_create() failed. (%d)", ret);
 			return;
 		}
+#endif
+
+#ifdef IOTRACE_ENABLE_LOGFILE
+#ifdef __linux__ // TODO: RAY MacOS; Windows?
+		print_filesystem();
+#endif
+		print_working_directory();
 #endif
 
 #ifdef WITH_STD_IO
@@ -2047,8 +2189,6 @@ void init_process()
 		open_std_file(stdout);
 		open_std_file(stderr);
 #endif
-
-		init_done = 1;
 	}
 }
 
@@ -2060,7 +2200,7 @@ void init_process()
 void get_stacktrace(struct basic *data)
 {
 	int size;
-	void *trace = malloc(sizeof(void *) * (stacktrace_depth + 3));
+	void *trace = CALL_REAL_ALLOC_SYNC(malloc)(sizeof(void *) * (stacktrace_depth + 3));
 	char **messages = (char **)NULL;
 
 	if (NULL == trace)
@@ -2102,7 +2242,7 @@ void get_stacktrace(struct basic *data)
 
 	if (!stacktrace_ptr)
 	{
-		free(trace);
+		CALL_REAL_ALLOC_SYNC(free)(trace);
 	}
 }
 
@@ -2191,7 +2331,8 @@ void print_buffer()
 {
 	struct basic *data;
 	int ret;
-	char buf[libiotrace_struct_max_size_basic() + 1]; /* +1 for trailing null character */
+	int count;
+	char buf[libiotrace_struct_max_size_basic() + sizeof(LINE_BREAK)];
 	int fd;
 	pos = data_buffer;
 
@@ -2207,10 +2348,14 @@ void print_buffer()
 		data = (struct basic *)((void *)pos);
 
 		ret = libiotrace_struct_print_basic(buf, sizeof(buf), data); //Function is present at runtime, built with macros from libiotrace_defines.h
-		ret = dprintf(fd, "%s" LINE_BREAK, buf);
-		if (0 > ret)
-		{
-			LIBIOTRACE_ERROR("dprintf() returned %d", ret);
+		strcpy(buf + ret, LINE_BREAK);
+		count = ret + sizeof(LINE_BREAK) - 1;
+		ret = CALL_REAL_POSIX_SYNC(write)(fd, buf, count);
+		if (0 > ret) {
+			LIBIOTRACE_ERROR("write() returned %d", ret);
+		}
+		if (ret < count) {
+			LIBIOTRACE_ERROR("incomplete write() occurred");
 		}
 		ret = libiotrace_struct_sizeof_basic(data);
 
@@ -2250,7 +2395,11 @@ void write_into_influxdb(struct basic *data)
 	body[body_length] = '\0'; /*remove last comma*/
 
 	char short_log_name[50];
-	strncpy(short_log_name, log_name, sizeof(short_log_name));
+	if (log_name_len < sizeof(short_log_name)) {
+		strncpy(short_log_name, log_name, sizeof(short_log_name));
+	} else {
+		strncpy(short_log_name, log_name + (log_name_len - sizeof(short_log_name) + 1), sizeof(short_log_name));
+	}
 
 	const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u,functionname=%s";
 	int body_labels_length = strlen(labels)
@@ -2401,7 +2550,9 @@ void cleanup()
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-	write_into_buffer(&data);
+	if (active_wrapper_status.cleanup) {
+		write_into_buffer(&data);
+	}
 	pthread_mutex_lock(&lock);
 	print_buffer();
 	pthread_mutex_unlock(&lock);

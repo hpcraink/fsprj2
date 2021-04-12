@@ -629,7 +629,7 @@ SOCKET create_socket()
 	 * endless recursion of function calls that exceeds the stack size.
 	 * => getaddrinfo should only be called if POSIX wrapper are not
 	 *    build */
-#ifdef WITH_POSIX_IO
+#if defined(WITH_POSIX_IO) || defined(WITH_ALLOC)
 	new_socket = CALL_REAL_POSIX_SYNC(socket)(AF_INET, SOCK_STREAM, 0);
 #else
 	//Configure remote address for socket
@@ -1472,40 +1472,17 @@ void write_metadata_into_influxdb()
 #endif
 
 /**
- * Thread for reading answers from influxdb and receiving commands
- * from http connections (WebServices).
+ * Creates additional control socket
  *
- * Started as a separate thread via "pthread_create" during call
- * of "init_process".
+ * The additional socket for incoming connections is bound to a
+ * PORT in the range from PORT_RANGE_MIN to PORT_RANGE_MAX.
+ * Which port is bound is written to a file.
  *
- * Checks for responses from influxdb on existing connections
- * (each thread of the monitored program opens a new socket to
- * communicate with influxdb during call of "init_thread" with the
- * function "prepare_socket"; each such thread uses it's socket to
- * send data to influxdb but doesn't wait for an response;
- * responses are read in this separate thread).
- *
- * Also waits for incoming connections on a additional socket.
- * Each such connection is handled inside this separate thread and
- * enables controlling which wrapper is active. The additional
- * socket for incoming connections is bound to a PORT in the range
- * from PORT_RANGE_MIN to PORT_RANGE_MAX. Which port is bound is
- * written to a file. Incoming http requests are handled via
- * callback function "url_callback".
- *
- * This thread runs and reads/listens the multiple sockets until
- * "event_cleanup_done" is set to "true". This is done during call
- * of "cleanup" if the program exits.
- *
- * @param[in] arg Not used.
- * @return Not used (allways NULL)
+ * @return control socket
  */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-void *communication_thread(__attribute__((unused)) void *arg)
-{
-	struct timeval select_timeout;
-
 #ifdef ENABLE_INPUT
+SOCKET prepare_control_socket() {
+	SOCKET socket_control;
 
 	// Open Socket to receive control information
 	struct sockaddr_in addr;
@@ -1534,6 +1511,10 @@ void *communication_thread(__attribute__((unused)) void *arg)
 			//Write PORT and IP for control commands to file
 			struct ifreq ifreqs[20];
 			struct ifconf ic;
+			struct control_meta meta_data;
+			int ret;
+			int count;
+			char buf[libiotrace_struct_max_size_control_meta() + sizeof(LINE_BREAK)];
 
 			ic.ifc_len = sizeof ifreqs;
 			ic.ifc_req = ifreqs;
@@ -1551,14 +1532,22 @@ void *communication_thread(__attribute__((unused)) void *arg)
 				LIBIOTRACE_ERROR("open() of file %s returned %d", control_log_name, fd);
 			}
 
+			meta_data.process_id = pid;
+			meta_data.port = i;
 			for (int l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
 			{
-				int ret = dprintf(fd, "(%u) %s: %s:%d" LINE_BREAK, pid, ifreqs[l].ifr_name,
-								  inet_ntoa(((struct sockaddr_in *)&ifreqs[l].ifr_addr)->sin_addr), i);
+				meta_data.interface_name = ifreqs[l].ifr_name;
+				meta_data.ip = inet_ntoa(((struct sockaddr_in *)&ifreqs[l].ifr_addr)->sin_addr);
 
-				if (0 > ret)
-				{
-					LIBIOTRACE_ERROR("dprintf() returned %d with errno=%d", ret, errno);
+				ret = libiotrace_struct_print_control_meta(buf, sizeof(buf), &meta_data); //Function is present at runtime, built with macros from libiotrace_defines.h
+				strcpy(buf + ret, LINE_BREAK);
+				count = ret + sizeof(LINE_BREAK) - 1;
+				ret = CALL_REAL_POSIX_SYNC(write)(fd, buf, count);
+				if (0 > ret) {
+					LIBIOTRACE_ERROR("write() returned %d", ret);
+				}
+				if (ret < count) {
+					LIBIOTRACE_ERROR("incomplete write() occurred");
 				}
 			}
 
@@ -1588,8 +1577,42 @@ void *communication_thread(__attribute__((unused)) void *arg)
 		(socket_control);
 		LIBIOTRACE_ERROR("unable to listen to socket, errno=%d", errno);
 	}
-	// Now wait for connection in select below
+
+	return socket_control;
+}
 #endif
+
+/**
+ * Thread for reading answers from influxdb and receiving commands
+ * from http connections (WebServices).
+ *
+ * Started as a separate thread via "pthread_create" during call
+ * of "init_process".
+ *
+ * Checks for responses from influxdb on existing connections
+ * (each thread of the monitored program opens a new socket to
+ * communicate with influxdb during call of "init_thread" with the
+ * function "prepare_socket"; each such thread uses it's socket to
+ * send data to influxdb but doesn't wait for an response;
+ * responses are read in this separate thread).
+ *
+ * Also waits for incoming connections on a additional socket.
+ * Each such connection is handled inside this separate thread and
+ * enables controlling which wrapper is active.
+ * Incoming http requests are handled via callback function
+ * "url_callback".
+ *
+ * This thread runs and reads/listens the multiple sockets until
+ * "event_cleanup_done" is set to "true". This is done during call
+ * of "cleanup" if the program exits.
+ *
+ * @param[in] arg Not used.
+ * @return Not used (allways NULL)
+ */
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+void *communication_thread(__attribute__((unused)) void *arg)
+{
+	struct timeval select_timeout;
 
 	// Read responses from influxdb and read control messages
 	while (!event_cleanup_done)
@@ -2144,15 +2167,14 @@ void init_process()
 		settings.on_status = url_callback_responses;
 #endif
 
+		/* open and configure control socket */
+#ifdef ENABLE_INPUT
+		socket_control = prepare_control_socket();
+#endif
+
 		/* at this point all preparations necessary for a wrapper call
 		 * are done: set corresponding flag */
 		init_done = 1;
-
-		/* pthread_atfork uses malloc. malloc could be wrapped (see
-		 * alloc.h and alloc.c). The call of pthread_atfork must be
-		 * done after init_done is set to prevent a recursion between
-		 * pthread_atfork, malloc and init_process. */
-		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 		//Create receive thread per process
@@ -2167,6 +2189,17 @@ void init_process()
 			return;
 		}
 #endif
+
+		/* pthread_atfork uses malloc. malloc could be wrapped (see
+		 * alloc.h and alloc.c). The call of pthread_atfork must be
+		 * done after init_done is set to prevent a recursion between
+		 * pthread_atfork, malloc and init_process.
+		 * Also communication_thread must be created before
+		 * pthread_atfork is called, because malloc wrapper waits
+		 * for socket connection to influxdb to write influx meta
+		 * data and this connection is created in
+		 * communication_thread */
+		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
 
 #ifdef IOTRACE_ENABLE_LOGFILE
 #ifdef __linux__ // TODO: RAY MacOS; Windows?
@@ -2256,9 +2289,9 @@ void init_thread()
 	tid = iotrace_get_tid();
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	prepare_socket();
-#ifdef ENABLE_INPUT
+#  ifdef ENABLE_INPUT
 	write_metadata_into_influxdb();
-#endif
+#  endif
 #endif
 }
 

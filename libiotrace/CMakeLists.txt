@@ -52,6 +52,101 @@ set(ENABLE_OUTPUT_VALUES "LOGFILE_AND_INFLUXDB;LOGFILE;INFLUXDB")
 set_property(CACHE ENABLE_OUTPUT PROPERTY STRINGS ${ENABLE_OUTPUT_VALUES})
 
 
+# needed for the RTLD_NEXT macro and other GNU functions
+set(OPTIONS
+    -D_GNU_SOURCE
+)
+
+#compile using cmake -DLOGGING for write log (can be changed during execution with functions from libiotrace.h)
+if(LOGGING)
+    list(APPEND OPTIONS -DLOGGING)
+endif()
+
+#compile using cmake -DSENDING for sending log to influxdb (can be changed during execution with functions from libiotrace.h)
+if(SENDING)
+    list(APPEND OPTIONS -DSENDING)
+endif()
+
+#compile using cmake -DLOG_WRAPPER_TIME for logging start and end time of function wrappers
+if(LOG_WRAPPER_TIME)
+    list(APPEND OPTIONS -DLOG_WRAPPER_TIME)
+endif()
+
+list(APPEND OPTIONS -DBUFFER_SIZE=${BUFFER_SIZE})
+list(APPEND OPTIONS -DMAX_FUNCTION_NAME=${MAX_FUNCTION_NAME})
+list(APPEND OPTIONS -DMAX_ERROR_TEXT=${MAX_ERROR_TEXT})
+list(APPEND OPTIONS -DMAX_MMSG_MESSAGES=${MAX_MMSG_MESSAGES})
+list(APPEND OPTIONS -DMAX_MSG_FILE_DESCRIPTORS=${MAX_MSG_FILE_DESCRIPTORS})
+list(APPEND OPTIONS -DMAX_EXEC_ARRAY_LENGTH=${MAX_EXEC_ARRAY_LENGTH})
+list(APPEND OPTIONS -DMAX_INFLUX_TOKEN=${MAX_INFLUX_TOKEN})
+list(APPEND OPTIONS -DMAX_STACKTRACE_DEPTH=${MAX_STACKTRACE_DEPTH})
+list(APPEND OPTIONS -DMAX_STACKTRACE_ENTRY_LENGTH=${MAX_STACKTRACE_ENTRY_LENGTH})
+list(APPEND OPTIONS -DMAX_MPI_FILE_HINTS=${MAX_MPI_FILE_HINTS})
+list(APPEND OPTIONS -DMAX_MPI_FILE_HINT_LENGTH=${MAX_MPI_FILE_HINT_LENGTH})
+list(APPEND OPTIONS -DMAX_MPI_IMESSAGES=${MAX_MPI_IMESSAGES})
+list(APPEND OPTIONS -DPORT_RANGE_MIN=${PORT_RANGE_MIN})
+list(APPEND OPTIONS -DPORT_RANGE_MAX=${PORT_RANGE_MAX})
+list(APPEND OPTIONS -DSELECT_TIMEOUT_SECONDS=${SELECT_TIMEOUT_SECONDS})
+
+if(ALL_WRAPPERS_ACTIVE)
+    list(APPEND OPTIONS -DALL_WRAPPERS_ACTIVE=${ALL_WRAPPERS_ACTIVE})
+endif()
+
+if(REALTIME)
+    list(APPEND OPTIONS -DREALTIME)
+endif()
+
+if(ENABLE_INPUT)
+    list(APPEND OPTIONS -DENABLE_INPUT)
+endif()
+
+list(APPEND OPTIONS -DSTACKTRACE_DEPTH=${STACKTRACE_DEPTH})
+list(APPEND OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
+
+#compile using cmake -DSTACKTRACE_PTR for writing stacktrace pointer to log
+if(STACKTRACE_PTR)
+    list(APPEND OPTIONS -DSTACKTRACE_PTR)
+endif()
+
+#compile using cmake -DSTACKTRACE_SYMBOL for writing stacktrace symbols to log
+if(STACKTRACE_SYMBOL)
+    list(APPEND OPTIONS -DSTACKTRACE_SYMBOL)
+endif()
+
+#compile using cmake -DWITH_STD_IO for stdin, stdout and stderr
+if(WITH_STD_IO)
+    list(APPEND OPTIONS -DWITH_STD_IO)
+endif()
+
+#compile using cmake -DWITH_POSIX_IO for Posix-IO
+if(WITH_POSIX_IO)
+    list(APPEND OPTIONS -DWITH_POSIX_IO)
+endif()
+
+#compile using cmake -DWITH_POSIX_AIO for asynchronous Posix-IO
+if(WITH_POSIX_AIO)
+    if(HAVE_AIO_H)
+        list(APPEND OPTIONS -DWITH_POSIX_AIO)
+    else()
+        message(SEND_ERROR "Missing aio.h for asynchronous Posix-IO.")
+    endif()
+endif()
+
+#compile using cmake -DWITH_MPI_IO for MPI-IO
+if(WITH_MPI_IO)
+    list(APPEND OPTIONS -DWITH_MPI_IO)
+endif()
+
+#compile using cmake -DWITH_DL_IO for dlopen()
+if(WITH_DL_IO)
+    list(APPEND OPTIONS -DWITH_DL_IO)
+endif()
+
+#compile using cmake -DWITH_ALLOC for memory allocations
+if(WITH_ALLOC)
+    list(APPEND OPTIONS -DWITH_ALLOC)
+endif()
+
 
 if(WITH_MPI_IO)
     find_package(MPI REQUIRED)
@@ -81,11 +176,14 @@ if (WITH_UNIT_TESTS)
     # XXX list(APPEND CMAKE_PREFIX_PATH "${CUNIT_EXT_DIR}/")
     # find_package(CUnit REQUIRED)
     #
+    # possible solution: https://www.scivision.dev/cmake-git-submodule/
+    #
     # XXX Bail out by just adding the cunit git as submodule
     # git rm --cached ext/cunit
     # rm -rf ext
     # git submodule add https://gitlab.com/cunity/cunit.git ext/cunit
     add_subdirectory(ext/cunit)
+    enable_testing()
 endif()
 
 add_subdirectory(test)

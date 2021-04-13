@@ -6,6 +6,8 @@
 #include <limits.h>
 #include <math.h>
 
+#include "error.h"
+
 /*
  * To add a new data-type for generating the struct and the json-cstring seven lines
  * have to be added. The positions for adding a new data-type are marked with:

@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <net/if.h>
 
 #include "libiotrace_defines.h"
 

@@ -1,4 +1,6 @@
-enable_testing()
+if (WITH_UNIT_TESTS)
+    add_subdirectory(cunit)
+endif()
 
 add_subdirectory(internal)
 

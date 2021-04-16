@@ -64,7 +64,12 @@
 #define REAL_DEFINITION_INIT = NULL;
 
 #define WRAP(function_macro) __WRAP(function_macro)
-#ifdef IO_LIB_STATIC
+#ifdef IO_LIB_TEST
+#  define __WRAP(function_name) __test_##function_name
+// ToDo: __func__ dependencies
+#  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__ + 7, MAX_FUNCTION_NAME) /* +7 removes beginning __wrap_ from __func__ */
+#  define POSIX_IO_SET_FUNCTION_NAME_NO_WRAPPER(data) strncpy(data, __func__, MAX_FUNCTION_NAME)
+#elif defined(IO_LIB_STATIC)
 #  define __WRAP(function_name) __wrap_##function_name
 // ToDo: __func__ dependencies
 #  define POSIX_IO_SET_FUNCTION_NAME(data) strncpy(data, __func__ + 7, MAX_FUNCTION_NAME) /* +7 removes beginning __wrap_ from __func__ */

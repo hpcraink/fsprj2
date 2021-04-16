@@ -16,6 +16,15 @@ add_test(NAME test_libiotrace_structs COMMAND test_libiotrace_structs)
 if(WITH_ALLOC)
 	# don't include POSIX wrapper during compile of ../../src/alloc.c
 	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
+	
+	# we need exact one output function
+	list(REMOVE_ITEM OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
+	list(APPEND OPTIONS -DENABLE_OUTPUT=LOGFILE)
+	
+	# generate functions with prefix "__test_" instead of alloc wrappers
+	# (to prevent wrapping of alloc functions in cunit framework and
+	# enable testing of wrappers with dedicated function calls)
+	list(APPEND OPTIONS -DIO_LIB_TEST)
 
 	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/utils.c)
 	set_target_properties(test_alloc PROPERTIES LINK_FLAGS -W)

@@ -171,18 +171,23 @@ include_directories(${libiotrace_BINARY_DIR}/include)
 
 add_subdirectory(src)
 
+include(${libiotrace_SOURCE_DIR}/cmake/AddGitSubModule.cmake)
+
 if (WITH_UNIT_TESTS)
-    # XXX Develop a better way to check for/include cunit
-    # XXX list(APPEND CMAKE_PREFIX_PATH "${CUNIT_EXT_DIR}/")
-    # find_package(CUnit REQUIRED)
+    # Solution from https://www.scivision.dev/cmake-git-submodule/
     #
-    # possible solution: https://www.scivision.dev/cmake-git-submodule/
-    #
-    # XXX Bail out by just adding the cunit git as submodule
+    # If this fails, start anew by adding the cunit git as submodule
     # git rm --cached ext/cunit
     # rm -rf ext
     # git submodule add https://gitlab.com/cunity/cunit.git ext/cunit
+
+    # A better way than just plain COMPILING our own version of CUnit
+    # might be to find_package(CUnit REQUIRED) and check for pre-installed version.
+
+    add_git_submodule(ext/cunit)
     add_subdirectory(ext/cunit)
+    set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/ext/cunit/CUnit/;${CMAKE_PREFIX_PATH}")
+    
     enable_testing()
 endif()
 

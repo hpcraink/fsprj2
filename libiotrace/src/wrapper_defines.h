@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 
 #include "libiotrace_config.h"
+#include "utils.h"
 #include "error.h"
 #include "libiotrace_include_struct.h"
 

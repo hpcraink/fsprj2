@@ -39,9 +39,6 @@ void get_basic(struct basic *data);
 void get_file_id(int fd, struct file_id *data);
 void get_file_id_by_path(const char *filename, struct file_id *data);
 
-// ToDo: as macro with return value?
-u_int64_t gettime(void);
-
 #ifdef IOTRACE_ENABLE_LOGFILE
 void write_into_buffer(struct basic *data);
 #endif

@@ -25,7 +25,7 @@
 #define LIBIOTRACE_STRUCT_COPY              5 /* generate function to deep copy struct (with VOID_P elements) */
 #define LIBIOTRACE_STRUCT_FREE              6 /* generate function to free malloc'ed memory */
 #define LIBIOTRACE_STRUCT_PUSH_BYTES_COUNT  7 /* generate function to evaluate size for HTTP Posts */
-#define LIBIOTRACE_STRUCT_PUSH              8 /* generate function to generate POST request*/
+#define LIBIOTRACE_STRUCT_PUSH              8 /* generate function to generate POST request */
 
 /* #defines for error handling */
 #ifndef LIBIOTRACE_STRUCT_ERROR

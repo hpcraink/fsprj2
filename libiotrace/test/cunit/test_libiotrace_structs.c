@@ -220,10 +220,6 @@ static void check_basic_print(const struct basic *data, const char *print_buf, c
 			}
 		}
 	}
-	//CU_
-	//CU_ASSERT_FATAL(tokens[0].type == JSMN_OBJECT);
-	//fprintf(stdout, "\nsize: %d\n", tokens[0].size);
-	//CU_ASSERT_FATAL(tokens[0].size == token_count);
 }
 
 static void test_struct_basic(void) {
@@ -320,7 +316,7 @@ static void test_struct_basic(void) {
 	memset(print_buf, 0, sizeof(print_buf));
 	len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf), &data);
 
-	// check print of basic structure without substructures
+	// check print of basic structure with substructures
 
 	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
 	CU_ASSERT_FATAL(print_buf[0] == '{');

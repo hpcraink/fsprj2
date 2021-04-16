@@ -86,7 +86,38 @@ static void test_read_line(void) {
 	CU_ASSERT_FATAL(NULL == read_line(buf, sizeof(test_string1), &pos));
 }
 
+static void test_shorten_log_name(void) {
+	char one[] = "";
+	char two[] = "0";
+	char fourty_nine[] = "012345678901234567890123456789012345678901234567";
+	char fifty[] = "0123456789012345678901234567890123456789012345678";
+	char fifty_one[] = "01234567890123456789012345678901234567890123456789";
+
+	char shortened[50];
+
+	memset(shortened, -1, sizeof(shortened));
+	shorten_log_name(shortened, sizeof(shortened), one, sizeof(one));
+	CU_ASSERT_FATAL(0 == strcmp(one, shortened));
+
+	memset(shortened, -1, sizeof(shortened));
+	shorten_log_name(shortened, sizeof(shortened), two, sizeof(two));
+	CU_ASSERT_FATAL(0 == strcmp(two, shortened));
+
+	memset(shortened, -1, sizeof(shortened));
+	shorten_log_name(shortened, sizeof(shortened), fourty_nine, sizeof(fourty_nine));
+	CU_ASSERT_FATAL(0 == strcmp(fourty_nine, shortened));
+
+	memset(shortened, -1, sizeof(shortened));
+	shorten_log_name(shortened, sizeof(shortened), fifty, sizeof(fifty));
+	CU_ASSERT_FATAL(0 == strcmp(fifty, shortened));
+
+	memset(shortened, -1, sizeof(shortened));
+	shorten_log_name(shortened, sizeof(shortened), fifty_one, sizeof(fifty_one));
+	CU_ASSERT_FATAL(0 == strcmp(fifty_one + 1, shortened));
+}
+
 CUNIT_CI_RUN("Suite_1",
              CUNIT_CI_TEST(test_generate_env),
-             CUNIT_CI_TEST(test_read_line)
+             CUNIT_CI_TEST(test_read_line),
+			 CUNIT_CI_TEST(test_shorten_log_name)
             );

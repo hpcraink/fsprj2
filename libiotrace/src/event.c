@@ -4,7 +4,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -1416,11 +1415,7 @@ void write_metadata_into_influxdb()
 	body[body_length] = '\0'; /*remove last comma*/
 
 	char short_log_name[50];
-	if (log_name_len < sizeof(short_log_name)) {
-		strncpy(short_log_name, log_name, sizeof(short_log_name));
-	} else {
-		strncpy(short_log_name, log_name + (log_name_len - sizeof(short_log_name) + 1), sizeof(short_log_name));
-	}
+	shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
 
 	const char labels[] = "libiotrace_control,jobname=%s,hostname=%s,processid=%u,thread=%u";
 	int body_labels_length = strlen(labels)
@@ -2271,24 +2266,6 @@ void get_basic(struct basic *data)
 }
 
 /**
- * Gets actual time in nano seconds.
- *
- * @return time in nano seconds
- */
-inline u_int64_t gettime(void)
-{
-	struct timespec t;
-	u_int64_t time;
-#ifdef REALTIME
-	clock_gettime(CLOCK_REALTIME, &t);
-#else
-	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-#endif
-	time = (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
-	return time;
-}
-
-/**
  * Prints all structures from buffer to file.
  *
  * Each structure is serialized to json and written to
@@ -2366,11 +2343,7 @@ void write_into_influxdb(struct basic *data)
 	body[body_length] = '\0'; /*remove last comma*/
 
 	char short_log_name[50];
-	if (log_name_len < sizeof(short_log_name)) {
-		strncpy(short_log_name, log_name, sizeof(short_log_name));
-	} else {
-		strncpy(short_log_name, log_name + (log_name_len - sizeof(short_log_name) + 1), sizeof(short_log_name));
-	}
+	shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
 
 	const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u,functionname=%s";
 	int body_labels_length = strlen(labels)

@@ -1,21 +1,17 @@
 #include <string.h>
-#include <stdlib.h>
 
 #include "CUnit/CUnitCI.h"
 
 #define JSMN_STRICT
 #include "../../src/jsmn.h"
 
-/* One function from libiotrace_include_function.h uses
- * free(). In this context free could be wrapped as
- * __real_free. So __real_free() is necessary but should
- * only do what free() does (we don't need a free
- * wrapper to test the structures and the corresponding
- * functions. */
-void __real_free(void *ptr) {
-	free(ptr);
-}
-
+/* libiotrace_include_function.h uses POSIX functions. The functions
+ * are wrapped if WITH_POSIX_IO is defined. In this test file only
+ * the structures and no wrappers are tested. So use of wrappers is
+ * disabled via undef of WITH_POSIX_IO. It's the same for
+ * WITH_ALLOC */
+#undef WITH_POSIX_IO
+#undef WITH_ALLOC
 #include "../../src/libiotrace_include_struct.h"
 #include "../../src/libiotrace_include_function.h"
 

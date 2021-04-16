@@ -14,6 +14,9 @@ target_link_libraries(test_libiotrace_structs PRIVATE cunit)
 add_test(NAME test_libiotrace_structs COMMAND test_libiotrace_structs)
 
 if(WITH_ALLOC)
+	# don't include POSIX wrapper during compile of ../../src/alloc.c
+	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
+
 	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/utils.c)
 	set_target_properties(test_alloc PROPERTIES LINK_FLAGS -W)
 	target_compile_options(test_alloc PRIVATE ${OPTIONS})

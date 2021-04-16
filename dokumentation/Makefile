@@ -70,17 +70,6 @@ $(MAIN).pdf: graphics_pdf $(TEX) $(OBJ)
         done
 	# pdfinfo $(MAIN).pdf
 
-#
-# This may seem funny: For the Summary, we refer to the labels in the main file!
-# Therefore we copy the AUX file.
-#
-summary: $(MAIN).aux
-	cp $(MAIN).aux zusammenfassung_westkaemper.aux
-	$(LATEX) zusammenfassung_westkaemper.tex
-	@if [ -f zusammenfassung_westkaemper.dvi ] ; then \
-	  dvips zusammenfassung_westkaemper.dvi ; \
-	fi
-
 graphics_ps: $(CONVERT_GNUPLOT_EPS) $(CONVERT_PNG_EPS) $(CONVERT_FIG_EPS)
 
 graphics_pdf: $(CONVERT_GNUPLOT_EPS) $(CONVERT_PNG_EPS) $(CONVERT_FIG_PDF) $(CONVERT_EPS_PDF) $(CONVERT_PS_PDF)
@@ -166,5 +155,4 @@ veryclean: clean
 
 distclean maintainer-clean: veryclean
 	$(RM) $(MAIN).pdf $(MAIN).pdf.gz $(MAIN).pdf.bz2 $(MAIN).ps $(MAIN)_tmp.ps $(MAIN).ps.gz $(MAIN).ps.bz2 $(MAIN)_small.ps $(MAIN)_small_duplex.ps
-	$(RM) zusammenfassung_westkaemper.[adilop]*
 

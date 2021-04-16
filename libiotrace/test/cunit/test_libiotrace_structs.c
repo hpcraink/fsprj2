@@ -1,6 +1,8 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "CUnit/CUnitCI.h"
+
 #define JSMN_STRICT
 #include "../../src/jsmn.h"
 

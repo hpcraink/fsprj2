@@ -5,8 +5,8 @@ on: [push]
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
-  LIBIOTRACE_SRC_PATH: ${{github.workspace}}/libiotrace                # ${{github.workspace}}
-  LIBIOTRACE_BUILD_PATH: ${{env.LIBIOTRACE_SRC_PATH}}/build
+  LIBIOTRACE_SRC_PATH: ${{github.workspace}}/libiotrace
+  LIBIOTRACE_BUILD_PATH: ${{github.workspace}}/libiotrace/build
 
 jobs:
   build:

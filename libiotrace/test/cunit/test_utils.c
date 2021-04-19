@@ -116,8 +116,21 @@ static void test_shorten_log_name(void) {
 	CU_ASSERT_FATAL(0 == strcmp(fifty_one + 1, shortened));
 }
 
+#define GETTIME_COUNT 10
+static void test_gettime(void) {
+	u_int64_t time_old = 0;
+	u_int64_t time_new;
+
+	for (int i = 0; i < GETTIME_COUNT; i++) {
+		time_new = gettime();
+		CU_ASSERT_FATAL(time_new > time_old);
+		time_old = time_new;
+	}
+}
+
 CUNIT_CI_RUN("Suite_1",
              CUNIT_CI_TEST(test_generate_env),
              CUNIT_CI_TEST(test_read_line),
-			 CUNIT_CI_TEST(test_shorten_log_name)
+			 CUNIT_CI_TEST(test_shorten_log_name),
+			 CUNIT_CI_TEST(test_gettime)
             );

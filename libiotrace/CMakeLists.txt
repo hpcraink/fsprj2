@@ -52,6 +52,10 @@ set(ENABLE_OUTPUT_VALUES "LOGFILE_AND_INFLUXDB;LOGFILE;INFLUXDB")
 set_property(CACHE ENABLE_OUTPUT PROPERTY STRINGS ${ENABLE_OUTPUT_VALUES})
 
 
+## XXX to be deleted.
+FAIL()
+
+
 # needed for the RTLD_NEXT macro and other GNU functions
 set(OPTIONS
     -D_GNU_SOURCE

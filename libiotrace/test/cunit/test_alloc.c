@@ -7,6 +7,8 @@
 #include "../../src/utils.h"
 
 extern void* WRAP(malloc)(size_t size);
+extern void WRAP(free)(void *ptr) REAL_INIT;
+extern void* WRAP(calloc)(size_t nmemb, size_t size) REAL_INIT;
 
 struct wrapper_status active_wrapper_status;
 char init_done = 0;
@@ -131,7 +133,36 @@ void* call_and_check_malloc(size_t size, char *function_name) {
 	return mem;
 }
 
+void* call_and_check_calloc(size_t nmemb, size_t size, char *function_name) {
+	void *mem;
+	u_int64_t test_start;
+	u_int64_t test_end;
+	int ret_errno;
+
+	test_start = gettime();
+	mem = __test_calloc(nmemb, size);
+	ret_errno = errno;
+	test_end = gettime();
+
+	CU_ASSERT_FATAL(NULL != cached_data);
+
+	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+
+	check_basic(cached_data, function_name, test_start, test_end);
+
+	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+
+	errno = ret_errno;
+	return mem;
+}
+
 void *malloc_ENOMEM(size_t size) {
+	errno = ENOMEM;
+	return NULL;
+}
+
+void *calloc_ENOMEM(size_t nmemb, size_t size) {
 	errno = ENOMEM;
 	return NULL;
 }
@@ -140,8 +171,6 @@ static void test_malloc(void) {
 	char function_name[] = "malloc";
 	void *mem;
 	size_t size;
-	u_int64_t test_start;
-	u_int64_t test_end;
 	int ret_errno;
 	void *(*tmp_malloc)(size_t);
 
@@ -192,5 +221,146 @@ static void test_malloc(void) {
 	free(cached_data);
 }
 
-CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_toggle_alloc_wrapper),
-		CUNIT_CI_TEST(test_alloc_init), CUNIT_CI_TEST(test_malloc));
+static void test_free(void) {
+	void* mem;
+	void* (*tmp_calloc)(size_t nmemb, size_t size);
+
+	// free memory allocated from static calloc buffer
+
+	tmp_calloc = __real_calloc;
+	__real_calloc = NULL;
+	mem = __test_calloc(1, 1);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', 1);
+	__test_free(mem); // should return without free
+	__test_free(mem); // no double free error because nothing is freed
+	__real_calloc = tmp_calloc;
+
+	// free memory allocated with malloc wrapper
+
+	mem = __test_malloc(1);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', 1);
+	__test_free(mem);
+
+	// free memory allocated with malloc
+
+	mem = malloc(1);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', 1);
+	__test_free(mem);
+}
+
+static void test_calloc(void) {
+	char function_name[] = "calloc";
+	char zeros[5];
+	int i;
+	int ret_errno;
+	size_t size;
+	void* mem[STATIC_CALLOC_BUFFER_SIZE + 1];
+	void* (*tmp_calloc)(size_t nmemb, size_t size);
+
+	memset(zeros, 0, sizeof(zeros));
+
+	toggle_alloc_wrapper(function_name, 1);
+	CU_ASSERT_FATAL(1 == active_wrapper_status.calloc);
+
+	// allocate 0 bytes in static calloc buffer
+
+	tmp_calloc = __real_calloc;
+	__real_calloc = NULL;
+	mem[0] = __test_calloc(0, 1);
+	CU_ASSERT_FATAL(NULL == mem[0]);
+	mem[0] = __test_calloc(1, 0);
+	CU_ASSERT_FATAL(NULL == mem[0]);
+	__real_calloc = tmp_calloc;
+
+	// overflow during allocation in static calloc buffer
+
+	tmp_calloc = __real_calloc;
+	__real_calloc = NULL;
+	mem[0] = __test_calloc(-1, 1);
+	CU_ASSERT_FATAL(NULL == mem[0]);
+	CU_ASSERT_FATAL(ENOMEM == errno);
+	mem[0] = __test_calloc(1, -1);
+	CU_ASSERT_FATAL(NULL == mem[0]);
+	CU_ASSERT_FATAL(ENOMEM == errno);
+	__real_calloc = tmp_calloc;
+
+	// allocate all memory available in static calloc buffer
+
+	tmp_calloc = __real_calloc;
+	__real_calloc = NULL;
+	for (i = 0; i <= STATIC_CALLOC_BUFFER_SIZE; i++) {
+		mem[i] = __test_calloc(1, 1);
+		if (NULL == mem[i]) {
+			CU_ASSERT_FATAL(ENOMEM == errno);
+			break; // all memory available was allocated
+		} else {
+			CU_ASSERT_FATAL('\0' == *((char *)mem[i]));
+		}
+	}
+	if (STATIC_CALLOC_BUFFER_SIZE + 1 == i) {
+		CU_FAIL_FATAL("It should not be possible to allocate more memory than STATIC_CALLOC_BUFFER_SIZE.");
+	}
+	for (int l = 0; l < i; l++) {
+		__test_free(mem[l]);
+	}
+	mem[0] = __test_calloc(1, 1);
+	CU_ASSERT_FATAL(NULL == mem[0]);
+	CU_ASSERT_FATAL(ENOMEM == errno);
+	__real_calloc = tmp_calloc;
+
+	// alloc with size 1
+
+	size = 1;
+	mem[0] = call_and_check_calloc(1, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem[0]);
+	CU_ASSERT_FATAL('\0' == *((char *)mem[0]));
+	memset(mem[0], 'm', size);
+	free(mem[0]);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+
+	// alloc with size 5
+
+	size = 5;
+	mem[0] = call_and_check_calloc(1, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem[0]);
+	CU_ASSERT_FATAL(0 == memcmp(mem[0], zeros, size));
+	memset(mem[0], 'm', size);
+	free(mem[0]);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+
+	// alloc with size 5 returns ENOMEM
+
+	size = 5;
+	tmp_calloc = __real_calloc;
+	__real_calloc = calloc_ENOMEM;
+	mem[0] = call_and_check_calloc(1, size, function_name);
+	ret_errno = errno;
+	__real_calloc = tmp_calloc;
+	CU_ASSERT_FATAL(NULL == mem[0]);
+
+	CU_ASSERT_FATAL(error == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL != cached_data->return_state_detail);
+	CU_ASSERT_FATAL(ret_errno == cached_data->return_state_detail->errno_value);
+	CU_ASSERT_FATAL(0 == strcmp(strerror(ret_errno), cached_data->return_state_detail->errno_text));
+
+	free(cached_data);
+}
+
+CUNIT_CI_RUN("Suite_1",
+		CUNIT_CI_TEST(test_toggle_alloc_wrapper),
+		CUNIT_CI_TEST(test_alloc_init),
+		CUNIT_CI_TEST(test_malloc),
+		CUNIT_CI_TEST(test_free),
+		CUNIT_CI_TEST(test_calloc)
+		);

@@ -12,8 +12,6 @@
 #include "libiotrace_include_struct.h"
 #include "wrapper_name.h"
 
-#define STATIC_CALLOC_BUFFER_SIZE 1024
-
 /* must be static because calloc has to return zero initialized memory
  * and static variables are zero initialized */
 static char static_calloc_buffer[STATIC_CALLOC_BUFFER_SIZE];

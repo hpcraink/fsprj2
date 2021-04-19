@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include "wrapper_defines.h"
 
+#define STATIC_CALLOC_BUFFER_SIZE 1024
+
 /* Function pointers for  alloc functions */
 
 BEGIN_C_DECLS

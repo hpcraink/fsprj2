@@ -7,8 +7,12 @@
 #include "../../src/utils.h"
 
 extern void* WRAP(malloc)(size_t size);
-extern void WRAP(free)(void *ptr) REAL_INIT;
-extern void* WRAP(calloc)(size_t nmemb, size_t size) REAL_INIT;
+extern void WRAP(free)(void *ptr);
+extern void* WRAP(calloc)(size_t nmemb, size_t size);
+extern void* WRAP(realloc)(void *ptr, size_t size);
+#ifdef HAVE_REALLOCARRAY
+extern void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size);
+#endif
 
 struct wrapper_status active_wrapper_status;
 char init_done = 0;
@@ -17,7 +21,7 @@ static char hostname[] = "test-hostname";
 
 extern char alloc_init_done;
 
-static struct basic *cached_data;
+static struct basic *cached_data = NULL;
 
 void init_process() {
 	// is called from wrappers if init_done = 0
@@ -157,6 +161,56 @@ void* call_and_check_calloc(size_t nmemb, size_t size, char *function_name) {
 	return mem;
 }
 
+void* call_and_check_realloc(void *ptr, size_t size, char *function_name) {
+	void *mem;
+	u_int64_t test_start;
+	u_int64_t test_end;
+	int ret_errno;
+
+	test_start = gettime();
+	mem = __test_realloc(ptr, size);
+	ret_errno = errno;
+	test_end = gettime();
+
+	CU_ASSERT_FATAL(NULL != cached_data);
+
+	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+
+	check_basic(cached_data, function_name, test_start, test_end);
+
+	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+
+	errno = ret_errno;
+	return mem;
+}
+
+#ifdef HAVE_REALLOCARRAY
+void* call_and_check_reallocarray(void *ptr, size_t nmemb, size_t size, char *function_name) {
+	void *mem;
+	u_int64_t test_start;
+	u_int64_t test_end;
+	int ret_errno;
+
+	test_start = gettime();
+	mem = __test_reallocarray(ptr, nmemb, size);
+	ret_errno = errno;
+	test_end = gettime();
+
+	CU_ASSERT_FATAL(NULL != cached_data);
+
+	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+
+	check_basic(cached_data, function_name, test_start, test_end);
+
+	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+
+	errno = ret_errno;
+	return mem;
+}
+#endif
+
 void *malloc_ENOMEM(size_t size) {
 	errno = ENOMEM;
 	return NULL;
@@ -166,6 +220,18 @@ void *calloc_ENOMEM(size_t nmemb, size_t size) {
 	errno = ENOMEM;
 	return NULL;
 }
+
+void *realloc_ENOMEM(void * ptr, size_t nmemb) {
+	errno = ENOMEM;
+	return NULL;
+}
+
+#ifdef HAVE_REALLOCARRAY
+void *reallocarray_ENOMEM(void * ptr, size_t nmemb, size_t size) {
+	errno = ENOMEM;
+	return NULL;
+}
+#endif
 
 static void test_malloc(void) {
 	char function_name[] = "malloc";
@@ -189,6 +255,7 @@ static void test_malloc(void) {
 	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
 
 	free(cached_data);
+	cached_data = NULL;
 
 	// alloc with size 5
 
@@ -202,6 +269,7 @@ static void test_malloc(void) {
 	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
 
 	free(cached_data);
+	cached_data = NULL;
 
 	// alloc with size 5 returns ENOMEM
 
@@ -219,6 +287,7 @@ static void test_malloc(void) {
 	CU_ASSERT_FATAL(0 == strcmp(strerror(ret_errno), cached_data->return_state_detail->errno_text));
 
 	free(cached_data);
+	cached_data = NULL;
 }
 
 static void test_free(void) {
@@ -267,32 +336,40 @@ static void test_calloc(void) {
 
 	// allocate 0 bytes in static calloc buffer
 
+	cached_data = NULL;
 	tmp_calloc = __real_calloc;
 	__real_calloc = NULL;
 	mem[0] = __test_calloc(0, 1);
 	CU_ASSERT_FATAL(NULL == mem[0]);
+	CU_ASSERT_FATAL(NULL == cached_data);
 	mem[0] = __test_calloc(1, 0);
 	CU_ASSERT_FATAL(NULL == mem[0]);
+	CU_ASSERT_FATAL(NULL == cached_data);
 	__real_calloc = tmp_calloc;
 
 	// overflow during allocation in static calloc buffer
 
+	cached_data = NULL;
 	tmp_calloc = __real_calloc;
 	__real_calloc = NULL;
 	mem[0] = __test_calloc(-1, 1);
 	CU_ASSERT_FATAL(NULL == mem[0]);
 	CU_ASSERT_FATAL(ENOMEM == errno);
+	CU_ASSERT_FATAL(NULL == cached_data);
 	mem[0] = __test_calloc(1, -1);
 	CU_ASSERT_FATAL(NULL == mem[0]);
 	CU_ASSERT_FATAL(ENOMEM == errno);
+	CU_ASSERT_FATAL(NULL == cached_data);
 	__real_calloc = tmp_calloc;
 
 	// allocate all memory available in static calloc buffer
 
+	cached_data = NULL;
 	tmp_calloc = __real_calloc;
 	__real_calloc = NULL;
 	for (i = 0; i <= STATIC_CALLOC_BUFFER_SIZE; i++) {
 		mem[i] = __test_calloc(1, 1);
+		CU_ASSERT_FATAL(NULL == cached_data);
 		if (NULL == mem[i]) {
 			CU_ASSERT_FATAL(ENOMEM == errno);
 			break; // all memory available was allocated
@@ -305,10 +382,12 @@ static void test_calloc(void) {
 	}
 	for (int l = 0; l < i; l++) {
 		__test_free(mem[l]);
+		CU_ASSERT_FATAL(NULL == cached_data);
 	}
 	mem[0] = __test_calloc(1, 1);
 	CU_ASSERT_FATAL(NULL == mem[0]);
 	CU_ASSERT_FATAL(ENOMEM == errno);
+	CU_ASSERT_FATAL(NULL == cached_data);
 	__real_calloc = tmp_calloc;
 
 	// alloc with size 1
@@ -324,6 +403,7 @@ static void test_calloc(void) {
 	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
 
 	free(cached_data);
+	cached_data = NULL;
 
 	// alloc with size 5
 
@@ -338,6 +418,7 @@ static void test_calloc(void) {
 	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
 
 	free(cached_data);
+	cached_data = NULL;
 
 	// alloc with size 5 returns ENOMEM
 
@@ -355,12 +436,200 @@ static void test_calloc(void) {
 	CU_ASSERT_FATAL(0 == strcmp(strerror(ret_errno), cached_data->return_state_detail->errno_text));
 
 	free(cached_data);
+	cached_data = NULL;
 }
+
+static void test_realloc(void) {
+	char function_name[] = "realloc";
+	void *mem;
+	void *tmp_mem;
+	size_t size;
+	int ret_errno;
+	void *(*tmp_realloc)(void *, size_t);
+
+	toggle_alloc_wrapper(function_name, 1);
+	CU_ASSERT_FATAL(1 == active_wrapper_status.realloc);
+
+	// new allocation with size 1
+
+	size = 1;
+	mem = call_and_check_realloc(NULL, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', size);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// resize allocation to size 5
+
+	size = 5;
+	mem = call_and_check_realloc(mem, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', size);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// resize allocation to size 3
+
+	size = 3;
+	mem = call_and_check_realloc(mem, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', size);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// resize allocation to size 10 returns ENOMEM
+
+	size = 10;
+	tmp_realloc = __real_realloc;
+	__real_realloc = realloc_ENOMEM;
+	mem = call_and_check_realloc(mem, size, function_name);
+	ret_errno = errno;
+	__real_realloc = tmp_realloc;
+	CU_ASSERT_FATAL(NULL == mem);
+
+	CU_ASSERT_FATAL(error == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL != cached_data->return_state_detail);
+	CU_ASSERT_FATAL(ret_errno == cached_data->return_state_detail->errno_value);
+	CU_ASSERT_FATAL(0 == strcmp(strerror(ret_errno), cached_data->return_state_detail->errno_text));
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// free memory
+
+	size = 0;
+	cached_data = NULL;
+	tmp_mem = call_and_check_realloc(mem, size, function_name);
+	CU_ASSERT_FATAL(NULL == mem || tmp_mem == mem);
+	if (NULL != mem) {
+		/* If the size of the space requested is zero, the behavior is
+		 * implementation-defined: either a null pointer is returned,
+		 * or the behavior is as if the size were some nonzero value,
+		 * except that the returned pointer shall not be used to access
+		 * an object (7.20.3.1 for C11, 7.22.3.1 for C1x) */
+		free(mem);
+	}
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+}
+
+#ifdef HAVE_REALLOCARRAY
+static void test_reallocarray(void) {
+	char function_name[] = "reallocarray";
+	void *mem;
+	void *tmp_mem;
+	size_t size;
+	int ret_errno;
+	void *(*tmp_reallocarray)(void *, size_t, size_t);
+
+	toggle_alloc_wrapper(function_name, 1);
+	CU_ASSERT_FATAL(1 == active_wrapper_status.reallocarray);
+
+	// new allocation with size 1
+
+	size = 1;
+	mem = call_and_check_reallocarray(NULL, 1, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', size);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// resize allocation to size 5
+
+	size = 5;
+	mem = call_and_check_reallocarray(mem, 1, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', size);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// resize allocation to size 3
+
+	size = 3;
+	mem = call_and_check_reallocarray(mem, 1, size, function_name);
+	CU_ASSERT_FATAL(NULL != mem);
+	memset(mem, 'm', size);
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// resize allocation to size 10 returns ENOMEM
+
+	size = 10;
+	tmp_reallocarray = __real_reallocarray;
+	__real_reallocarray = reallocarray_ENOMEM;
+	mem = call_and_check_reallocarray(mem, 1, size, function_name);
+	ret_errno = errno;
+	__real_reallocarray = tmp_reallocarray;
+	CU_ASSERT_FATAL(NULL == mem);
+
+	CU_ASSERT_FATAL(error == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL != cached_data->return_state_detail);
+	CU_ASSERT_FATAL(ret_errno == cached_data->return_state_detail->errno_value);
+	CU_ASSERT_FATAL(0 == strcmp(strerror(ret_errno), cached_data->return_state_detail->errno_text));
+
+	free(cached_data);
+	cached_data = NULL;
+
+	// free memory
+
+	size = 0;
+	cached_data = NULL;
+	tmp_mem = call_and_check_reallocarray(mem, 1, size, function_name);
+	CU_ASSERT_FATAL(NULL == mem || tmp_mem == mem);
+	if (NULL != mem) {
+		/* If the size of the space requested is zero, the behavior is
+		 * implementation-defined: either a null pointer is returned,
+		 * or the behavior is as if the size were some nonzero value,
+		 * except that the returned pointer shall not be used to access
+		 * an object (7.20.3.1 for C11, 7.22.3.1 for C1x) */
+		free(mem);
+	}
+
+	CU_ASSERT_FATAL(ok == cached_data->return_state);
+	CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+	free(cached_data);
+	cached_data = NULL;
+}
+#endif
 
 CUNIT_CI_RUN("Suite_1",
 		CUNIT_CI_TEST(test_toggle_alloc_wrapper),
 		CUNIT_CI_TEST(test_alloc_init),
 		CUNIT_CI_TEST(test_malloc),
 		CUNIT_CI_TEST(test_free),
-		CUNIT_CI_TEST(test_calloc)
+		CUNIT_CI_TEST(test_calloc),
+		CUNIT_CI_TEST(test_realloc)
+#ifdef HAVE_REALLOCARRAY
+		,
+		CUNIT_CI_TEST(test_reallocarray)
+#endif
 		);

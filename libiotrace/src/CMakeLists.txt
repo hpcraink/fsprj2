@@ -133,6 +133,8 @@ check_symbol_exists(dlmopen "dlfcn.h" HAVE_DLMOPEN)
 
 check_symbol_exists(getmntent_r "mntent.h" HAVE_GETMNTENT_R)
 
+check_symbol_exists(reallocarray "stdlib.h" HAVE_REALLOCARRAY)
+
 #ToDo: right place to search for off64_t?
 check_symbol_exists(off64_t "stdio.h,sys/types.h" HAVE_OFF64_T)
 check_symbol_exists(O_CLOEXEC "fcntl.h" HAVE_O_CLOEXEC)

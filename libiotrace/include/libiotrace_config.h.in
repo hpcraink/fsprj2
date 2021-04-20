@@ -374,6 +374,9 @@
 /* Define to 1 if system supports getmntent_r(). */
 #cmakedefine HAVE_GETMNTENT_R 1
 
+/* Define to 1 if system supports reallocarray(). */
+#cmakedefine HAVE_REALLOCARRAY 1
+
 /* Define to 1 if system supports Lmid_t. */
 #cmakedefine HAVE_LMID_T 1
 

@@ -28,5 +28,4 @@ jobs:
 
     - name: Test (CUnit)
       shell: bash
-      # -C $LIBIOTRACE_BUILD_PATH 
-      run: make test
+      run: make -C $LIBIOTRACE_BUILD_PATH test; cat /home/runner/work/fsprj2/fsprj2/libiotrace/build/Testing/Temporary/LastTest.log

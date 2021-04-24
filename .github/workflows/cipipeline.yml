@@ -3,8 +3,6 @@ name: CI Pipeline
 on: [push, pull_request]
 
 env:
-  BUILD_OS_RELEASE: 'ubuntu-18.04'
-
   LIBIOTRACE_BUILD_TYPE: Debug
   LIBIOTRACE_BASE_PATH: '${{github.workspace}}/libiotrace'
   LIBIOTRACE_BUILD_PATH: '${{github.workspace}}/libiotrace/build'
@@ -15,7 +13,7 @@ jobs:
   # --- libiotrace ---
   build_libiotrace:
     name: Build libiotrace
-    runs-on: ${{env.BUILD_OS_RELEASE}}
+    runs-on: 'ubuntu-20.04'
     steps:
     - uses: actions/checkout@v2
 
@@ -40,7 +38,7 @@ jobs:
   # --- IOTrace_Analyze ---
   build_iotraceanalyze:
     name: Build IOTrace_Analyze
-    runs-on: ${{env.BUILD_OS_RELEASE}}
+    runs-on: 'ubuntu-20.04'
     steps:
       - uses: actions/checkout@v2
 

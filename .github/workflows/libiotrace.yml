@@ -28,4 +28,5 @@ jobs:
 
     - name: Test (CUnit)
       shell: bash
-      run: make -C $LIBIOTRACE_BUILD_PATH test
+      # -C $LIBIOTRACE_BUILD_PATH 
+      run: make test

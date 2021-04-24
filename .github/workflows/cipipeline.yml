@@ -3,15 +3,19 @@ name: CI Pipeline
 on: [push, pull_request]
 
 env:
+  BUILD_OS_RELEASE: 'ubuntu-18.04'
+
   LIBIOTRACE_BUILD_TYPE: Debug
   LIBIOTRACE_BASE_PATH: '${{github.workspace}}/libiotrace'
   LIBIOTRACE_BUILD_PATH: '${{github.workspace}}/libiotrace/build'
+
+  IOTRACEANALYZE_BASE_PATH: '${{github.workspace}}/IOTrace_Analyze'
 
 jobs:
   # --- libiotrace ---
   build_libiotrace:
     name: Build libiotrace
-    runs-on: ubuntu-20.04
+    runs-on: ${{env.BUILD_OS_RELEASE}}
     steps:
     - uses: actions/checkout@v2
 
@@ -23,7 +27,7 @@ jobs:
       shell: bash
       run: cmake -B $LIBIOTRACE_BUILD_PATH -S $LIBIOTRACE_BASE_PATH -DCMAKE_BUILD_TYPE=$LIBIOTRACE_BUILD_TYPE
 
-    - name: Build
+    - name: Build w/ CMake
       shell: bash
       run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
 
@@ -33,4 +37,18 @@ jobs:
 #      run: make -C $LIBIOTRACE_BUILD_PATH test
 
 
-  # --- TODO: IOTrace_Analyze ---
+  # --- IOTrace_Analyze ---
+  build_iotraceanalyze:
+    name: Build IOTrace_Analyze
+    runs-on: ${{env.BUILD_OS_RELEASE}}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Build w/ Maven
+        run: mvn -f $IOTRACEANALYZE_BASE_PATH --batch-mode --update-snapshots verify

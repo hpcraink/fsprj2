@@ -17,6 +17,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    # - Clean
+    - name: Cleanup
+      run: rm -rf $LIBIOTRACE_BUILD_PATH
+
+    # - Build
     - name: Create Build Environment
       # Use out-of-source build
       run: cmake -E make_directory $LIBIOTRACE_BUILD_PATH
@@ -30,9 +35,10 @@ jobs:
       run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
 
 
-    # Install dependencies
-    - name: Install CUnit
-      run: sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
+    # - Test
+#    # Install dependencies
+#    - name: Install CUnit
+#      run: sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
 
     - name: Test (CUnit)
       shell: bash
@@ -52,5 +58,5 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Build + test w/ Maven
+      - name: Build + Test w/ Maven
         run: mvn -f $IOTRACEANALYZE_BASE_PATH --batch-mode --update-snapshots verify

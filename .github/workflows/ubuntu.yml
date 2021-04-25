@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI Pipeline [Ubuntu]
 
 on: [push, pull_request]
 
@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # - Clean
+    # - Clean   -> Unnecessary ??
     - name: Cleanup
       run: rm -rf $LIBIOTRACE_BUILD_PATH
 
@@ -40,9 +40,9 @@ jobs:
 #    - name: Install CUnit
 #      run: sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
 
-    - name: Test (CUnit)
-      shell: bash
-      run: make -C $LIBIOTRACE_BUILD_PATH test
+#    - name: Test (CUnit)
+#      shell: bash
+#      run: make -C $LIBIOTRACE_BUILD_PATH test
 
 
   # --- IOTrace_Analyze ---

@@ -12,8 +12,8 @@ env:
 jobs:
   # --- libiotrace ---
   build_libiotrace:
-    name: Build libiotrace
-    runs-on: 'ubuntu-20.04'
+    name: libiotrace
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
 
@@ -30,15 +30,19 @@ jobs:
       run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
 
 
-#    - name: Test (CUnit)
-#      shell: bash
-#      run: make -C $LIBIOTRACE_BUILD_PATH test
+    # Install dependencies
+    - name: Install CUnit
+      run: sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
+
+    - name: Test (CUnit)
+      shell: bash
+      run: make -C $LIBIOTRACE_BUILD_PATH test
 
 
   # --- IOTrace_Analyze ---
-  build_iotraceanalyze:
-    name: Build IOTrace_Analyze
-    runs-on: 'ubuntu-20.04'
+  build_test_iotraceanalyze:
+    name: IOTrace_Analyze
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
@@ -48,5 +52,5 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
-      - name: Build w/ Maven
+      - name: Build + test w/ Maven
         run: mvn -f $IOTRACEANALYZE_BASE_PATH --batch-mode --update-snapshots verify

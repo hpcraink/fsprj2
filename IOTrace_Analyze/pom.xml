@@ -78,6 +78,7 @@
 			</snapshots>
 		</repository>
 		<repository>
+		<!-- as explained in https://netbeans.apache.org/about/oracle-transition.html -->
 			<id>netbeans</id>
 			<name>NetBeans</name>
 			<url>http://netbeans.apidesign.org/maven2/</url>

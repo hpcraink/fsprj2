@@ -1,0 +1,70 @@
+name: CI Pipeline [Ubuntu]
+
+on: [push, pull_request]
+
+env:
+  LIBIOTRACE_BUILD_TYPE: Debug
+  LIBIOTRACE_BASE_PATH: '${{github.workspace}}/libiotrace'
+  LIBIOTRACE_BUILD_PATH: '${{github.workspace}}/libiotrace/build'
+
+  IOTRACEANALYZE_BASE_PATH: '${{github.workspace}}/IOTrace_Analyze'
+
+jobs:
+  # --- libiotrace ---
+  build_libiotrace:
+    name: libiotrace
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+#      with:                                  # Required for CUnit tests --> doesn't work ?
+#        submodules: recursive
+    # >> WORKAROUND <<
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        cd $LIBIOTRACE_BASE_PATH
+        git rm --cached ext/cunit
+        rm -rf ext
+        git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
+
+
+    # - Clean (unnecessary ??) + Build -
+    - name: Cleanup
+      shell: bash
+      run: rm -rf $LIBIOTRACE_BUILD_PATH
+
+    - name: Create Build Environment
+      shell: bash
+      # Use out-of-source build
+      run: cmake -E make_directory $LIBIOTRACE_BUILD_PATH
+
+    - name: Configure CMake
+      shell: bash
+      run: cmake -B $LIBIOTRACE_BUILD_PATH -S $LIBIOTRACE_BASE_PATH -DCMAKE_BUILD_TYPE=$LIBIOTRACE_BUILD_TYPE
+
+    - name: Build w/ CMake
+      shell: bash
+      run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
+
+    # - Test -
+    - name: Test (CUnit)
+      shell: bash
+      run: make -C $LIBIOTRACE_BUILD_PATH test
+
+
+  # --- IOTrace_Analyze ---
+  build_test_iotraceanalyze:
+    name: IOTrace_Analyze
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Build + Test w/ Maven
+        shell: bash
+        run: mvn -f $IOTRACEANALYZE_BASE_PATH --batch-mode --update-snapshots verify

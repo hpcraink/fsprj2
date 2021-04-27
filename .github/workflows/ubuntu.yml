@@ -60,7 +60,8 @@ jobs:
         with:
           repo_token: "${{secrets.GITHUB_TOKEN}}"
           prerelease: false
-          title: "libiotrace-${{github.run_number}}"
+          automatic_release_tag: "latest"
+          title: "libiotrace-#${{github.run_number}}"
           files: |
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace.so
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so

@@ -33,19 +33,19 @@ jobs:
       - name: Cleanup
         shell: bash
         run: rm -rf $LIBIOTRACE_BUILD_PATH
-  
+
       - name: Create Build Environment
         shell: bash
         run: cmake -E make_directory $LIBIOTRACE_BUILD_PATH
-  
+
       - name: Configure CMake
         shell: bash
         run: cmake -B $LIBIOTRACE_BUILD_PATH -S $LIBIOTRACE_BASE_PATH -DCMAKE_BUILD_TYPE=$LIBIOTRACE_BUILD_TYPE
-  
+
       - name: Build w/ CMake
         shell: bash
         run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
-  
+
       # - Test -
       - name: Test (CUnit)
         shell: bash
@@ -68,6 +68,7 @@ jobs:
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_static.a
         name: Create Release
 
+
   # --- IOTrace_Analyze ---
   iotraceanalyze:
     name: IOTrace_Analyze
@@ -81,6 +82,7 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
+      # - Build + Test -
       - name: Build + Test w/ Maven
         shell: bash
         run: mvn -f $IOTRACEANALYZE_BASE_PATH --batch-mode --update-snapshots verify

@@ -1,5 +1,14 @@
 enable_testing()
 
+# - CTest config
+# if(${CMAKE_VERSION} VERSION_LESS "3.12.0") 		# Doesn't work (https://stackoverflow.com/a/5757256) ? 
+#   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
+# else()
+#   set(CTEST_OUTPUT_ON_FAILURE=1) 	# this is for new versions of cmake
+# endif()
+# - CTest config
+
+
 add_executable(test_utils test_utils.c ../../src/utils.c)
 set_target_properties(test_utils PROPERTIES LINK_FLAGS -W)
 target_link_libraries(test_utils PRIVATE cunit)

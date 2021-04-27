@@ -59,9 +59,8 @@ jobs:
       - uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{secrets.GITHUB_TOKEN}}"
-          automatic_release_tag: "latest"
           prerelease: false
-          title: "libiotrace"
+          title: "libiotrace-${{github.run_number}}"
           files: |
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace.so
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so

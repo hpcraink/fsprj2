@@ -3,7 +3,7 @@ name: CI Pipeline [Ubuntu]
 on: [push, pull_request]
 
 env:
-  LIBIOTRACE_BUILD_TYPE: Debug
+  LIBIOTRACE_BUILD_TYPE: Release
   LIBIOTRACE_BASE_PATH: '${{github.workspace}}/libiotrace'
   LIBIOTRACE_BUILD_PATH: '${{github.workspace}}/libiotrace/build'
 
@@ -11,53 +11,66 @@ env:
 
 jobs:
   # --- libiotrace ---
-  build_libiotrace:
+  libiotrace:
     name: libiotrace
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
-       # Required for CUnit tests --> doesn't work ?
-#      with:
-#        submodules: recursive
-    # >> WORKAROUND <<
-    - name: Checkout submodules
-      shell: bash
-      run: |
-        cd $LIBIOTRACE_BASE_PATH
-        git rm --cached ext/cunit
-        rm -rf ext
-        git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
+      - uses: actions/checkout@v2
+         # Required for CUnit tests --> doesn't work ?
+#        with:
+#          submodules: recursive
+      # >> WORKAROUND <<
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          cd $LIBIOTRACE_BASE_PATH
+          git rm --cached ext/cunit
+          rm -rf ext
+          git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
 
-    # - Clean (unnecessary ??) + Build -
-    - name: Cleanup
-      shell: bash
-      run: rm -rf $LIBIOTRACE_BUILD_PATH
-
-    - name: Create Build Environment
-      shell: bash
-      run: cmake -E make_directory $LIBIOTRACE_BUILD_PATH
-
-    - name: Configure CMake
-      shell: bash
-      run: cmake -B $LIBIOTRACE_BUILD_PATH -S $LIBIOTRACE_BASE_PATH -DCMAKE_BUILD_TYPE=$LIBIOTRACE_BUILD_TYPE
-
-    - name: Build w/ CMake
-      shell: bash
-      run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
-
-    # - Test -
-    - name: Test (CUnit)
-      shell: bash
-      # Executes only tests w/ 'test_' prefix
-      run: make -C $LIBIOTRACE_BUILD_PATH test ARGS="-R '^test_'"
-      # >> WORKAROUND <<: Not feasible w/ cmake (see 'libiotrace/test/cunit/CMakeLists.txt')
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
+      # - Clean (unnecessary ??) + Build -
+      - name: Cleanup
+        shell: bash
+        run: rm -rf $LIBIOTRACE_BUILD_PATH
+  
+      - name: Create Build Environment
+        shell: bash
+        run: cmake -E make_directory $LIBIOTRACE_BUILD_PATH
+  
+      - name: Configure CMake
+        shell: bash
+        run: cmake -B $LIBIOTRACE_BUILD_PATH -S $LIBIOTRACE_BASE_PATH -DCMAKE_BUILD_TYPE=$LIBIOTRACE_BUILD_TYPE
+  
+      - name: Build w/ CMake
+        shell: bash
+        run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
+  
+      # - Test -
+      - name: Test (CUnit)
+        shell: bash
+        # Executes only tests w/ 'test_' prefix
+        run: make -C $LIBIOTRACE_BUILD_PATH test ARGS="-R '^test_'"
+        # >> WORKAROUND <<: Not feasible w/ cmake (see 'libiotrace/test/cunit/CMakeLists.txt')
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+      
+      # - Release -
+      - name: Create Release
+      - uses: "marvinpinto/action-automatic-releases@latest"
+          with:
+            repo_token: "${{secrets.GITHUB_TOKEN}}"
+            automatic_release_tag: "latest"
+            prerelease: false
+            title: "libiotrace"
+            files: |
+              ${LIBIOTRACE_BUILD_PATH}/src/libiotrace.so
+              ${LIBIOTRACE_BUILD_PATH}/src/libiotrace_shared.so
+              ${LIBIOTRACE_BUILD_PATH}/src/libiotrace_static.a
 
 
   # --- IOTrace_Analyze ---
-  build_test_iotraceanalyze:
+  iotraceanalyze:
     name: IOTrace_Analyze
     runs-on: ubuntu-20.04
     steps:

@@ -63,9 +63,9 @@ jobs:
           prerelease: false
           title: "libiotrace"
           files: |
-            ${LIBIOTRACE_BUILD_PATH}/src/libiotrace.so
-            ${LIBIOTRACE_BUILD_PATH}/src/libiotrace_shared.so
-            ${LIBIOTRACE_BUILD_PATH}/src/libiotrace_static.a
+            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace.so
+            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so
+            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_static.a
         name: Create Release
 
   # --- IOTrace_Analyze ---

@@ -66,6 +66,7 @@ jobs:
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace.so
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_static.a
+            ${{env.LIBIOTRACE_BASE_PATH}}/include/libiotrace.h
         name: Create Release
 
 

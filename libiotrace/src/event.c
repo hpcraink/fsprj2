@@ -1323,6 +1323,8 @@ int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
  */
 #ifdef ENABLE_INPUT
 int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
+	// TODO: parser will call callback multiple times for partial messages:
+	//       if (url_chunk) { build TLS_URL } else
 	if (parser->method == HTTP_POST)
 	{
 		char *slash1 = NULL;

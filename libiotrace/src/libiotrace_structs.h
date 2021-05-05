@@ -1,8 +1,6 @@
 #include <limits.h>
 #include <net/if.h>
 
-#include "libiotrace_defines.h"
-
 /* defines to compile only necessary functions */
 #define LOGFILE_AND_INFLUXDB 0
 #define LOGFILE 1
@@ -18,6 +16,8 @@
 #  undef IOTRACE_ENABLE_LOGFILE
 #  define IOTRACE_ENABLE_INFLUXDB
 #endif
+
+#include "libiotrace_defines.h"
 
 #ifdef LIBIOTRACE_STRUCT
 

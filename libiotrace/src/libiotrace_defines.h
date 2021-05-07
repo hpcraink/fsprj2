@@ -626,7 +626,8 @@ int libiotrace_struct_write(char* libiotrace_struct_buf, size_t libiotrace_struc
                                                                + 1) /* for sign (-) */
 #  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(int) \
                                                                 + 1) /* for sign (-) */
-#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(pid_t))
+#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(pid_t) \
+                                                                       + 1) /* for sign (-) */
 #  define LIBIOTRACE_STRUCT_CSTRING(name,length) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, (length - 1) /* -1 trailing null character */ \
                                                                           * 6  /* *6 for escaping (\u00ff) */ \
                                                                           + 2) /* +2 quotation marks (for value) */
@@ -1272,7 +1273,7 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 #  define LIBIOTRACE_STRUCT_ENUM(type, name)
 #  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %u, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length)

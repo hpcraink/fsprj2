@@ -17,7 +17,10 @@ add_test(NAME test_utils COMMAND test_utils)
 
 add_executable(test_libiotrace_structs test_libiotrace_structs.c)
 set_target_properties(test_libiotrace_structs PROPERTIES LINK_FLAGS -W)
+#list(APPEND OPTIONS -fsanitize=undefined)
 target_compile_options(test_libiotrace_structs PRIVATE ${OPTIONS})
+#list(REMOVE_ITEM OPTIONS -fsanitize=undefined)
+#target_link_libraries(test_libiotrace_structs PRIVATE cunit ubsan)
 target_link_libraries(test_libiotrace_structs PRIVATE cunit)
 
 add_test(NAME test_libiotrace_structs COMMAND test_libiotrace_structs)

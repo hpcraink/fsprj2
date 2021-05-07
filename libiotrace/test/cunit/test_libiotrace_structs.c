@@ -44,7 +44,7 @@ static void fill_string(char *dest, const ssize_t len, const char repeat) {
 static void fill_number(void *number, const ssize_t len) {
 	const unsigned char filler = -1;
 	for (ssize_t i = 0; i < len; i++) {
-		*((unsigned char*) number) = filler;
+		*(((unsigned char*) number) + i) = filler;
 	}
 }
 
@@ -85,7 +85,8 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 	} else {
 		CU_ASSERT_FATAL(
 				data->void_p_enum_file_type == copy->void_p_enum_file_type);
-		if (void_p_enum_file_type_file_descriptor == data->void_p_enum_file_type) {
+		if (void_p_enum_file_type_file_descriptor
+				== data->void_p_enum_file_type) {
 			CU_ASSERT_FATAL(
 					((struct file_descriptor* )(data->file_type))->descriptor
 							== ((struct file_descriptor* )(copy->file_type))->descriptor);
@@ -106,18 +107,26 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 	}
 }
 
-static void check_json_string(const char *print_buf, const jsmntok_t *token, const char* string) {
+static void check_json_string(const char *print_buf, const jsmntok_t *token,
+		const char *string) {
 	CU_ASSERT_FATAL(token->type == JSMN_STRING);
 	CU_ASSERT_FATAL(strlen(string) == token->end - token->start);
-	CU_ASSERT_FATAL(0 == strncmp(print_buf + token->start, string, token->end - token->start));
+	CU_ASSERT_FATAL(
+			0
+					== strncmp(print_buf + token->start, string,
+							token->end - token->start));
 }
 
-static void check_json_number(const char *print_buf, const jsmntok_t *token, const long long int number) {
+static void check_json_number(const char *print_buf, const jsmntok_t *token,
+		const long long int number, char is_unsigned) {
+	long long int value_number;
+
 	CU_ASSERT_FATAL(token->type == JSMN_PRIMITIVE);
 
 	// check if it's a number not a other primitive (like true/false or null)
 	char start_char = *(print_buf + token->start);
-	CU_ASSERT_FATAL('-' == start_char || ('0' <= start_char && '9' >= start_char));
+	CU_ASSERT_FATAL(
+			'-' == start_char || ('0' <= start_char && '9' >= start_char));
 
 	// copy json number to new '\0' terminated string
 	ssize_t len = token->end - token->start;
@@ -127,7 +136,11 @@ static void check_json_number(const char *print_buf, const jsmntok_t *token, con
 
 	// convert string to long long int
 	char *endptr;
-	long long int value_number = strtoll(value_string, &endptr, 10);
+	if (is_unsigned) {
+		value_number = strtoull(value_string, &endptr, 10);
+	} else {
+		value_number = strtoll(value_string, &endptr, 10);
+	}
 
 	// check if each char in string was a valid digit
 	CU_ASSERT_FATAL('\0' == *endptr);
@@ -136,17 +149,23 @@ static void check_json_number(const char *print_buf, const jsmntok_t *token, con
 	CU_ASSERT_FATAL(number == value_number);
 }
 
-static void check_json_enum_read_write_state(const char *print_buf, const jsmntok_t *token, enum read_write_state read_write_state) {
+static void check_json_enum_read_write_state(const char *print_buf,
+		const jsmntok_t *token, enum read_write_state read_write_state) {
 	CU_ASSERT_FATAL(token->type == JSMN_STRING);
 
 	char buf[libiotrace_struct_max_size_enum_read_write_state() + 1];
-	libiotrace_struct_print_enum_read_write_state(buf, sizeof(buf), &read_write_state);
+	libiotrace_struct_print_enum_read_write_state(buf, sizeof(buf),
+			&read_write_state);
 
 	// compare values with enclosing '"'
-	CU_ASSERT_FATAL(0 == strncmp(print_buf + token->start - 1, buf, token->end - token->start + 2));
+	CU_ASSERT_FATAL(
+			0
+					== strncmp(print_buf + token->start - 1, buf,
+							token->end - token->start + 2));
 }
 
-static void check_basic_print(const struct basic *data, const char *print_buf, const int len) {
+static void check_basic_print(const struct basic *data, const char *print_buf,
+		const int len) {
 	jsmn_parser parser;
 	jsmn_init(&parser);
 	int token_count = jsmn_parse(&parser, print_buf, len, NULL, 0);
@@ -164,28 +183,31 @@ static void check_basic_print(const struct basic *data, const char *print_buf, c
 	check_json_string(print_buf, &tokens[i++], "hostname");
 	check_json_string(print_buf, &tokens[i++], data->hostname);
 	check_json_string(print_buf, &tokens[i++], "process_id");
-	check_json_number(print_buf, &tokens[i++], data->process_id);
+	check_json_number(print_buf, &tokens[i++], data->process_id, 0);
 	check_json_string(print_buf, &tokens[i++], "thread_id");
-	check_json_number(print_buf, &tokens[i++], data->thread_id);
+	check_json_number(print_buf, &tokens[i++], data->thread_id, 0);
 	check_json_string(print_buf, &tokens[i++], "function_name");
 	check_json_string(print_buf, &tokens[i++], data->function_name);
 	check_json_string(print_buf, &tokens[i++], "time_start");
-	check_json_number(print_buf, &tokens[i++], data->time_start);
+	check_json_number(print_buf, &tokens[i++], data->time_start, 1);
 	check_json_string(print_buf, &tokens[i++], "time_end");
-	check_json_number(print_buf, &tokens[i++], data->time_end);
+	check_json_number(print_buf, &tokens[i++], data->time_end, 1);
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	check_json_string(print_buf, &tokens[i++], "time_diff");
-	check_json_number(print_buf, &tokens[i++], data->time_diff);
+	check_json_number(print_buf, &tokens[i++], data->time_diff, 1);
 #endif
 	check_json_string(print_buf, &tokens[i++], "return_state");
-	check_json_enum_read_write_state(print_buf, &tokens[i++], data->return_state);
+	check_json_enum_read_write_state(print_buf, &tokens[i++],
+			data->return_state);
 	check_json_string(print_buf, &tokens[i++], "return_state_detail");
 	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
-	CU_ASSERT_FATAL(tokens[i-1].size == 2);
+	CU_ASSERT_FATAL(tokens[i - 1].size == 2);
 	check_json_string(print_buf, &tokens[i++], "errno_value");
-	check_json_number(print_buf, &tokens[i++], data->return_state_detail->errno_value);
+	check_json_number(print_buf, &tokens[i++],
+			data->return_state_detail->errno_value, 0);
 	check_json_string(print_buf, &tokens[i++], "errno_text");
-	check_json_string(print_buf, &tokens[i++], data->return_state_detail->errno_text);
+	check_json_string(print_buf, &tokens[i++],
+			data->return_state_detail->errno_text);
 #ifdef LOG_WRAPPER_TIME
 	check_json_string(print_buf, &tokens[i++], "wrapper");
 	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
@@ -198,22 +220,25 @@ static void check_basic_print(const struct basic *data, const char *print_buf, c
 	if (NULL != data->file_type) {
 		check_json_string(print_buf, &tokens[i++], "file_type");
 		CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
-		if (void_p_enum_file_type_file_descriptor == data->void_p_enum_file_type) {
-			CU_ASSERT_FATAL(tokens[i-1].size == 1);
+		if (void_p_enum_file_type_file_descriptor
+				== data->void_p_enum_file_type) {
+			CU_ASSERT_FATAL(tokens[i - 1].size == 1);
 			check_json_string(print_buf, &tokens[i++], "descriptor");
-			check_json_number(print_buf, &tokens[i++], ((struct file_descriptor*)(data->file_type))->descriptor);
+			check_json_number(print_buf, &tokens[i++],
+					((struct file_descriptor*) (data->file_type))->descriptor,
+					0);
 		}
 	}
 	if (NULL != data->function_data) {
 		check_json_string(print_buf, &tokens[i++], "function_data");
 		CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
 		if (void_p_enum_function_data_mpi_waitall
-						== data->void_p_enum_function_data) {
-			fprintf(stdout, "\nsize: %d\n", tokens[i-1].size);
-			if (NULL == ((struct mpi_waitall*)(data->function_data))->requests) {
-				CU_ASSERT_FATAL(tokens[i-1].size == 0);
+				== data->void_p_enum_function_data) {
+			if (NULL
+					== ((struct mpi_waitall*) (data->function_data))->requests) {
+				CU_ASSERT_FATAL(tokens[i - 1].size == 0);
 			} else {
-				CU_ASSERT_FATAL(tokens[i-1].size == 1);
+				CU_ASSERT_FATAL(tokens[i - 1].size == 1);
 				check_json_string(print_buf, &tokens[i++], "requests");
 			}
 		}
@@ -276,13 +301,14 @@ static void test_struct_basic(void) {
 
 	char print_buf[libiotrace_struct_max_size_basic()];
 	memset(print_buf, 0, sizeof(print_buf));
-	int len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf), &data);
+	int len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf),
+			&data);
 
 	// check print of basic structure without substructures
 
 	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
 	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len -1] == '}');
+	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
 	check_basic_print(&data, print_buf, len);
 
 	// add substructures to basic structure
@@ -318,7 +344,7 @@ static void test_struct_basic(void) {
 
 	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
 	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len -1] == '}');
+	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
 	check_basic_print(&data, print_buf, len);
 }
 

@@ -435,7 +435,7 @@ int libiotrace_struct_write(char* libiotrace_struct_buf, size_t libiotrace_struc
 #  define LIBIOTRACE_STRUCT_ENUM(type, name) LIBIOTRACE_STRUCT_TYPE(name, libiotrace_struct_print_enum_##type)
 #  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %u, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ESCAPE(name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ESCAPE(name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_ESCAPE(name)

@@ -213,9 +213,9 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
 	CU_ASSERT_FATAL(tokens[i-1].size == 2);
 	check_json_string(print_buf, &tokens[i++], "time_start");
-	check_json_number(print_buf, &tokens[i++], data->wrapper.time_start);
+	check_json_number(print_buf, &tokens[i++], data->wrapper.time_start, 1);
 	check_json_string(print_buf, &tokens[i++], "time_end");
-	check_json_number(print_buf, &tokens[i++], data->wrapper.time_end);
+	check_json_number(print_buf, &tokens[i++], data->wrapper.time_end, 1);
 #endif
 	if (NULL != data->file_type) {
 		check_json_string(print_buf, &tokens[i++], "file_type");

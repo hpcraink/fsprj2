@@ -1154,7 +1154,7 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 #  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(pid_t))
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, length + 2) /* +2 for "" in Strings --> Influx 2.X */
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_CSTRING(name, max_length)
-#  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length)
+#  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_CSTRING(name, max_length)
 #  define LIBIOTRACE_STRUCT_CLOCK_T(name)
 #  define LIBIOTRACE_STRUCT_FILE_P(name)
 #  define LIBIOTRACE_STRUCT_LONG_INT(name)
@@ -1276,7 +1276,7 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 #  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length)
+#  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CLOCK_T(name)
 #  define LIBIOTRACE_STRUCT_FILE_P(name)
 #  define LIBIOTRACE_STRUCT_LONG_INT(name)

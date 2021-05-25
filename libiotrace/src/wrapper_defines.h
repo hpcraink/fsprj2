@@ -209,6 +209,7 @@
                             data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
                             data.void_p_enum_file_type == void_p_enum_file_type_file_mpi || \
                             data.void_p_enum_file_type == void_p_enum_file_type_shared_library || \
+                            data.void_p_enum_file_type == void_p_enum_file_type_file_alloc || \
                             (data.void_p_enum_file_type == void_p_enum_file_type_file_descriptor \
                              && STDIN_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
                              && STDOUT_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \

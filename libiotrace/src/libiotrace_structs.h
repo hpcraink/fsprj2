@@ -76,6 +76,10 @@ LIBIOTRACE_STRUCT_START(shared_library)
   LIBIOTRACE_STRUCT_VOID_P_CONST(dl_handle)
 LIBIOTRACE_STRUCT_END
 
+LIBIOTRACE_STRUCT_START(file_alloc)
+  LIBIOTRACE_STRUCT_VOID_P(address)
+LIBIOTRACE_STRUCT_END
+
 LIBIOTRACE_STRUCT_START(errno_detail)
   LIBIOTRACE_STRUCT_INT(errno_value)
   LIBIOTRACE_STRUCT_CSTRING_P(errno_text, MAX_ERROR_TEXT)
@@ -980,6 +984,7 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, file_mpi)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, shared_library)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, request_mpi)
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, file_alloc)
   LIBIOTRACE_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position has changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)

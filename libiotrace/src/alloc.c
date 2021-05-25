@@ -63,13 +63,14 @@ void* WRAP(malloc)(size_t size) {
 	void *ret;
 	struct basic data;
 	struct alloc_function alloc_function_data;
+	struct file_alloc file_alloc_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
 			alloc_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
 	alloc_function_data.size = size;
 
 	CALL_REAL_FUNCTION_RET(data, ret, malloc, size)
@@ -79,12 +80,16 @@ void* WRAP(malloc)(size_t size) {
 	} else {
 		data.return_state = ok;
 	}
+	file_alloc_data.address = ret;
 
 	WRAP_END(data, malloc)
 	return ret;
 }
 
 void WRAP(free)(void *ptr) {
+	struct basic data;
+	struct file_alloc file_alloc_data;
+
 	if ((char*) ptr
 			>= &(static_calloc_buffer[0])&& (char*)ptr < &(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE) {
 		/* ptr was returned by wrapper of calloc from static memory: don't
@@ -92,19 +97,25 @@ void WRAP(free)(void *ptr) {
 		return;
 	}
 
-	if (!init_done) {
-		init_process();
-		/* if some __attribute__((constructor))-function calls a wrapped function:
-		 * init_basic() must be called first */
-	}
+	WRAP_START(data)
 
-	CALL_REAL(free)(ptr);
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
+
+	CALL_REAL_FUNCTION(data, free, ptr)
+
+	data.return_state = ok;
+	file_alloc_data.address = ptr;
+	WRAP_END(data, free)
 }
 
 void* WRAP(calloc)(size_t nmemb, size_t size) {
 	void *ret;
 	struct basic data;
 	struct alloc_function alloc_function_data;
+	struct file_alloc file_alloc_data;
 	size_t real_size;
 	char *old_value;
 	char *new_value;
@@ -160,7 +171,7 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
 			alloc_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
 	alloc_function_data.size = nmemb * size;
 
 	CALL_REAL_FUNCTION_RET(data, ret, calloc, nmemb, size)
@@ -170,6 +181,7 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	} else {
 		data.return_state = ok;
 	}
+	file_alloc_data.address = ret;
 
 	WRAP_END(data, calloc)
 	return ret;
@@ -179,13 +191,14 @@ void* WRAP(realloc)(void *ptr, size_t size) {
 	void *ret;
 	struct basic data;
 	struct alloc_function alloc_function_data;
+	struct file_alloc file_alloc_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
 			alloc_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
 	alloc_function_data.size = size;
 
 	CALL_REAL_FUNCTION_RET(data, ret, realloc, ptr, size)
@@ -195,6 +208,7 @@ void* WRAP(realloc)(void *ptr, size_t size) {
 	} else {
 		data.return_state = ok;
 	}
+	file_alloc_data.address = ret;
 
 	WRAP_END(data, realloc)
 	return ret;
@@ -205,13 +219,14 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 	void *ret;
 	struct basic data;
 	struct alloc_function alloc_function_data;
+	struct file_alloc file_alloc_data;
 	WRAP_START(data)
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
 			alloc_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
 	alloc_function_data.size = nmemb * size;
 
 	CALL_REAL_FUNCTION_RET(data, ret, reallocarray, ptr, nmemb, size)
@@ -221,6 +236,7 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 	} else {
 		data.return_state = ok;
 	}
+	file_alloc_data.address = ret;
 
 	WRAP_END(data, reallocarray)
 	return ret;

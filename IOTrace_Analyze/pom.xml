@@ -28,7 +28,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>iotrace.analyze.Data</mainClass>
+							<mainClass>Launcher</mainClass>
 						</manifest>
 						<manifestEntries>
 							<Multi-Release>true</Multi-Release>

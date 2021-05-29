@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import iotrace.analyze.FileName;
+import iotrace.model.analysis.file.FileName;
 
 public class FileNameTest {
 

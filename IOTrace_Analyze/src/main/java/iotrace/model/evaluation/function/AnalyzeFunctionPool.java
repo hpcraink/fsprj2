@@ -16,7 +16,7 @@ public class AnalyzeFunctionPool {
     public AnalyzeFunctionPool(String propsPath) throws IOException, ReflectiveOperationException,
             IllegalArgumentException, SecurityException {
         String tmpProperties = getProperties(propsPath);
-        parseProperties(tmpProperties);
+        parseProps(tmpProperties);
     }
 
 
@@ -38,6 +38,8 @@ public class AnalyzeFunctionPool {
         return functions.get(functionName).invoke(objects, functions);
     }
 
+
+    // --------------------------------------- ?? Evaluation properties file stuff ?? ----------------------------------------
     public void cmd(String functionName, String cmd) throws ReflectiveOperationException,
             IllegalArgumentException {
         String tmpFunctionName = functionName + "_" + cmd;
@@ -49,11 +51,12 @@ public class AnalyzeFunctionPool {
             throw new NoSuchMethodException();
         }
     }
+    // --------------------------------------- ?? Evaluation properties file stuff ?? ----------------------------------------
 
 
-    // - Helper-methods
-    private static String getProperties(String propertiesFilePath) throws IOException {
-        InputStream is = Evaluation.class.getResourceAsStream(propertiesFilePath);
+    // - 'Helper'-methods
+    private static String getProperties(String propsFilePath) throws IOException {
+        InputStream is = AnalyzeFunctionPool.class.getResourceAsStream(propsFilePath);
         byte[] buffer = new byte[is.available()];
         is.read(buffer);
         is.close();
@@ -61,15 +64,16 @@ public class AnalyzeFunctionPool {
         return new String(buffer);
     }
 
-    private void parseProperties(String tmpProperties) throws ReflectiveOperationException,
+    private void parseProps(String propsStr) throws ReflectiveOperationException,
             SecurityException, IllegalArgumentException {
-        for (String e : tmpProperties.split("\n")) {
-            e = e.trim();
+        for (String line : propsStr.split("\n")) {
+            line = line.trim();
 
-            if (e.length() > 0 && !e.startsWith("#")) {
-                int splitPos = e.indexOf("=");
-                String key = e.substring(0, splitPos).trim();
-                String value = e.substring(splitPos + 1).trim();
+            if (line.length() > 0 && !line.startsWith("#")) {
+
+                int splitPos = line.indexOf("=");
+                String key = line.substring(0, splitPos).trim();
+                String value = line.substring(splitPos + 1).trim();
 
                 if (key.equals("ClassNames")) {
                     for (String s : value.split(";")) {

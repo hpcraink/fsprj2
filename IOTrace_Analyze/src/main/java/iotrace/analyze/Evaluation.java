@@ -215,7 +215,7 @@ public class Evaluation {
 	}
 
 
-	// ------------------------------------------------------- Init -------------------------------------------------------
+	// --------------------------------------------------------- Init --------------------------------------------------------
 	/**
 	 * Creates a {@link Json} from each line in {@code file} and puts it in an
 	 * intern buffer for further processing. The intern buffer is ordered by start
@@ -239,7 +239,7 @@ public class Evaluation {
 	public void addWorkingDirs(File file) {
 		workingDirs = Json.workingDirLogFileToJsonObjectMap(file, workingDirFunctions);
 	}
-	// ------------------------------------------------------- Init -------------------------------------------------------
+	// --------------------------------------------------------- Init --------------------------------------------------------
 
 	// ------------------------------------------------------- Process -------------------------------------------------------
 	/**
@@ -449,7 +449,13 @@ public class Evaluation {
 
 		return processTrace;
 	}
+	// ------------------------------------------------------- Process -------------------------------------------------------
 
+
+
+
+
+	// --------------------------------------- ?? Evaluation properties file stuff ?? ----------------------------------------
 	/**
 	 * Creates a new {@link ProcessTrace} with the id's (file descriptors and memory
 	 * mappings) of an existing one. This is needed for wrapped function calls of
@@ -1529,6 +1535,10 @@ public class Evaluation {
 
 		return null;
 	}
+	// --------------------------------------- ?? Evaluation properties file stuff ?? ----------------------------------------
+
+
+
 
 	public void printStats() {
 		if (statistics_Ignored > 0) {

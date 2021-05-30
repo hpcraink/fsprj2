@@ -20,6 +20,7 @@ import java.util.UUID;
 public class Json {
 	private static final Logger logger = LogManager.getLogger(Json.class);
 
+
 	private UUID uuid = UUID.randomUUID();
 
 	// TODO: differ between strings and other value-types
@@ -36,6 +37,7 @@ public class Json {
 
 
 
+	// -- ?? only internal use + JUnit tests ?? --
 	public boolean containsElement(String name) {
 		return elements.containsKey(name);
 	}
@@ -63,10 +65,11 @@ public class Json {
 	public LinkedList<Json> getObjectArray(String name) {
 		return objectArrays.get(name);
 	}
+	// -- ?? only internal use + JUnit tests ?? --
 
 
 
-	// --- ?? properties file stuff ?? ---
+	// --------------------------------------- ?? Evaluation properties file stuff ?? ----------------------------------------
 	public boolean hasValue(String path, String value) {
 		String foundValue = getValue(path);
 		if (foundValue != null) {
@@ -134,6 +137,25 @@ public class Json {
 		return null;
 	}
 
+	// - 'Helper'-methods
+	private Json getObjectFromPath(String[] pathTokens, int depth) {
+		Json json = this;
+
+		for (int i = 0; i < depth; i++) {
+			String token = pathTokens[i];
+			if (token.length() <= 0) {
+				return null;
+			}
+
+			if (json.containsObject(token)) {
+				json = json.getObject(token);
+			} else {
+				return null;
+			}
+		}
+
+		return json;
+	}
 
 	// - Utils
 	public LinkedList<String> combineObjectValuesToList(String pathToObjectArray, String pathToElementInObject) {
@@ -171,24 +193,6 @@ public class Json {
 		
 		return tmpList;
 	}
-	private Json getObjectFromPath(String[] pathTokens, int depth) {
-		Json json = this;
-
-		for (int i = 0; i < depth; i++) {
-			String token = pathTokens[i];
-			if (token.length() <= 0) {
-				return null;
-			}
-
-			if (json.containsObject(token)) {
-				json = json.getObject(token);
-			} else {
-				return null;
-			}
-		}
-
-		return json;
-	}
 
 	public static LinkedList<String> mergeArrays(LinkedList<String> arr1, LinkedList<String> arr2) {
 		if (arr1 == null) {
@@ -220,7 +224,7 @@ public class Json {
 	public static boolean getFalse() {
 		return false;
 	}
-	// --- ?? properties file stuff ?? ---
+	// --------------------------------------- ?? Evaluation properties file stuff ?? ----------------------------------------
 
 
 
@@ -319,7 +323,8 @@ public class Json {
 
 
 
-	// - JSON-Parsing stuff
+	// - 'Helper'-methods
+	// JSON-Parsing stuff
 	private void parseJson(String jsonStr) {
 		jsonStr = jsonStr.trim();
 
@@ -636,8 +641,6 @@ public class Json {
 		}
 
 		tmp.append("}");
-
-		System.err.println(tmp.toString());
 
 		return tmp.toString();
 	}

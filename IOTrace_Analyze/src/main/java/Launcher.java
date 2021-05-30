@@ -117,13 +117,13 @@ public class Launcher {
 
     private static void performAnalysis(Properties props) {
         // - Setup
-        Evaluation evaluation = newEvaluation(props);
-
-        // - Perform analysis  ...
         String pathPrefix = props.getProperty("workingDir");
         String inputFile = props.getProperty("inputFile");
+        Evaluation evaluation = newEvaluation(props);
         evaluation.addWorkingDirs(new File(pathPrefix + inputFile + "_working_dir.log"));
         evaluation.addJsons(new File(pathPrefix + inputFile + "_iotrace.log"));
+
+        // - Perform analysis  ...
         evaluation.processJsons();
 
 

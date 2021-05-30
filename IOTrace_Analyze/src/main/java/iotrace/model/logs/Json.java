@@ -4,14 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import iotrace.analyze.Evaluation;
-import iotrace.analyze.function.AnalyzeFunctionPool;
+import iotrace.model.evaluation.function.AnalyzeFunctionPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -581,62 +580,65 @@ public class Json {
 
 	@Override
 	public String toString() {
-		String tmp = "{";
+		StringBuilder tmp = new StringBuilder(100);
+		tmp.append("{");
 
 		for (Entry<String, String> e : elements.entrySet()) {
-			if (!tmp.endsWith("{")) {
-				tmp += ",";
+			if (tmp.charAt(tmp.length()-1) != '{') {
+				tmp.append(",");
 			}
-			tmp += "\"" + e.getKey() + "\":\"" + e.getValue() + "\"";
+			tmp.append("\"").append(e.getKey()).append("\":\"").append(e.getValue()).append("\"");
 		}
 
 		for (Entry<String, LinkedList<String>> e : arrays.entrySet()) {
-			if (!tmp.endsWith("{")) {
-				tmp += ",";
+			if (tmp.charAt(tmp.length()-1) != '{') {
+				tmp.append(",");
 			}
-			tmp += "\"" + e.getKey() + "\":[";
+			tmp.append("\"").append(e.getKey()).append("\":[");
 			for (String a : e.getValue()) {
-				if (!tmp.endsWith("[")) {
-					tmp += ",";
+				if (tmp.charAt(tmp.length()-1) != '[') {
+					tmp.append(",");
 				}
-				tmp += "\"" + a + "\"";
+				tmp.append("\"").append(a).append("\"");
 			}
 			if (objectArrays.containsKey(e.getKey())) {
 				for (Json j : objectArrays.get(e.getKey())) {
-					if (!tmp.endsWith("[")) {
-						tmp += ",";
+					if (tmp.charAt(tmp.length()-1) != '[') {
+						tmp.append(",");
 					}
-					tmp += j;
+					tmp.append(j);
 				}
 			}
-			tmp += "]";
+			tmp.append("]");
 		}
 
 		for (Entry<String, LinkedList<Json>> e : objectArrays.entrySet()) {
 			if (!arrays.containsKey(e.getKey())) {
-				if (!tmp.endsWith("{")) {
-					tmp += ",";
+				if (tmp.charAt(tmp.length()-1) != '{') {
+					tmp.append(",");
 				}
-				tmp += "\"" + e.getKey() + "\":[";
+				tmp.append("\"").append(e.getKey()).append("\":[");
 				for (Json j : e.getValue()) {
-					if (!tmp.endsWith("[")) {
-						tmp += ",";
+					if (tmp.charAt(tmp.length()-1) != '[') {
+						tmp.append(",");
 					}
-					tmp += j;
+					tmp.append(j);
 				}
-				tmp += "]";
+				tmp.append("]");
 			}
 		}
 
 		for (Entry<String, Json> e : objects.entrySet()) {
-			if (!tmp.endsWith("{")) {
-				tmp += ",";
+			if (tmp.charAt(tmp.length()-1) != '{') {
+				tmp.append(",");
 			}
-			tmp += "\"" + e.getKey() + "\":" + e.getValue();
+			tmp.append("\"").append(e.getKey()).append("\":").append(e.getValue());
 		}
 
-		tmp += "}";
+		tmp.append("}");
 
-		return tmp;
+		System.err.println(tmp.toString());
+
+		return tmp.toString();
 	}
 }

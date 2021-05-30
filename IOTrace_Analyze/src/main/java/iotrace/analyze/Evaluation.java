@@ -13,7 +13,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.SortedMap;
 
-import iotrace.analyze.function.AnalyzeFunctionPool;
+import iotrace.model.evaluation.function.AnalyzeFunctionPool;
 import iotrace.model.analysis.*;
 import iotrace.model.analysis.file.FileRange.RangeType;
 import iotrace.model.analysis.file.*;
@@ -40,6 +40,8 @@ public class Evaluation {
 	private static final Logger logger = LogManager.getLogger(Evaluation.class);
 
 	public static final String JSON_GET_START_TIME = "getStartTime";
+	private String directoryDelimiter = "/";
+
 
 	/**
 	 * Set of all methods needed to build {@link FileTrace}'s and
@@ -102,9 +104,9 @@ public class Evaluation {
 	 * specific host is possible.
 	 */
 	private Map<String, HashMap<String, ProcessTrace>> processTraces = new HashMap<>();
-	private int noFileTrace = 0;
-	private int ignored = 0;
-	private int unknown = 0;
+	private int statistics_noFileTrace = 0;
+	private int statistics_Ignored = 0;
+	private int statistics_Unknown = 0;
 
 	/**
 	 * Current {@link ProcessTrace}. Contains the {@link ProcessTrace} for the
@@ -167,13 +169,8 @@ public class Evaluation {
 	private KeyValueTreeNode fork;
 	private HashMap<String, HashMap<String, KeyValueTreeNode>> forkedProcesses = new HashMap<>();
 
-
-
 	private ResourceBundle legends;
 
-
-
-	private String directoryDelimiter = "/";
 
 
 	/**
@@ -214,12 +211,11 @@ public class Evaluation {
 		this.fork = new KeyValueTreeNode(0, legends.getString("forkTraceMainNode"), legends.getString("forkTraceOther"));
 
 
-
 		this.legends = legends;
 	}
 
 
-
+	// ------------------------------------------------------- Init -------------------------------------------------------
 	/**
 	 * Creates a {@link Json} from each line in {@code file} and puts it in an
 	 * intern buffer for further processing. The intern buffer is ordered by start
@@ -236,14 +232,16 @@ public class Evaluation {
 	 * Creates a {@link Json} from each line in {@code file} and puts it in an
 	 * intern buffer for further processing. The intern buffer is ordered by host
 	 * name, process id and time.
-	 * 
+	 *
 	 * @param file file that holds a JSON-Object representing a working dir in each
 	 *             line
 	 */
 	public void addWorkingDirs(File file) {
 		workingDirs = Json.workingDirLogFileToJsonObjectMap(file, workingDirFunctions);
 	}
+	// ------------------------------------------------------- Init -------------------------------------------------------
 
+	// ------------------------------------------------------- Process -------------------------------------------------------
 	/**
 	 * Processes all {@link Json}-objects from intern buffer. This means processing
 	 * of all with method {@link #addJsons(File)}
@@ -262,7 +260,7 @@ public class Evaluation {
 			processJson(currentJson.getValue());
 
 			if (minTime == null) {
-				minTime = (hasWrapperInfo) ? (Long.parseLong(wrapperTimeStart)) : (Long.parseLong(tmpTimeStart));
+				minTime = Long.parseLong((hasWrapperInfo) ? (wrapperTimeStart) : (tmpTimeStart));
 			}
 
 			jsonCountTmp++;
@@ -273,8 +271,8 @@ public class Evaluation {
 			}
 		}
 
-		maxTime = (hasWrapperInfo) ? (Long.parseLong(wrapperTimeEnd)) : (Long.parseLong(tmpTimeEnd));
-		String.valueOf(maxTime - minTime).length();
+		maxTime = Long.parseLong((hasWrapperInfo) ? (wrapperTimeEnd) : (tmpTimeEnd));
+//		String.valueOf(maxTime - minTime).length();
 
 		logger.debug("process Events ...");
 
@@ -294,7 +292,6 @@ public class Evaluation {
 			logger.trace("    {}", file);
 		}
 	}
-
 
 	/**
 	 * Processes the {@link Json} given in parameter {@code json}. Sets the global
@@ -372,17 +369,17 @@ public class Evaluation {
 				fileTraceFunctions.invoke(tmpFunctionName);
 			} else {
 				// TODO: default/Warning
-				unknown++;
-				logger.debug("unknown function-call #{} in json {}", unknown, tmpJson);
+				statistics_Unknown++;
+				logger.debug("unknown function-call #{} in json {}", statistics_Unknown, tmpJson);
 			}
 
 		} catch (ReflectiveOperationException | IllegalArgumentException e) {
 			logger.error("Exception during invokation of method for creating file trace for function " + tmpFunctionName
 					+ " for json " + tmpJson, e);
-			return;
 		}
 	}
 
+	// - 'Helper'-methods
 	/**
 	 * Returns a {@link ProcessTrace} for the parameters {@code hostName} and
 	 * {@code processId}. If no existing {@link ProcessTrace} is found, a new one is
@@ -1180,8 +1177,8 @@ public class Evaluation {
 			fileTrace.addEvent(call);
 			fileTrace.addEvent(ret);
 		} else {
-			noFileTrace++;
-			logger.debug("without file-trace #{} in json {}", noFileTrace, tmpJson);
+			statistics_noFileTrace++;
+			logger.debug("without file-trace #{} in json {}", statistics_noFileTrace, tmpJson);
 		}
 
 		return call;
@@ -1394,8 +1391,8 @@ public class Evaluation {
 				FileTraceId sendFileTraceId = tmpProcessTrace.getFileTraceId(sendIdType, sendId);
 
 				if (sendFileTraceId == null) {
-					noFileTrace++;
-					logger.debug("without file-trace #{} in json {}", noFileTrace, tmpJson);
+					statistics_noFileTrace++;
+					logger.debug("without file-trace #{} in json {}", statistics_noFileTrace, tmpJson);
 				} else {
 					// fileTraces.add(sendFileTraceId);
 					fileTraceId.getFileTrace().sendFileTraceId(sendFileTraceId);
@@ -1426,8 +1423,8 @@ public class Evaluation {
 					// (this can be if the sending process is from a other program or the connection
 					// between the sending and receiving socket is unknown: e.g. connection is build
 					// via call of bind or connect function)
-					noFileTrace++;
-					logger.debug("without file-trace #{} in json {}", noFileTrace, tmpJson);
+					statistics_noFileTrace++;
+					logger.debug("without file-trace #{} in json {}", statistics_noFileTrace, tmpJson);
 				}
 			}
 		}
@@ -1444,14 +1441,14 @@ public class Evaluation {
 			fileTraceFunctions.invoke(tmpFunctionName);
 		} else {
 			// TODO: default/Warning
-			unknown++;
-			logger.debug("unknown function-call #{} in json {}", unknown, tmpJson);
+			statistics_Unknown++;
+			logger.debug("unknown function-call #{} in json {}", statistics_Unknown, tmpJson);
 		}
 	}
 
 	public void ignore() {
-		ignored++;
-		logger.debug("ignored function-call #{} in json {}", ignored, tmpJson);
+		statistics_Ignored++;
+		logger.debug("ignored function-call #{} in json {}", statistics_Ignored, tmpJson);
 	}
 
 	public FileId getRegularFileId(String hostName, String deviceId, String fileId) {
@@ -1534,14 +1531,14 @@ public class Evaluation {
 	}
 
 	public void printStats() {
-		if (ignored > 0) {
-			logger.warn("ignored functions-calls: {} (see more with log level debug)", ignored);
+		if (statistics_Ignored > 0) {
+			logger.warn("ignored functions-calls: {} (see more with log level debug)", statistics_Ignored);
 		}
-		if (unknown > 0) {
-			logger.warn("unknown functions-calls: {} (see more with log level debug)", unknown);
+		if (statistics_Unknown > 0) {
+			logger.warn("unknown functions-calls: {} (see more with log level debug)", statistics_Unknown);
 		}
-		if (noFileTrace > 0) {
-			logger.warn("function-calls without file-trace: {} (see more with log level debug)", noFileTrace);
+		if (statistics_noFileTrace > 0) {
+			logger.warn("function-calls without file-trace: {} (see more with log level debug)", statistics_noFileTrace);
 		}
 
 //		System.out.println();

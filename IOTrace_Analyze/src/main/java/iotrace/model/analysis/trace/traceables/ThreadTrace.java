@@ -1,12 +1,11 @@
 package iotrace.model.analysis.trace.traceables;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
 
-import iotrace.analyze.function.AnalyzeFunctionPool;
+import iotrace.model.evaluation.function.AnalyzeFunctionPool;
 import iotrace.model.analysis.FunctionEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

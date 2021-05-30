@@ -1,10 +1,9 @@
-package iotrace.analyze.function;
+package iotrace.model.evaluation.function;
 
 import iotrace.analyze.Evaluation;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 public class AnalyzeFunctionPool {

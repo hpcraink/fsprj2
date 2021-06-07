@@ -296,7 +296,7 @@ struct wrapper_status active_wrapper_status;
 static ATTRIBUTE_THREAD pid_t tid = -1;
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-static ATTRIBUTE_THREAD SOCKET socket_peer;
+static ATTRIBUTE_THREAD SOCKET socket_peer = -1;
 #endif
 
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
@@ -305,6 +305,10 @@ void cleanup() ATTRIBUTE_DESTRUCTOR;
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
 void *communication_thread(void *arg);
+#endif
+
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+void send_data(const char *message, SOCKET socket);
 #endif
 
 #ifndef IO_LIB_STATIC
@@ -841,6 +845,76 @@ void libiotrace_set_wrapper_inactive(const char *wrapper) {
 }
 
 /**
+ * Writes one filesystem-entry to influxdb.
+ *
+ * @param[in]  data filesystem-entry.
+ */
+#if defined(IOTRACE_ENABLE_INFLUXDB)
+void write_filesystem_into_influxdb(struct filesystem *data) {
+	//buffer for body
+	int body_length = libiotrace_struct_push_max_size_filesystem(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
+	char body[body_length];
+	body_length = libiotrace_struct_push_filesystem(body, body_length, data, "");
+	if (0 > body_length)
+	{
+		LIBIOTRACE_ERROR("libiotrace_struct_push_filesystem() returned %d", body_length);
+	}
+	body_length--; /*last comma in ret*/
+	body[body_length] = '\0'; /*remove last comma*/
+
+	char short_log_name[50];
+	shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
+
+	const char labels[] = "libiotrace_filesystem,jobname=%s,hostname=%s,device_id=%lu";
+	int body_labels_length = strlen(labels)
+			+ sizeof(short_log_name) /* jobname */
+			+ HOST_NAME_MAX /* hostname */
+			+ COUNT_DEC_AS_CHAR(data->device_id); /* deviceid */
+	char body_labels[body_labels_length];
+	snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, data->device_id);
+	body_labels_length = strlen(body_labels);
+
+	u_int64_t current_time = gettime();
+	int timestamp_length = COUNT_DEC_AS_CHAR(current_time);
+	char timestamp[timestamp_length];
+#ifdef REALTIME
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, current_time);
+#else
+	snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + current_time);
+#endif
+	timestamp_length = strlen(timestamp);
+
+	const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
+
+	const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
+			"Host: %s:%s" LINE_BREAK
+			"Accept: */*" LINE_BREAK
+			"Authorization: Token %s" LINE_BREAK
+			"Content-Length: %d" LINE_BREAK
+			"Content-Type: application/x-www-form-urlencoded" LINE_BREAK
+			LINE_BREAK
+			"%s %s %s";
+	const int message_length = strlen(header)
+			+ influx_bucket_len
+			+ influx_organization_len
+			+ database_ip_len
+			+ database_port_len
+			+ influx_token_len
+			+ COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
+			+ body_labels_length
+			+ body_length
+			+ timestamp_length;
+
+	//buffer all (header + body)
+	char message[message_length + 1];
+	snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
+			content_length, body_labels, body, timestamp);
+
+	send_data(message, socket_peer);
+}
+#endif
+
+/**
  * Prints the filesystem to a file.
  *
  * The file is given in the global variable #filesystem_log_name which is
@@ -849,7 +923,8 @@ void libiotrace_set_wrapper_inactive(const char *wrapper) {
  * file-system type and the mount options, the dump frequency in days and
  * the mount passno as a json object.
  */
-#ifdef IOTRACE_ENABLE_LOGFILE
+#if defined(IOTRACE_ENABLE_LOGFILE) \
+	|| defined(IOTRACE_ENABLE_INFLUXDB)
 #ifdef __linux__ // TODO: RAY MacOS; Windows?
 void print_filesystem()
 {
@@ -859,14 +934,17 @@ void print_filesystem()
 	char buf[4 * MAXFILENAME];
 #endif
 	struct mntent *filesystem_entry_ptr;
-	char buf_filesystem[libiotrace_struct_max_size_filesystem() + sizeof(LINE_BREAK)];
 	struct filesystem filesystem_data;
 	struct stat stat_data;
 	char mount_point[MAXFILENAME];
+#ifdef IOTRACE_ENABLE_LOGFILE
+	char buf_filesystem[libiotrace_struct_max_size_filesystem() + sizeof(LINE_BREAK)];
 	int fd;
-	int ret;
 	int count;
+#endif
+	int ret;
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 	fd = CALL_REAL_POSIX_SYNC(open)(filesystem_log_name,
 									O_WRONLY | O_CREAT | O_EXCL,
 									S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
@@ -881,6 +959,7 @@ void print_filesystem()
 			LIBIOTRACE_ERROR("open() returned %d with errno=%d", fd, errno);
 		}
 	}
+#endif
 
 	file = setmntent("/proc/mounts", "r");
 	if (NULL == file)
@@ -920,6 +999,7 @@ void print_filesystem()
 		filesystem_data.dump_frequency_in_days = filesystem_entry_ptr->mnt_freq;
 		filesystem_data.pass_number_on_parallel_fsck =
 			filesystem_entry_ptr->mnt_passno;
+#ifdef IOTRACE_ENABLE_LOGFILE
 		ret = libiotrace_struct_print_filesystem(buf_filesystem, sizeof(buf_filesystem),
 									 &filesystem_data);
 		strcpy(buf_filesystem + ret, LINE_BREAK);
@@ -931,12 +1011,18 @@ void print_filesystem()
 		if (ret < count) {
 			LIBIOTRACE_ERROR("incomplete write() occurred");
 		}
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
+		write_filesystem_into_influxdb(&filesystem_data);
+#endif
 	}
 
 	endmntent(file);
 
+#ifdef IOTRACE_ENABLE_LOGFILE
 	CALL_REAL_POSIX_SYNC(close)
 	(fd);
+#endif
 }
 #endif
 #endif
@@ -2136,10 +2222,16 @@ void init_process()
 		 * communication_thread */
 		pthread_atfork(NULL, NULL, reset_values_in_forked_process);
 
-#ifdef IOTRACE_ENABLE_LOGFILE
+#if defined(IOTRACE_ENABLE_LOGFILE) \
+	|| defined(IOTRACE_ENABLE_INFLUXDB)
 #ifdef __linux__ // TODO: RAY MacOS; Windows?
+		if (-1 == socket_peer) {
+			prepare_socket();
+		}
 		print_filesystem();
 #endif
+#endif
+#ifdef IOTRACE_ENABLE_LOGFILE
 		print_working_directory();
 #endif
 
@@ -2223,7 +2315,9 @@ void init_thread()
 {
 	tid = iotrace_get_tid();
 #ifdef IOTRACE_ENABLE_INFLUXDB
-	prepare_socket();
+	if (-1 == socket_peer) {
+		prepare_socket();
+	}
 #  ifdef ENABLE_INPUT
 	write_metadata_into_influxdb();
 #  endif

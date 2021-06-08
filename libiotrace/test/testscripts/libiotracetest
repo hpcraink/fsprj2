@@ -1,0 +1,30 @@
+#!/bin/bash
+
+
+module load cae/openfoam/8
+
+DBNODE=$(scontrol show hostname | tail -n 1)
+echo $DBNODE
+
+export PATH="~/Projects/scripts/:$PATH" # Muss im Terminal exportiert werden?!?
+tmux new-session -d -s "runsondbnode" srun --nodelist=$DBNODE --pty runsondbnode
+
+echo "Fertig"
+
+while IFS= read -r line; do
+    IB0ADDR=$line
+done < ~/Projects/scripts/ib0
+
+echo $IB0ADDR
+
+cd ~/Projects/fsprj2/libiotrace/test/testscripts && ./mpi_file_io.sh $IB0ADDR
+
+sleep 20000000
+
+# export OMP_NUM_THREADS=$((${SLURM_CPUS_PER_TASK}/2))
+# export MPIRUN_OPTIONS="-binding "domain=omp:compact" -print-rank-map -envall"
+# export NUM_PROCS=eval(${SLURM_NTASKS}*${OMP_NUM_THREADS})
+# echo "${EXE} running on ${NUM_PROCS} cores with ${SLURM_NTASKS} MPI-tasks and ${OMP_NUM_THREADS} threads"
+# startexe="mpiexec.hydra -bootstrap slurm ${MPIRUN_OPTIONS} -n ${SLURM_NTASKS} ${EXE}"
+# echo $startexe
+# exec $startexe

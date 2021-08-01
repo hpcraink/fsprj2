@@ -23,6 +23,7 @@ option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (WITH_ALLOC "build wrappers for memory allocations" OFF)
+option (WITH_FILENAME_RESOLUTION "create mapping b/w ids and associated filenames during runtime" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
 option (ENABLE_INPUT "enable input via REST-API" ON)
@@ -146,6 +147,12 @@ endif()
 if(WITH_ALLOC)
     list(APPEND OPTIONS -DWITH_ALLOC)
 endif()
+
+#compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w ids and filenames during runtime
+if(WITH_FILENAME_RESOLUTION)
+    list(APPEND OPTIONS -DWITH_FILENAME_RESOLUTION)
+endif()
+
 
 
 if(WITH_MPI_IO)

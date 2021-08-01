@@ -185,6 +185,9 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 # Please keep in alphabetical order
 set(SOURCE
     event.c
+    fnres/fevent.c
+    fnres/map/fmap.c
+    fnres/map/impl/hashmap.c
     init.c
     llhttp/api.c
     llhttp/http.c

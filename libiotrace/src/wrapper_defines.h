@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "error.h"
 #include "libiotrace_include_struct.h"
+#include "fnres/fevent.h"                // ???????????????????
 
 #define LINE_BREAK "\r\n"
 
@@ -223,7 +224,7 @@
                               CALL_WRITE_INTO_INFLUXDB(data); \
                               CALL_WRITE_INTO_BUFFER(data); \
                             } \
-                         } \
+                         }                               \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #else
@@ -231,7 +232,8 @@
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
-                         } \
+                         }                               \
+                         ADD_FEVENT_TO_TRACE(&data)      \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif

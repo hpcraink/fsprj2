@@ -19,6 +19,7 @@ public class WriteBarChartsPostTask extends PostTask {
     }
 
 
+    @Override
     public void performTask(Evaluation evaluation) {
         ResourceBundle legends = evaluation.getLegends();
         BasicTrace<BasicTrace<BasicTrace<ThreadTrace>>> cluster = evaluation.getCluster();

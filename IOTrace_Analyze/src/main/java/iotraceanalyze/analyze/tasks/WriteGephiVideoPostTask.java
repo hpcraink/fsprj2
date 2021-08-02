@@ -15,6 +15,7 @@ public class WriteGephiVideoPostTask extends PostTask {
     }
 
 
+    @Override
     public void performTask(Evaluation evaluation) {
         // - ...
         GephiVideo.generate(super.getOutputFolder(), super.getInputFile(), super.getProps(), evaluation.getLegends());

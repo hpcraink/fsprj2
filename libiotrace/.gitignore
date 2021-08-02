@@ -1,6 +1,7 @@
+# - CMake
+**/CMakeFiles/
+**/cmake-build-debug
+
+
+# - IDEs
 nbproject
-
-src/CMakeFiles/
-
-test/CMakeFiles/
-

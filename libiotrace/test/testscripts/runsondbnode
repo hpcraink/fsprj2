@@ -1,0 +1,16 @@
+#!/bin/bash
+
+rm ~/.influxdbv2/configs
+
+cp -r ~/Projects/influxdb2-2.0.6-linux-amd64 /tmp
+mkdir /tmp/.influxdbv2
+cd /tmp/influxdb2-2.0.6-linux-amd64/ && ./influxd --bolt-path=/tmp/.influxdbv2/influxd.bolt --engine-path=/tmp/.influxdbv2/engine &
+sleep 20
+rm ~/.influxdbv2/configs
+cd /tmp/influxdb2-2.0.6-linux-amd64/ &&./influx setup --bucket hsebucket -t OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -o hse --username=admin --password=test12345678 -f
+
+rm ~/Projects/scripts/ib0
+ifconfig ib0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' &> ~/Projects/scripts/ib0
+
+sleep 200000000000
+

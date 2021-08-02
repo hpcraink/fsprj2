@@ -53,3 +53,12 @@ dkms.confe
 
 # Untrack folders
 build/
+
+
+
+# - IDEs
+.idea
+.vscode
+
+# - OS
+**/.DS_Store

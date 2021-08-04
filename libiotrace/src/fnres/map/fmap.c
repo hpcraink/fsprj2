@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "fmap.h"
 #include "impl/hashmap.h"
@@ -39,7 +40,7 @@ static void _create_map_value(struct fmap_value* value, fmap_key* key, char* fil
 
 // - Public functions -
 void fmap_create(void) {
-    assert(global_map == NULL);
+    assert(global_map == NULL);     // event.c init_process -> sicherstellen, dass map erstellt wurde
 
     pthread_mutex_lock(&lock);
 
@@ -71,15 +72,19 @@ char* fmap_get(fmap_key* key) {
     return (found_val == NULL) ? (NULL) : (found_val->filename);
 }
 
-void fmap_set(fmap_key* key, char* filename) {
-    assert(global_map != NULL && key != NULL && filename != NULL);
+void fmap_set(fmap_key* key, char* fname) {
+    assert(global_map != NULL && key != NULL && fname != NULL);
 
     pthread_mutex_lock(&lock);
 
     struct fmap_value value;
-    _create_map_value(&value, key, filename);
+    char* filename = malloc(sizeof(fname));     // Make copy of filename
+    if (filename != NULL) {
+        strcpy(filename, fname);
+        _create_map_value(&value, key, filename);
 
-    hashmap_set(global_map, &value);
+        hashmap_set(global_map, &value);
+    }
 
     pthread_mutex_unlock(&lock);
 }
@@ -89,7 +94,11 @@ void fmap_remove(fmap_key* key) {
 
     pthread_mutex_lock(&lock);
 
-    hashmap_delete(global_map, key);
+    char* fname;
+    if ((fname = fmap_get(key)) != NULL) {
+        hashmap_delete(global_map, key);
+        free(fname);
+    }
 
     pthread_mutex_unlock(&lock);
 }

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "../../error.h"
+
 #include "fmap.h"
 #include "impl/hashmap.h"
 
@@ -78,12 +80,16 @@ void fmap_set(fmap_key* key, char* fname) {
     pthread_mutex_lock(&lock);
 
     struct fmap_value value;
-    char* filename = malloc(sizeof(fname));     // Make copy of filename
-    if (filename != NULL) {
-        strcpy(filename, fname);
+
+    char* filename = NULL;
+    unsigned long f_size = (strlen(fname) * sizeof(char)) + sizeof("\0");
+    if ((filename = malloc(f_size)) != NULL) {
+        strcpy(filename, fname);                    // Make copy of filename
         _create_map_value(&value, key, filename);
 
         hashmap_set(global_map, &value);
+    } else {
+        LIBIOTRACE_WARN("malloc() returned NULL for %s");
     }
 
     pthread_mutex_unlock(&lock);

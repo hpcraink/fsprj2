@@ -2224,12 +2224,14 @@ void init_process()
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
 	|| defined(IOTRACE_ENABLE_INFLUXDB)
-#ifdef __linux__ // TODO: RAY MacOS; Windows?
+#  ifdef __linux__ // TODO: RAY MacOS; Windows?
+#    if defined(IOTRACE_ENABLE_INFLUXDB)
 		if (-1 == socket_peer) {
 			prepare_socket();
 		}
+#    endif
 		print_filesystem();
-#endif
+#  endif
 #endif
 #ifdef IOTRACE_ENABLE_LOGFILE
 		print_working_directory();

@@ -43,6 +43,7 @@ public class Evaluation {
 	private String directoryDelimiter = "/";
 
 
+	// - ?? Analyze function pool ?? -
 	/**
 	 * Set of all methods needed to build {@link FileTrace}'s and
 	 * {@link ThreadTrace}'s. Each method is available over the function name from a
@@ -72,9 +73,14 @@ public class Evaluation {
 	 */
 	private AnalyzeFunctionPool workingDirFunctions;
 
+
+	// - ? -
 	private int countTmpFiles = 0;
 	private int countNotAFile = 0;
 	private int countUnnamedSockets = 0;
+
+
+	// - ? Log sorted in different ways ? -
 	/**
 	 * All read in {@link Json}-objects representing a function call sorted by start
 	 * time of the function call. TreeMap for efficient sorting.
@@ -104,10 +110,15 @@ public class Evaluation {
 	 * specific host is possible.
 	 */
 	private Map<String, HashMap<String, ProcessTrace>> processTraces = new HashMap<>();
+
+
+	// - Statistics -
 	private int statistics_noFileTrace = 0;
 	private int statistics_Ignored = 0;
 	private int statistics_Unknown = 0;
 
+
+	// - Currently evaluated -
 	/**
 	 * Current {@link ProcessTrace}. Contains the {@link ProcessTrace} for the
 	 * current evaluated {@link Json}.
@@ -158,6 +169,8 @@ public class Evaluation {
 	 */
 	private String tmpTimeEnd = "";
 
+
+	// - ? -
 	private boolean hasWrapperInfo;
 
 	private String wrapperTimeStart;
@@ -169,6 +182,8 @@ public class Evaluation {
 	private KeyValueTreeNode fork;
 	private HashMap<String, HashMap<String, KeyValueTreeNode>> forkedProcesses = new HashMap<>();
 
+
+	// - Misc. -
 	private ResourceBundle legends;
 
 
@@ -205,6 +220,7 @@ public class Evaluation {
 		this.workingDirFunctions = new AnalyzeFunctionPool(workingDirPropsPath);
 
 
+		// - Create ds for traces from different 'views'
 		this.cluster = new BasicTrace<>(legends.getString("threadTraceClusterTitle"));
 		this.fileTraces = new BasicTrace<>(legends.getString("fileTraceFileTitle"));
 
@@ -251,10 +267,12 @@ public class Evaluation {
 	 * {@link FileTrace} objects the method {@code processEvents} is called.
 	 */
 	public void processJsons() {
-		int jsonCountOnePercent = jsons.size() / 100;
+		final int jsonCountOnePercent = jsons.size() / 100;
 		int jsonCountTmp = 0;
 		int jsonCount = 0;
 
+
+		// - process function calls from parsed JSON -
 		logger.debug("Start processing:");
 		for (Entry<UniqueStartTime, Json> currentJson : jsons.entrySet()) {
 			processJson(currentJson.getValue());
@@ -274,8 +292,9 @@ public class Evaluation {
 		maxTime = Long.parseLong((hasWrapperInfo) ? (wrapperTimeEnd) : (tmpTimeEnd));
 //		String.valueOf(maxTime - minTime).length();
 
-		logger.debug("process Events ...");
 
+		// - Process Events -
+		logger.debug("process Events ...");
 		for (BasicTrace<BasicTrace<ThreadTrace>> host : cluster.getTraces().values()) {
 			for (BasicTrace<ThreadTrace> process : host.getTraces().values()) {
 				for (ThreadTrace thread : process.getTraces().values()) {
@@ -284,6 +303,7 @@ public class Evaluation {
 				}
 			}
 		}
+
 		// processEvents() of FileTrace has to be done after processEvents() of
 		// ThreadTrace because the FileRange is defined in processEvents() of
 		// ThreadTrace and used in processEvents() of FileTrace
@@ -313,7 +333,8 @@ public class Evaluation {
 		fileTraceFunctions.addObject(tmpJson);
 
 		try {
-			String functionName = (String) fileTraceFunctions.invoke("getFunctionName");
+			// - Extract information -
+			String functionName = (String) fileTraceFunctions.invoke("getFunctionName");			// $$ TODO: REFACTOR own data-type $$
 			String hostName = (String) fileTraceFunctions.invoke("getHostName");
 			String processId = (String) fileTraceFunctions.invoke("getProcessId");
 			String threadId = (String) fileTraceFunctions.invoke("getThreadId");
@@ -333,6 +354,7 @@ public class Evaluation {
 				return;
 			}
 
+			// - Set globals -
 			tmpHostName = hostName;
 			tmpProcessId = processId;
 			tmpThreadId = threadId;
@@ -340,6 +362,7 @@ public class Evaluation {
 			tmpTimeEnd = timeEnd;
 			tmpFunctionName = functionName;
 
+			// - Add to different ds -
 			BasicTrace<BasicTrace<ThreadTrace>> host;
 			if (!cluster.containsTrace(tmpHostName)) {
 				host = new BasicTrace<>(legends.getString("threadTraceHostTitle"));
@@ -374,7 +397,7 @@ public class Evaluation {
 			}
 
 		} catch (ReflectiveOperationException | IllegalArgumentException e) {
-			logger.error("Exception during invokation of method for creating file trace for function " + tmpFunctionName
+			logger.error("Exception during invocation of method for creating file trace for function " + tmpFunctionName
 					+ " for json " + tmpJson, e);
 		}
 	}

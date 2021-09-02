@@ -24,6 +24,7 @@ public class WritePieChartsPostTask extends PostTask {
     }
 
 
+    @Override
     public void performTask(Evaluation evaluation) {
         Properties props = super.getProps();
         String filePrefix = super.getOutputFolder() + super.getInputFile();

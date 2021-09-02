@@ -31,6 +31,7 @@ public class WriteFileTracesPostTask extends PostTask {
     }
 
 
+    @Override
     public void performTask(Evaluation evaluation) {
         ResourceBundle legends = evaluation.getLegends();
         BasicTrace<FileTrace> fileTraces = evaluation.getFileTraces();

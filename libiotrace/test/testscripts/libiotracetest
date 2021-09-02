@@ -6,11 +6,14 @@ module load cae/openfoam/8
 DBNODE=$(scontrol show hostname | tail -n 1)
 echo $DBNODE
 
-export PATH="~/Projects/scripts/:$PATH" # Muss im Terminal exportiert werden?!?
-tmux new-session -d -s "runsondbnode" srun --nodelist=$DBNODE --pty runsondbnode
+export PATH="~/Projects/fsprj2/libiotrace/test/testscripts/:$PATH"
+
+tmux new-session -d -s "runsondbnode" srun -w $DBNODE --pty /bin/bash -c "export PATH="~/Projects/fsprj2/libiotrace/test/testscripts/:$PATH" && runsondbnode $DBNODE"
+#srun -n120 -l --multi-prog multiprog.conf
 
 echo "Fertig"
 
+sleep 30
 while IFS= read -r line; do
     IB0ADDR=$line
 done < ~/Projects/scripts/ib0

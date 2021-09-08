@@ -1,14 +1,12 @@
 #!/bin/bash
 
 
-module load cae/openfoam/8
-
 DBNODE=$(scontrol show hostname | tail -n 1)
 echo $DBNODE
 
-export PATH="~/Projects/fsprj2/libiotrace/test/testscripts/:$PATH"
+export PATH="$PWD:$PATH"
 
-tmux new-session -d -s "runsondbnode" srun -w $DBNODE --pty /bin/bash -c "export PATH="~/Projects/fsprj2/libiotrace/test/testscripts/:$PATH" && runsondbnode $DBNODE"
+tmux new-session -d -s "runsondbnode" srun -N 1 -n 1 -w $DBNODE --pty /bin/bash -c "export PATH="$PWD:$PATH" && runsondbnode"
 #srun -n120 -l --multi-prog multiprog.conf
 
 echo "Fertig"
@@ -20,7 +18,7 @@ done < ~/Projects/scripts/ib0
 
 echo $IB0ADDR
 
-cd ~/Projects/fsprj2/libiotrace/test/testscripts && ./mpi_file_io.sh $IB0ADDR
+cd $PWD && ./mpi_file_io.sh $IB0ADDR
 
 sleep 20000000
 

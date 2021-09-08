@@ -131,7 +131,7 @@ int main (int argc, char * argv[]) {
 #pragma omp master
         {
 #       endif
-            MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, "mpi_file_io.txt", MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+            MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, "/home/es/es_es/es_juruess/Projects/fsprj2/libiotrace/test/testscripts/mpi_file_io.txt", MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
             // MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL));
 #       ifdef WANT_OPENMP
         }

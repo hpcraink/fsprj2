@@ -10,12 +10,14 @@ IOTRACE_INFLUX_ORGANIZATION=hse
 IOTRACE_INFLUX_BUCKET=hsebucket
 IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
 IOTRACE_WHITELIST=./whitelist
-LD_PRELOAD=../src/libiotrace_shared.so
+LD_PRELOAD=../../build/src/libiotrace_shared.so
 TESTNAME=mpi_file_io_openmp
 TESTARGUMENTS=$number_of_writes
 
 file=performance_test
 format="\t%E\t%U\t%S\t%D\t%K\t%M"
+
+module load cae/openfoam/8
 
 rm $file
 rm -f $IOTRACE_WHITELIST

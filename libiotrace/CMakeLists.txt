@@ -26,6 +26,7 @@ option (WITH_ALLOC "build wrappers for memory allocations" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
 option (ENABLE_INPUT "enable input via REST-API" ON)
+option (ENABLE_FILESYSTEM_METADATA "writes mount points to LOGFILE and/or to INFLUXDB if ENABLE_OUTPUT is set to LOGFILE, INFLUXDB or LOGFILE_AND_INFLUXDB" ON)
 
 set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
 set(MAX_FUNCTION_NAME "40" CACHE STRING "max length of function names")
@@ -98,6 +99,10 @@ endif()
 
 if(ENABLE_INPUT)
     list(APPEND OPTIONS -DENABLE_INPUT)
+endif()
+
+if(ENABLE_FILESYSTEM_METADATA)
+    list(APPEND OPTIONS -DENABLE_FILESYSTEM_METADATA)
 endif()
 
 list(APPEND OPTIONS -DSTACKTRACE_DEPTH=${STACKTRACE_DEPTH})

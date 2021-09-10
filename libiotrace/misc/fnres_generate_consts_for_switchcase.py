@@ -156,8 +156,9 @@ case_strings = [
     "fork", "vfork",                # Handeled by libiotrace
 
 
-    # - libiotrace stuff -
+    # - libiotrace internal (nonexistent) fcts -
     "open_std_fd", "open_std_file",
+    "cleanup", "init_on_load",
 
 
 

@@ -14,6 +14,7 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
 /* --- Constants --- */
 /* Note: All files which aren't actual files have '_' as pre- & suffix */
 #define FNAME_SPECIFIER_STD "_ STD-IO _"
+#define FNAME_SPECIFIER_INTERNAL "_ INTERNAL-FCT _"
 #define FNAME_SPECIFIER_PSEUDO "_ PSEUDO-FILE _"
 #define FNAME_SPECIFIER_MEMMAP "_ MEM-MAPPING _"
 #define FNAME_SPECIFIER_NOTFOUND "_ NOT FOUND _"

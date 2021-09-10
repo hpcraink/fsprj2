@@ -1,5 +1,6 @@
 /**
  * Constants + string-hash function for switch-case on function-name
+ *   Note: To generate constants, use Python script 'fnres_generate_consts_for_switchcase.py' in 'misc'
  */
 
 #ifndef LIBIOTRACE_FCTCONSTS_H
@@ -152,6 +153,8 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_VFORK 0x311090218d
 #define CASE_OPEN_STD_FD 0xc0bc1dffa227498a
 #define CASE_OPEN_STD_FILE 0xe03b9c70c91ff7a0
+#define CASE_CLEANUP 0xd0b1cbccff0d
+#define CASE_INIT_ON_LOAD 0xd4004ddf3f7cb074
 #define CASE_MPI_FILE_OPEN 0xb63288054d21a95b
 #define CASE_MPI_FILE_CLOSE 0x7c8388aef07ba8bf
 #define CASE_MPI_REQUEST_FREE 0xb3de516efaa9efd4

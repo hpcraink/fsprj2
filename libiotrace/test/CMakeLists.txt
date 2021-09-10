@@ -241,11 +241,14 @@ list(APPEND LINK_OPTIONS
     "-lpthread"
 )
 
-if(WITH_FILENAME_RESOLUTION)            # $$$ TODO: ??? $$$
+if(WITH_FILENAME_RESOLUTION)
+# $$$ TODO: Rmv for tests not related to fnres;
+# Fails currently during linking (e.g., send_recv_static -> 'undefined reference to `pow'') due to $<TARGET_OBJECTS:iotrace_object> which has been compiled WITH_FILENAME_RESOLUTION $$$
     list(APPEND LINK_OPTIONS
         "-lm"
     )
 endif()
+
 
 ##########################################################################################################
 
@@ -264,6 +267,7 @@ if(WITH_POSIX_IO)
     )
     target_link_libraries(read_byte_static ${LINK_OPTIONS_STATIC})
     target_link_libraries(read_byte_static ${LINK_OPTIONS})
+
 endif()
 
 ##########################################################################################################

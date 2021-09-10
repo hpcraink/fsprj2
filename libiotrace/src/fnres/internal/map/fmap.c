@@ -60,7 +60,7 @@ int fmap_get(fmap_key* key, char** found_fname) {
     return atomic_hash_get(global_map, key, FMAP_KEY_SIZE, NULL, found_fname);
 }
 
-void fmap_set(fmap_key* key, char* fname) {
+void fmap_set(fmap_key* key, const char* fname) {
     assert(NULL != global_map && NULL != key && NULL != fname);
 
     char* filename;

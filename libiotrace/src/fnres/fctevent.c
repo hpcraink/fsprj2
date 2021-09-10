@@ -131,7 +131,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_MPI_FILE_OPEN:
         {
-            char* const fname = __get_file_name_from_fctevent_function_data(fctevent);
+            const char* const fname = __get_file_name_from_fctevent_function_data(fctevent);
 
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, fname)
 

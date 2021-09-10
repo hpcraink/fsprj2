@@ -42,7 +42,7 @@ void fmap_create(size_t max_size);
 void fmap_destroy(void);
 
 int fmap_get(fmap_key* key, char** found_fname);
-void fmap_set(fmap_key* key, char* fname);
+void fmap_set(fmap_key* key, const char* fname);    /* `const char*` -> avoid compiler warning */
 void fmap_remove(fmap_key* key);
 /* void fmap_clear(void); */
 

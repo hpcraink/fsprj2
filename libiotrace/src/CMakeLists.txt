@@ -244,8 +244,8 @@ add_library(iotrace_control SHARED libiotrace.c)
 if(WITH_FILENAME_RESOLUTION)
     set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE")      # sse4.2 is required for 'hash_city.c'
 
-    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} m pthread)        # $$$ TODO: DO WE ALSO NEED FOR STATIC ?? $$$
-    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} m pthread)
+    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} m pthread)
+    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} m pthread)        # $$$ TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ?? $$$
 else()
     target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} "-lpthread")
 endif()

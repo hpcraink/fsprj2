@@ -1,5 +1,10 @@
 
 
+- `assert`s in fmap.c ??
+
+-
+
+
 - Garbage values for 'open_std_fd' and 'open_std_fd' (won't be called), e.g.:
     {"traced_filename":"�����","hostname":"fpj-vm","process_id":96089,"thread_id":96089,"function_name":"open_std_fd","time_start":1631220901096297316,"time_end":1631220901096297316,"return_state":"ok","wrapper":{"time_start":1631220901096297316,"time_end":1631220901096308464},"file_type":{"descriptor":0}}
 
@@ -16,14 +21,14 @@
 
 
 - `event.c`:
-    - ENV var for setting # filenames in fmap
-    - #include's in #ifdef (or on top of src-file) ?
+    - ENV var parsing for setting # filenames in fmap
+    - #include's on top of src-file ?
 
 - Add Python-script in 'misc' folder ?
 
 - TODOs in `fctevent.c`
     - CASE_MPI_FILE_DELETE
-    - CASE_OPEN_STD_FD
+    - CASE_OPEN_STD_FD --> Gets never called (add STD-stuff instead in init function (which shall be async-signal-safe)) ?
 
 
 - `logging.h`: Logging output format

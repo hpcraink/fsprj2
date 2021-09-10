@@ -20,12 +20,12 @@
  *    - Implement callable hook 'reset_on_fork' (which sets flag 'got_forked' to indicate in next wrapper call a necessary removal of map values; called by 'reset_values_in_forked_process' in event.c)
  *  - Cleanup MPI Immediate MPI_Request handles (--> requires wrapper for 'MPI_Request_free')
  *     -> Concern (of current implementation): Max buckets of fmap may NOT be sufficient when some things aren't removed after close
- *  - Support multiple traced files in 'basic'-struct (some function-events affect multiple files) -> 'sync', 'floseall' or 'MPI_Waitall'
+ *  - Support multiple traced files in 'basic'-struct (some function-events affect multiple files) -> 'sync', 'floseall', 'copy_write_data' or 'MPI_Waitall'
+ *      - Note regarding copy_write_data: Implemented using 2 calls to this module; Check enum during call whether read or write data + assemble it
  *  - Optimization: Currently, each 'fmap_set' results in an 'malloc'. HOWEVER, some functions (like 'dup') create an 'id' referring to an already open file (which has already a filename-entry in the map)
  *    => Use pointer to this already allocated filename
  */
 
-// copy_write_data -> enum bei aufruf checken ob read oder write data + zusammenbauen
 
 /* --- Function prototypes for helper functions --- */
 static int __create_fmap_key_using_vals(id_type type, void* id, size_t mmap_length, fmap_key* new_key);
@@ -104,14 +104,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     SWITCH_FCTNAME(fctname) {
 
         /* --- Functions relevant for tracing + traceable --- */
-        case CASE_OPEN_STD_FD:                  // $$$ NOTE: Won't ever be called; TODO: ASK (MV TO INIT ?? ) $$$
+        case CASE_OPEN_STD_FD:
         case CASE_OPEN_STD_FILE:
-        {
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD)
 
             RETURN_IF_FCTEVENT_FAILED(fctevent)
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD)
-        }
             return;
 
         case CASE_OPEN:
@@ -131,12 +129,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_MPI_FILE_OPEN:
         {
-            const char* const fname = __get_file_name_from_fctevent_function_data(fctevent);
+            const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);
 
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, fname)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname)
 
             RETURN_IF_FCTEVENT_FAILED(fctevent)
-            ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, fname)
+            ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)
         }
             return;
 
@@ -168,13 +166,21 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_FREOPEN:
         case CASE_FREOPEN64:
         {
-            char const *fname = __get_file_name_from_fctevent_function_data(fctevent);
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, fname)
+            const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);
 
+            if (NULL == extracted_fname) {     /* Note: filename == NULL means 'reopen SAME file again' */
+                fmap_key search_key; char* search_found_fname;
+                IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
+                                                                 search_key, search_found_fname) {
+                    SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+                return;
+            }
+
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname)      // SEARCH FILENAME IN MAP ...
             RETURN_IF_FCTEVENT_FAILED(fctevent)
-            if (NULL == fname) { return; }     /* Note: filename == NULL means 'reopen SAME file again' */
             RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
-            ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, fname)          /* Add under same key but w/ different filename */
+            ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)          /* Add under same key but w/ different filename */
         }
             return;
 
@@ -293,7 +299,13 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
         /* --- Traceable --- */
-        case CASE_MPI_FILE_DELETE:          // TODO: ASK ??
+        case CASE_CLEANUP:          /* Internal libiotrace functions (which will be written to trace) */
+        case CASE_INIT_ON_LOAD:
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_INTERNAL)
+            return;
+
+
+        case CASE_MPI_FILE_DELETE:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, __get_file_name_from_fctevent_function_data(fctevent))
             return;
 
@@ -426,7 +438,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         not_implemented_yet:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT)
-            LOG_DEBUG("Not implemented yet...")
+            LOG_DEBUG("Not implemented yet function '%s'", fctname)
             return;
     }
 }

@@ -331,6 +331,38 @@ void test_mpi_open_immediate_close(void) {
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf3_MPI_Wait.traced_filename, FNAME_SPECIFIER_NOTFOUND));
 }
 
+/**
+ * Tests memory-mapping
+ */
+void test_posix_freopen_same_file(void) {
+    /* -- Create test data -- */
+    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)next_dummy_id++ };
+    struct open_function tmp_af1_function_data = { .file_name = "/var/tmp/ramdisk.tmp" };
+    struct basic af1_creat = {
+            .function_name = "creat",
+            .return_state = ok,
+            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function
+    };
+
+
+    struct open_function tmp_af2_function_data = { .file_name = NULL };
+    struct basic af2_freopen = {
+            .function_name = "freopen",
+            .return_state = ok,
+            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af2_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function
+    };
+    /* -- Create test data -- */
+
+
+
+    /* -- (0) Add to trace: 'creat' -> 'freopen' (reopen same file again) -- */
+    fnres_trace_fctevent(&af1_creat);
+    fnres_trace_fctevent(&af2_freopen);
+    CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(af2_freopen.traced_filename, tmp_af1_function_data.file_name));
+}
+
 
 
 CUNIT_CI_RUN("Suite_1",
@@ -338,4 +370,5 @@ CUNIT_CI_RUN("Suite_1",
              CUNIT_CI_TEST(test_posix_pipe2_lseek),
              CUNIT_CI_TEST(test_posix_stream_fildes_fileno_fwrite),
              CUNIT_CI_TEST(test_posix_creat_mmap_msync_mremap_munmap),
-             CUNIT_CI_TEST(test_mpi_open_immediate_close));
+             CUNIT_CI_TEST(test_mpi_open_immediate_close),
+             CUNIT_CI_TEST(test_posix_freopen_same_file));

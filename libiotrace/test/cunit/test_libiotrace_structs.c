@@ -180,6 +180,10 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 
 	int i = 0;
 	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+#ifdef WITH_FILENAME_RESOLUTION
+    check_json_string(print_buf, &tokens[i++], "traced_filename");
+    check_json_string(print_buf, &tokens[i++], data->traced_filename);
+#endif
 	check_json_string(print_buf, &tokens[i++], "hostname");
 	check_json_string(print_buf, &tokens[i++], data->hostname);
 	check_json_string(print_buf, &tokens[i++], "process_id");

@@ -56,7 +56,7 @@ if (WITH_FILENAME_RESOLUTION)
         ../../src/fnres/fctevent.c)
 	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
 
-	set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE")
+	set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
 	target_link_libraries(test_fctevent PRIVATE cunit m pthread)
 
 	add_test(NAME test_fctevent COMMAND test_fctevent)

@@ -185,9 +185,6 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 # Please keep in alphabetical order
 set(SOURCE
     event.c
-    fnres/fevent.c
-    fnres/map/fmap.c
-    fnres/map/impl/hashmap.c
     init.c
     llhttp/api.c
     llhttp/http.c
@@ -225,17 +222,33 @@ if(WITH_ALLOC)
     list(APPEND SOURCE alloc.c)
 endif()
 
+if(WITH_FILENAME_RESOLUTION)
+    list(APPEND SOURCE
+            fnres/fctevent.c
+            fnres/internal/map/fmap.c
+            fnres/internal/map/impl/hash_functions/hash_city.c
+            fnres/internal/map/impl/atomic_hash.c)
+endif()
+
 add_library(iotrace_shared SHARED ${SOURCE})
 
 add_library(iotrace_static STATIC ${SOURCE})
 
 add_library(iotrace_object OBJECT ${SOURCE})
 
-add_library(iotrace SHARED libiotrace.c)
+add_library(iotrace_control SHARED libiotrace.c)
+
 
 # ${CMAKE_DL_LIBS} needed for dlsym-function
 # "-lpthread" needed for pthread_atfork()
-target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} "-lpthread")
+if(WITH_FILENAME_RESOLUTION)
+    set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE")      # sse4.2 is required for 'hash_city.c'
+
+    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} m pthread)        # $$$ TODO: DO WE ALSO NEED FOR STATIC ?? $$$
+    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} m pthread)
+else()
+    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} "-lpthread")
+endif()
 
 target_compile_options(iotrace_shared PRIVATE ${OPTIONS})
 target_compile_options(iotrace_static PRIVATE ${OPTIONS})

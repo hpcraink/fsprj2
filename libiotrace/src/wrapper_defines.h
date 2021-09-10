@@ -8,7 +8,16 @@
 #include "utils.h"
 #include "error.h"
 #include "libiotrace_include_struct.h"
-#include "fnres/fevent.h"                // ???????????????????
+
+
+#ifdef WITH_FILENAME_RESOLUTION
+#  include "fnres/fctevent.h"
+#  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent);
+#else
+#  define FNRES_TRACE_FCTEVENT(fctevent)
+#endif
+
+
 
 #define LINE_BREAK "\r\n"
 
@@ -225,7 +234,7 @@
                               CALL_WRITE_INTO_BUFFER(data); \
                             } \
                          }                               \
-                         ADD_FEVENT_TO_TRACE(&data)      \
+                         FNRES_TRACE_FCTEVENT(&data)      \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #else
@@ -234,7 +243,7 @@
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
                          }                               \
-                         ADD_FEVENT_TO_TRACE(&data)      \
+                         FNRES_TRACE_FCTEVENT(&data)      \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
@@ -243,7 +252,7 @@
                              CALL_WRITE_INTO_INFLUXDB(data); \
                              CALL_WRITE_INTO_BUFFER(data); \
                            }                                 \
-                           ADD_FEVENT_TO_TRACE(&data)      \
+                           FNRES_TRACE_FCTEVENT(&data)      \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

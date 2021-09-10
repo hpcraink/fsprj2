@@ -1,0 +1,44 @@
+
+
+- Garbage values for 'open_std_fd' and 'open_std_fd' (won't be called), e.g.:
+    {"traced_filename":"�����","hostname":"fpj-vm","process_id":96089,"thread_id":96089,"function_name":"open_std_fd","time_start":1631220901096297316,"time_end":1631220901096297316,"return_state":"ok","wrapper":{"time_start":1631220901096297316,"time_end":1631220901096308464},"file_type":{"descriptor":0}}
+
+
+- CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
+
+- `event.c`:
+    - ENV var for setting # filenames in fmap
+    - #include's in #ifdef (or on top of src-file) ?
+
+- Add Python-script in 'misc' folder ?
+
+- TODOs in `fctevent.c`
+    - CASE_MPI_FILE_DELETE
+    - CASE_OPEN_STD_FD
+
+
+- `logging.h`: Logging output format
+    - DEBUGGING LOG format ok ??
+    - NDEBUG-Flag not working (when compling as Release)
+
+
+- POSIX AIO ??
+
+
+- Compiler warnings ?
+  8%] Building C object src/CMakeFiles/iotrace_object.dir/posix_io.c.o
+[  9%] Building C object src/CMakeFiles/iotrace_object.dir/fnres/fctevent.c.o
+/home/dev/Desktop/fsprj2/libiotrace/src/fnres/fctevent.c: In function ‘fnres_trace_fctevent’:
+/home/dev/Desktop/fsprj2/libiotrace/src/fnres/fctevent.c:124:33: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+  124 |             char* const fname = __get_file_name_from_fctevent_function_data(fctevent);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/dev/Desktop/fsprj2/libiotrace/src/fnres/fctevent.c:167:67: warning: passing argument 2 of ‘fmap_set’ discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+  167 |             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, fname)          /* Add under same key but w/ different filename */
+      |                                                                   ^~~~~
+/home/dev/Desktop/fsprj2/libiotrace/src/fnres/fctevent.c:44:25: note: in definition of macro ‘ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE’
+   44 |   fmap_set(&insert_key, filename);\
+      |                         ^~~~~~~~
+In file included from /home/dev/Desktop/fsprj2/libiotrace/src/fnres/fctevent.c:3:
+/home/dev/Desktop/fsprj2/libiotrace/src/fnres/internal/map/fmap.h:45:36: note: expected ‘char *’ but argument is of type ‘const char *’
+   45 | void fmap_set(fmap_key* key, char* fname);
+      |                              ~~~~~~^~~~~

@@ -45,3 +45,19 @@ if(WITH_ALLOC)
 
 	add_test(NAME test_alloc COMMAND test_alloc)
 endif()
+
+
+
+if (WITH_FILENAME_RESOLUTION)
+	add_executable(test_fctevent test_fctevent.c
+        ../../src/fnres/internal/map/impl/hash_functions/hash_city.c
+        ../../src/fnres/internal/map/impl/atomic_hash.c
+        ../../src/fnres/internal/map/fmap.c
+        ../../src/fnres/fctevent.c)
+	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
+
+	set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE")
+	target_link_libraries(test_fctevent PRIVATE cunit m pthread)
+
+	add_test(NAME test_fctevent COMMAND test_fctevent)
+endif()

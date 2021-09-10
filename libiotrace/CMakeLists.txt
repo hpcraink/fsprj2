@@ -148,12 +148,10 @@ if(WITH_ALLOC)
     list(APPEND OPTIONS -DWITH_ALLOC)
 endif()
 
-#compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w ids and filenames during runtime
-if(WITH_FILENAME_RESOLUTION)
+# Compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w ids and filenames during runtime
+if (WITH_FILENAME_RESOLUTION)
     list(APPEND OPTIONS -DWITH_FILENAME_RESOLUTION)
 endif()
-
-
 
 if(WITH_MPI_IO)
     find_package(MPI REQUIRED)

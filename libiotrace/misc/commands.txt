@@ -1,0 +1,31 @@
+
+- Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
+
+- Compile: (rm -rf build && mkdir build && cd build && cmake -D CMAKE_BUILD_TYPE=Debug -DENABLE_OUTPUT=LOGFILE -DWITH_FILENAME_RESOLUTION=ON .. && cmake -B . -S .. && cmake --build .)
+- Run test:
+    ./build/test/cunit/test_fctevent
+
+    (cd build/test && IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared ; code ../../test/read_byte.c read_byte_shared_test1_iotrace.log)
+    (cd build/test && IOTRACE_LOG_NAME=read_byte_static_test1 ./read_byte_static ; code ../../test/read_byte.c read_byte_static_test1_iotrace.log)
+
+
+    TODO:   DOESN'T WORK
+    (cd build/test && IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared ; code ../../test/read_stream.c read_stream_shared_test1_iotrace.log)
+    (cd build/test && IOTRACE_LOG_NAME=read_stream_static_test1 ./read_stream_static ; code ../../test/read_stream.c read_stream_static_test1_iotrace.log)
+
+    (cd build/test && IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared ; code ../../test/read_byte_and_stream.c read_byte_and_stream_shared_test1_iotrace.log)
+    (cd build/test && IOTRACE_LOG_NAME=read_byte_and_stream_static_test1 ./read_byte_and_stream_static ; code ../../test/read_byte_and_stream.c read_byte_and_stream_static_test1_iotrace.log)
+
+    (cd build/test && IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared ; code ../../test/write_stream.c write_stream_shared_test1_iotrace.log)
+    (cd build/test && IOTRACE_LOG_NAME=write_stream_static_test1 ./write_stream_static ; code ../../test/write_stream.c write_stream_static_test1_iotrace.log)
+
+    (cd build/test && IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared ; code ../../test/send_recv.c send_recv_shared_test1_iotrace.log)
+    (cd build/test && IOTRACE_LOG_NAME=send_recv_static_test1 ./send_recv_static ; code ../../test/send_recv.c send_recv_static_test1_iotrace.log)
+
+    (cd build/test && IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared ; code ../../test/OpenMP_read_stream.c OpenMP_read_stream_shared_test1_iotrace.log)
+
+
+
+    AIO CURRENTLY NOT SUPPORTED
+    (cd build/test && IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared ; code ../../test/read_async_byte.c read_async_byte_shared_test1.log)
+    (cd build/test && IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_async_byte_static ; code ../../test/read_async_byte.c read_async_byte_static_test1.log)

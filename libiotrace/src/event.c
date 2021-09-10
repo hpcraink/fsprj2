@@ -1207,6 +1207,11 @@ void open_std_fd(int fd)
 	data.return_state = ok;
 	data.return_state_detail = NULL;
 
+
+#ifdef WITH_FILENAME_RESOLUTION
+    fnres_trace_fctevent(&data);
+#endif
+
 #ifdef IOTRACE_ENABLE_LOGFILE
 	write_into_buffer(&data);
 #endif
@@ -1253,6 +1258,12 @@ void open_std_file(FILE *file)
 	data.return_state = ok;
 	data.return_state_detail = NULL;
 
+
+#ifdef WITH_FILENAME_RESOLUTION
+    fnres_trace_fctevent(&data);
+#endif
+
+
 #ifdef IOTRACE_ENABLE_LOGFILE
 	write_into_buffer(&data);
 #endif
@@ -1295,6 +1306,11 @@ void init_on_load()
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
+
+#ifdef WITH_FILENAME_RESOLUTION
+    fnres_trace_fctevent(&data);
+#endif
+
 #  ifdef IOTRACE_ENABLE_LOGFILE
 	if (active_wrapper_status.init_on_load) {
 		write_into_buffer(&data);
@@ -2013,26 +2029,6 @@ void init_process()
 
 	if (!init_done)
 	{
-#ifdef WITH_FILENAME_RESOLUTION
-        {
-            /* Get & parse env for max # of filenames in fmap */
-            size_t fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
-            char *fnres_fmap_max_fnames_env_str = NULL;
-            if (NULL != (fnres_fmap_max_fnames_env_str = getenv(env_fnres_fmap_max_fnames))) {
-                char *p_end_ptr = NULL;
-                fnres_fmap_max_fnames = strtoul(fnres_fmap_max_fnames_env_str, &p_end_ptr,10);
-                if ((fnres_fmap_max_fnames_env_str == p_end_ptr || ERANGE == errno) ||
-                        (0 >= fnres_fmap_max_fnames || FNRES_MAX_FMAP_MAX_FNAMES < fnres_fmap_max_fnames)) {
-                    // LIBIOTRACE_WARN("Invalid value for env-var '%s'\n", env_fnres_fmap_max_fnames);      /* TODO: Causes lib not to function properly? */
-                    fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
-                }
-            }
-
-            /* Init module using parsed env-var */
-            fnres_init(fnres_fmap_max_fnames);
-        }
-#endif
-
 #ifdef IOTRACE_ENABLE_LOGFILE
 		pos = data_buffer;
 		count_basic = 0;
@@ -2074,7 +2070,27 @@ void init_process()
 #endif
 
 #if !defined(IO_LIB_STATIC)
-		init_wrapper();
+		init_wrapper();         /* WARNING: glibc calls (CALL_REAL_POSIX_SYNC) will work ONLY AFTER THIS LINE */
+#endif
+
+#ifdef WITH_FILENAME_RESOLUTION
+        {
+            /* Get & parse env for max # of filenames in fmap */
+            size_t fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
+            char *fnres_fmap_max_fnames_env_str = NULL;
+            if (NULL != (fnres_fmap_max_fnames_env_str = getenv(env_fnres_fmap_max_fnames))) {
+                char *p_end_ptr = NULL;
+                fnres_fmap_max_fnames = strtoul(fnres_fmap_max_fnames_env_str, &p_end_ptr,10);
+                if ((fnres_fmap_max_fnames_env_str == p_end_ptr || ERANGE == errno) ||
+                    (0 >= fnres_fmap_max_fnames || FNRES_MAX_FMAP_MAX_FNAMES < fnres_fmap_max_fnames)) {
+                    LIBIOTRACE_WARN("Invalid value for env-var '%s'\n", env_fnres_fmap_max_fnames);      /* TODO: Causes lib not to function properly? */
+                    fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
+                }
+            }
+
+            /* Init module using parsed env-var */
+            fnres_init(fnres_fmap_max_fnames);
+        }
 #endif
 
 #if !defined(HAVE_HOST_NAME_MAX)
@@ -2595,9 +2611,6 @@ void free_memory(struct basic *data)
 void cleanup()
 {
 	event_cleanup_done = 1;
-#ifdef WITH_FILENAME_RESOLUTION
-    fnres_fin();
-#endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
 
@@ -2624,18 +2637,31 @@ void cleanup()
 
 	WRAPPER_TIME_END(data);
 
+#ifdef WITH_FILENAME_RESOLUTION
+    fnres_trace_fctevent(&data);        // $$$ TODO: ASK whether ok $$$
+#endif
+
 #ifdef LOG_WRAPPER_TIME
 	if (active_wrapper_status.cleanup) {
 		write_into_buffer(&data);
 	}
+
+#ifdef WITH_FILENAME_RESOLUTION
+    fnres_trace_fctevent(&data);
+#endif
+
 	pthread_mutex_lock(&lock);
 	print_buffer();
 	pthread_mutex_unlock(&lock);
 	WRAP_FREE(&data)
-#endif
+#endif /* LOG_WRAPPER_TIME */
 
 	pthread_mutex_destroy(&lock);
 
+#endif /* IOTRACE_ENABLE_LOGFILE */
+
+#ifdef WITH_FILENAME_RESOLUTION
+    fnres_fin();
 #endif
 
 #ifdef IOTRACE_ENABLE_INFLUXDB

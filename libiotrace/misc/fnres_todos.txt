@@ -6,6 +6,15 @@
 
 - CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
 
+
+
+-  Broken unit test once compiled w/ FILENAME_RESULTION:
+  Running Suite : Suite_1
+       Running Test : test_struct_basic ..FAILED
+  Suite Suite_1, Test test_struct_basic had failures:
+      1. check_json_string:/home/runner/work/fsprj2/fsprj2/libiotrace/test/cunit/test_libiotrace_structs.c:113  - strlen(string) == token->end - token->start
+
+
 - `event.c`:
     - ENV var for setting # filenames in fmap
     - #include's in #ifdef (or on top of src-file) ?

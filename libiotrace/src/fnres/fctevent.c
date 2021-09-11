@@ -304,7 +304,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         /* --- Traceable --- */
         case CASE_CLEANUP:          /* Internal libiotrace functions (which will be written to trace) */
         case CASE_INIT_ON_LOAD:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_INTERNAL)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF)
             return;
 
 

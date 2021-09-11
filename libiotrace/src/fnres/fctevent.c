@@ -91,7 +91,7 @@ void fnres_init(size_t fmap_max_size) {
 void fnres_fin(void) {
     fmap_destroy();
 
-    got_init = false;           // $$ TODO: THREAD SAFETY (one thread calls 'init' whilst the other calls 'fin') $$
+    got_init = false;
     LOG_DEBUG("Uninit done")
 }
 
@@ -101,16 +101,24 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LOG_ERROR_AND_EXIT("fnres: Got no init prior usage") }
 
     char* const extracted_fctname = fctevent->function_name;
-    printf("\n\nCALLED W/ %s\n\n", extracted_fctname);
+    printf("\n\nCALLED W/ %s\n", extracted_fctname);        // DEBUGGING
     SWITCH_FCTNAME(extracted_fctname) {
 
         /* --- Functions relevant for tracing + traceable --- */
         case CASE_OPEN_STD_FD:
+            printf("\tFD-ID = %d\n", ((struct file_descriptor*)fctevent->file_type)->descriptor);        // DEBUGGING
+            goto continue_debug;
+
         case CASE_OPEN_STD_FILE:
+            printf("\tSTREAM = %p\n", ((struct file_stream*)fctevent->file_type)->stream);        // DEBUGGING
+        continue_debug:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD)
+            puts("\t0");          // DEBUGGING
 
             RETURN_IF_FCTEVENT_FAILED(fctevent)
+            puts("\t1");          // DEBUGGING
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD)
+            puts("\t2");          // DEBUGGING
             return;
 
         case CASE_OPEN:
@@ -137,7 +145,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             RETURN_IF_FCTEVENT_FAILED(fctevent)
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)
 
-            printf("\n\nAfter: %s\n\n", fctevent->traced_filename); // TODO .......................................................................................
+            printf("\n\nAfter: %s\n\n", fctevent->traced_filename);         // DEBUGGING
             return;
         }
 
@@ -478,7 +486,7 @@ static int __create_fmap_key_using_vals(id_type type, void* id, size_t mmap_leng
             new_key->id.mpi_id = *((int*) id);
             return 0;
 
-        case MPI_REQUEST:
+        case R_MPI:
             new_key->id.mpi_req_id = *((int*) id);
             return 0;
 
@@ -506,8 +514,8 @@ static int __create_fmap_key_using_fctevent_file_type(struct basic *fctevent, fm
                            &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
 
         case void_p_enum_file_type_request_mpi:
-            return __create_fmap_key_using_vals(MPI_REQUEST,
-                           &((struct request_mpi *) fctevent->file_type)->request_id,0, new_key);
+            return __create_fmap_key_using_vals(R_MPI,
+                                                &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
 
         default:
             LOG_DEBUG("Unhandled case for 'fctevent->void_p_enum_file_type' w/ value %d", fctevent->void_p_enum_file_type)
@@ -543,10 +551,10 @@ static int __create_fmap_key_using_fctevent_function_data(struct basic* fctevent
             return __create_fmap_key_using_vals(F_MEMORY, ((struct memory_remap_function*)fctevent->function_data)->new_address, ((struct memory_remap_function*) fctevent->function_data)->new_length, new_key1);
 
         case void_p_enum_function_data_mpi_immediate:
-            return __create_fmap_key_using_vals(MPI_REQUEST, &((struct mpi_immediate*)fctevent->function_data)->request_id, 0, new_key1);
+            return __create_fmap_key_using_vals(R_MPI, &((struct mpi_immediate*)fctevent->function_data)->request_id, 0, new_key1);
 
         case void_p_enum_function_data_mpi_immediate_at:
-            return __create_fmap_key_using_vals(MPI_REQUEST, &((struct mpi_immediate_at*)fctevent->function_data)->request_id, 0, new_key1);
+            return __create_fmap_key_using_vals(R_MPI, &((struct mpi_immediate_at*)fctevent->function_data)->request_id, 0, new_key1);
 
         case void_p_enum_function_data_mpi_open_function:
             return __create_fmap_key_using_vals(F_MPI, &((struct file_mpi*)fctevent->function_data)->mpi_file, 0, new_key1);

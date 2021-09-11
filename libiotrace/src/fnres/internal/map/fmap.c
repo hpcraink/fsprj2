@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -29,6 +28,46 @@ int __del_hook(void* hash_data, void* caller_data) {
 
     return PLEASE_REMOVE_HASH_NODE;
 }
+
+/* ... debugging ... */
+#ifndef NDEBUG
+int print_fmap_key_to_str(fmap_key* key, char* str_buf, size_t str_buf_size) {
+    #define SNPRINTF(id_type_str, id_format_specifier, id_union_value) \
+        snprintf(str_buf, str_buf_size, "type=%s,id=" #id_format_specifier ",mmap_length=%zu", \
+        id_type_str, key->id.id_union_value, key->mmap_length);
+
+    if (F_DESCRIPTOR == key->type) {
+        return SNPRINTF("F_DES", %d, fildes)
+    } else if (F_STREAM == key->type) {
+        return SNPRINTF("F_STR", %p, stream)
+    } else if (F_MEMORY == key->type) {
+        return SNPRINTF("F_MEM", %p, mmap_start)
+    } else if (F_MPI == key->type) {
+        return SNPRINTF("F_MPI", %d, mpi_id)
+    } else {
+        return SNPRINTF("R_MPI", %d, mpi_req_id)
+    }
+}
+
+void log_fmap_key(fmap_key* key) {
+    char* str_buf = NULL;
+    int str_buf_size = print_fmap_key_to_str(key, NULL, 0) + ((int)sizeof((char)'\0'));
+    if (NULL != (str_buf = malloc(str_buf_size))) {
+        print_fmap_key_to_str(key, str_buf, str_buf_size);
+        LOG_DEBUG("fmap-key: %s", str_buf);
+
+        free(str_buf);
+    } else {
+        LOG_ERROR_AND_EXIT("Failed printing key ('malloc' returned NULL)")
+    }
+}
+
+#  define PRINT_FMAP_KEY_IN_DEBUG(key) log_fmap_key(key);
+#else
+#  define PRINT_FMAP_KEY_IN_DEBUG(key)
+#endif
+
+
 
 
 /* - Public functions - */
@@ -77,9 +116,11 @@ void fmap_set(fmap_key* key, const char* fname) {
         strncpy(filename, fname, fname_size);                    /* Make copy of filename */
 
         if (atomic_hash_add(global_map, key, FMAP_KEY_SIZE, filename, TTL_DISABLE, NULL, NULL)) {
-            LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s'", fname);
+            PRINT_FMAP_KEY_IN_DEBUG(key)
+            LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s'", fname)
         } else {
             LOG_DEBUG(_LOG_MODULE_NAME": Added '%s'", filename)
+            // PRINT_FMAP_KEY_IN_DEBUG(key)
         }
     } else {
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": malloc() returned NULL for '%s'", fname);
@@ -92,6 +133,7 @@ void fmap_remove(fmap_key* key) {
     }
 
     if (atomic_hash_del(global_map, key, FMAP_KEY_SIZE, NULL, NULL)) {
+        PRINT_FMAP_KEY_IN_DEBUG(key)
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't delete value (filename)");
     }
 }

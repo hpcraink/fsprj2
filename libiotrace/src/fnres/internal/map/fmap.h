@@ -24,14 +24,13 @@ typedef enum id_type {
     F_STREAM,
     F_MEMORY,
     F_MPI,
-    MPI_REQUEST      // Immediate mapping for MPI_Request struct
+    R_MPI      /* Immediate mapping for MPI_Request struct */
 } id_type;
 
 typedef struct fmap_key {
     id id;
     id_type type;
     size_t mmap_length;                   // Only relevant 4 file_memory (0 indicates none)
-                                          // ??? shared -or public mmapping ? (muss ich mapping nach fork entfernen) ? --> wie aufrufen ???
 } fmap_key;
 
 #define FMAP_KEY_SIZE sizeof(fmap_key)

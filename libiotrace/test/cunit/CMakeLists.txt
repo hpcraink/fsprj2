@@ -49,6 +49,9 @@ endif()
 
 
 if (WITH_FILENAME_RESOLUTION)
+	set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
+
+    # - fctevent -
 	add_executable(test_fctevent test_fctevent.c
         ../../src/fnres/internal/map/impl/hash_functions/hash_city.c
         ../../src/fnres/internal/map/impl/atomic_hash.c
@@ -56,8 +59,19 @@ if (WITH_FILENAME_RESOLUTION)
         ../../src/fnres/fctevent.c)
 	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
 
-	set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
 	target_link_libraries(test_fctevent PRIVATE cunit m pthread)
 
 	add_test(NAME test_fctevent COMMAND test_fctevent)
+
+
+	# - fmap -
+	add_executable(testing_fmap testing_fmap.c
+			../../src/fnres/internal/map/impl/hash_functions/hash_city.c
+			../../src/fnres/internal/map/impl/atomic_hash.c
+			../../src/fnres/internal/map/fmap.c)
+	set_target_properties(testing_fmap PROPERTIES LINK_FLAGS -W)
+
+	target_link_libraries(testing_fmap PRIVATE cunit m pthread)
+
+	add_test(NAME testing_fmap COMMAND test_fmap)
 endif()

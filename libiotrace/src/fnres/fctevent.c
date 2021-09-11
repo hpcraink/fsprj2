@@ -106,19 +106,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         /* --- Functions relevant for tracing + traceable --- */
         case CASE_OPEN_STD_FD:
-            printf("\tFD-ID = %d\n", ((struct file_descriptor*)fctevent->file_type)->descriptor);        // DEBUGGING
-            goto continue_debug;
-
         case CASE_OPEN_STD_FILE:
-            printf("\tSTREAM = %p\n", ((struct file_stream*)fctevent->file_type)->stream);        // DEBUGGING
-        continue_debug:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD)
-            puts("\t0");          // DEBUGGING
-
             RETURN_IF_FCTEVENT_FAILED(fctevent)
-            puts("\t1");          // DEBUGGING
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD)
-            puts("\t2");          // DEBUGGING
             return;
 
         case CASE_OPEN:
@@ -502,7 +493,7 @@ static int __create_fmap_key_using_fctevent_file_type(struct basic *fctevent, fm
 
         case void_p_enum_file_type_file_stream:
             return __create_fmap_key_using_vals(F_STREAM,
-                           &((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
+                           ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
 
         case void_p_enum_file_type_file_memory:
             return __create_fmap_key_using_vals(F_MEMORY,
@@ -515,7 +506,7 @@ static int __create_fmap_key_using_fctevent_file_type(struct basic *fctevent, fm
 
         case void_p_enum_file_type_request_mpi:
             return __create_fmap_key_using_vals(R_MPI,
-                                                &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
+                            &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
 
         default:
             LOG_DEBUG("Unhandled case for 'fctevent->void_p_enum_file_type' w/ value %d", fctevent->void_p_enum_file_type)

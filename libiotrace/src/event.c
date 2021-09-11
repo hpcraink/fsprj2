@@ -2646,9 +2646,9 @@ void cleanup()
 		write_into_buffer(&data);
 	}
 
-#ifdef WITH_FILENAME_RESOLUTION
-    fnres_trace_fctevent(&data);
-#endif
+//#ifdef WITH_FILENAME_RESOLUTION
+//    fnres_trace_fctevent(&data);        // $$$ TODO: ASK whether ok $$$
+//#endif
 
 	pthread_mutex_lock(&lock);
 	print_buffer();

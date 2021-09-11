@@ -31,7 +31,7 @@ int __del_hook(void* hash_data, void* caller_data) {
 
 /* ... debugging ... */
 #ifndef NDEBUG
-int print_fmap_key_to_str(fmap_key* key, char* str_buf, size_t str_buf_size) {
+static int __print_fmap_key_to_str(fmap_key* key, char* str_buf, size_t str_buf_size) {
     #define SNPRINTF(id_type_str, id_format_specifier, id_union_value) \
         snprintf(str_buf, str_buf_size, "type=%s,id=" #id_format_specifier ",mmap_length=%zu", \
         id_type_str, key->id.id_union_value, key->mmap_length);
@@ -49,11 +49,11 @@ int print_fmap_key_to_str(fmap_key* key, char* str_buf, size_t str_buf_size) {
     }
 }
 
-void log_fmap_key(fmap_key* key) {
+static void __log_fmap_key(fmap_key* key) {
     char* str_buf = NULL;
-    int str_buf_size = print_fmap_key_to_str(key, NULL, 0) + ((int)sizeof((char)'\0'));
+    int str_buf_size = __print_fmap_key_to_str(key, NULL, 0) + ((int)sizeof((char)'\0'));
     if (NULL != (str_buf = malloc(str_buf_size))) {
-        print_fmap_key_to_str(key, str_buf, str_buf_size);
+        __print_fmap_key_to_str(key, str_buf, str_buf_size);
         LOG_DEBUG(_LOG_MODULE_NAME": fmap-key: %s", str_buf);
 
         free(str_buf);
@@ -62,7 +62,7 @@ void log_fmap_key(fmap_key* key) {
     }
 }
 
-#  define PRINT_FMAP_KEY_IN_DEBUG(key) log_fmap_key(key);
+#  define PRINT_FMAP_KEY_IN_DEBUG(key) __log_fmap_key(key);
 #else
 #  define PRINT_FMAP_KEY_IN_DEBUG(key)
 #endif

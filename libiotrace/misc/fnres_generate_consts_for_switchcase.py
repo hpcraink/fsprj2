@@ -76,7 +76,7 @@ case_strings = [
 
 
     "close", "fclose",              # Note: Only for debugging (application using already closed file will crash anyways)
-    "fcloseall",
+    "fcloseall",             # GNU extension
     "munmap",
 
 
@@ -143,6 +143,8 @@ case_strings = [
     "fflush", "fflush_unlocked",
     "setvbuf", "setbuf", "setbuffer",
     "setlinebuf",
+
+    "__freadable", "__fwritable", "__fsetlocking",      # GNU extensions
 
 
     # - Inaccurate (since private mappings are NOT removed) -

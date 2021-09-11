@@ -100,8 +100,9 @@ void fnres_fin(void) {
 void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LOG_ERROR_AND_EXIT("fnres: Got no init prior usage") }
 
-    char* const fctname = fctevent->function_name;
-    SWITCH_FCTNAME(fctname) {
+    char* const extracted_fctname = fctevent->function_name;
+    printf("\n\nCALLED W/ %s\n\n", extracted_fctname);
+    SWITCH_FCTNAME(extracted_fctname) {
 
         /* --- Functions relevant for tracing + traceable --- */
         case CASE_OPEN_STD_FD:
@@ -135,8 +136,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
             RETURN_IF_FCTEVENT_FAILED(fctevent)
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)
-        }
+
+            printf("\n\nAfter: %s\n\n", fctevent->traced_filename); // TODO .......................................................................................
             return;
+        }
 
         case CASE_ACCEPT:
         case CASE_ACCEPT4:
@@ -181,8 +184,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             RETURN_IF_FCTEVENT_FAILED(fctevent)
             RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)          /* Add under same key but w/ different filename */
-        }
             return;
+        }
 
         case CASE_MREMAP:
         {
@@ -195,8 +198,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 ADD_FNAME_TO_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname)
                 RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)       /* Remove old mapping */
             } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
-        }
             return;
+        }
 
 
         case CASE_MMAP:
@@ -210,8 +213,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             } else {
                 goto case_dup;
             }
-        }
             return;
+        }
 
         case CASE_DUP:
         case CASE_DUP2:
@@ -237,8 +240,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 ADD_FNAME_TO_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname)
             } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
-        }
             return;
+        }
 
         case CASE_FCNTL:
             if (void_p_enum_cmd_data_dup_function ==
@@ -255,8 +258,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_found_fname)
             } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
-        }
             return;
+        }
 
 
         case CASE_SENDMSG:
@@ -279,8 +282,9 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
             } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
-        }
             return;
+        }
+
 
 
         case CASE_MADVISE:
@@ -288,7 +292,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             goto not_implemented_yet;
 
 
-        case CASE_FCLOSEALL:
+        case CASE_FCLOSEALL:            /* GNU extension */
             goto not_implemented_yet;
 
 
@@ -394,6 +398,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_SETBUFFER:
         case CASE_SETLINEBUF:
 
+        case CASE___FREADABLE:          /* GNU extensions */
+        case CASE___FWRITABLE:
+        case CASE___FSETLOCKING:
+
         case CASE_MPI_FILE_READ:
         case CASE_MPI_FILE_READ_ALL:
         case CASE_MPI_FILE_READ_ALL_BEGIN:
@@ -413,8 +421,9 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                                                              search_key, search_found_fname) {
                 SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
             } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
-        }
             return;
+        }
+
 
 
 
@@ -433,12 +442,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         /* ---------------------------------------------------------------------------------- */
         default:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT)
-            LOG_DEBUG("Unhandled case for function '%s'", fctname)
+            LOG_DEBUG("Unhandled case for function '%s'", extracted_fctname)
             return;
 
         not_implemented_yet:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT)
-            LOG_DEBUG("Not implemented yet function '%s'", fctname)
+            LOG_DEBUG("Not implemented yet function '%s'", extracted_fctname)
             return;
     }
 }

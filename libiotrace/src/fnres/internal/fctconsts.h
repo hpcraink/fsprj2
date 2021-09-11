@@ -146,6 +146,9 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_SETBUF 0x6531b853c4e
 #define CASE_SETBUFFER 0x377d88a4a7840eb
 #define CASE_SETLINEBUF 0x7272e9d67fd901f6
+#define CASE___FREADABLE 0xc0624271cfe98859
+#define CASE___FWRITABLE 0xc06242a769b293a3
+#define CASE___FSETLOCKING 0x61fcd11a85e62afc
 #define CASE_SYNC 0x17c9e3062
 #define CASE_SENDMSG 0xd0b68bc12bd6
 #define CASE_RECVMSG 0xd0b63e09c05c

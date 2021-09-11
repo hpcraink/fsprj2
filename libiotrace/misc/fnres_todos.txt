@@ -1,39 +1,24 @@
 
 
-- `assert`s in fmap.c ??
-
--
-
-
-- Garbage values for 'open_std_fd' and 'open_std_fd' (won't be called), e.g.:
-    {"traced_filename":"�����","hostname":"fpj-vm","process_id":96089,"thread_id":96089,"function_name":"open_std_fd","time_start":1631220901096297316,"time_end":1631220901096297316,"return_state":"ok","wrapper":{"time_start":1631220901096297316,"time_end":1631220901096308464},"file_type":{"descriptor":0}}
 
 
 - CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
+    -> tests -> remove -DWITH_FILENAME_RESOLUTION (libm won't be required anymore)
+    	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
 
 
-
--  Broken unit test once compiled w/ FILENAME_RESULTION:
-  Running Suite : Suite_1
-       Running Test : test_struct_basic ..FAILED
-  Suite Suite_1, Test test_struct_basic had failures:
-      1. check_json_string:/home/runner/work/fsprj2/fsprj2/libiotrace/test/cunit/test_libiotrace_structs.c:113  - strlen(string) == token->end - token->start
 
 
 - `event.c`:
-    - ENV var parsing for setting # filenames in fmap
-    - #include's on top of src-file ?
+    - FNRES_MAX_FMAP_MAX_FNAMES ??
 
-- Add Python-script in 'misc' folder ?
 
 - TODOs in `fctevent.c`
-    - CASE_MPI_FILE_DELETE
-    - CASE_OPEN_STD_FD --> Gets never called (add STD-stuff instead in init function (which shall be async-signal-safe)) ?
+    - MPI_Wait cleanup filename afterwards (MPI_Request_free cancels or continues request -> delete filename ...)
+    - CASE_OPEN_STD_FD --> issues ?
 
 
-- `logging.h`: Logging output format
-    - DEBUGGING LOG format ok ??
-    - NDEBUG-Flag not working (when compling as Release)
+freopen
 
-
-- POSIX AIO ??
+- `logging.h`:
+    - NDEBUG-Flag not working (when compiling as Release)

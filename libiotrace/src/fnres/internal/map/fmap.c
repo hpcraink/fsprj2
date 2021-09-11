@@ -22,7 +22,7 @@ static hash_t* global_map = NULL;
 /* Hook is necessary for destroying map (and removing values) */
 int __del_hook(void* hash_data, void* caller_data) {
     if (hash_data) {
-        LOG_DEBUG("Freeing string/filename '%s'", (char*)hash_data)
+        LOG_DEBUG(_LOG_MODULE_NAME": Freeing string/filename '%s'", (char*)hash_data)
         free(hash_data);
     }
 
@@ -54,11 +54,11 @@ void log_fmap_key(fmap_key* key) {
     int str_buf_size = print_fmap_key_to_str(key, NULL, 0) + ((int)sizeof((char)'\0'));
     if (NULL != (str_buf = malloc(str_buf_size))) {
         print_fmap_key_to_str(key, str_buf, str_buf_size);
-        LOG_DEBUG("fmap-key: %s", str_buf);
+        LOG_DEBUG(_LOG_MODULE_NAME": fmap-key: %s", str_buf);
 
         free(str_buf);
     } else {
-        LOG_ERROR_AND_EXIT("Failed printing key ('malloc' returned NULL)")
+        LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Failed printing key ('malloc' returned NULL)")
     }
 }
 
@@ -120,7 +120,7 @@ void fmap_set(fmap_key* key, const char* fname) {
             LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s'", fname)
         } else {
             LOG_DEBUG(_LOG_MODULE_NAME": Added '%s'", filename)
-            // PRINT_FMAP_KEY_IN_DEBUG(key)
+            PRINT_FMAP_KEY_IN_DEBUG(key)
         }
     } else {
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": malloc() returned NULL for '%s'", fname);

@@ -2083,7 +2083,7 @@ void init_process()
                 fnres_fmap_max_fnames = strtoul(fnres_fmap_max_fnames_env_str, &p_end_ptr,10);
                 if ((fnres_fmap_max_fnames_env_str == p_end_ptr || ERANGE == errno) ||
                     (0 >= fnres_fmap_max_fnames || FNRES_MAX_FMAP_MAX_FNAMES < fnres_fmap_max_fnames)) {
-                    LIBIOTRACE_WARN("Invalid value for env-var '%s'\n", env_fnres_fmap_max_fnames);      /* TODO: Causes lib not to function properly? */
+                    LIBIOTRACE_WARN("Invalid value for env-var '%s'", env_fnres_fmap_max_fnames);
                     fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
                 }
             }

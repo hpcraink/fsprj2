@@ -15,10 +15,11 @@
 
 - TODOs in `fctevent.c`
     - MPI_Wait cleanup filename afterwards (MPI_Request_free cancels or continues request -> delete filename ...)
-    - CASE_OPEN_STD_FD --> issues ?
 
 
-freopen
+- Writeout to log not working properly ?
+
 
 - `logging.h`:
     - NDEBUG-Flag not working (when compiling as Release)
+    - `<<libiotrace>>` lib wide logging output format

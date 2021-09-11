@@ -115,9 +115,12 @@ void fmap_set(fmap_key* key, const char* fname) {
     if (NULL != (filename = malloc(fname_size))) {
         strncpy(filename, fname, fname_size);                    /* Make copy of filename */
 
-        if (atomic_hash_add(global_map, key, FMAP_KEY_SIZE, filename, TTL_DISABLE, NULL, NULL)) {
+        int map_operation_result;
+        if ((map_operation_result = atomic_hash_add(global_map, key, FMAP_KEY_SIZE, filename, TTL_DISABLE, NULL, NULL)) ) {
             PRINT_FMAP_KEY_IN_DEBUG(key)
-            LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s'", fname)
+            LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s' (code = %d [%s])", fname, map_operation_result, (
+                    (1 == map_operation_result) ? "value for same key exists already" :
+                    (-1 == map_operation_result) ? "max filenames in fmap exceeded" : "unknown"))
         } else {
             LOG_DEBUG(_LOG_MODULE_NAME": Added '%s'", filename)        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
             PRINT_FMAP_KEY_IN_DEBUG(key)                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)

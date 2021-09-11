@@ -51,9 +51,10 @@ void test_same_value(void) {
         .mmap_length = 0
     };
 
-    for (int i = 0; i <= 50; i++) {
+    for (int i = 0; i <= 99; i++) {             // Failure cause: `i <=` --> Too many entries for fmap
+        printf("Added nr. %d\n", i);
         fmap_set(&key, "_TEST_");
-        // key.id.fildes++;
+        // key.id.fildes++;                        // Failure cause: Identical key
     }
 
     CU_ASSERT_FATAL(false);

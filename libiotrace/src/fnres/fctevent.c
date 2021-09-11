@@ -20,7 +20,7 @@
  *     -> Concern (of current implementation): Max buckets of fmap may NOT be sufficient when some things aren't removed after close
  *  - Support multiple traced files in 'basic'-struct (some function-events affect multiple files) -> 'sync', 'floseall', 'copy_write_data' or 'MPI_Waitall'
  *      - Note regarding copy_write_data: Implemented using 2 calls to this module; Check enum during call whether read or write data + assemble it
- *  - Optimization: Currently, each 'fmap_set' results in an 'malloc'. HOWEVER, some functions (like 'dup') create an 'id' referring to an already open file (which has already a filename-entry in the map)
+ *  - Optimization: Currently, each 'fmap_add_or_update' results in an 'malloc'. HOWEVER, some functions (like 'dup') create an 'id' referring to an already open file (which has already a filename-entry in the map)
  *    => Use pointer to this already allocated filename
  */
 
@@ -43,16 +43,16 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 #define ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, filename) {\
   fmap_key insert_key;\
   __create_fmap_key_using_fctevent_file_type(fctevent, &insert_key);\
-  fmap_set(&insert_key, filename);\
+  fmap_add_or_update(&insert_key, filename);\
 }
 #define ADD_FNAME_TO_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, filename) {\
   fmap_key insert_key1; fmap_key insert_key2;\
   __create_fmap_key_using_fctevent_function_data(fctevent, &insert_key1, &insert_key2);\
-  fmap_set(&insert_key1, filename);\
+  fmap_add_or_update(&insert_key1, filename);\
   \
   if (void_p_enum_function_data_file_pair == (fctevent)->void_p_enum_function_data || \
     void_p_enum_function_data_socketpair_function == (fctevent)->void_p_enum_function_data) {\
-    fmap_set(&insert_key2, filename);\
+    fmap_add_or_update(&insert_key2, filename);\
   }\
 }
 

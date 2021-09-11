@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "fmap.h"
 #include "impl/atomic_hash.h"
@@ -105,7 +106,7 @@ int fmap_get(fmap_key* key, char** found_fname) {
     return atomic_hash_get(global_map, key, FMAP_KEY_SIZE, NULL, found_fname);
 }
 
-void fmap_set(fmap_key* key, const char* fname) {
+void fmap_add_or_update(fmap_key* key, const char* fname) {
     if (NULL == global_map || NULL == key || NULL == fname) {   /* Used to be assert */
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Invalid key / fname or uninit fmap")
     }
@@ -113,16 +114,24 @@ void fmap_set(fmap_key* key, const char* fname) {
     char* filename;
     const size_t fname_size = (strlen(fname) * sizeof(char)) + sizeof((char)'\0');
     if (NULL != (filename = malloc(fname_size))) {
-        strncpy(filename, fname, fname_size);                    /* Make copy of filename */
+        strncpy(filename, fname, fname_size);                    /* Make copy of filename (which will be stored in fmap as value) */
 
-        int map_operation_result;
+        int map_operation_result; bool value_already_removed_for_update = false;
+    update_value_after_removal:
         if ((map_operation_result = atomic_hash_add(global_map, key, FMAP_KEY_SIZE, filename, TTL_DISABLE, NULL, NULL)) ) {
+
+            if (1 == map_operation_result && !value_already_removed_for_update) {      /* UPDATE value under already used key */
+                LOG_DEBUG(_LOG_MODULE_NAME": Updating value under already existing key ...")        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+                fmap_remove(key);
+                value_already_removed_for_update = true;
+                goto update_value_after_removal;
+            }
+
             PRINT_FMAP_KEY_IN_DEBUG(key)
             LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s' (code = %d [%s])", fname, map_operation_result, (
-                    (1 == map_operation_result) ? "value for same key exists already" :
                     (-1 == map_operation_result) ? "max filenames in fmap exceeded" : "unknown"))
         } else {
-            LOG_DEBUG(_LOG_MODULE_NAME": Added '%s'", filename)        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+            LOG_DEBUG(_LOG_MODULE_NAME": Added '%s' using following key ...", filename)        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
             PRINT_FMAP_KEY_IN_DEBUG(key)                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         }
     } else {
@@ -139,7 +148,7 @@ void fmap_remove(fmap_key* key) {
         PRINT_FMAP_KEY_IN_DEBUG(key)
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't delete value (filename).");
     } else {
-        LOG_DEBUG(_LOG_MODULE_NAME": Removed filename under following key ...")        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+        LOG_DEBUG(_LOG_MODULE_NAME": Removed filename using following key ...")        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         PRINT_FMAP_KEY_IN_DEBUG(key)                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     }
 }

@@ -22,7 +22,7 @@ static hash_t* global_map = NULL;
 /* Hook is necessary for destroying map (and removing values) */
 int __del_hook(void* hash_data, void* caller_data) {
     if (hash_data) {
-        LOG_DEBUG(_LOG_MODULE_NAME": Freeing string/filename '%s'", (char*)hash_data)
+        // LOG_DEBUG(_LOG_MODULE_NAME": Freeing string/filename '%s'", (char*)hash_data)
         free(hash_data);
     }
 
@@ -119,8 +119,8 @@ void fmap_set(fmap_key* key, const char* fname) {
             PRINT_FMAP_KEY_IN_DEBUG(key)
             LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s'", fname)
         } else {
-            LOG_DEBUG(_LOG_MODULE_NAME": Added '%s'", filename)
-            PRINT_FMAP_KEY_IN_DEBUG(key)
+            LOG_DEBUG(_LOG_MODULE_NAME": Added '%s'", filename)        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+            PRINT_FMAP_KEY_IN_DEBUG(key)                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         }
     } else {
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": malloc() returned NULL for '%s'", fname);

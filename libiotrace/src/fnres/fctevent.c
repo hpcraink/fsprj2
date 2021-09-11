@@ -3,8 +3,6 @@
 #include "internal/map/fmap.h"
 #include "internal/logging.h"
 
-#include "../libiotrace_include_struct.h"
-
 #include <string.h>
 #include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
 
@@ -25,6 +23,10 @@
  *  - Optimization: Currently, each 'fmap_set' results in an 'malloc'. HOWEVER, some functions (like 'dup') create an 'id' referring to an already open file (which has already a filename-entry in the map)
  *    => Use pointer to this already allocated filename
  */
+
+
+/* - Constants - */
+#define _LOG_MODULE_NAME "fctevent"
 
 
 /* --- Function prototypes for helper functions --- */
@@ -67,7 +69,11 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
   __create_fmap_key_using_fctevent_function_data((fctevent), &(search_key), NULL);\
   if (!fmap_get(&(search_key), &(search_found_fname)))
 
-#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename));
+#define ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent) else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+
+#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname)\
+    strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename));\
+    LOG_DEBUG(_LOG_MODULE_NAME": Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename)
 
 /* --- Globals --- */
 bool got_init = false;
@@ -82,7 +88,7 @@ void fnres_init(size_t fmap_max_size) {
     fmap_create(fmap_max_size);
 
     got_init = true;
-    LOG_DEBUG("Init done ['fmap_max_size = %zu']", fmap_max_size)
+    LOG_DEBUG(_LOG_MODULE_NAME": Init done ['fmap_max_size = %zu']", fmap_max_size)
 }
 
 /**
@@ -92,7 +98,7 @@ void fnres_fin(void) {
     fmap_destroy();
 
     got_init = false;
-    LOG_DEBUG("Uninit done")
+    LOG_DEBUG(_LOG_MODULE_NAME": Uninit done")        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
 }
 
 
@@ -101,7 +107,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LOG_ERROR_AND_EXIT("fnres: Got no init prior usage") }
 
     char* const extracted_fctname = fctevent->function_name;
-    printf("\n\nCALLED W/ %s\n", extracted_fctname);        // DEBUGGING
+    printf("\n\nCALLED W/ %s\n", extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     SWITCH_FCTNAME(extracted_fctname) {
 
         /* --- Functions relevant for tracing + traceable --- */
@@ -135,8 +141,6 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
             RETURN_IF_FCTEVENT_FAILED(fctevent)
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)
-
-            printf("\n\nAfter: %s\n\n", fctevent->traced_filename);         // DEBUGGING
             return;
         }
 
@@ -170,16 +174,16 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         {
             const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);
 
-            if (NULL == extracted_fname) {     /* Note: filename == NULL means 'reopen SAME file again' */
+            if (NULL == extracted_fname) {     /* Note: filename == NULL means >> reopen SAME file again << */
                 fmap_key search_key; char* search_found_fname;
                 IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                                  search_key, search_found_fname) {
                     SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
-                } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+                } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
                 return;
             }
 
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname)      // SEARCH FILENAME IN MAP ...
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname)
             RETURN_IF_FCTEVENT_FAILED(fctevent)
             RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
             ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)          /* Add under same key but w/ different filename */
@@ -196,7 +200,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 ADD_FNAME_TO_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname)
                 RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)       /* Remove old mapping */
-            } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
 
@@ -238,7 +242,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 ADD_FNAME_TO_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname)
-            } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
 
@@ -256,7 +260,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 ADD_FNAME_TO_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_found_fname)
-            } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
 
@@ -280,7 +284,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent)
                 RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
-            } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
 
@@ -419,7 +423,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                              search_key, search_found_fname) {
                 SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
-            } else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
+            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
 
@@ -441,12 +445,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         /* ---------------------------------------------------------------------------------- */
         default:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT)
-            LOG_DEBUG("Unhandled case for function '%s'", extracted_fctname)
+            LOG_DEBUG(_LOG_MODULE_NAME": Unhandled case for function '%s'", extracted_fctname)
             return;
 
         not_implemented_yet:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT)
-            LOG_DEBUG("Not implemented yet function '%s'", extracted_fctname)
+            LOG_DEBUG(_LOG_MODULE_NAME": Not implemented yet function '%s'", extracted_fctname)
             return;
     }
 }
@@ -509,7 +513,7 @@ static int __create_fmap_key_using_fctevent_file_type(struct basic *fctevent, fm
                             &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
 
         default:
-            LOG_DEBUG("Unhandled case for 'fctevent->void_p_enum_file_type' w/ value %d", fctevent->void_p_enum_file_type)
+            LOG_DEBUG(_LOG_MODULE_NAME": Unhandled case for 'fctevent->void_p_enum_file_type' w/ value %d", fctevent->void_p_enum_file_type)
             return 1;
     }
 }
@@ -559,7 +563,7 @@ static int __create_fmap_key_using_fctevent_function_data(struct basic* fctevent
 
 
         default:
-            LOG_DEBUG("Unhandled case for 'fctevent->void_p_enum_function_data' w/ value %d", fctevent->void_p_enum_function_data)
+            LOG_DEBUG(_LOG_MODULE_NAME": Unhandled case for 'fctevent->void_p_enum_function_data' w/ value %d", fctevent->void_p_enum_function_data)
             return 1;
     }
 }
@@ -579,7 +583,7 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
             return ((struct mpi_delete_function*)fctevent->function_data)->file_name;
 
         default:
-            LOG_DEBUG("Unhandled case for 'fctevent->void_p_enum_function_data' w/ value %d", fctevent->void_p_enum_function_data)
+            LOG_DEBUG(_LOG_MODULE_NAME": Unhandled case for 'fctevent->void_p_enum_function_data' w/ value %d", fctevent->void_p_enum_function_data)
             return NULL;
     }
 }

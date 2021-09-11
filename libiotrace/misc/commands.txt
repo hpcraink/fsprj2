@@ -5,11 +5,11 @@
 - Run test:
     ./build/test/cunit/test_fctevent
 
+
+    TODO:   PARTIALLY WORKING
     (cd build/test && IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared ; code ../../test/read_byte.c read_byte_shared_test1_iotrace.log)
     (cd build/test && IOTRACE_LOG_NAME=read_byte_static_test1 ./read_byte_static ; code ../../test/read_byte.c read_byte_static_test1_iotrace.log)
 
-
-    TODO:   DOESN'T WORK
     (cd build/test && IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared ; code ../../test/read_stream.c read_stream_shared_test1_iotrace.log)
     (cd build/test && IOTRACE_LOG_NAME=read_stream_static_test1 ./read_stream_static ; code ../../test/read_stream.c read_stream_static_test1_iotrace.log)
 
@@ -26,6 +26,7 @@
 
 
 
+    ---------------------------------------
     AIO CURRENTLY NOT SUPPORTED
     (cd build/test && IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared ; code ../../test/read_async_byte.c read_async_byte_shared_test1.log)
     (cd build/test && IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_async_byte_static ; code ../../test/read_async_byte.c read_async_byte_static_test1.log)

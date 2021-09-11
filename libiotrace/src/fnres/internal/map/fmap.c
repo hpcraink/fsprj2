@@ -134,6 +134,9 @@ void fmap_remove(fmap_key* key) {
 
     if (atomic_hash_del(global_map, key, FMAP_KEY_SIZE, NULL, NULL)) {
         PRINT_FMAP_KEY_IN_DEBUG(key)
-        LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't delete value (filename)");
+        LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't delete value (filename).");
+    } else {
+        LOG_DEBUG(_LOG_MODULE_NAME": Removed filename under following key ...")        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+        PRINT_FMAP_KEY_IN_DEBUG(key)                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     }
 }

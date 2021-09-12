@@ -1,9 +1,9 @@
 #!/bin/bash
 
-DBNODE=$1
-echo $DBNODE
-HOSTNAME=$(hostname | cut -d '.' -f 1)
-echo "$HOSTNAME"
+# DBNODE=$1
+# echo $DBNODE
+# HOSTNAME=$(hostname | cut -d '.' -f 1)
+# echo "$HOSTNAME"
 
 # rm ~/.influxdbv2/configs
 
@@ -19,7 +19,6 @@ echo "$HOSTNAME"
 
 # sleep 200000000000
 
-if [ "$DBNODE" = "$HOSTNAME" ]; then
     rm ~/.influxdbv2/configs
 
     cp -r ~/Projects/influxdb2-2.0.6-linux-amd64 /tmp
@@ -33,10 +32,6 @@ if [ "$DBNODE" = "$HOSTNAME" ]; then
     ifconfig ib0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' &> ~/Projects/scripts/ib0
 
     sleep 200000000000
-
-else
-    echo "wrong"
-fi
 
 
 

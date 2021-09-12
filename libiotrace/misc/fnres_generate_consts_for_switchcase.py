@@ -120,6 +120,7 @@ case_strings = [
     "fputs", "fputs_unlocked",
     "fputws", "fputws_unlocked",
 
+    "getc", "getc_unlocked",
     "fgetc", "fgetc_unlocked", "getw", "fgetwc", "fgetwc_unlocked",
     "fgets", "fgets_unlocked", "fgetws", "fgetws_unlocked",
     "ungetc", "ungetwc",

@@ -98,6 +98,8 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_FPUTS_UNLOCKED 0x18806e634b54500b
 #define CASE_FPUTWS 0x652fdfa12ee
 #define CASE_FPUTWS_UNLOCKED 0x28a72f01230975c2
+#define CASE_GETC 0x17c974788
+#define CASE_GETC_UNLOCKED 0x1fa7f7a8f61c779c
 #define CASE_FGETC 0x310f6efb8e
 #define CASE_FGETC_UNLOCKED 0x3cf30078311e1262
 #define CASE_GETW 0x17c97479c

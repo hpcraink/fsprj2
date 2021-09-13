@@ -10,27 +10,43 @@
                - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
 
 
-    TODO: TEST ALL
-    (cd build/test && IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared ; code ../../test/read_byte.c read_byte_shared_test1_iotrace.log)
-    (cd build/test && IOTRACE_LOG_NAME=read_byte_static_test1 ./read_byte_static ; code ../../test/read_byte.c read_byte_static_test1_iotrace.log)
+    --- Working ---
+    - POSIX -
+        (cd build/test && IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared ; code ../../test/read_byte.c read_byte_shared_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=read_byte_static_test1 ./read_byte_static ; code ../../test/read_byte.c read_byte_static_test1_iotrace.log)
 
-    (cd build/test && IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared ; code ../../test/read_stream.c read_stream_shared_test1_iotrace.log)
-    (cd build/test && IOTRACE_LOG_NAME=read_stream_static_test1 ./read_stream_static ; code ../../test/read_stream.c read_stream_static_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared ; code ../../test/read_stream.c read_stream_shared_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=read_stream_static_test1 ./read_stream_static ; code ../../test/read_stream.c read_stream_static_test1_iotrace.log)
 
-    (cd build/test && IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared ; code ../../test/read_byte_and_stream.c read_byte_and_stream_shared_test1_iotrace.log)
-    (cd build/test && IOTRACE_LOG_NAME=read_byte_and_stream_static_test1 ./read_byte_and_stream_static ; code ../../test/read_byte_and_stream.c read_byte_and_stream_static_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared ; code ../../test/read_byte_and_stream.c read_byte_and_stream_shared_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=read_byte_and_stream_static_test1 ./read_byte_and_stream_static ; code ../../test/read_byte_and_stream.c read_byte_and_stream_static_test1_iotrace.log)
 
-    (cd build/test && IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared ; code ../../test/write_stream.c write_stream_shared_test1_iotrace.log)
-    (cd build/test && IOTRACE_LOG_NAME=write_stream_static_test1 ./write_stream_static ; code ../../test/write_stream.c write_stream_static_test1_iotrace.log)
+        TODO: ASK -> ??? fprintf is replaced w/ fwrite ???
+        (cd build/test && IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared ; code ../../test/write_stream.c write_stream_shared_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=write_stream_static_test1 ./write_stream_static ; code ../../test/write_stream.c write_stream_static_test1_iotrace.log)
 
-    (cd build/test && IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared ; code ../../test/send_recv.c send_recv_shared_test1_iotrace.log)
-    (cd build/test && IOTRACE_LOG_NAME=send_recv_static_test1 ./send_recv_static ; code ../../test/send_recv.c send_recv_static_test1_iotrace.log)
+    - POSIX + OpenMP (i.e., multi-threaded) -
+        (cd build/test && IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared ; code ../../test/OpenMP_read_stream.c OpenMP_read_stream_shared_test1_iotrace.log)
 
-    (cd build/test && IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared ; code ../../test/OpenMP_read_stream.c OpenMP_read_stream_shared_test1_iotrace.log)
+    - MPI -
+        --- TODO ---
 
 
 
 
-    AIO CURRENTLY NOT SUPPORTED
-    (cd build/test && IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared ; code ../../test/read_async_byte.c read_async_byte_shared_test1.log)
-    (cd build/test && IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_async_byte_static ; code ../../test/read_async_byte.c read_async_byte_static_test1.log)
+    --- Broken tests (e.g., failed assertions) ---
+    - POSIX -
+        (cd build/test && IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared ; code ../../test/send_recv.c send_recv_shared_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=send_recv_static_test1 ./send_recv_static ; code ../../test/send_recv.c send_recv_static_test1_iotrace.log)
+
+
+    --- Irrelevant ---
+    - POSIX -
+        (cd build/test && IOTRACE_LOG_NAME=clone_test1 LD_PRELOAD=../src/libiotrace_shared.so ./clone_shared ; code ../../test/clone.c clone_test1_iotrace.log)
+        (cd build/test && IOTRACE_LOG_NAME=clone_static_test1 ./clone_static ; code ../../test/clone.c clone_test1_iotrace.log)
+
+
+    --- Unsupported ---
+    - POSIX AIO -
+        (cd build/test && IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared ; code ../../test/read_async_byte.c read_async_byte_shared_test1.log)
+        (cd build/test && IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_async_byte_static ; code ../../test/read_async_byte.c read_async_byte_static_test1.log)

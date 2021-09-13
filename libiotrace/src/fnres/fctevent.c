@@ -38,7 +38,7 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 
 
 /* --- Macros --- */
-#define RETURN_IF_FCTEVENT_FAILED(fctevent) if (error == (fctevent)->return_state) { return; }
+#define RETURN_IF_FCTEVENT_FAILED(fctevent) if (error == (fctevent)->return_state) { LOG_DEBUG(_LOG_MODULE_NAME": Failed fectevent, not adding to trace ...") /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER) */ return; }
 
 #define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, filename) {\
   fmap_key insert_key;\
@@ -88,7 +88,7 @@ void fnres_init(size_t fmap_max_size) {
     fmap_create(fmap_max_size);
 
     got_init = true;
-    LOG_DEBUG(_LOG_MODULE_NAME": Init done ['fmap_max_size = %zu']", fmap_max_size)
+    LOG_DEBUG(_LOG_MODULE_NAME": Init done [fmap_max_size = %zu]", fmap_max_size)
 }
 
 /**
@@ -107,7 +107,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LOG_ERROR_AND_EXIT("fnres: Got no init prior usage") }
 
     char* const extracted_fctname = fctevent->function_name;
-    printf("\n\nCALLED W/ %s\n", extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+    printf("\nCALLED W/ %s\n", extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     SWITCH_FCTNAME(extracted_fctname) {
 
         /* --- Functions relevant for tracing + traceable --- */

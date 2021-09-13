@@ -229,30 +229,30 @@
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \
+                            FNRES_TRACE_FCTEVENT(&data) \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \
                               CALL_WRITE_INTO_BUFFER(data); \
                             } \
-                         }                               \
-                         FNRES_TRACE_FCTEVENT(&data)      \
+                         } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
+                         FNRES_TRACE_FCTEVENT(&data) \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
                          }                               \
-                         FNRES_TRACE_FCTEVENT(&data)      \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
+                           FNRES_TRACE_FCTEVENT(&data) \
                            if(active_wrapper_status.functionname){ \
                              CALL_WRITE_INTO_INFLUXDB(data); \
                              CALL_WRITE_INTO_BUFFER(data); \
                            }                                 \
-                           FNRES_TRACE_FCTEVENT(&data)      \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

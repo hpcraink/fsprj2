@@ -1,7 +1,7 @@
 
 - Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
-- Compile: (rm -rf build && mkdir build && cd build && cmake -D CMAKE_BUILD_TYPE=Debug -DENABLE_OUTPUT=LOGFILE -DWITH_FILENAME_RESOLUTION=ON .. && cmake -B . -S .. && cmake --build .)
+- Compile: rm -rf build && mkdir build && (cd build && cmake -D CMAKE_BUILD_TYPE=Debug -DENABLE_OUTPUT=LOGFILE -DWITH_FILENAME_RESOLUTION=ON .. && cmake -B . -S .. && cmake --build .)
 - Run test:
     ./build/test/cunit/test_fctevent
 

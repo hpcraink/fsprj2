@@ -243,7 +243,7 @@
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
-                         }                               \
+                         } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
 #endif
@@ -252,7 +252,7 @@
                            if(active_wrapper_status.functionname){ \
                              CALL_WRITE_INTO_INFLUXDB(data); \
                              CALL_WRITE_INTO_BUFFER(data); \
-                           }                                 \
+                           } \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

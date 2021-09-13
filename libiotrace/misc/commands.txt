@@ -1,13 +1,49 @@
 
 - Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
-- Compile: rm -rf build && mkdir build && (cd build && cmake -D CMAKE_BUILD_TYPE=Debug -DENABLE_OUTPUT=LOGFILE -DWITH_FILENAME_RESOLUTION=ON .. && cmake -B . -S .. && cmake --build .)
+- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF .. && cmake --build .)
+                                                                                                                             ^
+                                                                                                           LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB
+
+- Validate logs / influx:
+    - Cleanup LOGFILE's: find build/test/ -type f -name "*.log" -delete
+
+    - Launch Influx: (cd ../Grafana && docker-compose up -d)
+    - Setup Influx-CLI:
+        influx config create --config-name local_influx-fspj \
+            --host-url http://localhost:8086 \
+            --org hse \
+            --token OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CKf5Eh1bN0Ng==
+    - Query InfluxDB using CLI:
+        influx query --active-config local_influx-fspj 'from(bucket: "hsebucket")|> range(start: -1d)|> filter(fn: (r) => r._measurement == "libiotrace")|> drop(columns: ["_start", "_stop", "_measurement", "thread", "_time"])'' | grep traced_filename
+
+
 - Run test:
     ./build/test/cunit/test_fctevent
 
     ---------------------------------------
         flags: - IOTRACE_FNRES_MAX_FILENAMES=100
                - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
+
+
+
+    --- Not tested yet (TODO) ---
+        - MPI -
+            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read ; code ../../test/MPI_read.c MPI_read_test1_iotrace.log)
+
+            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_IO_single ; code ../../test/MPI_parallel_IO_single.c MPI_read_test2_iotrace.log)
+
+            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_read ; code ../../test/MPI_parallel_read.c MPI_read_test3_iotrace.log)
+
+            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread ; code ../../test/MPI_parallel_iread.c MPI_parallel_iread_iotrace.log)
+
+            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_immediate_test ; code ../../test/MPI_immediate_test.c MPI_immediate_test_iotrace.log)
+
+            (cd build/test && rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10 ; code ../../test/mpi_file_io.c mpi_file_io_test1_iotrace.log)
+
+            MPI + MP
+            (cd build/test && rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10 ; code ../../test/mpi_file_io.c mpi_file_io_test1_iotrace.log)
+
 
 
     --- Working ---
@@ -27,11 +63,6 @@
 
     - POSIX + OpenMP (i.e., multi-threaded) -
         (cd build/test && IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared ; code ../../test/OpenMP_read_stream.c OpenMP_read_stream_shared_test1_iotrace.log)
-
-    - MPI -
-        --- TODO ---
-
-
 
 
     --- Broken tests (e.g., failed assertions) ---

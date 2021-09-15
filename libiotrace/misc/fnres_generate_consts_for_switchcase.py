@@ -51,7 +51,7 @@ ULONG_MAX = 0xffffffffffffffff
 
 case_strings = [
     # --- POSIX ---
-    # - Relevants relevant for tracing + traceable -
+    # - Relevant for tracing + traceable -
     "open", "open64",
     "creat", "creat64",
 

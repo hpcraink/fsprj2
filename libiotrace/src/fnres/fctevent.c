@@ -249,7 +249,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_FCNTL:
             if (void_p_enum_cmd_data_dup_function ==
                 ((struct fcntl_function*)fctevent->function_data)->void_p_enum_cmd_data) { goto case_dup; }
-            return;
+            goto case_fcntl_no_dup;
 
         case CASE_FDOPEN:       /* Fildes -> Stream */
         {
@@ -317,6 +317,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             return;
 
 
+        case_fcntl_no_dup:
         case CASE_READ:
         case CASE_WRITE:
         case CASE_READV:

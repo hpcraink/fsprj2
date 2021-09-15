@@ -7,6 +7,9 @@
     	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
 
 
+- Missing functions (besides functions affecting multiple files):
+    - dirent.h: (directory traversing; used by OMPI extensively): opendir, closedir, readdir, readdir_r, rewinddir, seekdir, telldir
+        - Currently not feasible due to missing `opendir` wrapper; TODO: ASK -> No 'opendir' wrapper, but for 'readdir' ?
 
 
 - `event.c`:

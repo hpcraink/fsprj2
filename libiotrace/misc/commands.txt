@@ -24,6 +24,16 @@
     ---------------------------------------
         flags: - IOTRACE_FNRES_MAX_FILENAMES=100
                - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
+               - IOTRACE_WHITELIST=./whitelist
+
+- Create whitelist (for MPI-tests):
+cd build && cat<<EOF>./whitelist
+MPI_File_open
+MPI_File_seek
+MPI_File_read
+MPI_File_write
+MPI_File_close
+EOF
 
 
 

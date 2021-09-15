@@ -8,7 +8,7 @@
 #define __MODULE_NAME "fnres"
 
 
-#ifndef NDEBUG
+#if !defined(NDEBUG)
 #  include <stdio.h>
 #  define LOG_DEBUG(fmt, ...) printf("<<"__LIB_NAME">> [DEBUG] "__MODULE_NAME" - "fmt"\n", ##__VA_ARGS__);
 #else

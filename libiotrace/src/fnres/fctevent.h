@@ -17,7 +17,7 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
 #define FNAME_SPECIFIER_STD "_ STD-IO _"
 #define FNAME_SPECIFIER_PSEUDO "_ PSEUDO-FILE _"
 #define FNAME_SPECIFIER_MEMMAP "_ MEM-MAPPING _"
-#define FNAME_SPECIFIER_NOTFOUND "_ WARN: NOT FOUND _"
+#define FNAME_SPECIFIER_NOTFOUND "_ NOT FOUND _"            /* May indicate error in module OR e.g., using invalid fildes (errno 9 Bad file descriptor) */
 #define FNAME_SPECIFIER_UNSUPPORTED_FCT "__ UNKNOWN (NOT-YET-SUPPORTED) __"
 #define FNAME_SPECIFIER_UNHANDELED_FCT "__ UNKNOWN (UNHANDLED-FCT) __"
 

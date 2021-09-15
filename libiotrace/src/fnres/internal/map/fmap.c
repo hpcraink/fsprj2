@@ -51,21 +51,21 @@ static int __print_fmap_key_to_str(fmap_key* key, char* str_buf, size_t str_buf_
 }
 
 static void __log_fmap_key(fmap_key* key) {
-    char* str_buf = NULL;
+    char* key_str_buf = NULL;
     int str_buf_size = __print_fmap_key_to_str(key, NULL, 0) + ((int)sizeof((char)'\0'));
-    if (NULL != (str_buf = malloc(str_buf_size))) {
-        __print_fmap_key_to_str(key, str_buf, str_buf_size);
-        LOG_DEBUG(_LOG_MODULE_NAME": fmap-key: %s", str_buf);
+    if (NULL != (key_str_buf = malloc(str_buf_size))) {
+        __print_fmap_key_to_str(key, key_str_buf, str_buf_size);
+        LOG_DEBUG(_LOG_MODULE_NAME": fmap-key: %s", key_str_buf);
 
-        free(str_buf);
+        free(key_str_buf);
     } else {
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Failed printing key ('malloc' returned NULL)")
     }
 }
 
-#  define PRINT_FMAP_KEY_IN_DEBUG(key) __log_fmap_key(key);
+#  define LOG_DEBUG_FMAP_KEY(key) __log_fmap_key(key);
 #else
-#  define PRINT_FMAP_KEY_IN_DEBUG(key)
+#  define LOG_DEBUG_FMAP_KEY(key)
 #endif
 
 
@@ -127,12 +127,12 @@ void fmap_add_or_update(fmap_key* key, const char* fname) {
                 goto update_value_after_removal;
             }
 
-            PRINT_FMAP_KEY_IN_DEBUG(key)
+            LOG_DEBUG_FMAP_KEY(key)
             LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't add value '%s' (code = %d [%s])", fname, map_operation_result, (
                     (-1 == map_operation_result) ? "max filenames in fmap exceeded" : "unknown"))
         } else {
             LOG_DEBUG(_LOG_MODULE_NAME": Added '%s' using following key ...", filename)        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-            PRINT_FMAP_KEY_IN_DEBUG(key)                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+            LOG_DEBUG_FMAP_KEY(key)                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         }
     } else {
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": malloc() returned NULL for '%s'", fname);
@@ -145,10 +145,10 @@ void fmap_remove(fmap_key* key) {
     }
 
     if (atomic_hash_del(global_map, key, FMAP_KEY_SIZE, NULL, NULL)) {
-        PRINT_FMAP_KEY_IN_DEBUG(key)
+        LOG_DEBUG_FMAP_KEY(key)
         LOG_ERROR_AND_EXIT(_LOG_MODULE_NAME": Couldn't delete value (filename).");
     } else {
         LOG_DEBUG(_LOG_MODULE_NAME": Removed filename using following key ...")        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-        PRINT_FMAP_KEY_IN_DEBUG(key)                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+        LOG_DEBUG_FMAP_KEY(key)                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     }
 }

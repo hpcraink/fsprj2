@@ -7,7 +7,6 @@
 #include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
 
 
-// !!!! TODO: Add Wrapper for 'MPI_Request_free' (https://www.mpich.org/static/docs/v3.3/www3/MPI_Request_free.html) in libiotrace !!!!
 /**
  * TODOS:
  *  - 'fmap_destroy' currently LEAKS MEMORY since '__del_hook' isn't executed for each item in map (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)

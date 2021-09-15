@@ -1,6 +1,24 @@
 
 
 
+TODOs:
+    mmap + mpi test
+    test map
+
+
+
+
+
+- `event.c`:
+    - FNRES_MAX_FMAP_MAX_FNAMES ??
+
+
+- TODOs in `fctevent.c`
+    - MPI_Wait cleanup filename afterwards (MPI_Request_free cancels or continues request -> delete filename ...)
+
+
+
+
 
 - CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
     -> tests -> remove -DWITH_FILENAME_RESOLUTION (libm won't be required anymore)
@@ -12,17 +30,10 @@
         - Currently not feasible due to missing `opendir` wrapper; TODO: ASK -> No 'opendir' wrapper, but for 'readdir' ?
 
 
-- `event.c`:
-    - FNRES_MAX_FMAP_MAX_FNAMES ??
-
-
-- TODOs in `fctevent.c`
-    - MPI_Wait cleanup filename afterwards (MPI_Request_free cancels or continues request -> delete filename ...)
-
-
 - `logging.h`:
     - NDEBUG-Flag not working (when compiling as Release)
     - `<<libiotrace>>` lib wide logging output format
+
 
 
 

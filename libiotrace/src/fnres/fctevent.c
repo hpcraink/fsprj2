@@ -18,8 +18,6 @@
  *     -> Concern (of current implementation): Max buckets of fmap may NOT be sufficient when some things aren't removed after close
  *  - Support multiple traced files in `basic` struct (some function-events affect multiple files) -> `sync`, `floseall`, `copy_write_data` or `MPI_Waitall`
  *      - Note regarding copy_write_data: Implemented using 2 calls to this module; Check enum during call whether read or write data + assemble it
- *  - Optimization: Currently, each `fmap_add_or_update` results in an `malloc`. HOWEVER, some functions (like `dup`) create an 'id' referring to an already open file (which has already a filename-entry in the map)
- *    => Use pointer to this already allocated filename
  */
 
 
@@ -80,7 +78,7 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 }
 
 /* --- Globals --- */
-bool got_init = false;
+static bool got_init = false;
 
 
 /* --- Public functions --- */

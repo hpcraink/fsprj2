@@ -362,6 +362,13 @@ endif()
 
 ##########################################################################################################
 
+if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=mmap_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./mmap_io
+    add_executable(mmap_io mmap_io.c)
+endif()
+
+##########################################################################################################
+
 if(WITH_POSIX_AIO)
     # test with: IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared
     add_executable(read_async_byte_shared read_async_byte.c)

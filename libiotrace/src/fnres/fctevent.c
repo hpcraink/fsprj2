@@ -8,17 +8,17 @@
 
 /**
  * TODOS:
- *  - 'fmap_destroy' currently LEAKS MEMORY since '__del_hook' isn't executed for each item in map (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
+ *  - `fmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in map (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
  *  - Remove memory-mappings after fork
  *    - Save mapping type (public/private) -> save struct consisting of filename + whether public in map
- *    - Change 'CASE_MMAP' to save this additional information (see struct mentioned line above)
+ *    - Change `CASE_MMAP` to save this additional information (see struct mentioned line above)
  *    - Implement CASE_MADVISE
- *    - Implement callable hook 'reset_on_fork' (which sets flag 'got_forked' to indicate in next wrapper call a necessary removal of map values; called by 'reset_values_in_forked_process' in event.c)
- *  - Cleanup MPI Immediate MPI_Request handles (--> requires wrapper for 'MPI_Request_free')
+ *    - Implement callable hook `reset_on_fork` (which sets flag `got_forked` to indicate in next wrapper call a necessary removal of map values; called by `reset_values_in_forked_process` in event.c)
+ *  - Cleanup MPI Immediate MPI_Request handles
  *     -> Concern (of current implementation): Max buckets of fmap may NOT be sufficient when some things aren't removed after close
- *  - Support multiple traced files in 'basic'-struct (some function-events affect multiple files) -> 'sync', 'floseall', 'copy_write_data' or 'MPI_Waitall'
+ *  - Support multiple traced files in `basic` struct (some function-events affect multiple files) -> `sync`, `floseall`, `copy_write_data` or `MPI_Waitall`
  *      - Note regarding copy_write_data: Implemented using 2 calls to this module; Check enum during call whether read or write data + assemble it
- *  - Optimization: Currently, each 'fmap_add_or_update' results in an 'malloc'. HOWEVER, some functions (like 'dup') create an 'id' referring to an already open file (which has already a filename-entry in the map)
+ *  - Optimization: Currently, each `fmap_add_or_update` results in an `malloc`. HOWEVER, some functions (like `dup`) create an 'id' referring to an already open file (which has already a filename-entry in the map)
  *    => Use pointer to this already allocated filename
  */
 
@@ -86,7 +86,7 @@ bool got_init = false;
 /* --- Public functions --- */
 /* - 'Hooks' - */
 /**
- * Initializes module; MUST be called prior usage  (by 'init_process' in event.c)
+ * Initializes module; MUST be called prior usage  (by `init_process` in event.c)
  */
 void fnres_init(size_t fmap_max_size) {
     fmap_create(fmap_max_size);
@@ -96,7 +96,7 @@ void fnres_init(size_t fmap_max_size) {
 }
 
 /**
- * Finalizes, i.e., "un"initializes module; should be called prior termination for cleaning up  (by 'cleanup' in event.c)
+ * Finalizes, i.e., "un"initializes module; should be called prior termination for cleaning up  (by `cleanup` in event.c)
  */
 void fnres_fin(void) {
     fmap_destroy();
@@ -111,10 +111,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LIBIOTRACE_ERROR("Got no init prior usage"); }
 
     char* const extracted_fctname = fctevent->function_name;
-    printf("\nCALLED W/ %s\n", extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+    LIBIOTRACE_DEBUG("CALLED W/ %s", extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     SWITCH_FCTNAME(extracted_fctname) {
 
-        /* --- Functions relevant for tracing + traceable --- */
+    /* --- Functions relevant for tracing + traceable --- */
         case CASE_OPEN_STD_FD:
         case CASE_OPEN_STD_FILE:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD);
@@ -212,7 +212,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MMAP:
         case CASE_MMAP64:
         {
-            if (((struct memory_map_flags)((struct memory_map_function*)fctevent->function_data)->map_flags).anonymous) {      /* Not file backed ('mmap' will ignore its arg 'fd') */
+            if (((struct memory_map_flags)((struct memory_map_function*)fctevent->function_data)->map_flags).anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
                 SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP);
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent);
@@ -303,15 +303,13 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             goto not_implemented_yet;
 
 
-        case CASE_FORK:         /* Handled by hook 'reset_on_fork', which is automatically called on 'fork' */
-        case CASE_VFORK:
-            return;
 
-
-
-            /* --- Traceable --- */
-        case CASE_CLEANUP:          /* Internal libiotrace functions (which will be written to trace) */
+    /* --- Traceable --- */
+        case CASE_CLEANUP:          /* Internal libiotrace functions (which are written to trace) */
         case CASE_INIT_ON_LOAD:
+
+        case CASE_FORK:             /* Handled by hook `reset_on_fork` in event.c, which is automatically called on `fork` */
+        case CASE_VFORK:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
             return;
 
@@ -437,8 +435,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
-            /* TODO: Functions affecting multiple files -> currently not feasible w/ char* trace_fname in 'basic' struct */
-        case CASE_COPY_FILE_RANGE:    /* Special case: This module will be called twice w/ same 'basic' struct, BUT first w/ 'copy_read_data' and finally w/ 'copy_write_data' for 'function_data' */
+        /* TODO: Functions affecting multiple files -> currently not feasible w/ char* trace_fname in `basic` struct */
+        case CASE_COPY_FILE_RANGE:    /* Special case: This module will be called twice w/ same `basic` struct, BUT first w/ `copy_read_data` and finally w/ `copy_write_data` for `function_data` */
             goto not_implemented_yet;
 
 
@@ -452,12 +450,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             /* ---------------------------------------------------------------------------------- */
         default:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT);
-            LIBIOTRACE_DEBUG("Unhandled case for function '%s'", extracted_fctname);
+            LIBIOTRACE_DEBUG("Unhandled case for function `%s`", extracted_fctname);
             return;
 
         not_implemented_yet:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT);
-            LIBIOTRACE_DEBUG("Not implemented yet function '%s'", extracted_fctname);
+            LIBIOTRACE_DEBUG("Not implemented yet function `%s`", extracted_fctname);
             return;
     }
 }
@@ -500,27 +498,27 @@ static int __create_fmap_key_using_fctevent_file_type(struct basic *fctevent, fm
     switch(fctevent->void_p_enum_file_type) {
         case void_p_enum_file_type_file_descriptor:
             return __create_fmap_key_using_vals(F_DESCRIPTOR,
-                                                &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
+                        &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
 
         case void_p_enum_file_type_file_stream:
             return __create_fmap_key_using_vals(F_STREAM,
-                                                ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
+                        ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
 
         case void_p_enum_file_type_file_memory:
             return __create_fmap_key_using_vals(F_MEMORY,
-                                                ((struct file_memory *) fctevent->file_type)->address,
-                                                ((struct file_memory *) fctevent->file_type)->length, new_key);
+                        ((struct file_memory *) fctevent->file_type)->address,
+                        ((struct file_memory *) fctevent->file_type)->length, new_key);
 
         case void_p_enum_file_type_file_mpi:
             return __create_fmap_key_using_vals(F_MPI,
-                                                &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
+                        &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
 
         case void_p_enum_file_type_request_mpi:
             return __create_fmap_key_using_vals(R_MPI,
-                                                &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
+                        &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
 
         default:
-            LIBIOTRACE_DEBUG("Unhandled case for 'fctevent->void_p_enum_file_type' w/ value %d", fctevent->void_p_enum_file_type);
+            LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_file_type` w/ value %d", fctevent->void_p_enum_file_type);
             return 1;
     }
 }
@@ -570,7 +568,7 @@ static int __create_fmap_key_using_fctevent_function_data(struct basic* fctevent
 
 
         default:
-            LIBIOTRACE_DEBUG("Unhandled case for 'fctevent->void_p_enum_function_data' w/ value %d", fctevent->void_p_enum_function_data);
+            LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %d", fctevent->void_p_enum_function_data);
             return 1;
     }
 }
@@ -590,7 +588,7 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
             return ((struct mpi_delete_function*)fctevent->function_data)->file_name;
 
         default:
-            LIBIOTRACE_DEBUG("Unhandled case for 'fctevent->void_p_enum_function_data' w/ value %d", fctevent->void_p_enum_function_data);
+            LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %d", fctevent->void_p_enum_function_data);
             return NULL;
     }
 }

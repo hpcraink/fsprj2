@@ -57,7 +57,7 @@ static void __log_fmap_key(fmap_key* key) {
 
         free(key_str_buf);
     } else {
-        LIBIOTRACE_ERROR("Failed printing key ('malloc' returned NULL)");
+        LIBIOTRACE_ERROR("Failed printing key (`malloc` returned NULL)");
     }
 }
 

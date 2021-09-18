@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
 
+#include <unistd.h>     // TODO: RMV LATER ...
+
 /**
  * TODOS:
  *  - `fmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in map (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
@@ -87,10 +89,14 @@ static bool got_init = false;
  * Initializes module; MUST be called prior usage  (by `init_process` in event.c)
  */
 void fnres_init(size_t fmap_max_size) {
-    fmap_create(fmap_max_size);
+    if (!got_init) {            /* `fork` causes this function to be called again -> TODO: ASK */
+        fmap_create(fmap_max_size);
 
-    got_init = true;
-    LIBIOTRACE_DEBUG("Init done [fmap_max_size = %zu]", fmap_max_size);
+        got_init = true;
+        LIBIOTRACE_DEBUG("Init done [fmap_max_size = %zu]", fmap_max_size);
+    } else {
+        LIBIOTRACE_DEBUG("Got already init -> `fork` ?");
+    }
 }
 
 /**
@@ -109,7 +115,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LIBIOTRACE_ERROR("Got no init prior usage"); }
 
     char* const extracted_fctname = fctevent->function_name;
-    LIBIOTRACE_DEBUG("CALLED W/ %s", extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+    printf("\n[pid = %d] CALLED W/ %s\n", getpid(), extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     SWITCH_FCTNAME(extracted_fctname) {
 
     /* --- Functions relevant for tracing + traceable --- */
@@ -278,7 +284,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MUNMAP:
 
         case CASE_MPI_REQUEST_FREE:
-        case CASE_MPI_FILE_CLOSE: {
+        case CASE_MPI_FILE_CLOSE:
+        {
             fmap_key search_key; char *search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                              search_key, search_found_fname) {

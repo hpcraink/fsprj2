@@ -9,7 +9,7 @@
 
 // Q: `mmap` not file-backed => Basically same as using `malloc` ?
 void test_not_filebacked_shared_mem(const size_t mmap_num_arr_elements) {
-    puts("\n\n--- mmap: Not file backed SHARED memory ---\n");
+    puts("\n\n--- `mmap`: Not file backed SHARED memory ---\n");
 
     int* not_file_backed_shared_mem;
     const size_t not_file_backed_shared_mem_len = mmap_num_arr_elements * sizeof(*not_file_backed_shared_mem);
@@ -33,14 +33,16 @@ void test_not_filebacked_shared_mem(const size_t mmap_num_arr_elements) {
     /* - 2. `fork` - */
     pid_t child_pid;
     if (0 == (child_pid = fork())) {
-        /* - 3. Child: Update values - */
+    /* - 3. Child: Update values - */
         puts("\nCHILD: I'm updating the values in the meantime ...");
         for (int i = 0; i < mmap_num_arr_elements; i++) {
             not_file_backed_shared_mem[i] *= (not_file_backed_shared_mem[i] << 1);
         }
+        puts("CHILD: I'm done, exiting now ...");
+        exit(0);
     }
     else {
-        /* - 4. Parent: Wait for child  ->  show updated values - */
+    /* - 4. Parent: Wait for child  ->  show updated values - */
         waitpid(child_pid, NULL, 0);
         puts("\nPARENT:");
 
@@ -59,7 +61,7 @@ void test_not_filebacked_shared_mem(const size_t mmap_num_arr_elements) {
 }
 
 void test_filebacked_anon_mem(const char* const file_to_be_mmaped, const size_t num_bytes) {
-    puts("\n\n--- mmap: File backed anonymous memory ---\n");
+    puts("\n\n--- `mmap`: File backed anonymous memory ---\n");
 
 
     /* - 0. `open` to be mapped file - */
@@ -98,8 +100,8 @@ void test_filebacked_anon_mem(const char* const file_to_be_mmaped, const size_t 
 
 int main(void) {
 
-    test_filebacked_anon_mem("/etc/fstab", 700 - 34);
-    test_not_filebacked_shared_mem(633 + 33);
+    test_filebacked_anon_mem("/etc/fstab", 100);
+    test_not_filebacked_shared_mem(100);
 
     return 0;
 }

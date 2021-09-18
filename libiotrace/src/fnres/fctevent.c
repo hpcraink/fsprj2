@@ -6,7 +6,6 @@
 #include <string.h>
 #include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
 
-
 /**
  * TODOS:
  *  - 'fmap_destroy' currently LEAKS MEMORY since '__del_hook' isn't executed for each item in map (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
@@ -33,14 +32,25 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 
 
 /* --- Macros --- */
-#define RETURN_IF_FCTEVENT_FAILED(fctevent) if (error == (fctevent)->return_state) { LIBIOTRACE_DEBUG("Failed fectevent, not adding to trace ..."); /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER) */ return; }
+#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) do {\
+  strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename));\
+  LIBIOTRACE_DEBUG("Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename); /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER); TODO: RMV SEMICOLON LATER ... */\
+} while(0)
 
-#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, filename) {\
+#define RETURN_IF_FCTEVENT_FAILED(fctevent) do {\
+  if (error == (fctevent)->return_state) {\
+    LIBIOTRACE_DEBUG("Failed fectevent, not adding to trace ..."); /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER) */\
+    return;\
+  }\
+} while(0)
+
+#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, filename) do {\
   fmap_key insert_key;\
   __create_fmap_key_using_fctevent_file_type(fctevent, &insert_key);\
   fmap_add_or_update(&insert_key, filename);\
-}
-#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, filename) {\
+} while(0)
+
+#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, filename) do {\
   fmap_key insert_key1; fmap_key insert_key2;\
   __create_fmap_key_using_fctevent_function_data(fctevent, &insert_key1, &insert_key2);\
   fmap_add_or_update(&insert_key1, filename);\
@@ -49,25 +59,25 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
     void_p_enum_function_data_socketpair_function == (fctevent)->void_p_enum_function_data) {\
     fmap_add_or_update(&insert_key2, filename);\
   }\
-}
+} while(0)
 
-#define RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent) {\
+#define RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent) do {\
   fmap_key delete_key;\
   __create_fmap_key_using_fctevent_file_type(fctevent, &delete_key);\
   fmap_remove(&delete_key);\
-}
+} while(0)
 
 #define IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_key, search_found_fname)\
   __create_fmap_key_using_fctevent_file_type((fctevent), &(search_key));\
   if (!fmap_get(&(search_key), &(search_found_fname)))
+
 #define IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_key, search_found_fname)\
   __create_fmap_key_using_fctevent_function_data((fctevent), &(search_key), NULL);\
   if (!fmap_get(&(search_key), &(search_found_fname)))
 
-#define ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent) else { SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND) }
-
-#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename));\
-    LIBIOTRACE_DEBUG("Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename); /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER) */
+#define ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent) else {\
+  SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND);\
+}
 
 /* --- Globals --- */
 bool got_init = false;
@@ -107,9 +117,9 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         /* --- Functions relevant for tracing + traceable --- */
         case CASE_OPEN_STD_FD:
         case CASE_OPEN_STD_FILE:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD)
-            RETURN_IF_FCTEVENT_FAILED(fctevent)
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD);
+            RETURN_IF_FCTEVENT_FAILED(fctevent);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD);
             return;
 
         case CASE_OPEN:
@@ -131,10 +141,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         {
             const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);
 
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname);
 
-            RETURN_IF_FCTEVENT_FAILED(fctevent)
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)
+            RETURN_IF_FCTEVENT_FAILED(fctevent);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname);
             return;
         }
 
@@ -147,19 +157,19 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_INOTIFY_INIT1:
         case CASE_MEMFD_CREATE:
         case CASE_SOCKET:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_PSEUDO)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_PSEUDO);
 
-            RETURN_IF_FCTEVENT_FAILED(fctevent)
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_PSEUDO)
+            RETURN_IF_FCTEVENT_FAILED(fctevent);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_PSEUDO);
             return;
 
         case CASE_PIPE:
         case CASE_PIPE2:
         case CASE_SOCKETPAIR:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_PSEUDO)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_PSEUDO);
 
-            RETURN_IF_FCTEVENT_FAILED(fctevent)
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_PSEUDO)
+            RETURN_IF_FCTEVENT_FAILED(fctevent);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_PSEUDO);
             return;
 
 
@@ -172,15 +182,15 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 fmap_key search_key; char* search_found_fname;
                 IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                                  search_key, search_found_fname) {
-                    SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                    SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
                 } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
                 return;
             }
 
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname)
-            RETURN_IF_FCTEVENT_FAILED(fctevent)
-            RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname)          /* Add under same key but w/ different filename */
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname);
+            RETURN_IF_FCTEVENT_FAILED(fctevent);
+            RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname);  /* Add under same key but w/ different filename */
             return;
         }
 
@@ -189,11 +199,11 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             fmap_key search_key; char* search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                              search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent)
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname)
-                RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)       /* Remove old mapping */
+                RETURN_IF_FCTEVENT_FAILED(fctevent);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname);
+                RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent);                       /* Remove old mapping */
             } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
@@ -203,10 +213,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MMAP64:
         {
             if (((struct memory_map_flags)((struct memory_map_function*)fctevent->function_data)->map_flags).anonymous) {      /* Not file backed ('mmap' will ignore its arg 'fd') */
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP)
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent)
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_MEMMAP)
+                RETURN_IF_FCTEVENT_FAILED(fctevent);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_MEMMAP);
             } else {
                 goto case_dup;
             }
@@ -232,10 +242,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             fmap_key search_key; char *search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                              search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent)
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname)
+                RETURN_IF_FCTEVENT_FAILED(fctevent);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname);
             } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
@@ -250,10 +260,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             fmap_key search_key; char *search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent,
                                                                  search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent)
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_found_fname)
+                RETURN_IF_FCTEVENT_FAILED(fctevent);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_found_fname);
             } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
@@ -274,10 +284,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             fmap_key search_key; char *search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                              search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent)
-                RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent)
+                RETURN_IF_FCTEVENT_FAILED(fctevent);
+                RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent);
             } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
@@ -299,15 +309,15 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
-        /* --- Traceable --- */
+            /* --- Traceable --- */
         case CASE_CLEANUP:          /* Internal libiotrace functions (which will be written to trace) */
         case CASE_INIT_ON_LOAD:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
             return;
 
 
         case CASE_MPI_FILE_DELETE:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, __get_file_name_from_fctevent_function_data(fctevent))
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, __get_file_name_from_fctevent_function_data(fctevent));
             return;
 
 
@@ -419,7 +429,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             fmap_key search_key; char* search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
                                                              search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname)
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
             } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
             return;
         }
@@ -427,7 +437,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
-    /* TODO: Functions affecting multiple files -> currently not feasible w/ char* trace_fname in 'basic' struct */
+            /* TODO: Functions affecting multiple files -> currently not feasible w/ char* trace_fname in 'basic' struct */
         case CASE_COPY_FILE_RANGE:    /* Special case: This module will be called twice w/ same 'basic' struct, BUT first w/ 'copy_read_data' and finally w/ 'copy_write_data' for 'function_data' */
             goto not_implemented_yet;
 
@@ -439,14 +449,14 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
-        /* ---------------------------------------------------------------------------------- */
+            /* ---------------------------------------------------------------------------------- */
         default:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT);
             LIBIOTRACE_DEBUG("Unhandled case for function '%s'", extracted_fctname);
             return;
 
         not_implemented_yet:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT);
             LIBIOTRACE_DEBUG("Not implemented yet function '%s'", extracted_fctname);
             return;
     }
@@ -490,24 +500,24 @@ static int __create_fmap_key_using_fctevent_file_type(struct basic *fctevent, fm
     switch(fctevent->void_p_enum_file_type) {
         case void_p_enum_file_type_file_descriptor:
             return __create_fmap_key_using_vals(F_DESCRIPTOR,
-                           &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
+                                                &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
 
         case void_p_enum_file_type_file_stream:
             return __create_fmap_key_using_vals(F_STREAM,
-                           ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
+                                                ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
 
         case void_p_enum_file_type_file_memory:
             return __create_fmap_key_using_vals(F_MEMORY,
-                           ((struct file_memory *) fctevent->file_type)->address,
-                           ((struct file_memory *) fctevent->file_type)->length, new_key);
+                                                ((struct file_memory *) fctevent->file_type)->address,
+                                                ((struct file_memory *) fctevent->file_type)->length, new_key);
 
         case void_p_enum_file_type_file_mpi:
             return __create_fmap_key_using_vals(F_MPI,
-                           &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
+                                                &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
 
         case void_p_enum_file_type_request_mpi:
             return __create_fmap_key_using_vals(R_MPI,
-                            &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
+                                                &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
 
         default:
             LIBIOTRACE_DEBUG("Unhandled case for 'fctevent->void_p_enum_file_type' w/ value %d", fctevent->void_p_enum_file_type);

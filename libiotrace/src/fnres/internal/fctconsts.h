@@ -162,7 +162,6 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_INIT_ON_LOAD 0xd4004ddf3f7cb074
 #define CASE_MPI_FILE_OPEN 0xb63288054d21a95b
 #define CASE_MPI_FILE_CLOSE 0x7c8388aef07ba8bf
-#define CASE_MPI_REQUEST_FREE 0xb3de516efaa9efd4
 #define CASE_MPI_FILE_IREAD 0x7c8388aef0eb592e
 #define CASE_MPI_FILE_IREAD_ALL 0xaf653749bc660326
 #define CASE_MPI_FILE_IREAD_AT 0x1c967609fdf39382
@@ -183,6 +182,7 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_MPI_FILE_SEEK 0xb63288054d23ac11
 #define CASE_MPI_FILE_DELETE 0xcf49e8d01c55f5c
 #define CASE_MPI_FILE_SET_VIEW 0x1c96766972b408cf
+#define CASE_MPI_REQUEST_FREE 0xb3de516efaa9efd4
 #define CASE_MPI_WAIT 0x1ae6084ae45b5f
 #define CASE_MPI_WAITALL 0xbffdb21942803df8
 

@@ -283,7 +283,9 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_FCLOSE:
         case CASE_MUNMAP:
 
+        case CASE_MPI_WAIT:
         case CASE_MPI_REQUEST_FREE:
+
         case CASE_MPI_FILE_CLOSE:
         {
             fmap_key search_key; char *search_found_fname;
@@ -297,6 +299,19 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             return;
         }
 
+        case CASE_MPI_WAITALL:              /* ... TODO: Removes only requests from fmap (to prevent leak), but doesn't set traced_filename(s) ...  */
+        {
+            const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->function_data;
+            for (int i = 0; i < fctevent_function_data->size_requests; i++) {
+                int* req_id = &(((struct mpi_waitall_element*)fctevent_function_data->requests +i)->request_id);
+
+                fmap_key delete_key;
+                __create_fmap_key_using_vals(R_MPI, req_id, 0, &delete_key);
+                fmap_remove(&delete_key);
+            }
+
+            goto not_implemented_yet;
+        }
 
 
         case CASE_MADVISE:
@@ -426,8 +441,6 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MPI_FILE_WRITE_AT_ALL:
         case CASE_MPI_FILE_SEEK:
         case CASE_MPI_FILE_SET_VIEW:
-
-        case CASE_MPI_WAIT:
         {
             fmap_key search_key; char* search_found_fname;
             IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
@@ -444,8 +457,6 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_COPY_FILE_RANGE:    /* Special case: This module will be called twice w/ same `basic` struct, BUT first w/ `copy_read_data` and finally w/ `copy_write_data` for `function_data` */
             goto not_implemented_yet;
 
-
-        case CASE_MPI_WAITALL:
 
         case CASE_SYNC:
             goto not_implemented_yet;

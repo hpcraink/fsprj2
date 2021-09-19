@@ -169,7 +169,6 @@ case_strings = [
     # - Functions relevant for tracing + traceable -
     "MPI_File_open",
     "MPI_File_close",               # Note: Only for debugging (application using already closed file will crash anyways)
-    "MPI_Request_free",
 
     "MPI_File_iread",               # Immediate functions use MPI_Request handle -> must be traced, otherwise traceable functions using the handle won't be traceable
     "MPI_File_iread_all",           # NOTE: No function for cleaning up immediate files --> BE CAREFUL !!
@@ -195,7 +194,8 @@ case_strings = [
     "MPI_File_delete",
     "MPI_File_set_view",
 
-    "MPI_Wait",                     # Immediate
+    "MPI_Request_free",             # Immediate
+    "MPI_Wait",
     "MPI_Waitall"
 ]
 

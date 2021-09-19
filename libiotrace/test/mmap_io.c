@@ -31,8 +31,8 @@ void test_not_filebacked_shared_mem(const size_t mmap_num_arr_elements) {
 
 
     /* - 2. `fork` - */
-    pid_t child_pid;
-    if (0 == (child_pid = fork())) {
+    pid_t pid;
+    if (0 == (pid = fork())) {
     /* - 3. Child: Update values - */
         puts("\nCHILD: I'm updating the values in the meantime ...");
         for (int i = 0; i < mmap_num_arr_elements; i++) {
@@ -43,7 +43,7 @@ void test_not_filebacked_shared_mem(const size_t mmap_num_arr_elements) {
     }
     else {
     /* - 4. Parent: Wait for child  ->  show updated values - */
-        waitpid(child_pid, NULL, 0);
+        waitpid(pid, NULL, 0);
         puts("\nPARENT:");
 
         puts("Updated values in the mmap'ed memory region:");

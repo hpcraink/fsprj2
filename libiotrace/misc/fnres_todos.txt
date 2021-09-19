@@ -31,7 +31,9 @@
 - ASK: event.c: `init_process` gets called for `fork` --> init_fmap ?
 
 
+- `munmap` ?? -> _ NOT FOUND _
 
+- MPI_Waitall cleanup not working properly ... !!
 
 
 ----
@@ -49,21 +51,9 @@ TODOs:
     - FNRES_MAX_FMAP_MAX_FNAMES ??
 
 
-- TODOs in `fctevent.c`
-    - MPI_Wait cleanup filename afterwards (MPI_Request_free cancels or continues request -> delete filename ...)
-
-
-
-
-
 - CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
     -> tests -> remove -DWITH_FILENAME_RESOLUTION (libm won't be required anymore)
     	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
-
-
-- Missing functions (besides functions affecting multiple files):
-    - dirent.h: (directory traversing; used by OMPI extensively): opendir, closedir, readdir, readdir_r, rewinddir, seekdir, telldir
-        - Currently not feasible due to missing `opendir` wrapper; TODO: ASK -> No 'opendir' wrapper, but for 'readdir' ?
 
 
 - `logging.h`:

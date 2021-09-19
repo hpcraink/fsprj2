@@ -61,7 +61,7 @@ static void __log_fmap_key(fmap_key* key) {
     }
 }
 
-#  define LOG_DEBUG_FMAP_KEY(key) __log_fmap_key(key);
+#  define LOG_DEBUG_FMAP_KEY(key) __log_fmap_key(key)
 #else
 #  define LOG_DEBUG_FMAP_KEY(key)
 #endif
@@ -124,12 +124,12 @@ void fmap_add_or_update(fmap_key* key, const char* fname) {
                 goto update_value_after_removal;
             }
 
-            LOG_DEBUG_FMAP_KEY(key)
-            LIBIOTRACE_ERROR("Couldn't add value '%s' (code = %d [%s])", fname, map_operation_result, (
+            LOG_DEBUG_FMAP_KEY(key);
+            LIBIOTRACE_ERROR("Couldn't add value '%s' (err_code = %d [%s])", fname, map_operation_result, (
                     (-1 == map_operation_result) ? "max filenames in fmap exceeded" : "unknown"));
         } else {
             LIBIOTRACE_DEBUG("Added '%s' using following key ...", filename);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-            LOG_DEBUG_FMAP_KEY(key)                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+            LOG_DEBUG_FMAP_KEY(key);                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         }
     } else {
         LIBIOTRACE_ERROR("malloc() returned NULL for '%s'", fname);
@@ -141,11 +141,12 @@ void fmap_remove(fmap_key* key) {
         LIBIOTRACE_ERROR("Invalid key or uninit fmap");
     }
 
-    if (atomic_hash_del(global_map, key, FMAP_KEY_SIZE, NULL, NULL)) {
-        LOG_DEBUG_FMAP_KEY(key)
-        LIBIOTRACE_ERROR("Couldn't delete value (filename)");
+    int map_operation_result;
+    if ((map_operation_result = atomic_hash_del(global_map, key, FMAP_KEY_SIZE, NULL, NULL))) {
+        LOG_DEBUG_FMAP_KEY(key);
+        LIBIOTRACE_ERROR("Couldn't delete value (filename) (err_code = %d)", map_operation_result);
     } else {
         LIBIOTRACE_DEBUG("Removed filename using following key ...");        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-        LOG_DEBUG_FMAP_KEY(key)                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+        LOG_DEBUG_FMAP_KEY(key);                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
     }
 }

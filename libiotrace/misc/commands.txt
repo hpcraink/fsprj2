@@ -27,7 +27,7 @@
                - IOTRACE_WHITELIST=./whitelist
 
 - Create whitelist (for MPI-tests):
-cd build && cat<<EOF>./whitelist
+cd build/test && cat<<EOF>./whitelist
 MPI_File_open
 MPI_File_seek
 MPI_File_read
@@ -39,17 +39,7 @@ EOF
 
     --- Not tested yet (TODO) ---
         - MPI -
-            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read ; code ../../test/MPI_read.c MPI_read_test1_iotrace.log)
-
-            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_IO_single ; code ../../test/MPI_parallel_IO_single.c MPI_read_test2_iotrace.log)
-
-            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_read ; code ../../test/MPI_parallel_read.c MPI_read_test3_iotrace.log)
-
-            (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread ; code ../../test/MPI_parallel_iread.c MPI_parallel_iread_iotrace.log)
-
             (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_immediate_test ; code ../../test/MPI_immediate_test.c MPI_immediate_test_iotrace.log)
-
-            (cd build/test && rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10 ; code ../../test/mpi_file_io.c mpi_file_io_test1_iotrace.log)
 
             MPI + MP
             (cd build/test && rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10 ; code ../../test/mpi_file_io.c mpi_file_io_test1_iotrace.log)
@@ -74,11 +64,21 @@ EOF
     - POSIX + OpenMP (i.e., multi-threaded) -
         (cd build/test && IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared ; code ../../test/OpenMP_read_stream.c OpenMP_read_stream_shared_test1_iotrace.log)
 
+    - MPI  (? munmap (internal MPI stuff) ?) -
+        (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read ; code ../../test/MPI_read.c MPI_read_test1_iotrace.log)
+        (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_IO_single ; code ../../test/MPI_parallel_IO_single.c MPI_read_test2_iotrace.log)
+        (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_read ; code ../../test/MPI_parallel_read.c MPI_read_test3_iotrace.log)
+        (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread ; code ../../test/MPI_parallel_iread.c MPI_parallel_iread_iotrace.log)
+
 
     --- Broken tests (e.g., failed assertions) ---
     - POSIX -
         (cd build/test && IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared ; code ../../test/send_recv.c send_recv_shared_test1_iotrace.log)
         (cd build/test && IOTRACE_LOG_NAME=send_recv_static_test1 ./send_recv_static ; code ../../test/send_recv.c send_recv_static_test1_iotrace.log)
+
+    - MPI -
+            # Invalid absolute path ...
+        (cd build/test && rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10 ; code ../../test/mpi_file_io.c mpi_file_io_test1_iotrace.log)
 
 
     --- Irrelevant ---

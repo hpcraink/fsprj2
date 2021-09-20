@@ -89,13 +89,13 @@ static bool got_init = false;
  * Initializes module; MUST be called prior usage  (by `init_process` in event.c)
  */
 void fnres_init(size_t fmap_max_size) {
-    if (!got_init) {            /* `fork` causes this function to be called again -> TODO: ASK */
+    if (!got_init) {
         fmap_create(fmap_max_size);
 
         got_init = true;
         LIBIOTRACE_DEBUG("Init done [fmap_max_size = %zu]", fmap_max_size);
     } else {
-        LIBIOTRACE_DEBUG("Got already init -> `fork` ?");
+        LIBIOTRACE_DEBUG("Got already init -> `fork`");
     }
 }
 
@@ -302,8 +302,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MPI_WAITALL:              /* ... TODO: Removes only requests from fmap (to prevent leak), but doesn't set traced_filename(s) ...  */
         {
             const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->function_data;
+
+            if (fctevent_function_data->requests == NULL) { return; }
             for (int i = 0; i < fctevent_function_data->size_requests; i++) {
-                int* req_id = &(((struct mpi_waitall_element*)fctevent_function_data->requests +i)->request_id);
+                int* req_id = &((*((fctevent_function_data->requests) +i))->request_id);
 
                 fmap_key delete_key;
                 __create_fmap_key_using_vals(R_MPI, req_id, 0, &delete_key);

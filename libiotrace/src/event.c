@@ -2579,18 +2579,14 @@ void cleanup() {
 
 	WRAPPER_TIME_END(data);
 
+#ifdef LOG_WRAPPER_TIME
 #ifdef WITH_FILENAME_RESOLUTION
-    fnres_trace_fctevent(&data);        // $$$ TODO: ASK whether ok $$$
+    fnres_trace_fctevent(&data);
 #endif
 
-#ifdef LOG_WRAPPER_TIME
 	if (active_wrapper_status.cleanup) {
 		write_into_buffer(&data);
 	}
-
-//#ifdef WITH_FILENAME_RESOLUTION
-//    fnres_trace_fctevent(&data);        // $$$ TODO: ASK whether ok $$$
-//#endif
 
 	pthread_mutex_lock(&lock);
 	print_buffer();

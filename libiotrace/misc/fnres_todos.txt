@@ -20,23 +20,8 @@
 
 
 
-
-
-- `fork` -> module gets called twice
-    <<libiotrace>> [DEBUG] In function fnres_trace_fctevent (file /mnt/hgfs/fpj/fsprj2/libiotrace/src/fnres/fctevent.c, line 114): CALLED W/ fork.
-    <<libiotrace>> [DEBUG] In function fnres_trace_fctevent (file /mnt/hgfs/fpj/fsprj2/libiotrace/src/fnres/fctevent.c, line 313): Set for fctevent [fork] traced_filename: _ NOT-A-FILE _.
-    <<libiotrace>> [DEBUG] In function fnres_trace_fctevent (file /mnt/hgfs/fpj/fsprj2/libiotrace/src/fnres/fctevent.c, line 114): CALLED W/ fork.
-    <<libiotrace>> [DEBUG] In function fnres_trace_fctevent (file /mnt/hgfs/fpj/fsprj2/libiotrace/src/fnres/fctevent.c, line 313): Set for fctevent [fork] traced_filename: _ NOT-A-FILE _.
-
-- ASK: event.c: `init_process` gets called for `fork` --> init_fmap ?
-
-
 - `munmap` ?? -> _ NOT FOUND _
 
-- MPI_Waitall cleanup not working properly ... !!
-
-
-- POSIX tests tend to fail when compiled w/ MPI
 
 ----
 
@@ -47,20 +32,9 @@ TODOs:
 
 
 
-
-
-- `event.c`:
-    - FNRES_MAX_FMAP_MAX_FNAMES ??
-
-
 - CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
     -> tests -> remove -DWITH_FILENAME_RESOLUTION (libm won't be required anymore)
     	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
-
-
-- `logging.h`:
-    - `<<libiotrace>>` lib wide logging output format
-
 
 
 

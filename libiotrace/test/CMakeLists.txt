@@ -242,8 +242,7 @@ list(APPEND LINK_OPTIONS
 )
 
 if(WITH_FILENAME_RESOLUTION)
-# $$$ TODO: Rmv for tests not related to fnres;
-# Fails currently during linking (e.g., send_recv_static -> 'undefined reference to `pow'') due to $<TARGET_OBJECTS:iotrace_object> which has been compiled WITH_FILENAME_RESOLUTION $$$
+# TODO: Disable for tests not related to fnres  -->  Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
         "-lm"
     )

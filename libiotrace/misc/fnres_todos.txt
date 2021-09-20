@@ -18,23 +18,12 @@
     make[1]: *** [CMakeFiles/Makefile2:388: src/CMakeFiles/iotrace_static.dir/all] Error 2
     make: *** [Makefile:163: all] Error 2
 
-
-
-- `munmap` ?? -> _ NOT FOUND _
-
-
 ----
 
-
 TODOs:
-    mpi test
-    test map
+    - test map
+    - `munmap` ?? -> _ NOT FOUND _
 
-
-
-- CMakeLists.txt files (in src + test + test/cunit) --> target_link_options + target_compile_options ??
-    -> tests -> remove -DWITH_FILENAME_RESOLUTION (libm won't be required anymore)
-    	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
 
 
 

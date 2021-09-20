@@ -178,6 +178,11 @@ Steps to build _libiotrace_:
           Which is probably wrong.
           So if you are not sure if the monitored program manipulates the standard (std) _file streams_ or _File Descriptors_ (e.g. with an redirect of standard _file streams_ during start of an new process) set this option to _ON_.
           In any other case you can omit a lot of overhead by setting it to _OFF_.
+
+        * _WITH_FILENAME_RESOLUTION_:
+          If set to _ON_ libiotrace will create a mapping between filenames and file identifiers (e.g., fildes) during runtime and write the traced filenames to the trace.
+          Supports by default up to 100 open files. This limit can be raised to max. 10000 using the environment variable _IOTRACE_FNRES_MAX_FILENAMES_.
+          Note: This mapping can also be created post-mortem using the tool _IOTrace_Analyze_.
           
     14. press “c” again (this brings up the option “g” to generate)
     15. press “g” and wait until _ccmake_ exits

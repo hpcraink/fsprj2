@@ -303,7 +303,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         {
             const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->function_data;
 
-            if (fctevent_function_data->requests == NULL) { return; }
+            if (NULL == fctevent_function_data->requests) { return; }
             for (int i = 0; i < fctevent_function_data->size_requests; i++) {
                 int* req_id = &((*((fctevent_function_data->requests) +i))->request_id);
 

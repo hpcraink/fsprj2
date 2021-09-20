@@ -36,6 +36,8 @@
 - MPI_Waitall cleanup not working properly ... !!
 
 
+- POSIX tests tend to fail when compiled w/ MPI
+
 ----
 
 

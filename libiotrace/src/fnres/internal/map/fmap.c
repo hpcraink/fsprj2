@@ -63,7 +63,7 @@ static void __log_fmap_key(fmap_key* key) {
 
 #  define LOG_DEBUG_FMAP_KEY(key) __log_fmap_key(key)
 #else
-#  define LOG_DEBUG_FMAP_KEY(key)
+#  define LOG_DEBUG_FMAP_KEY(key) do {} while(0)
 #endif
 
 
@@ -83,6 +83,7 @@ void fmap_create(size_t max_size) {
         global_map->on_del = __del_hook;
     }
 }
+
 void fmap_destroy(void) {
     if (NULL == global_map) {   /* Used to be assert */
         LIBIOTRACE_ERROR("fmap hasn't been init'ed yet");

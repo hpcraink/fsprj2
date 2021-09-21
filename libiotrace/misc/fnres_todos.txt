@@ -1,6 +1,3 @@
-
-
-
 - Release build currently broken (comment out CMakeLists.txt --> line 8):
     [ 19%] Building C object src/CMakeFiles/iotrace_static.dir/posix_io.c.o
     In file included from /usr/include/stdio.h:864,
@@ -18,13 +15,11 @@
     make[1]: *** [CMakeFiles/Makefile2:388: src/CMakeFiles/iotrace_static.dir/all] Error 2
     make: *** [Makefile:163: all] Error 2
 
-----
 
+
+----
 TODOs:
     - test map
-    - `munmap` ?? -> _ NOT FOUND _
 
 
-
-
-- Code-Review + Merge back
+- Code-Review + Merge into master

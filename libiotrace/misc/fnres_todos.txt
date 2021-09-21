@@ -22,4 +22,10 @@ TODOs:
     - test map
 
 
+- OpenMPI internal stuff:
+    (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read 2>&1 | tee results.txt ; code ../../test/MPI_read.c MPI_read_test1_iotrace.log results.txt )
+    `close` -> `mmap` ?? (filename already removed before `mmap`'ed)
+
+
+
 - Code-Review + Merge into master

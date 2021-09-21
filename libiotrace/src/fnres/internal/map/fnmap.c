@@ -101,7 +101,12 @@ int fnmap_get(fnmap_key* key, char** found_fname) {
         LIBIOTRACE_ERROR("Invalid key or uninit fnmap");
     }
 
-    return atomic_hash_get(global_map, key, FNMAP_KEY_SIZE, NULL, found_fname);
+    int map_operation_result;
+    if ((map_operation_result = atomic_hash_get(global_map, key, FNMAP_KEY_SIZE, NULL, found_fname))) {
+        LIBIOTRACE_DEBUG("Didn't find filename using key below (err_code=%d) ...", map_operation_result);
+        LOG_DEBUG_FNMAP_KEY(key);                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+    }
+    return map_operation_result;
 }
 
 void fnmap_add_or_update(fnmap_key* key, const char* fname) {
@@ -126,14 +131,14 @@ void fnmap_add_or_update(fnmap_key* key, const char* fname) {
             }
 
             LOG_DEBUG_FNMAP_KEY(key);
-            LIBIOTRACE_ERROR("Couldn't add value '%s' (err_code = %d [%s])", fname, map_operation_result, (
+            LIBIOTRACE_ERROR("Couldn't add value '%s' (err_code=%d [%s])", fname, map_operation_result, (
                     (-1 == map_operation_result) ? "max filenames in fnmap exceeded" : "unknown"));
         } else {
             LIBIOTRACE_DEBUG("Added '%s' using following key ...", filename);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
             LOG_DEBUG_FNMAP_KEY(key);                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         }
     } else {
-        LIBIOTRACE_ERROR("malloc() returned NULL for '%s'", fname);
+        LIBIOTRACE_ERROR("`malloc` returned NULL for '%s'", fname);
     }
 }
 
@@ -145,7 +150,7 @@ void fnmap_remove(fnmap_key* key) {
     int map_operation_result;
     if ((map_operation_result = atomic_hash_del(global_map, key, FNMAP_KEY_SIZE, NULL, NULL))) {
         LOG_DEBUG_FNMAP_KEY(key);
-        LIBIOTRACE_ERROR("Couldn't delete value (filename) (err_code = %d)", map_operation_result);
+        LIBIOTRACE_ERROR("Couldn't delete value (filename) (err_code=%d)", map_operation_result);
     } else {
         LIBIOTRACE_DEBUG("Removed filename using following key ...");        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
         LOG_DEBUG_FNMAP_KEY(key);                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)

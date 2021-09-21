@@ -220,7 +220,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
                 SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP);
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent);
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_MEMMAP);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_MEMMAP);
             } else {
                 goto case_dup;
             }

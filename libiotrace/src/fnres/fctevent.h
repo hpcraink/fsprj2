@@ -1,6 +1,7 @@
 /**
- * Takes in data from wrapper calls ("function events") for the purpose
- * of creating a mapping from all types of handles pertaining files to filenames
+ * Function event (fctevent):
+ *   Takes in data from wrapper calls ("function events") for the purpose
+ *   of creating a mapping from all types of handles pertaining files to filenames
  */
 
 #ifndef LIBIOTRACE_FCTEVENT_H
@@ -23,7 +24,7 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
 
 
 /* --- Function prototypes --- */
-void fnres_init(size_t fmap_max_size);
+void fnres_init(size_t fnmap_max_size);
 void fnres_fin(void);
 /* void fnres_reset_on_fork(void); */
 

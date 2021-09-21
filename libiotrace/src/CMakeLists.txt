@@ -225,7 +225,7 @@ endif()
 if(WITH_FILENAME_RESOLUTION)
     list(APPEND SOURCE
             fnres/fctevent.c
-            fnres/internal/map/fmap.c
+            fnres/internal/map/fnmap.c
             fnres/internal/map/impl/hash_functions/hash_city.c
             fnres/internal/map/impl/atomic_hash.c)
 endif()

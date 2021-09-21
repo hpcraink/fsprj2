@@ -1,10 +1,11 @@
 /**
- * Constants + string-hash function for switch-case on function-name
+ * Function name constants (fctnconsts):
+ *   Defines constants + string-hash function for switch-case on function name
  *   Note: To generate constants, use Python script 'fnres_generate_consts_for_switchcase.py' in 'misc'
  */
 
-#ifndef LIBIOTRACE_FCTCONSTS_H
-#define LIBIOTRACE_FCTCONSTS_H
+#ifndef LIBIOTRACE_FCTNCONSTS_H
+#define LIBIOTRACE_FCTNCONSTS_H
 
 #include <sys/types.h>
 
@@ -186,4 +187,4 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_MPI_WAIT 0x1ae6084ae45b5f
 #define CASE_MPI_WAITALL 0xbffdb21942803df8
 
-#endif /* LIBIOTRACE_FCTCONSTS_H */
+#endif /* LIBIOTRACE_FCTNCONSTS_H */

@@ -8,7 +8,7 @@
 
 
 /* -- Constants -- */
-#define DEFAULT_FMAP_MAX_SIZE 100
+#define DEFAULT_FNMAP_MAX_SIZE 100
 
 #define STRINGS_ARE_EQUAL 0
 
@@ -19,7 +19,7 @@ int64_t next_dummy_id = 3;     /* Avoid colliding ids */
 /* -- Hooks -- */
 /* run at the start of the suite */
 CU_SUITE_SETUP() {
-    fnres_init(DEFAULT_FMAP_MAX_SIZE);
+    fnres_init(DEFAULT_FNMAP_MAX_SIZE);
 
 	return CUE_SUCCESS;
 }

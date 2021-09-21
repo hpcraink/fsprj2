@@ -336,9 +336,9 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #ifdef WITH_FILENAME_RESOLUTION
 #  include "fnres/fctevent.h"
 
-static const char *env_fnres_fmap_max_fnames = "IOTRACE_FNRES_MAX_FILENAMES";
-static const size_t FNRES_DEFAULT_FMAP_MAX_FNAMES = 100;
-static const size_t FNRES_MAX_FMAP_MAX_FNAMES = 10000;
+static const char *FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
+static const size_t FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
+static const size_t FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
 
 
@@ -1274,10 +1274,9 @@ void init_on_load() {
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-
-#ifdef WITH_FILENAME_RESOLUTION
+#  ifdef WITH_FILENAME_RESOLUTION
     fnres_trace_fctevent(&data);
-#endif
+#  endif
 
 #  ifdef IOTRACE_ENABLE_LOGFILE
 	if (active_wrapper_status.init_on_load) {
@@ -1290,7 +1289,7 @@ void init_on_load() {
 	}
 #  endif
 	WRAP_FREE(&data)
-#endif
+#endif /* LOG_WRAPPER_TIME */
 }
 
 /**
@@ -2021,22 +2020,22 @@ void init_process() {
 
 #ifdef WITH_FILENAME_RESOLUTION
         {
-            /* Get & parse env for max # of filenames in fmap */
-            size_t fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
-            char *fnres_fmap_max_fnames_env_str = NULL;
-            if (NULL != (fnres_fmap_max_fnames_env_str = getenv(env_fnres_fmap_max_fnames))) {
+            /* Get & parse env for max # of filenames in fnmap */
+            size_t fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
+            char *fnres_fnmap_max_fnames_env_str = NULL;
+            if (NULL != (fnres_fnmap_max_fnames_env_str = getenv(FNRES_ENV_FNMAP_MAX_FNAMES))) {
                 char *p_end_ptr = NULL;
-                fnres_fmap_max_fnames = strtoul(fnres_fmap_max_fnames_env_str, &p_end_ptr,10);
-                if ((fnres_fmap_max_fnames_env_str == p_end_ptr || ERANGE == errno) ||
-                    (0 >= fnres_fmap_max_fnames || FNRES_MAX_FMAP_MAX_FNAMES < fnres_fmap_max_fnames)) {
-                    LIBIOTRACE_WARN("Invalid value for env-var '%s', using default (%zu) as fallback",
-                                    env_fnres_fmap_max_fnames, FNRES_DEFAULT_FMAP_MAX_FNAMES);
-                    fnres_fmap_max_fnames = FNRES_DEFAULT_FMAP_MAX_FNAMES;
+                fnres_fnmap_max_fnames = strtoul(fnres_fnmap_max_fnames_env_str, &p_end_ptr,10);
+                if ((fnres_fnmap_max_fnames_env_str == p_end_ptr || ERANGE == errno) ||
+                    (0 >= fnres_fnmap_max_fnames || FNRES_MAX_FNMAP_MAX_FNAMES < fnres_fnmap_max_fnames)) {
+                    LIBIOTRACE_WARN("Invalid value for env var `%s`, using default (%zu) as fallback",
+                                    FNRES_ENV_FNMAP_MAX_FNAMES, FNRES_DEFAULT_FNMAP_MAX_FNAMES);
+                    fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
                 }
             }
 
             /* Init module using parsed env-var */
-            fnres_init(fnres_fmap_max_fnames);
+            fnres_init(fnres_fnmap_max_fnames);
         }
 #endif
 
@@ -2580,9 +2579,9 @@ void cleanup() {
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-#ifdef WITH_FILENAME_RESOLUTION
+#  ifdef WITH_FILENAME_RESOLUTION
     fnres_trace_fctevent(&data);
-#endif
+#  endif
 
 	if (active_wrapper_status.cleanup) {
 		write_into_buffer(&data);

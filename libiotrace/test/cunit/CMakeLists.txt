@@ -1,5 +1,9 @@
 enable_testing()
 
+#
+# IMPORTANT: Tests which shall be run by Github's CI Pipeline MUST use `test_` as prefix in the filename
+#
+
 # - CTest config
 # if(${CMAKE_VERSION} VERSION_LESS "3.12.0") 		# Doesn't work (https://stackoverflow.com/a/5757256) ? 
 #   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
@@ -55,7 +59,7 @@ if (WITH_FILENAME_RESOLUTION)
 	add_executable(test_fctevent test_fctevent.c
         ../../src/fnres/internal/map/impl/hash_functions/hash_city.c
         ../../src/fnres/internal/map/impl/atomic_hash.c
-        ../../src/fnres/internal/map/fmap.c
+		../../src/fnres/internal/map/fnmap.c
         ../../src/fnres/fctevent.c)
 	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
 
@@ -64,14 +68,14 @@ if (WITH_FILENAME_RESOLUTION)
 	add_test(NAME test_fctevent COMMAND test_fctevent)
 
 
-	# - fmap -
-	add_executable(testing_fmap testing_fmap.c
-			../../src/fnres/internal/map/impl/hash_functions/hash_city.c
-			../../src/fnres/internal/map/impl/atomic_hash.c
-			../../src/fnres/internal/map/fmap.c)
-	set_target_properties(testing_fmap PROPERTIES LINK_FLAGS -W)
+	# - fnmap -
+	add_executable(testing_fnmap testing_fnmap.c
+		../../src/fnres/internal/map/impl/hash_functions/hash_city.c
+		../../src/fnres/internal/map/impl/atomic_hash.c
+		../../src/fnres/internal/map/fnmap.c)
+	set_target_properties(testing_fnmap PROPERTIES LINK_FLAGS -W)
 
-	target_link_libraries(testing_fmap PRIVATE cunit m pthread)
+	target_link_libraries(testing_fnmap PRIVATE cunit m pthread)
 
-	add_test(NAME testing_fmap COMMAND test_fmap)
+	add_test(NAME testing_fnmap COMMAND testing_fnmap)
 endif()

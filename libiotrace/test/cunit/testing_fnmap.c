@@ -1,6 +1,6 @@
 /**
- * Used solely for validating/testing the behaviour of the map implementation (currently `atomic_hash`) via the `fmap` iface
- * Doesn't test any functionality of the `fnres` module
+ * Used solely for validating/testing the behaviour of the map implementation (currently `atomic_hash`) via the `fnmap` iface
+ * Doesn't test any other functionality of the `fnres` module
  */
 
 #include <string.h>
@@ -8,12 +8,12 @@
 
 #include "CUnit/CUnitCI.h"
 
-#include "../../src/fnres/internal/map/fmap.h"
+#include "../../src/fnres/internal/map/fnmap.h"
 #include "../../src/libiotrace_include_struct.h"
 
 
 /* -- Constants -- */
-#define DEFAULT_FMAP_MAX_SIZE 100
+#define DEFAULT_FNMAP_MAX_SIZE 100
 
 #define STRINGS_ARE_EQUAL 0
 
@@ -24,14 +24,14 @@
 /* -- Hooks -- */
 /* run at the start of the suite */
 CU_SUITE_SETUP() {
-    fmap_create(DEFAULT_FMAP_MAX_SIZE);
+    fnmap_create(DEFAULT_FNMAP_MAX_SIZE);
 
 	return CUE_SUCCESS;
 }
 
 /* run at the end of the suite */
 CU_SUITE_TEARDOWN() {
-    fmap_destroy();            /* Note: As mentioned in 'fctevent.c', 'fnres_fin' doesn't clean up dyn. allocated filenames (i.e., leaks memory) */
+    fnmap_destroy();            /* Note: As mentioned in 'fctevent.c', 'fnres_fin' doesn't clean up dyn. allocated filenames (i.e., leaks memory) */
 
 	return CUE_SUCCESS;
 }
@@ -45,15 +45,15 @@ CU_TEST_TEARDOWN() {}
 
 /* -- Tests -- */
 void test_same_value(void) {
-    struct fmap_key key = {
+    struct fnmap_key key = {
         .id = { .fildes = 0 },
         .type = F_DESCRIPTOR,
         .mmap_length = 0
     };
 
-    for (int i = 0; i <= 30; i++) {             // Failure cause: `i <=` --> Too many entries for fmap
+    for (int i = 0; i <= 30; i++) {             // Failure cause: `i <=` --> Too many entries for fnmap
         printf("Added nr. %d\n", i);
-        fmap_add_or_update(&key, "_TEST_");
+        fnmap_add_or_update(&key, "_TEST_");
         // key.id.fildes++;
     }
 

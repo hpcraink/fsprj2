@@ -159,11 +159,6 @@ case_strings = [
     "fork", "vfork",                # Handeled by libiotrace
 
 
-    # - libiotrace internal (nonexistent) fcts -
-    "open_std_fd", "open_std_file",
-    "cleanup", "init_on_load",
-
-
 
     # --- MPI ---
     # - Functions relevant for tracing + traceable -
@@ -196,7 +191,47 @@ case_strings = [
 
     "MPI_Request_free",             # Immediate
     "MPI_Wait",
-    "MPI_Waitall"
+    "MPI_Waitall",
+
+
+
+    # --- POSIX AIO ---
+    "shm_open",
+    "aio_init",
+    "aio_cancel", "aio_cancel64",
+    "aio_suspend", "aio_suspend64",
+    "aio_fsync", "aio_fsync64",
+    "aio_return", "aio_return64",
+    "aio_error", "aio_error64",
+    "lio_listio", "lio_listio64",
+    "aio_write", "aio_write64",
+    "aio_read", "aio_read64",
+
+
+
+    # --- STDIO ---
+    # - (nonexistent) fcts -
+    "open_std_fd", "open_std_file",
+
+
+
+    # --- Dynamic linking loader ---
+    "dlopen",
+    "dlmopen",
+
+
+
+    # --- Dynamically allocated mem ---
+    "malloc",
+    "calloc",
+    "realloc",
+    "reallocarray",
+    "free",
+
+
+
+    # --- libiotrace internal (nonexistent) fcts ---
+    "cleanup", "init_on_load"
 ]
 
 print_in_hex = True

@@ -465,6 +465,42 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
+
+    /* --- IO-types which aren't currently impl. yet --- */
+    /* - Dynamic linking loader - */
+        case CASE_DLOPEN:
+        case CASE_DLMOPEN:
+
+    /* - Dynamically allocated mem. - */
+        case CASE_MALLOC:
+        case CASE_CALLOC:
+        case CASE_REALLOC:
+        case CASE_REALLOCARRAY:
+        case CASE_FREE:
+
+    /* - POSIX-AIO */
+        case CASE_SHM_OPEN:
+        case CASE_AIO_INIT:
+        case CASE_AIO_CANCEL:
+        case CASE_AIO_CANCEL64:
+        case CASE_AIO_SUSPEND:
+        case CASE_AIO_SUSPEND64:
+        case CASE_AIO_FSYNC:
+        case CASE_AIO_FSYNC64:
+        case CASE_AIO_RETURN:
+        case CASE_AIO_RETURN64:
+        case CASE_AIO_ERROR:
+        case CASE_AIO_ERROR64:
+        case CASE_LIO_LISTIO:
+        case CASE_LIO_LISTIO64:
+        case CASE_AIO_WRITE:
+        case CASE_AIO_WRITE64:
+        case CASE_AIO_READ:
+        case CASE_AIO_READ64:
+            goto not_implemented_yet;
+
+
+
             /* ---------------------------------------------------------------------------------- */
         default:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT);

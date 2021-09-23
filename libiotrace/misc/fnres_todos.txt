@@ -27,5 +27,10 @@ TODOs:
     `close` -> `mmap` ?? (filename already removed before `mmap`'ed)
 
 
+- Unhandled function:
+    - connect, bind => PSEUDO-FILE
+    - readdir => File
+
+
 
 - Code-Review + Merge into master

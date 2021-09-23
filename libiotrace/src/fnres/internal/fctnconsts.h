@@ -23,9 +23,9 @@ static u_int64_t hash_string(const char *str) {
 
 #define CASE_OPEN 0x17c9bd777
 #define CASE_OPEN64 0x65312ef9861
-#define CASE_OPENAT 0x65312ef9e2c
 #define CASE_CREAT 0x310f3eb7d4
 #define CASE_CREAT64 0xd0b1d9cc03fe
+#define CASE_OPENAT 0x65312ef9e2c
 #define CASE_MKOSTEMP 0x1ae74e4ba14a55
 #define CASE_MKOSTEMPS 0x377d117bfca9568
 #define CASE_MKSTEMP 0xd0b4cc45d0e6
@@ -53,8 +53,6 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_FCLOSEALL 0x377c7d33dff327a
 #define CASE_MUNMAP 0x6530ea4b293
 #define CASE_DIRFD 0x310f4c18ce
-#define CASE_ACCEPT 0x652f15ae9b5
-#define CASE_ACCEPT4 0xd0b11cb82089
 #define CASE_EPOLL_CREATE 0xd13de43412238a74
 #define CASE_EPOLL_CREATE1 0xf8fa6ab65694d925
 #define CASE_EVENTFD 0xd0b27d1c4751
@@ -62,6 +60,8 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_INOTIFY_INIT1 0x542abc02dc54d74b
 #define CASE_MEMFD_CREATE 0xd69e2b6db9b43c61
 #define CASE_SOCKET 0x6531c31032e
+#define CASE_ACCEPT 0x652f15ae9b5
+#define CASE_ACCEPT4 0xd0b11cb82089
 #define CASE_PIPE 0x17c9c4773
 #define CASE_PIPE2 0x3110253605
 #define CASE_SOCKETPAIR 0x7272f5f80679ff3a
@@ -154,15 +154,13 @@ static u_int64_t hash_string(const char *str) {
 #define CASE___FWRITABLE 0xc06242a769b293a3
 #define CASE___FSETLOCKING 0x61fcd11a85e62afc
 #define CASE_READDIR 0xd0b63ddb8900
+#define CASE_CONNECT 0xd0b1d3764dcf
+#define CASE_BIND 0x17c9499e2
 #define CASE_SYNC 0x17c9e3062
 #define CASE_SENDMSG 0xd0b68bc12bd6
 #define CASE_RECVMSG 0xd0b63e09c05c
 #define CASE_FORK 0x17c96e577
 #define CASE_VFORK 0x311090218d
-#define CASE_OPEN_STD_FD 0xc0bc1dffa227498a
-#define CASE_OPEN_STD_FILE 0xe03b9c70c91ff7a0
-#define CASE_CLEANUP 0xd0b1cbccff0d
-#define CASE_INIT_ON_LOAD 0xd4004ddf3f7cb074
 #define CASE_MPI_FILE_OPEN 0xb63288054d21a95b
 #define CASE_MPI_FILE_CLOSE 0x7c8388aef07ba8bf
 #define CASE_MPI_FILE_IREAD 0x7c8388aef0eb592e
@@ -188,13 +186,6 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_MPI_REQUEST_FREE 0xb3de516efaa9efd4
 #define CASE_MPI_WAIT 0x1ae6084ae45b5f
 #define CASE_MPI_WAITALL 0xbffdb21942803df8
-#define CASE_DLOPEN 0x652f9040207
-#define CASE_DLMOPEN 0xd0b2195fb394
-#define CASE_MALLOC 0x6530d39ad3d
-#define CASE_CALLOC 0x652f5e616f3
-#define CASE_REALLOC 0xd0b63de00ec7
-#define CASE_REALLOCARRAY 0xda1e07ca69672126
-#define CASE_FREE 0x17c96f087
 #define CASE_SHM_OPEN 0x1ae788e826c5de
 #define CASE_AIO_INIT 0x1ae6d69d2709d1
 #define CASE_AIO_CANCEL 0x726ff6f2742912c3
@@ -213,5 +204,16 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_AIO_WRITE64 0xc06ed547242eae12
 #define CASE_AIO_READ 0x1ae6d69d2bd1d9
 #define CASE_AIO_READ64 0x726ff6f29767b343
+#define CASE_OPEN_STD_FD 0xc0bc1dffa227498a
+#define CASE_OPEN_STD_FILE 0xe03b9c70c91ff7a0
+#define CASE_DLOPEN 0x652f9040207
+#define CASE_DLMOPEN 0xd0b2195fb394
+#define CASE_MALLOC 0x6530d39ad3d
+#define CASE_CALLOC 0x652f5e616f3
+#define CASE_REALLOC 0xd0b63de00ec7
+#define CASE_REALLOCARRAY 0xda1e07ca69672126
+#define CASE_FREE 0x17c96f087
+#define CASE_CLEANUP 0xd0b1cbccff0d
+#define CASE_INIT_ON_LOAD 0xd4004ddf3f7cb074
 
 #endif /* LIBIOTRACE_FCTNCONSTS_H */

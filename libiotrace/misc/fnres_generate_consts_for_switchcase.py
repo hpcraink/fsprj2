@@ -83,12 +83,13 @@ case_strings = [
 
 
     # - Pseudo-files -
-    "accept", "accept4",
     "epoll_create", "epoll_create1",
     "eventfd",
     "inotify_init", "inotify_init1",
     "memfd_create",
     "socket",
+
+    "accept", "accept4",
 
     "pipe", "pipe2",                # Note: Create 2 fildes
     "socketpair",
@@ -150,6 +151,9 @@ case_strings = [
     "__freadable", "__fwritable", "__fsetlocking",      # GNU extensions
 
     "readdir",
+
+    "connect",
+    "bind",
 
 
     # - Inaccurate (since private mappings are NOT removed) -

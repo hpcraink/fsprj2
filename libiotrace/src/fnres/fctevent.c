@@ -56,7 +56,7 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
   fnmap_add_or_update(&insert_key1, filename);\
   \
   if (void_p_enum_function_data_file_pair == (fctevent)->void_p_enum_function_data || \
-    void_p_enum_function_data_socketpair_function == (fctevent)->void_p_enum_function_data) {\
+        void_p_enum_function_data_socketpair_function == (fctevent)->void_p_enum_function_data) {\
     fnmap_add_or_update(&insert_key2, filename);\
   }\
 } while(0)
@@ -152,8 +152,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             return;
         }
 
-        case CASE_ACCEPT:
-        case CASE_ACCEPT4:
+
         case CASE_EPOLL_CREATE:
         case CASE_EPOLL_CREATE1:
         case CASE_EVENTFD:
@@ -167,6 +166,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_PSEUDO);
             return;
 
+        case CASE_ACCEPT:
+        case CASE_ACCEPT4:
         case CASE_PIPE:
         case CASE_PIPE2:
         case CASE_SOCKETPAIR:
@@ -432,6 +433,9 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_SETBUFFER:
         case CASE_SETLINEBUF:
 
+        case CASE_BIND:
+        case CASE_CONNECT:
+
         case CASE___FREADABLE:          /* GNU extensions */
         case CASE___FWRITABLE:
         case CASE___FSETLOCKING:
@@ -604,11 +608,14 @@ static int __create_fnmap_key_using_fctevent_function_data(struct basic* fcteven
         case void_p_enum_function_data_fdopen_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fdopen_function*)fctevent->function_data)->descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_file_pair:
+        case void_p_enum_function_data_accept_function:
+            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct accept_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+
+        case void_p_enum_function_data_file_pair:               /* Note: Creates 2 keys (2 fildes) */
             __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor1, 0, new_key1);
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor2, 0, new_key2);
 
-        case void_p_enum_function_data_socketpair_function:
+        case void_p_enum_function_data_socketpair_function:     /* Note: Creates 2 keys (2 fildes) */
             __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor1, 0, new_key1);
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor2, 0, new_key2);
 

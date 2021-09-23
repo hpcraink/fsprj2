@@ -28,7 +28,6 @@ TODOs:
 
 
 - Unhandled function:
-    - connect, bind => PSEUDO-FILE
     - readdir => File
 
 

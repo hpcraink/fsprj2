@@ -6,14 +6,15 @@
 #ifndef LIBIOTRACE_FNMAP_H
 #define LIBIOTRACE_FNMAP_H
 
-#include <stdio.h>
-#include <sys/types.h>
+#include <stdio.h>          /* FILE struct */
+#include <sys/types.h>      /* sizt_t */
 
 
 // - Data structures -
 typedef union id {
     int fildes;
     FILE* stream;
+    void* dir;              /* Use `void*` instead of `DIR*` (to avoid missing header `dirent.h`) */
     void* mmap_start;
 
     int mpi_id;
@@ -23,6 +24,7 @@ typedef union id {
 typedef enum id_type {
     F_DESCRIPTOR,
     F_STREAM,
+    F_DIR,
     F_MEMORY,
     F_MPI,
     R_MPI                                           /* Immediate mapping for MPI_Request struct */

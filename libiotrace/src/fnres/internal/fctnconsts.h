@@ -7,7 +7,7 @@
 #ifndef LIBIOTRACE_FCTNCONSTS_H
 #define LIBIOTRACE_FCTNCONSTS_H
 
-#include <sys/types.h>
+#include <sys/types.h>          /* u_int64_t */
 
 
 /* djb2 by Dan Bernstein */
@@ -52,6 +52,7 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_FCLOSE 0x652fd09cf21
 #define CASE_FCLOSEALL 0x377c7d33dff327a
 #define CASE_MUNMAP 0x6530ea4b293
+#define CASE_DIRFD 0x310f4c18ce
 #define CASE_ACCEPT 0x652f15ae9b5
 #define CASE_ACCEPT4 0xd0b11cb82089
 #define CASE_EPOLL_CREATE 0xd13de43412238a74
@@ -152,6 +153,7 @@ static u_int64_t hash_string(const char *str) {
 #define CASE___FREADABLE 0xc0624271cfe98859
 #define CASE___FWRITABLE 0xc06242a769b293a3
 #define CASE___FSETLOCKING 0x61fcd11a85e62afc
+#define CASE_READDIR 0xd0b63ddb8900
 #define CASE_SYNC 0x17c9e3062
 #define CASE_SENDMSG 0xd0b68bc12bd6
 #define CASE_RECVMSG 0xd0b63e09c05c

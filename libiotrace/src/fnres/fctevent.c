@@ -321,6 +321,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             goto not_implemented_yet;
 
 
+        case CASE_DIRFD:
+            goto not_implemented_yet;   /* TODO: Ask no wrapper for `opendir` (`dirent.h`) ? */
+
+
         case CASE_FCLOSEALL:            /* GNU extension */
             goto not_implemented_yet;
 
@@ -453,6 +457,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         }
 
 
+        case CASE_READDIR:
+            goto not_implemented_yet;   /* TODO: Ask no wrapper for `opendir` (`dirent.h`) ? */
 
 
         /* TODO: Functions affecting multiple files -> currently not feasible w/ char* trace_fname in `basic` struct */
@@ -501,7 +507,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
-            /* ---------------------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------------------- */
         default:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT);
             LIBIOTRACE_DEBUG("Unhandled case for function `%s`", extracted_fctname);
@@ -531,6 +537,10 @@ static int __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_len
             new_key->id.stream = (FILE*) id;
             return 0;
 
+        case F_DIR:
+            new_key->id.dir = id;
+            return 0;
+
         case F_MEMORY:
             new_key->id.mmap_start = id;
             new_key->mmap_length = mmap_length;
@@ -557,6 +567,10 @@ static int __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, f
         case void_p_enum_file_type_file_stream:
             return __create_fnmap_key_using_vals(F_STREAM,
                         ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
+
+        case void_p_enum_file_type_file_dir:
+            return __create_fnmap_key_using_vals(F_DIR,
+                         ((struct file_dir *) fctevent->file_type)->directory_stream, 0, new_key);
 
         case void_p_enum_file_type_file_memory:
             return __create_fnmap_key_using_vals(F_MEMORY,

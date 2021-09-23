@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 '''
 Generates constants necessary for using switch on strings
@@ -79,6 +79,8 @@ case_strings = [
     "fcloseall",             # GNU extension
     "munmap",
 
+    "dirfd",
+
 
     # - Pseudo-files -
     "accept", "accept4",
@@ -146,6 +148,8 @@ case_strings = [
     "setlinebuf",
 
     "__freadable", "__fwritable", "__fsetlocking",      # GNU extensions
+
+    "readdir",
 
 
     # - Inaccurate (since private mappings are NOT removed) -

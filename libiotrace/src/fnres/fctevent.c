@@ -10,16 +10,16 @@
 
 /**
  * TODOS:
- *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in map (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
- *  - Remove memory-mappings after fork
- *    - Save mapping type (public/private) -> save struct consisting of filename + whether public in map
- *    - Change `CASE_MMAP` to save this additional information (see struct mentioned line above)
- *    - Implement CASE_MADVISE
+ *  - Remove memory-mappings after `fork`
+ *    - Save `mmap` mapping type (`MAP_SHARED` flag) in struct (requires changing `CASE_MMAP`)
+ *    - Implement `CASE_MADVISE`
  *    - Implement callable hook `reset_on_fork` (which sets flag `got_forked` to indicate in next wrapper call a necessary removal of map values; called by `reset_values_in_forked_process` in event.c)
- *  - Cleanup MPI Immediate MPI_Request handles
- *     -> Concern (of current implementation): Max buckets of fnmap may NOT be sufficient when some things aren't removed after close
- *  - Support multiple traced files in `basic` struct (some function-events affect multiple files) -> `sync`, `floseall`, `copy_write_data` or `MPI_Waitall`
- *      - Note regarding copy_write_data: Implemented using 2 calls to this module; Check enum during call whether read or write data + assemble it
+ *  - Support multiple traced files in `basic` struct (some function-events affect multiple files) -> `sync`, `floseall`, `copy_write_data` and `MPI_Waitall`
+ *      - Note regarding `copy_write_data`: Implemented using 2 calls to this module -> Check enum during call whether read or write data + assemble it
+ *  - Fildes 'extracted' from Streams (via `fileno`) must be deleted as soon as the original stream gets closed (e.g., via `fclose`) for more precise tracing (currently not traced function creating same fildes may result in wrong `traced_filename`)
+ *
+ * KNOWN ISSUES:
+ *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in fnmap (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
  */
 
 

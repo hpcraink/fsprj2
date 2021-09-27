@@ -94,9 +94,9 @@ void fnres_init(size_t fnmap_max_size) {
 
         got_init = true;
         // LIBIOTRACE_DEBUG("Init done [fnmap_max_size = %zu]", fnmap_max_size);    // DEBUGGING
-    } else {
-        LIBIOTRACE_DEBUG("Got already init -> `fork`");
-    }
+    } /*else {
+        LIBIOTRACE_DEBUG("Got already init -> `fork`");    // DEBUGGING
+    }*/
 }
 
 /**

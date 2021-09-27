@@ -102,7 +102,7 @@ int fnmap_get(fnmap_key* key, char** found_fname) {
     }
 
     int map_operation_result = atomic_hash_get(global_map, key, FNMAP_KEY_SIZE, NULL, found_fname);
-    /*if ((map_operation_result)) {
+    /*if (map_operation_result) {
         LIBIOTRACE_DEBUG("Couldn't find filename using key below (err_code=%d) ...", map_operation_result);
         LOG_DEBUG_FNMAP_KEY(key);    // DEBUGGING
     }*/

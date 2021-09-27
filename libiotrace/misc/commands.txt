@@ -39,6 +39,8 @@ EOF
 
     --- Working ---
     - POSIX -
+        (cd build/test && IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args; code ../../test/open_var_args.c open_var_args_shared_test1_iotrace.log)
+
         (cd build/test && IOTRACE_LOG_NAME=mmap_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./mmap_io; code ../../test/mmap_io.c mmap_shared_test1_iotrace.log)
 
         (cd build/test && IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared ; code ../../test/read_byte.c read_byte_shared_test1_iotrace.log)

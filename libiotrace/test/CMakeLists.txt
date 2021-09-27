@@ -368,6 +368,13 @@ endif()
 
 ##########################################################################################################
 
+if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args
+    add_executable(open_var_args open_var_args.c)
+endif()
+
+##########################################################################################################
+
 if(WITH_POSIX_AIO)
     # test with: IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared
     add_executable(read_async_byte_shared read_async_byte.c)

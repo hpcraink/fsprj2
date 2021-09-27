@@ -70,7 +70,7 @@ void test_filebacked_anon_mem(const char* const file_to_be_mmaped, const size_t 
     /* - 0. `open` to be mapped file - */
     int fd;
     if (-1 == (fd = open(file_to_be_mmaped, O_RDONLY))) {
-        perror("`open`'ing file failed: ");
+        perror("`open`'ing file failed");
         exit(1);
     } else {
         printf("-> `open`'ed file [filename=%s, fd=%d]\n", file_to_be_mmaped, fd);
@@ -80,7 +80,7 @@ void test_filebacked_anon_mem(const char* const file_to_be_mmaped, const size_t 
     char* file_backed_anon_mem;
     const size_t file_backed_anon_mem_len = num_bytes * sizeof(*file_backed_anon_mem);
     if (MAP_FAILED == (file_backed_anon_mem = mmap(NULL, file_backed_anon_mem_len, PROT_READ, MAP_FILE | MAP_PRIVATE, fd, 0))) {
-        perror("`mmap`'ing file failed: ");
+        perror("`mmap`'ing file failed");
         exit(1);
     } else {
         printf("-> `mmap`'ed file in memory [address=%p, length=%zu]\n", file_backed_anon_mem, file_backed_anon_mem_len);
@@ -93,14 +93,14 @@ void test_filebacked_anon_mem(const char* const file_to_be_mmaped, const size_t 
 
     /* - 3. cleanup (`munmap` + `close`) - */
     if (-1 == munmap(file_backed_anon_mem, file_backed_anon_mem_len)) {
-        perror("`munmap`'ing failed: ");
+        perror("`munmap`'ing failed");
         exit(1);
     } else {
         printf("-> `munmap`'ed file in memory [address=%p, length=%zu]\n", file_backed_anon_mem, file_backed_anon_mem_len);
     }
 
     if (-1 == close(fd)) {
-        perror("`close`'ing file failed: ");
+        perror("`close`'ing file failed");
         exit(1);
     } else {
         printf("-> `close`'ed file [filename=%s, fd=%d]\n", file_to_be_mmaped, fd);

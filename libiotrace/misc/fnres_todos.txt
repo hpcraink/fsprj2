@@ -1,32 +1,8 @@
-- Release build currently broken (comment out CMakeLists.txt --> line 8):
-    [ 19%] Building C object src/CMakeFiles/iotrace_static.dir/posix_io.c.o
-    In file included from /usr/include/stdio.h:864,
-                     from /mnt/hgfs/fpj/fsprj2/libiotrace/src/posix_io.c:11:
-    /mnt/hgfs/fpj/fsprj2/libiotrace/src/posix_io.c:5362:13: error: expected identifier or ‘(’ before ‘__extension__’
-     5362 | size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
-          |             ^~~~~~~~~~~~~~~
-    /mnt/hgfs/fpj/fsprj2/libiotrace/src/wrapper_defines.h:76:30: note: in expansion of macro ‘__WRAP’
-         76 | #define WRAP(function_macro) __WRAP(function_macro)
-          |                              ^~~~~~
-    /mnt/hgfs/fpj/fsprj2/libiotrace/src/posix_io.c:5362:8: note: in expansion of macro ‘WRAP’
-     5362 | size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
-          |        ^~~~
-    make[2]: *** [src/CMakeFiles/iotrace_static.dir/build.make:154: src/CMakeFiles/iotrace_static.dir/posix_io.c.o] Error 1
-    make[1]: *** [CMakeFiles/Makefile2:388: src/CMakeFiles/iotrace_static.dir/all] Error 2
-    make: *** [Makefile:163: all] Error 2
 
-
-
-----
 TODOs:
     - test map
 
-
-- OpenMPI internal stuff:
-    (cd build/test && mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read 2>&1 | tee results.txt ; code ../../test/MPI_read.c MPI_read_test1_iotrace.log results.txt )
-    `close` -> `mmap` ?? (filename already removed before `mmap`'ed)
-
-
+- ASK: mmap_test: rmv exit so close can occur ...
 - Unhandled function:
     - readdir => File
 

@@ -33,18 +33,18 @@ int __del_hook(void* hash_data, void* caller_data) {
 static int __sprint_fnmap_key(fnmap_key* key, char* str_buf, size_t str_buf_size) {
     #define SNPRINTF(id_type_str, id_format_specifier, id_union_value) \
         snprintf(str_buf, str_buf_size, "type=%s,id=" #id_format_specifier ",mmap_length=%zu", \
-        id_type_str, key->id.id_union_value, key->mmap_length);
+            id_type_str, key->id.id_union_value, key->mmap_length)
 
     if (F_DESCRIPTOR == key->type) {
-        return SNPRINTF("F_DES", %d, fildes)
+        return SNPRINTF("F_DES", %d, fildes);
     } else if (F_STREAM == key->type) {
-        return SNPRINTF("F_STR", %p, stream)
+        return SNPRINTF("F_STR", %p, stream);
     } else if (F_MEMORY == key->type) {
-        return SNPRINTF("F_MEM", %p, mmap_start)
+        return SNPRINTF("F_MEM", %p, mmap_start);
     } else if (F_MPI == key->type) {
-        return SNPRINTF("F_MPI", %d, mpi_id)
+        return SNPRINTF("F_MPI", %d, mpi_id);
     } else {
-        return SNPRINTF("R_MPI", %d, mpi_req_id)
+        return SNPRINTF("R_MPI", %d, mpi_req_id);
     }
 }
 
@@ -70,7 +70,7 @@ static void __log_fnmap_key(fnmap_key* key) {
 
 /* - Public functions - */
 /**
- * Shall be called by init_process in event.c
+ * Shall be called by `init_process` in event.c
  */
 void fnmap_create(size_t max_size) {
     if (NULL != global_map) {   /* Used to be assert */

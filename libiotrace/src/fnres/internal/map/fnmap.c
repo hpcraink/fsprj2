@@ -21,14 +21,14 @@ static hash_t* global_map = NULL;
 /* Hook is necessary for destroying map (and removing values) */
 int __del_hook(void* hash_data, void* caller_data) {
     if (hash_data) {
-        LIBIOTRACE_DEBUG("Freeing string/filename '%s'", (char*)hash_data);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+        // LIBIOTRACE_DEBUG("Freeing string/filename '%s'", (char*)hash_data);    // DEBUGGING
         free(hash_data);
     }
 
     return PLEASE_REMOVE_HASH_NODE;
 }
 
-/* ... debugging ... */
+/* ... debugging functions ... */
 #ifndef NDEBUG
 static int __sprint_fnmap_key(fnmap_key* key, char* str_buf, size_t str_buf_size) {
     #define SNPRINTF(id_type_str, id_format_specifier, id_union_value) \
@@ -101,11 +101,11 @@ int fnmap_get(fnmap_key* key, char** found_fname) {
         LIBIOTRACE_ERROR("Invalid key or uninit fnmap");
     }
 
-    int map_operation_result;
-    if ((map_operation_result = atomic_hash_get(global_map, key, FNMAP_KEY_SIZE, NULL, found_fname))) {
-        LIBIOTRACE_DEBUG("Didn't find filename using key below (err_code=%d) ...", map_operation_result);
-        LOG_DEBUG_FNMAP_KEY(key);                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-    }
+    int map_operation_result = atomic_hash_get(global_map, key, FNMAP_KEY_SIZE, NULL, found_fname);
+    /*if ((map_operation_result)) {
+        LIBIOTRACE_DEBUG("Couldn't find filename using key below (err_code=%d) ...", map_operation_result);
+        LOG_DEBUG_FNMAP_KEY(key);    // DEBUGGING
+    }*/
     return map_operation_result;
 }
 
@@ -124,7 +124,7 @@ void fnmap_add_or_update(fnmap_key* key, const char* fname) {
         if ((map_operation_result = atomic_hash_add(global_map, key, FNMAP_KEY_SIZE, filename, TTL_DISABLE, NULL, NULL)) ) {
 
             if (1 == map_operation_result && !value_already_removed_for_update) {      /* UPDATE value under already used key */
-                LIBIOTRACE_DEBUG("Updating value under already existing key ...");        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+                // LIBIOTRACE_DEBUG("Updating value under already existing key ...");    // DEBUGGING
                 fnmap_remove(key);
                 value_already_removed_for_update = true;
                 goto update_value_after_removal;
@@ -133,10 +133,10 @@ void fnmap_add_or_update(fnmap_key* key, const char* fname) {
             LOG_DEBUG_FNMAP_KEY(key);
             LIBIOTRACE_ERROR("Couldn't add value '%s' (err_code=%d [%s])", fname, map_operation_result, (
                     (-1 == map_operation_result) ? "max filenames in fnmap exceeded" : "unknown"));
-        } else {
-            LIBIOTRACE_DEBUG("Added '%s' using following key ...", filename);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-            LOG_DEBUG_FNMAP_KEY(key);                               // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-        }
+        } /*else {
+            LIBIOTRACE_DEBUG("Added '%s' using following key ...", filename);    // DEBUGGING
+            LOG_DEBUG_FNMAP_KEY(key);
+        }*/
     } else {
         LIBIOTRACE_ERROR("`malloc` returned NULL for '%s'", fname);
     }
@@ -151,8 +151,8 @@ void fnmap_remove(fnmap_key* key) {
     if ((map_operation_result = atomic_hash_del(global_map, key, FNMAP_KEY_SIZE, NULL, NULL))) {
         LOG_DEBUG_FNMAP_KEY(key);
         LIBIOTRACE_ERROR("Couldn't delete value (filename) (err_code=%d)", map_operation_result);
-    } else {
-        LIBIOTRACE_DEBUG("Removed filename using following key ...");        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-        LOG_DEBUG_FNMAP_KEY(key);                                                   // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
-    }
+    } /*else {
+        LIBIOTRACE_DEBUG("Removed filename using following key ...");    // DEBUGGING
+        LOG_DEBUG_FNMAP_KEY(key);
+    }*/
 }

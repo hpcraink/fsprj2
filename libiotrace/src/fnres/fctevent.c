@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
 
-#include <unistd.h>     // TODO: RMV LATER ...
+// #include <unistd.h>    // DEBUGGING
 
 /**
  * TODOS:
@@ -34,12 +34,12 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 /* --- Macros --- */
 #define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) do {\
   strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename));\
-  LIBIOTRACE_DEBUG("Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename); /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER); TODO: RMV SEMICOLON LATER ... */\
+  /* LIBIOTRACE_DEBUG("Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename);    // DEBUGGING */\
 } while(0)
 
 #define RETURN_IF_FCTEVENT_FAILED(fctevent) do {\
   if (error == (fctevent)->return_state) {\
-    LIBIOTRACE_DEBUG("Failed fectevent, not adding to trace ..."); /* DEBUGGING (TOO VERBOSE -> TODO: RMV LATER) */\
+    /* LIBIOTRACE_DEBUG("Failed fectevent, not adding to trace ...");    // DEBUGGING */\
     return;\
   }\
 } while(0)
@@ -93,7 +93,7 @@ void fnres_init(size_t fnmap_max_size) {
         fnmap_create(fnmap_max_size);
 
         got_init = true;
-        LIBIOTRACE_DEBUG("Init done [fnmap_max_size = %zu]", fnmap_max_size);
+        // LIBIOTRACE_DEBUG("Init done [fnmap_max_size = %zu]", fnmap_max_size);    // DEBUGGING
     } else {
         LIBIOTRACE_DEBUG("Got already init -> `fork`");
     }
@@ -106,7 +106,7 @@ void fnres_fin(void) {
     fnmap_destroy();
 
     got_init = false;
-    LIBIOTRACE_DEBUG("Uninit done");        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+    // LIBIOTRACE_DEBUG("Uninit done");    // DEBUGGING
 }
 
 
@@ -115,7 +115,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     if (!got_init) { LIBIOTRACE_ERROR("Got no init prior usage"); }
 
     char* const extracted_fctname = fctevent->function_name;
-    printf("\n[pid = %d] CALLED W/ %s\n", getpid(), extracted_fctname);        // DEBUGGING (TOO VERBOSE -> TODO: RMV LATER)
+    // printf("\n[pid = %d] CALLED W/ %s\n", getpid(), extracted_fctname);    // DEBUGGING
     SWITCH_FCTNAME(extracted_fctname) {
 
     /* --- Functions relevant for tracing + traceable --- */

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <fcntl.h>      /* `open` */
 #include <unistd.h>     /* `close` */
-#include <stdlib.h>     /* `exit`, `getenv` */
+#include <stdlib.h>     /* `exit` */
 
 /* - Globals - */
 const char* const TESTFILE_1 = "/etc/fstab";

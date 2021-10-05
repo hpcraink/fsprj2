@@ -666,6 +666,14 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
         case void_p_enum_function_data_mpi_delete_function:
             return ((struct mpi_delete_function*)fctevent->function_data)->file_name;
 
+        case void_p_enum_function_data_dlopen_function:
+            return ((struct dlopen_function*)fctevent->function_data)->file_name;
+
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
+        case void_p_enum_function_data_dlmopen_function:
+            return ((struct dlmopen_function*)fctevent->function_data)->file_name;
+#endif
+
         default:
             LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %d", fctevent->void_p_enum_function_data);
             return NULL;

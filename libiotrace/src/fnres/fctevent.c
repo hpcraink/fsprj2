@@ -470,6 +470,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             goto not_implemented_yet;
 
 
+        case CASE_SELECT:
+            goto not_implemented_yet;
+
+
         case CASE_SYNC:
             goto not_implemented_yet;
 

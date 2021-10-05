@@ -115,6 +115,8 @@ case_strings = [
 
     "copy_file_range",              # Note: Takes in input- + output-fildes
 
+    "select",
+
 
     "flockfile", "ftrylockfile", "funlockfile",
     "fwide",

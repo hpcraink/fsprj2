@@ -87,6 +87,7 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_FSYNC 0x310f75e468
 #define CASE_FDATASYNC 0x377c7d9e5ec90c2
 #define CASE_COPY_FILE_RANGE 0x5812c9031c40326b
+#define CASE_SELECT 0x6531b80e3c5
 #define CASE_FLOCKFILE 0x377c82d56b06774
 #define CASE_FTRYLOCKFILE 0xd207c71d1e20fb33
 #define CASE_FUNLOCKFILE 0xc08c03d6efa5b8b7

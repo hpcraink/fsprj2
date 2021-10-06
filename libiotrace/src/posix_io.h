@@ -483,6 +483,13 @@ REAL_TYPE int REAL(clone)(int (*fn)(void *), void *child_stack, int flags, void 
 //pthread_create ???
 //ToDo: int posix_spawn & int posix_spawnp
 
+
+/* --- Hardened functions (`-D_FORTIFY_SOURCE=2`) --- */
+#ifdef HAVE___OPEN_2
+REAL_TYPE int REAL(__open_2)(const char *file, int oflag) REAL_INIT;
+#endif
+
+
 #ifndef IO_LIB_STATIC
 void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
 #endif

@@ -56,6 +56,9 @@
 #define getwc_unlocked_MACRO getwc_unlocked
 #endif
 
+#ifdef HAVE___OPEN_2
+WRAPPER_NAME(__open_2)
+#endif
 WRAPPER_NAME(open)
 #ifdef HAVE_OPEN64
 WRAPPER_NAME(open64)

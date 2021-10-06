@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #endif
 
-//ToDo: test for existance
+//ToDo: test for existence
 #include <sys/un.h> //<afunix.h> on Windows?
 //#include <netinet/in.h>
 //#include <linux/netlink.h>
@@ -39,6 +39,9 @@
 #include "wrapper_name.h"
 
 #ifndef IO_LIB_STATIC
+#ifdef HAVE___OPEN_2
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open_2)(const char *file, int oflag) REAL_DEFINITION_INIT;
+#endif
 #define HAVE_OPEN_ELLIPSES
 #ifdef HAVE_OPEN_ELLIPSES
 REAL_DEFINITION_TYPE int REAL_DEFINITION(open)(const char *filename, int flags, ...) REAL_DEFINITION_INIT;
@@ -50,7 +53,7 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(open)(const char *filename, int flags, 
 #ifdef HAVE_OPEN64
 REAL_DEFINITION_TYPE int REAL_DEFINITION(open64)(const char *filename, int flags, mode_t mode) REAL_DEFINITION_INIT;
 #endif
-#endif
+#endif /* HAVE_OPEN_ELLIPSES */
 #ifdef HAVE_OPENAT
 REAL_DEFINITION_TYPE int REAL_DEFINITION(openat)(int dirfd, const char *pathname, int flags, ...) REAL_DEFINITION_INIT;
 //ToDo: test HAVE_OPEN_ELLIPSE
@@ -6873,5 +6876,48 @@ int WRAP(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... 
 
 	WRAP_END(data, clone)
 	return ret;
+}
+#endif
+
+
+
+/* --- Hardened functions (`-D_FORTIFY_SOURCE=2`) --- */
+#ifdef HAVE___OPEN_2
+int WRAP(__open_2)(const char *file, int oflag) {
+    int ret;
+    char expanded_symlinks[MAXFILENAME];
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = file;
+    open_data.mode = get_access_mode(oflag);
+    get_creation_flags(oflag, &open_data.creation);
+    get_status_flags(oflag, &open_data.status);
+
+    // ToDo: mode_t mode = os_getmode();
+    get_mode_flags(0, &open_data.file_mode);
+    CALL_REAL_FUNCTION_RET(data, ret, __open_2, file, oflag)
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
 }
 #endif

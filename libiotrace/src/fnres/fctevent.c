@@ -17,6 +17,12 @@
  *  - Support multiple traced files in `basic` struct (some function-events affect multiple files) -> `sync`, `floseall`, `copy_write_data` and `MPI_Waitall`
  *      - Note regarding `copy_write_data`: Implemented using 2 calls to this module -> Check enum during call whether read or write data + assemble it
  *  - Fildes 'extracted' from Streams (via `fileno`) must be deleted as soon as the original stream gets closed (e.g., via `fclose`) for more precise tracing (currently not traced function creating same fildes may result in wrong `traced_filename`)
+ *  - DL_IO, POSIX_AIO
+ *    - Things to keep in mind regarding DL_IO:
+ *	    - Additionally tracing DL_IO might incur a SIGNIFICANT increase in open files -> fnmap's  initial size of 100 might NOT be sufficient
+ *      - Currently, `dlsym`, `dlclose`, ... is NOT wrapped, therefore, ...
+ *        - only setting traced_filename (while not adding to fnmap) is atm sufficient
+ *        - the fnmap will never be cleaned up -> memory leak ?
  *
  * KNOWN ISSUES:
  *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in fnmap (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
@@ -481,10 +487,14 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 
-    /* --- IO-types which aren't currently impl. yet --- */
+    /* --- IO-types which are currently not / only partially implemented --- */
     /* - Dynamic linking loader - */
         case CASE_DLOPEN:
-        case CASE_DLMOPEN:
+        case CASE_DLMOPEN: {
+            const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);                  // TODO: ASK (?? SOMETIMES NULL ??)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, (extracted_fname) ? (extracted_fname) : (""));
+            return;
+        }
 
     /* - Dynamically allocated mem. - */
         case CASE_MALLOC:

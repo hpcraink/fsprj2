@@ -10,7 +10,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <sys/types.h>
-#include <sys/stat.h>versioversionn
+#include <sys/stat.h>
 #include <unistd.h>
 #include "mpi.h"
 #include "omp.h"

@@ -26,7 +26,10 @@ list(APPEND LINK_OPTIONS_STATIC
 if(WITH_POSIX_IO)
     list(APPEND LINK_OPTIONS_STATIC
         "-Wl,-wrap=open"
+        "-Wl,-wrap=__open"
+        "-Wl,-wrap=__open64"
         "-Wl,-wrap=__open_2"
+        "-Wl,-wrap=__open64_2"
         "-Wl,-wrap=open64"
         "-Wl,-wrap=openat"
         "-Wl,-wrap=creat"

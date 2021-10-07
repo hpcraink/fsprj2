@@ -81,7 +81,7 @@ case_strings = [
 
     "dirfd",
 
-    "__open_2", "__open64", "__open64_2", "__open",                     # Hardened functions (`-D_FORTIFY_SOURCE=2`)
+    "__open", "__open64", "__open_2", "__open64_2",                      # Hardened functions (`-D_FORTIFY_SOURCE=2`)
 
 
     # - Pseudo-files -

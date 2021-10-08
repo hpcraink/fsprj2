@@ -39,8 +39,17 @@
 #include "wrapper_name.h"
 
 #ifndef IO_LIB_STATIC
+#ifdef HAVE___OPEN
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open)(const char *__file, int __oflag, ...) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___OPEN64
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open64)(const char *__file, int __oflag, ...) REAL_DEFINITION_INIT;
+#endif
 #ifdef HAVE___OPEN_2
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__open_2)(const char *file, int oflag) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open_2)(const char *__file, int __oflag) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___OPEN64_2
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open64_2)(const char *__file, int __oflag) REAL_DEFINITION_INIT;
 #endif
 #define HAVE_OPEN_ELLIPSES
 #ifdef HAVE_OPEN_ELLIPSES
@@ -6882,8 +6891,8 @@ int WRAP(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... 
 
 
 /* --- Hardened functions (`-D_FORTIFY_SOURCE=2`) --- */
-#ifdef HAVE___OPEN_2
-int WRAP(__open_2)(const char *file, int oflag) {
+#ifdef HAVE___OPEN
+int WRAP(__open)(const char *__file, int __oflag, ...) {
     int ret;
     char expanded_symlinks[MAXFILENAME];
     struct basic data;
@@ -6894,14 +6903,158 @@ int WRAP(__open_2)(const char *file, int oflag) {
     get_basic(&data);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-    open_data.file_name = file;
-    open_data.mode = get_access_mode(oflag);
-    get_creation_flags(oflag, &open_data.creation);
-    get_status_flags(oflag, &open_data.status);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    if (__OPEN_NEEDS_MODE(__oflag))
+    {
+        va_list ap;
+        mode_t mode;
+        va_start(ap, __oflag); //get_mode_flags
+        mode = va_arg(ap, mode_t);
+        va_end(ap);
+        get_mode_flags(mode, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, __open, __file, __oflag, mode)
+    }
+    else
+    {
+        get_mode_flags(0, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, open, __file, __oflag)
+    }
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
+}
+#endif
+
+#ifdef HAVE___OPEN64
+int WRAP(__open64)(const char *__file, int __oflag, ...) {
+    int ret;
+    char expanded_symlinks[MAXFILENAME];
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    if (__OPEN_NEEDS_MODE(__oflag))
+    {
+        va_list ap;
+        mode_t mode;
+        va_start(ap, __oflag); //get_mode_flags
+        mode = va_arg(ap, mode_t);
+        va_end(ap);
+        get_mode_flags(mode, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, __open64, __file, __oflag, mode)
+    }
+    else
+    {
+        get_mode_flags(0, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, open, __file, __oflag)
+    }
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
+}
+#endif
+
+#ifdef HAVE___OPEN_2
+int WRAP(__open_2)(const char *__file, int __oflag) {
+    int ret;
+    char expanded_symlinks[MAXFILENAME];
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
 
     // ToDo: mode_t mode = os_getmode();
     get_mode_flags(0, &open_data.file_mode);
-    CALL_REAL_FUNCTION_RET(data, ret, __open_2, file, oflag)
+    CALL_REAL_FUNCTION_RET(data, ret, __open_2, __file, __oflag)
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
+}
+#endif
+
+#ifdef HAVE___OPEN64_2
+int WRAP(__open64_2)(const char *__file, int __oflag) {
+    int ret;
+    char expanded_symlinks[MAXFILENAME];
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    // ToDo: mode_t mode = os_getmode();
+    get_mode_flags(0, &open_data.file_mode);
+    CALL_REAL_FUNCTION_RET(data, ret, __open64_2, __file, __oflag)
 
     if (-1 == ret)
     {

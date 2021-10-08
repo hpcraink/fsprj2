@@ -132,7 +132,11 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD);
             return;
 
+        case CASE___OPEN:
+        case CASE___OPEN64:
         case CASE___OPEN_2:
+        case CASE___OPEN64_2:
+
         case CASE_OPEN:
         case CASE_OPEN64:
         case CASE_CREAT:

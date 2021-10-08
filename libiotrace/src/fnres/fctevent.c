@@ -19,8 +19,8 @@
  *  - Fildes 'extracted' from Streams (via `fileno`) must be deleted as soon as the original stream gets closed (e.g., via `fclose`) for more precise tracing (currently not traced function creating same fildes may result in wrong `traced_filename`)
  *  - DL_IO, POSIX_AIO
  *    - Things to keep in mind regarding DL_IO:
- *	    - Additionally tracing DL_IO might incur a SIGNIFICANT increase in open files -> fnmap's  initial size of 100 might NOT be sufficient
- *      - Currently, `dlsym`, `dlclose`, ... is NOT wrapped, therefore, ...
+ *      - Additionally tracing DL_IO might incur a SIGNIFICANT increase in open files -> fnmap's  initial size of 100 might NOT be sufficient
+ *      - Currently, `dlsym`, `dlclose`, ... are NOT wrapped, therefore, ...
  *        - only setting traced_filename (while not adding to fnmap) is atm sufficient
  *        - the fnmap will never be cleaned up -> memory leak ?
  *
@@ -495,8 +495,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     /* - Dynamic linking loader - */
         case CASE_DLOPEN:
         case CASE_DLMOPEN: {
-            const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);                  // TODO: ASK (?? SOMETIMES NULL ??)
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, (extracted_fname) ? (extracted_fname) : (""));
+            const char* const extracted_fname = __get_file_name_from_fctevent_function_data(fctevent);                  // Note: May be NULL (`dlopen`'s filename arg may be NULL to get a handle to the own program)
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, (extracted_fname) ? (extracted_fname) : ("MAIN PROGRAM"));
             return;
         }
 

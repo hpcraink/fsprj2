@@ -23,8 +23,8 @@ list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64 -D_FORT
 
 check_symbol_exists(__open "fcntl.h" HAVE___OPEN)              # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
 check_symbol_exists(__open64 "fcntl.h" HAVE___OPEN64)          # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
-check_symbol_exists(__open_2 "fcntl.h" HAVE___OPEN_2)          # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
-check_symbol_exists(__open64_2 "fcntl.h" HAVE___OPEN64_2)      # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
+check_symbol_exists(__open_2 "fcntl.h" HAVE___OPEN_2)
+check_symbol_exists(__open64_2 "fcntl.h" HAVE___OPEN64_2)
 check_symbol_exists(open64 "fcntl.h" HAVE_OPEN64)
 check_symbol_exists(openat "fcntl.h" HAVE_OPENAT)
 check_symbol_exists(creat64 "fcntl.h" HAVE_CREAT64)

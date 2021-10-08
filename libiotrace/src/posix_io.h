@@ -485,8 +485,20 @@ REAL_TYPE int REAL(clone)(int (*fn)(void *), void *child_stack, int flags, void 
 
 
 /* --- Hardened functions (`-D_FORTIFY_SOURCE=2`) --- */
+#ifdef HAVE___OPEN
+REAL_TYPE int REAL(__open)(const char *__file, int __oflag, ...) REAL_INIT;
+#endif
+
+#ifdef HAVE___OPEN64
+REAL_TYPE int REAL(__open64)(const char *__file, int __oflag, ...) REAL_INIT;
+#endif
+
 #ifdef HAVE___OPEN_2
-REAL_TYPE int REAL(__open_2)(const char *file, int oflag) REAL_INIT;
+REAL_TYPE int REAL(__open_2)(const char *__file, int __oflag) REAL_INIT;
+#endif
+
+#ifdef HAVE___OPEN64_2
+REAL_TYPE int REAL(__open64_2)(const char *__file, int __oflag) REAL_INIT;
 #endif
 
 

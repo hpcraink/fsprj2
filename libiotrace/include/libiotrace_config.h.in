@@ -53,6 +53,18 @@
 #cmakedefine HAVE_UTMPX_H 1
 
 /***************** First the definitions for system functions *****************/
+/* Define to 1 if system supports __open(). */
+#cmakedefine HAVE___OPEN 1
+
+/* Define to 1 if system supports __open64(). */
+#cmakedefine HAVE___OPEN64 1
+
+/* Define to 1 if system supports __open_2(). */
+#cmakedefine HAVE___OPEN_2 1
+
+/* Define to 1 if system supports __open64_2(). */
+#cmakedefine HAVE___OPEN64_2 1
+
 /* Define to 1 if system supports open64(). */
 #cmakedefine HAVE_OPEN64 1
 

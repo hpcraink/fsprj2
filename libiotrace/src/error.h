@@ -24,12 +24,12 @@
 
 
 #if !defined(NDEBUG)
-#define LIBIOTRACE_DEBUG(format, ...) \
+#  define LIBIOTRACE_DEBUG(format, ...) \
 	do { \
 		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LIB_NAME">> [DEBUG] In function %s (file %s, line %d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 #else
-#  define LOG_DEBUG(format, ...)
+#  define LIBIOTRACE_DEBUG(format, ...)
 #endif
 
 

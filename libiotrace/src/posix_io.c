@@ -1198,7 +1198,6 @@ int WRAP(open)(const char *filename, int flags, mode_t mode)
 {
 #endif
 	int ret;
-	char expanded_symlinks[MAXFILENAME];
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
 	struct open_function open_data;
@@ -6891,10 +6890,11 @@ int WRAP(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... 
 
 
 /* --- Hardened functions (`-D_FORTIFY_SOURCE=2`) --- */
+
+// TODO: is visibility of __open "hidden"? => could be only used internal (no wrapper needed)
 #ifdef HAVE___OPEN
 int WRAP(__open)(const char *__file, int __oflag, ...) {
     int ret;
-    char expanded_symlinks[MAXFILENAME];
     struct basic data;
     struct file_descriptor file_descriptor_data;
     struct open_function open_data;
@@ -6943,10 +6943,10 @@ int WRAP(__open)(const char *__file, int __oflag, ...) {
 }
 #endif
 
+// TODO: is visibility of __open64 "hidden"? => could be only used internal (no wrapper needed)
 #ifdef HAVE___OPEN64
 int WRAP(__open64)(const char *__file, int __oflag, ...) {
     int ret;
-    char expanded_symlinks[MAXFILENAME];
     struct basic data;
     struct file_descriptor file_descriptor_data;
     struct open_function open_data;
@@ -6998,7 +6998,6 @@ int WRAP(__open64)(const char *__file, int __oflag, ...) {
 #ifdef HAVE___OPEN_2
 int WRAP(__open_2)(const char *__file, int __oflag) {
     int ret;
-    char expanded_symlinks[MAXFILENAME];
     struct basic data;
     struct file_descriptor file_descriptor_data;
     struct open_function open_data;
@@ -7038,7 +7037,6 @@ int WRAP(__open_2)(const char *__file, int __oflag) {
 #ifdef HAVE___OPEN64_2
 int WRAP(__open64_2)(const char *__file, int __oflag) {
     int ret;
-    char expanded_symlinks[MAXFILENAME];
     struct basic data;
     struct file_descriptor file_descriptor_data;
     struct open_function open_data;

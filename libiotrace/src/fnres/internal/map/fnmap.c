@@ -115,7 +115,7 @@ void fnmap_add_or_update(fnmap_key* key, const char* fname) {
     }
 
     char* filename;
-    const size_t fname_size = (strlen(fname) * sizeof(char)) + sizeof((char)'\0');
+    const size_t fname_size = (strnlen(fname, FILENAME_MAX - 1) + 1 /* +1 for terminating '\0' */);
     if (NULL != (filename = malloc(fname_size))) {
         strncpy(filename, fname, fname_size);                    /* Make copy of filename (which will be stored in fnmap as value) */
 

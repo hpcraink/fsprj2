@@ -179,4 +179,6 @@ int main(void) {
 	assert(0 == ret);
 
 	unlink(MY_SOCK_PATH);
+
+	return ret;
 }

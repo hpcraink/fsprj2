@@ -595,8 +595,8 @@ int libiotrace_struct_write(char* libiotrace_struct_buf, size_t libiotrace_struc
 
 #  define LIBIOTRACE_STRUCT_START(name) int libiotrace_struct_max_size_##name() { \
                                     char libiotrace_struct_hasElements = 0; \
-                                    int libiotrace_struct_size_void_p; \
-                                    int libiotrace_struct_size_void_p_tmp; \
+                                    int libiotrace_struct_size_void_p __attribute__((unused)); \
+                                    int libiotrace_struct_size_void_p_tmp __attribute__((unused)); \
                                     size_t libiotrace_struct_size = 1; /* open parentheses */
 #  define LIBIOTRACE_STRUCT_END if (libiotrace_struct_hasElements) libiotrace_struct_size--; /* remove last comma */ \
                           libiotrace_struct_size++; /* close parentheses */ \
@@ -866,8 +866,8 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
 
 #  define LIBIOTRACE_STRUCT_START(name) void* libiotrace_struct_copy_##name(void *libiotrace_struct_buf, struct name *libiotrace_struct_data) { \
-                                    struct name *libiotrace_struct_copy = (struct name *)libiotrace_struct_buf; \
-                                    int libiotrace_struct_ret; \
+                                    struct name *libiotrace_struct_copy __attribute__((unused)) = (struct name *)libiotrace_struct_buf; \
+                                    int libiotrace_struct_ret __attribute__((unused)); \
                                     memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data, sizeof(struct name)); \
                                     libiotrace_struct_buf += sizeof(struct name);
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_buf;}
@@ -1138,8 +1138,8 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 //Jede Struktur beginnt mit diesem Makro
 #  define LIBIOTRACE_STRUCT_START(name) int libiotrace_struct_push_max_size_##name(size_t prefix_length) { /* prefix zb. file_type -- prefix nur fuer basic 0 */ \
                                     /* char libiotrace_struct_hasElements = 0; */ /* Merken ob in Struktur ueberhaupt was drin ist - nicht benoetigt weil letztes Element auch \n hat */ \
-                                    int libiotrace_struct_size_void_p; /* Nur fuer eingehaengte Strukuten... Merken welche eingeh. Strkt. am groessten */ \
-                                    int libiotrace_struct_size_void_p_tmp; \
+                                    int libiotrace_struct_size_void_p __attribute__((unused)); /* Nur fuer eingehaengte Strukuten... Merken welche eingeh. Strkt. am groessten */ \
+                                    int libiotrace_struct_size_void_p_tmp __attribute__((unused)); \
                                     size_t libiotrace_struct_size = 0; /* Start with 0 -- no parentheses like json */
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_size;}
 
@@ -1239,7 +1239,7 @@ int libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *lib
 
 #  define LIBIOTRACE_STRUCT_START(name) int libiotrace_struct_push_##name(char* libiotrace_struct_buf, size_t libiotrace_struct_size, \
                                         struct name *libiotrace_struct_data, const char* prefix) { \
-                                    int libiotrace_struct_ret = 0; \
+                                    int libiotrace_struct_ret __attribute__((unused)) = 0; \
                                     int libiotrace_struct_start_size = libiotrace_struct_size;
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_start_size - libiotrace_struct_size;}
 

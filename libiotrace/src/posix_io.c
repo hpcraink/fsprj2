@@ -3024,6 +3024,10 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 							   fcntl_hint_data)
 #endif
 		break;
+	default:
+		LIBIOTRACE_STRUCT_SET_VOID_P_NULL(fcntl_function_data, cmd_data)
+		LIBIOTRACE_WARN("Unknown cmd value in call to %s.", data.function_name);
+		ret = -1;
 	}
 	va_end(ap);
 
@@ -3714,7 +3718,6 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags)
 	ssize_t ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
-	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
@@ -3772,7 +3775,6 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags)
 	ssize_t ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
-	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;

@@ -681,11 +681,10 @@ SOCKET create_socket() {
 	unsigned char *database_port_short_p = (unsigned char *)&database_port_short;
 
 	//MAP IP FROM ENV TO SA_DATA(IPv4)
-	char *str = database_ip, *str2;
+	char *str = database_ip;
 	unsigned char database_ip_char[4] = {0};
 	size_t index = 0;
 
-	str2 = str;
 	while (*str)
 	{
 		if (isdigit((unsigned char)*str))
@@ -1931,7 +1930,6 @@ void read_whitelist() {
 
 	p = buffer;
 	while (NULL != (line = read_line(buffer, file_len, &p))) {
-		size_t byte_count = strlen(line);
 
 		clean_line = line;
 

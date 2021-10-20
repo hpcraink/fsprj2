@@ -7,6 +7,9 @@ enable_language(C)
 # set(CMAKE_BUILD_TYPE Release)
 # set(CMAKE_BUILD_TYPE Debug)
 
+#add_compile_options(-Wall -Wextra -pedantic -Werror -frecord-gcc-switches)
+add_compile_options(-Wall -frecord-gcc-switches)
+
 set(CMAKE_C_STANDARD 99)
 
 # XXX For production version, the default should be OFF
@@ -195,7 +198,18 @@ if (WITH_UNIT_TESTS)
     # might be to find_package(CUnit REQUIRED) and check for pre-installed version.
 
     add_git_submodule(ext/cunit)
+    
+    # The following workaround (to build cunit with Debug build type to ensure
+    # generation of assert functions) only works because cunit is added as a
+    # subdirectory. Each target uses the value a variable has at the end of the
+    # directory scope. A subdirectory has it's own scope, so at it's end the
+    # build type is the type defined before the add_subdirectory call (if no
+    # other definition inside the subdirectory is given).
+    set(_CMAKE_BUILD_TYPE_SAVE ${CMAKE_BUILD_TYPE})
+    set(CMAKE_BUILD_TYPE Debug)
     add_subdirectory(ext/cunit)
+    set(CMAKE_BUILD_TYPE ${_CMAKE_BUILD_TYPE_SAVE})
+    
     set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/ext/cunit/CUnit/;${CMAKE_PREFIX_PATH}")
     
     enable_testing()

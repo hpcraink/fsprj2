@@ -247,7 +247,6 @@ int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype dataty
 	struct basic data;
 	struct mpi_immediate mpi_immediate_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -282,7 +281,6 @@ int MPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype da
 	struct basic data;
 	struct mpi_immediate mpi_immediate_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -422,7 +420,6 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 	struct basic data;
 	struct mpi_immediate mpi_immediate_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -457,7 +454,6 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 	struct basic data;
 	struct mpi_immediate mpi_immediate_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -838,7 +834,6 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 	struct basic data;
 	struct mpi_immediate_at mpi_immediate_at_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -875,7 +870,6 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, 
 	struct basic data;
 	struct mpi_immediate_at mpi_immediate_at_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -912,7 +906,6 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 	struct basic data;
 	struct mpi_immediate_at mpi_immediate_at_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -949,7 +942,6 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int 
 	struct basic data;
 	struct mpi_immediate_at mpi_immediate_at_data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 
@@ -985,7 +977,6 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 	int ret;
 	struct basic data;
 	struct file_mpi file_mpi_data;
-	int datatype_size;
 
 	WRAP_MPI_START(data)
 

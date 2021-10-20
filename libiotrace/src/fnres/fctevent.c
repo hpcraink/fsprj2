@@ -39,7 +39,8 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 
 /* --- Macros --- */
 #define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) do {\
-  strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename));\
+  (fctevent)->traced_filename[sizeof((fctevent)->traced_filename) - 1] = '\0'; /* ensure there is a terminating '\0' after strncpy */\
+  strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename) - 1 /* save space for terminating '\0' */);\
   /* LIBIOTRACE_DEBUG("Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename);    // DEBUGGING */\
 } while(0)
 

@@ -579,7 +579,7 @@ static int __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_len
 
         default:
             LIBIOTRACE_WARN("Unhandled `id_type` w/ enum-value %d", type);
-            return -1;                      /* Note: Currently NOT checked by callee (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
+            return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 static int __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key *new_key) {
@@ -611,7 +611,7 @@ static int __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, f
 
         default:
             LIBIOTRACE_WARN("Unhandled case for `fctevent->void_p_enum_file_type` w/ value %d", fctevent->void_p_enum_file_type);
-            return -1;                      /* Note: Currently NOT checked by callee (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
+            return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 static int __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2) {
@@ -664,7 +664,7 @@ static int __create_fnmap_key_using_fctevent_function_data(struct basic* fcteven
 
         default:
             LIBIOTRACE_WARN("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %d", fctevent->void_p_enum_function_data);
-            return -1;                      /* Note: Currently NOT checked by callee (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
+            return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 
@@ -692,6 +692,6 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 
         default:
             LIBIOTRACE_WARN("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %d", fctevent->void_p_enum_function_data);
-            return NULL;                      /* Note: Currently NOT checked by callee (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
+            return NULL;                      /* Note: Currently NOT checked by all callers (ISSUE: Has sometimes special meaning, e.g., for `dlopen`; Note: Proceeding w/o checking return value might lead to SIGSEGV)  */
     }
 }

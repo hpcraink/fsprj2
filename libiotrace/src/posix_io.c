@@ -314,11 +314,11 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(ungetc)(int c, FILE *stream) REAL_DEFIN
 REAL_DEFINITION_TYPE wint_t REAL_DEFINITION(ungetwc)(wint_t wc, FILE *stream) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #ifdef HAVE_FREAD_UNLOCKED
-REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread_unlocked_MACRO)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #ifdef HAVE_FWRITE_UNLOCKED
-REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite_unlocked_MACRO)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fprintf)(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
 #ifdef HAVE_FWPRINTF
@@ -5305,7 +5305,7 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream)
 }
 
 #ifdef HAVE_FREAD_UNLOCKED
-size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
+size_t WRAP(fread_unlocked_MACRO)(void *data, size_t size, size_t count, FILE *stream)
 {
 	size_t ret;
 	struct basic _data;
@@ -5319,7 +5319,7 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 	file_stream_data.stream = stream;
 	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
-	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked, data, size, count,
+	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked_MACRO, data, size, count,
 						   stream)
 
 	if (0 == ret)
@@ -5333,7 +5333,7 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 		read_data.read_bytes = ret * size;
 	}
 
-	WRAP_END(_data, fread_unlocked)
+	WRAP_END(_data, fread_unlocked_MACRO)
 	return ret;
 }
 #endif
@@ -5370,7 +5370,7 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream)
 }
 
 #ifdef HAVE_FWRITE_UNLOCKED
-size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
+size_t WRAP(fwrite_unlocked_MACRO)(const void *data, size_t size, size_t count,
 							 FILE *stream)
 {
 	size_t ret;
@@ -5385,7 +5385,7 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 	file_stream_data.stream = stream;
 	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
-	CALL_REAL_FUNCTION_RET(_data, ret, fwrite_unlocked, data, size, count,
+	CALL_REAL_FUNCTION_RET(_data, ret, fwrite_unlocked_MACRO, data, size, count,
 						   stream)
 
 	if (ret != count)
@@ -5399,7 +5399,7 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 		write_data.written_bytes = ret * size;
 	}
 
-	WRAP_END(_data, fwrite_unlocked)
+	WRAP_END(_data, fwrite_unlocked_MACRO)
 	return ret;
 }
 #endif

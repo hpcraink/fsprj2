@@ -56,6 +56,22 @@
 #define getwc_unlocked_MACRO getwc_unlocked
 #endif
 
+#ifdef fread_unlocked
+#   undef fread_unlocked
+#   define fread_unlocked_MACRO fread_unlocked
+//#   error "Unknown macro for fread_unlocked function!"
+#else
+#   define fread_unlocked_MACRO fread_unlocked
+#endif
+
+#ifdef fwrite_unlocked
+#   undef fwrite_unlocked
+#   define fwrite_unlocked_MACRO fwrite_unlocked
+//#   error "Unknown macro for fwrite_unlocked function!"
+#else
+#   define fwrite_unlocked_MACRO fwrite_unlocked
+#endif
+
 #ifdef HAVE___OPEN
 WRAPPER_NAME(__open)
 #endif
@@ -317,11 +333,11 @@ WRAPPER_NAME(ungetc)
 WRAPPER_NAME(ungetwc)
 WRAPPER_NAME(fread)
 #ifdef HAVE_FREAD_UNLOCKED
-WRAPPER_NAME(fread_unlocked)
+WRAPPER_NAME(fread_unlocked_MACRO)
 #endif
 WRAPPER_NAME(fwrite)
 #ifdef HAVE_FWRITE_UNLOCKED
-WRAPPER_NAME(fwrite_unlocked)
+WRAPPER_NAME(fwrite_unlocked_MACRO)
 #endif
 WRAPPER_NAME(fprintf)
 #ifdef HAVE_FWPRINTF

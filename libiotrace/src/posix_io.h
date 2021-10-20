@@ -366,11 +366,25 @@ REAL_TYPE int REAL(ungetc)(int c, FILE *stream) REAL_INIT;
 REAL_TYPE wint_t REAL(ungetwc)(wint_t wc, FILE *stream) REAL_INIT;
 REAL_TYPE size_t REAL(fread)(void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #ifdef HAVE_FREAD_UNLOCKED
-REAL_TYPE size_t REAL(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
+#ifdef fread_unlocked
+#   undef fread_unlocked
+#   define fread_unlocked_MACRO fread_unlocked
+//#   error "Unknown macro for fread_unlocked function!"
+#else
+#   define fread_unlocked_MACRO fread_unlocked
+#endif
+REAL_TYPE size_t REAL(fread_unlocked_MACRO)(void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #endif
 REAL_TYPE size_t REAL(fwrite)(const void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #ifdef HAVE_FWRITE_UNLOCKED
-REAL_TYPE size_t REAL(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
+#ifdef fwrite_unlocked
+#   undef fwrite_unlocked
+#   define fwrite_unlocked_MACRO fwrite_unlocked
+//#   error "Unknown macro for fwrite_unlocked function!"
+#else
+#   define fwrite_unlocked_MACRO fwrite_unlocked
+#endif
+REAL_TYPE size_t REAL(fwrite_unlocked_MACRO)(const void *data, size_t size, size_t count, FILE *stream) REAL_INIT;
 #endif
 REAL_TYPE int REAL(fprintf)
 (FILE *stream, const char *template, ...) REAL_INIT;

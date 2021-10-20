@@ -5,7 +5,7 @@ enable_language(C)
 
 # XXX For production version, these should be deleted (it's a user-option)
 # set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_C_STANDARD 99)
 

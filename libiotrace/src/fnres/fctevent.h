@@ -1,7 +1,7 @@
 /**
  * Function event (fctevent):
- *   Takes in data from wrapper calls ("function events") for the purpose
- *   of creating a mapping from all types of handles pertaining files to filenames
+ *   Takes in data from wrapper calls (posix/mpi; are called "function events") for the purpose
+ *   of creating a mapping from all types of file handles (fildes, streams, etc.) to filenames
  */
 
 #ifndef LIBIOTRACE_FCTEVENT_H

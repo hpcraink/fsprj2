@@ -1,6 +1,6 @@
 /**
 * Filename map (fnmap)
-*   Implements abstraction (API) for map impl. which is used for tracking filenames
+*   Implements abstraction (API) for map implementation (which is used for tracking filenames)
 */
 
 #ifndef LIBIOTRACE_FNMAP_H

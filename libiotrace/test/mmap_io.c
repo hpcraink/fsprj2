@@ -7,7 +7,6 @@
 
 
 
-// Q: `mmap` not file-backed => Basically same as using `malloc` ?
 void test_not_filebacked_shared_mem_fork(const size_t mmap_num_arr_elements) {
     puts("\n\n--- `mmap`: Not file backed SHARED memory w/ `fork` ---\n");
 

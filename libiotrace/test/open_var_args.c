@@ -1,6 +1,6 @@
 /**
-* Tests whether `open` w/ var-args is traced
-*/
+ * Tests whether `open` w/ varargs is traced
+ */
 
 #include <stdio.h>
 #include <fcntl.h>      /* `open` */

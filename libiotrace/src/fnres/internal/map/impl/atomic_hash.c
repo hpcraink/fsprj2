@@ -21,6 +21,15 @@
  *
  */
 
+// $$ OWN ADDITIONS $$
+// added #ifdef DEBUG to some printfs to ommit debug output in non-debug build
+
+// unused variables removed
+// uninitialized variables initialized to 0
+
+// Added 'static' keyword to all 'inline'd functions (https://stackoverflow.com/a/54875926)
+// $$ OWN ADDITIONS $$
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -70,17 +79,6 @@
           } while (0)
 
 
-// $$ OWN ADDITIONS $$
-#ifndef DEBUG
-#  define printf(fmt, ...)
-#endif
-
-// Added 'static' keyword to all 'inline'd functions (https://stackoverflow.com/a/54875926)
-// $$ OWN ADDITIONS $$
-
-
-
-
 static inline unsigned long
 nowms ()
 {
@@ -105,7 +103,9 @@ create_mem_pool (unsigned int max_nodes, unsigned int node_size)
     for (pwr2_node_size = 0; (1 << pwr2_node_size) < node_size; pwr2_node_size++);
     if ((1 << pwr2_node_size) != node_size || pwr2_node_size < 5 || pwr2_node_size > 12)
     {
+#ifdef DEBUG
         printf("node_size should be N powe of 2, 5 <= N <= 12(4KB page)");
+#endif
         return NULL;
     }
 
@@ -159,7 +159,7 @@ destroy_mem_pool (mem_pool_t * pmp)
 static inline nid *
 new_mem_block (mem_pool_t * pmp, volatile cas_t * recv_queue)
 {
-    nid i, m, sz, sft, head = 0;
+    nid i, m, sz, head = 0;
     memword cas_t n, x, *pn;
     void *p;
 
@@ -177,7 +177,6 @@ new_mem_block (mem_pool_t * pmp, volatile cas_t * recv_queue)
         return NULL;
     }
     sz = pmp->node_size;
-    sft = pmp->shift;
     m = pmp->mask;
     head = i * (m + 1);
     for (i = 0; i < m; i++)
@@ -222,18 +221,18 @@ int
 init_htab (htab_t * ht, unsigned long num, double ratio)
 {
     unsigned long i, nb;
-    double r;
     nb = num * ratio;
     for (i = 134217728; nb > i; i *= 2);
 //  nb = (nb >= 134217728) ? i : nb; // improve folding for more than 1/32 of MAXTAB (2^32)
     ht->nb = (i > MAXTAB) ? MAXTAB : ((nb < MINTAB) ? MINTAB : nb);
     ht->n = num; //if 3rd tab: n <- 0, nb <- MINTAB, r <- COLLISION
-    r = (ht->n == 0 ? ratio : ht->nb * 1.0 / ht->n);
     if (!(ht->b = calloc (ht->nb, sizeof (*ht->b))))
         return -1;
     for (i = 0; i < ht->nb; i++)
         ht->b[i] = NNULL;
 #ifdef DEBUG
+    double r;
+    r = (ht->n == 0 ? ratio : ht->nb * 1.0 / ht->n);
     printf ("expected nb[%ld] = n[%ld] * r[%f]\n", (unsigned long) (num * ratio),
             num, ratio);
     printf ("actual   nb[%ld] = n[%ld] * r[%f]\n", ht->nb, ht->n, r);
@@ -251,7 +250,9 @@ atomic_hash_create (unsigned int max_nodes, int reset_ttl)
     unsigned long j, n1, n2;
     if (max_nodes < 2 || max_nodes > MAXTAB)
     {
+#ifdef DEBUG
         printf ("max_nodes range: 2 ~ %ld\n", (unsigned long) MAXTAB);
+#endif
         return NULL;
     }
     if (posix_memalign ((void **) (&h), 64, sizeof (*h)))
@@ -296,28 +297,36 @@ atomic_hash_create (unsigned int max_nodes, int reset_ttl)
  * nb1 = n1 * r1, r1 = ((n1+2)/tuning/K^2)^(K^2 - 1)
  * nb2 = n2 * r2 == nb1 / K == ((n2+2)/tuning/K))^(K - 1)
 */
+#ifdef DEBUG
     printf ("init bucket array 1:\n");
+#endif
     K = h->npos + 1;
     n1 = max_nodes;
     r1 = pow ((n1 * collision / (K * K)), (1.0 / (K * K - 1)));
     if (init_htab (ht1, n1, r1) < 0)
         goto calloc_exit;
 
+#ifdef DEBUG
     printf ("init bucket array 2:\n");
+#endif
     n2 = (n1 + 2.0) / (K * pow (r1, K - 1));
     r2 = pow (((n2 + 2.0) * collision / K), 1.0 / (K - 1));
     if (init_htab (ht2, n2, r2) < 0)
         goto calloc_exit;
 
+#ifdef DEBUG
     printf ("init collision array:\n");
+#endif
     if (init_htab (at1, 0, collision) < 0)
         goto calloc_exit;
 
     h->mp = create_mem_pool (max_nodes, sizeof (node_t));
 //  h->mp = old_create_mem_pool (ht1->nb + ht2->nb + at1->nb, sizeof (node_t), max_blocks);
+#ifdef DEBUG
     printf ("shift=%d; mask=%d\n", h->mp->shift, h->mp->mask);
     printf ("mem_blocks:\t%d/%d, %dx%d bytes, %d bytes per block\n", h->mp->curr_blocks, h->mp->max_blocks,
             h->mp->blk_node_num, h->mp->node_size, h->mp->blk_size);
+#endif
     if (!h->mp)
         goto calloc_exit;
 
@@ -342,7 +351,7 @@ atomic_hash_stats (hash_t * h, unsigned long escaped_milliseconds)
     const htab_t *ht1 = &h->ht[0], *ht2 = &h->ht[1];
     htab_t *p;
     mem_pool_t *m = h->mp;
-    unsigned long j, nadd, ndup, nget, ndel, nop, ncur, op = 0;
+    unsigned long j, nadd = 0, ndup = 0, nget = 0, ndel = 0, ncur = 0, op = 0;
     double blk_in_kB, mem, d = 1024.0;
     char *b = "    ";
     blk_in_kB = m->blk_size / d;
@@ -364,7 +373,6 @@ atomic_hash_stats (hash_t * h, unsigned long escaped_milliseconds)
     printf ("r1[%f]/r2[%f],  performance_wall[%.1f%%]\n",
             ht1->nb * 1.0 / ht1->n, ht2->nb * 1.0 / ht2->n,
             ht1->n * 100.0 / (ht1->nb + ht2->nb));
-    nop = ncur = nadd = ndup = nget = ndel = 0;
     printf ("---------------------------------------------------------------------------\n");
     printf ("tab n_cur %s%sn_add %s%sn_dup %s%sn_get %s%sn_del\n", b, b, b, b, b, b, b, b);
     for (j = 0; j <= NMHT && (p = &h->ht[j]); j++)

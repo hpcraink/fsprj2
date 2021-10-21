@@ -207,7 +207,13 @@ if (WITH_UNIT_TESTS)
     # other definition inside the subdirectory is given).
     set(_CMAKE_BUILD_TYPE_SAVE ${CMAKE_BUILD_TYPE})
     set(CMAKE_BUILD_TYPE Debug)
+    
+    add_compile_options(-Wno-unused-variable -Wno-unused-but-set-variable)
+    
     add_subdirectory(ext/cunit)
+    
+    list(REMOVE_ITEM COMPILE_OPTIONS "-Wno-unused-variable -Wno-unused-but-set-variable")
+    
     set(CMAKE_BUILD_TYPE ${_CMAKE_BUILD_TYPE_SAVE})
     
     set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/ext/cunit/CUnit/;${CMAKE_PREFIX_PATH}")

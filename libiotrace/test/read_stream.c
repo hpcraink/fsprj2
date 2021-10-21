@@ -12,6 +12,7 @@ int main(void) {
 	char *tmpLine;
 	size_t tmpSize;
 	int c;
+	int ret;
 
 	file = fopen("/etc/passwd", "r");
 	assert(NULL != file);
@@ -22,19 +23,26 @@ int main(void) {
 	__fwritable(file);
 	__fsetlocking(file, FSETLOCKING_QUERY);
 
-	ftell(file);
-	ftello(file);
+	ret = ftell(file);
+	assert(-1 != ret);
+	ret = ftello(file);
+	assert(-1 != ret);
 
 	flockfile(file);
-	fread(&buffer, sizeof(char), 1, file);
+	ret = fread(&buffer, sizeof(char), 1, file);
+	assert(sizeof(char) == ret);
 	funlockfile(file);
 
-	ftell(file);
-	ftello(file);
+	ret = ftell(file);
+	assert(-1 != ret);
+	ret = ftello(file);
+	assert(-1 != ret);
 	fseeko(file, 4, SEEK_CUR);
-	ftello(file);
+	ret = ftello(file);
+	assert(-1 != ret);
 	rewind(file);
-	ftello(file);
+	ret = ftello(file);
+	assert(-1 != ret);
 
 	fwide(file, 0);
 
@@ -47,13 +55,15 @@ int main(void) {
 
 	tmpLine = NULL;
 	tmpSize = 0;
-	getline(&tmpLine, &tmpSize, file);
+	ret = getline(&tmpLine, &tmpSize, file);
+	assert(-1 != ret);
 	free(tmpLine);
 
 	tmpLine = (char*) malloc(50);
 	assert (NULL != tmpLine);
 	tmpSize = 50;
-	getdelim(&tmpLine, &tmpSize, '\n', file);
+	ret = getdelim(&tmpLine, &tmpSize, '\n', file);
+	assert(-1 != ret);
 	free(tmpLine);
 
 	fclose(file);

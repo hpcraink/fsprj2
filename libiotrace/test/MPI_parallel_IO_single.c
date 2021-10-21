@@ -2,6 +2,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include <unistd.h>
 #define BUFSIZE 100
 #define BUFSIZE2 200
 

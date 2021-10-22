@@ -48,7 +48,7 @@
 // $$ OWN ADDITIONS $$
 // in atomic_hash.c this header (hash_city.h) is included inside a local function
 // inside this function not all typedefs are used
-// => added __attribute__((unused)) to suppress warnings
+// => added ATTRIBUTE_UNUSED to suppress warnings
 // $$ OWN ADDITIONS $$
 
 #ifndef CITY_HASH_H_
@@ -56,9 +56,10 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "libiotrace_config.h"
 
-typedef uint8_t uint8 __attribute__((unused));
-typedef uint32_t uint32 __attribute__((unused));
+typedef uint8_t uint8 ATTRIBUTE_UNUSED;
+typedef uint32_t uint32 ATTRIBUTE_UNUSED;
 typedef uint64_t uint64;
 
 typedef struct _uint128 uint128;

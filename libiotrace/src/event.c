@@ -1345,7 +1345,7 @@ void send_data(const char *message, SOCKET socket) {
  * @return Error state of the callback (not used; gives "0" back).
  */
 #ifdef IOTRACE_ENABLE_INFLUXDB
-int url_callback_responses(llhttp_t *parser, const char *at __attribute__((unused)), size_t length __attribute__((unused))) {
+int url_callback_responses(llhttp_t *parser, const char *at ATTRIBUTE_UNUSED, size_t length ATTRIBUTE_UNUSED) {
 	if (parser->status_code != 204) {
 		LIBIOTRACE_WARN("unknown status (%d) in response from influxdb",
 				parser->status_code);
@@ -1678,7 +1678,7 @@ SOCKET prepare_control_socket() {
  * @return Not used (allways NULL)
  */
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-void* communication_thread(__attribute__((unused)) void *arg) {
+void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
 	struct timeval select_timeout;
 
 	// Read responses from influxdb and read control messages

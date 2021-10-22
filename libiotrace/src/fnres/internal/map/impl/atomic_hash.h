@@ -26,6 +26,8 @@
 
 #include <stdint.h>
 
+#include "libiotrace_config.h"
+
 typedef int (*callback)(void *hash_data, void *caller_data);
 typedef int (* hook) (void *hash_data, void *rtn_data);
 
@@ -54,7 +56,7 @@ typedef uint64_t hvu;
 typedef struct hv { hvu x, y; } hv;
 #endif
 
-#define shared  __attribute__((aligned(64)))
+#define shared ATTRIBUTE_ALIGNED(64)
 
 typedef uint32_t nid;
 typedef struct hstats

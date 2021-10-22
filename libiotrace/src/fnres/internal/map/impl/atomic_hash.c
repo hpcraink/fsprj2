@@ -60,7 +60,7 @@
 #define MAXBLOCKS 1024
 #define MAXSPIN (1<<20) /* 2^20 loops 40ms with pause + sched_yield on xeon E5645 */
 
-#define memword __attribute__((aligned(sizeof(void *))))
+#define memword ATTRIBUTE_ALIGNED(sizeof(void *))
 #define atomic_add1(v) __sync_fetch_and_add(&(v), 1)
 #define atomic_sub1(v) __sync_fetch_and_sub(&(v), 1)
 #define add1(v) __sync_fetch_and_add(&(v), 1)

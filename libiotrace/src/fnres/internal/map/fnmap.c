@@ -5,6 +5,7 @@
 #include "fnmap.h"
 #include "impl/atomic_hash.h"
 #include "../../../error.h"
+#include "libiotrace_config.h"
 
 
 /* - Constants - */
@@ -19,7 +20,7 @@ static hash_t* global_map = NULL;
 /* - Internal functions - */
 /* ... hooks for hashmap */
 /* Hook is necessary for destroying map (and removing values) */
-int __del_hook(void* hash_data, void* caller_data __attribute__((unused))) {
+int __del_hook(void* hash_data, void* caller_data ATTRIBUTE_UNUSED) {
     if (hash_data) {
         // LIBIOTRACE_DEBUG("Freeing string/filename '%s'", (char*)hash_data);    // DEBUGGING
         free(hash_data);

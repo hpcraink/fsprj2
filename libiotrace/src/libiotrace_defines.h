@@ -287,7 +287,7 @@
                                         struct name *libiotrace_struct_data) { \
                                     char libiotrace_struct_hasElements = 0; \
                                     size_t libiotrace_struct_ret = 0; \
-                                    int libiotrace_struct_ret_int __attribute__((unused)) = 0; \
+                                    int libiotrace_struct_ret_int ATTRIBUTE_UNUSED = 0; \
                                     size_t libiotrace_struct_start_size = libiotrace_struct_size; \
                                     LIBIOTRACE_STRUCT_WRITE("{")
 #  define LIBIOTRACE_STRUCT_END if (libiotrace_struct_hasElements) { \
@@ -510,8 +510,8 @@
 
 #  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_max_size_##name() { \
                                     char libiotrace_struct_hasElements = 0; \
-                                    size_t libiotrace_struct_size_void_p __attribute__((unused)); \
-                                    size_t libiotrace_struct_size_void_p_tmp __attribute__((unused)); \
+                                    size_t libiotrace_struct_size_void_p ATTRIBUTE_UNUSED; \
+                                    size_t libiotrace_struct_size_void_p_tmp ATTRIBUTE_UNUSED; \
                                     size_t libiotrace_struct_size = 1; /* open parentheses */
 #  define LIBIOTRACE_STRUCT_END if (libiotrace_struct_hasElements) libiotrace_struct_size--; /* remove last comma */ \
                           libiotrace_struct_size++; /* close parentheses */ \
@@ -642,7 +642,7 @@
                                                       break;
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
 
-#  define LIBIOTRACE_STRUCT_START(name) int libiotrace_struct_sizeof_##name(struct name *libiotrace_struct_data __attribute__((unused))) { \
+#  define LIBIOTRACE_STRUCT_START(name) int libiotrace_struct_sizeof_##name(struct name *libiotrace_struct_data ATTRIBUTE_UNUSED) { \
                                     size_t libiotrace_struct_size = sizeof(struct name);
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_size;}
 
@@ -780,8 +780,8 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
 
 #  define LIBIOTRACE_STRUCT_START(name) void* libiotrace_struct_copy_##name(void *libiotrace_struct_buf, struct name *libiotrace_struct_data) { \
-                                    struct name *libiotrace_struct_copy __attribute__((unused)) = (struct name *)libiotrace_struct_buf; \
-                                    size_t libiotrace_struct_ret __attribute__((unused)); \
+                                    struct name *libiotrace_struct_copy ATTRIBUTE_UNUSED = (struct name *)libiotrace_struct_buf; \
+                                    size_t libiotrace_struct_ret ATTRIBUTE_UNUSED; \
                                     memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data, sizeof(struct name)); \
                                     libiotrace_struct_buf += sizeof(struct name);
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_buf;}
@@ -959,7 +959,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                       break;
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
 
-#  define LIBIOTRACE_STRUCT_START(name) void libiotrace_struct_free_##name(struct name *libiotrace_struct_data __attribute__((unused))) {
+#  define LIBIOTRACE_STRUCT_START(name) void libiotrace_struct_free_##name(struct name *libiotrace_struct_data ATTRIBUTE_UNUSED) {
 #  define LIBIOTRACE_STRUCT_END }
 
 #  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->name) { \
@@ -1049,10 +1049,10 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                       libiotrace_struct_size_void_p = libiotrace_struct_size_void_p_tmp;
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) libiotrace_struct_size += libiotrace_struct_size_void_p;
 
-// TODO: remove __attribute__((unused)) from parameters after all data types are implemented
-#  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_push_max_size_##name(size_t prefix_length __attribute__((unused))) { /* prefix e.g. file_type */ \
-                                    size_t libiotrace_struct_size_void_p __attribute__((unused)); \
-                                    size_t libiotrace_struct_size_void_p_tmp __attribute__((unused)); \
+// TODO: remove ATTRIBUTE_UNUSED from parameters after all data types are implemented
+#  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_push_max_size_##name(size_t prefix_length ATTRIBUTE_UNUSED) { /* prefix e.g. file_type */ \
+                                    size_t libiotrace_struct_size_void_p ATTRIBUTE_UNUSED; \
+                                    size_t libiotrace_struct_size_void_p_tmp ATTRIBUTE_UNUSED; \
                                     size_t libiotrace_struct_size = 0; /* start with 0 -- no parentheses like json */
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_size;}
 
@@ -1167,11 +1167,11 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                          } \
                                        }
 
-// TODO: remove __attribute__((unused)) from parameters after all data types are implemented
-#  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_push_##name(char* libiotrace_struct_buf __attribute__((unused)), size_t libiotrace_struct_size, \
-                                        struct name *libiotrace_struct_data __attribute__((unused)), const char* prefix __attribute__((unused))) { \
-                                    size_t libiotrace_struct_ret __attribute__((unused)) = 0; \
-                                    int libiotrace_struct_ret_int __attribute__((unused)) = 0; \
+// TODO: remove ATTRIBUTE_UNUSED from parameters after all data types are implemented
+#  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_push_##name(char* libiotrace_struct_buf ATTRIBUTE_UNUSED, size_t libiotrace_struct_size, \
+                                        struct name *libiotrace_struct_data ATTRIBUTE_UNUSED, const char* prefix ATTRIBUTE_UNUSED) { \
+                                    size_t libiotrace_struct_ret ATTRIBUTE_UNUSED = 0; \
+                                    int libiotrace_struct_ret_int ATTRIBUTE_UNUSED = 0; \
                                     size_t libiotrace_struct_start_size = libiotrace_struct_size;
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_start_size - libiotrace_struct_size;}
 

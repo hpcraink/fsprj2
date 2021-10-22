@@ -8,7 +8,7 @@ enable_language(C)
 # set(CMAKE_BUILD_TYPE Debug)
 
 #add_compile_options(-Wall -Wextra -pedantic -Werror -frecord-gcc-switches)
-add_compile_options(-Wall -Wextra -frecord-gcc-switches)
+add_compile_options(-Wall -Wextra -Werror -frecord-gcc-switches)
 
 set(CMAKE_C_STANDARD 99)
 

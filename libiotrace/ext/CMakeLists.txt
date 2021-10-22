@@ -7,6 +7,6 @@
 set(CMAKE_BUILD_TYPE Debug)
 
 # Warnings from compiling CUnit should be ignored (CUnit is not part of our production code).
-add_compile_options(-Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter)
+add_compile_options(-Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-missing-field-initializers)
 
 add_subdirectory(cunit)

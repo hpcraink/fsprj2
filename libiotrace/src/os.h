@@ -1,3 +1,5 @@
+#ifndef LIBIOTRACE_OS_H
+#define LIBIOTRACE_OS_H
 /**
  * Headers for OS-dependent functions
  * This are wrappers around the various OS-dependent calls.
@@ -23,3 +25,5 @@ void *memrchr(const void *s, int c, size_t n);
 #endif
 
 END_C_DECLS
+
+#endif /* LIBIOTRACE_OS_H */

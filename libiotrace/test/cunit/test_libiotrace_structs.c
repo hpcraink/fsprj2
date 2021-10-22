@@ -110,7 +110,10 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 static void check_json_string(const char *print_buf, const jsmntok_t *token,
 		const char *string) {
 	CU_ASSERT_FATAL(token->type == JSMN_STRING);
-	CU_ASSERT_FATAL(strlen(string) == token->end - token->start);
+	CU_ASSERT_FATAL(token->start >= 0);
+	CU_ASSERT_FATAL(token->end >= 0);
+	CU_ASSERT_FATAL(token->start <= token->end);
+	CU_ASSERT_FATAL(strlen(string) == (size_t)token->end - (size_t)token->start);
 	CU_ASSERT_FATAL(
 			0
 					== strncmp(print_buf + token->start, string,
@@ -305,7 +308,7 @@ static void test_struct_basic(void) {
 
 	char print_buf[libiotrace_struct_max_size_basic()];
 	memset(print_buf, 0, sizeof(print_buf));
-	int len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf),
+	size_t len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf),
 			&data);
 
 	// check print of basic structure without substructures

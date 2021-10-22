@@ -35,12 +35,8 @@ int main(void) {
 	struct sockaddr_un addr;
 	struct sockaddr_un accept_addr;
 	struct msghdr msg = { 0 };
-#ifdef _GNU_SOURCE
-	struct mmsghdr mmsg[2] = { 0 };
-#endif
 	struct cmsghdr *cmsg;
 	int myfds[1];
-	int myfds2[2];
 	int *fdptr;
 	char iobuf[1];
 	struct iovec io = { .iov_base = iobuf, .iov_len = sizeof(iobuf) };
@@ -48,10 +44,14 @@ int main(void) {
 		char buf[CMSG_SPACE(sizeof(myfds))];
 		struct cmsghdr align;
 	} u = { .align = 0 };
+#ifdef _GNU_SOURCE
+	struct mmsghdr mmsg[2] = { 0 };
+	int myfds2[2];
 	union {
 		char buf[CMSG_SPACE(sizeof(myfds2))];
 		struct cmsghdr align;
 	} u2 = { .align = 0 };
+#endif
 
 	iobuf[0] = '\0';
 

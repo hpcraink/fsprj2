@@ -1317,7 +1317,7 @@ void send_data(const char *message, SOCKET socket) {
 						errno);
 			}
 		} else {
-			if (bytes_sent < bytes_to_send) {
+			if ((size_t)bytes_sent < bytes_to_send) {
 				bytes_to_send -= bytes_sent;
 				message_to_send += bytes_sent;
 			} else {
@@ -1345,7 +1345,7 @@ void send_data(const char *message, SOCKET socket) {
  * @return Error state of the callback (not used; gives "0" back).
  */
 #ifdef IOTRACE_ENABLE_INFLUXDB
-int url_callback_responses(llhttp_t *parser, const char *at, size_t length) {
+int url_callback_responses(llhttp_t *parser, const char *at __attribute__((unused)), size_t length __attribute__((unused))) {
 	if (parser->status_code != 204) {
 		LIBIOTRACE_WARN("unknown status (%d) in response from influxdb",
 				parser->status_code);
@@ -1602,7 +1602,7 @@ SOCKET prepare_control_socket() {
 
 			meta_data.process_id = pid;
 			meta_data.port = i;
-			for (int l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
+			for (size_t l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
 			{
 				meta_data.interface_name = ifreqs[l].ifr_name;
 				meta_data.ip = inet_ntoa(((struct sockaddr_in *)&ifreqs[l].ifr_addr)->sin_addr);

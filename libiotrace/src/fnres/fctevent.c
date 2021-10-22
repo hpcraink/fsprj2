@@ -317,8 +317,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->function_data;
 
             if (NULL == fctevent_function_data->requests) { return; }
-            for (int i = 0; i < fctevent_function_data->size_requests; i++) {
-                int* req_id = &((*((fctevent_function_data->requests) +i))->request_id);
+            for (size_t i = 0; i < fctevent_function_data->size_requests; i++) {
+                int* req_id = &((*((fctevent_function_data->requests) + i))->request_id);
 
                 fnmap_key delete_key;
                 __create_fnmap_key_using_vals(R_MPI, req_id, 0, &delete_key);

@@ -32,7 +32,7 @@ void libiotrace_end_stacktrace_symbol() {
 	return;
 }
 
-void libiotrace_set_stacktrace_depth(int depth) {
+void libiotrace_set_stacktrace_depth(int depth __attribute__((unused))) {
 	return;
 }
 
@@ -40,10 +40,10 @@ int libiotrace_get_stacktrace_depth() {
 	return 0;
 }
 
-void libiotrace_set_wrapper_active(const char *wrapper) {
+void libiotrace_set_wrapper_active(const char *wrapper __attribute__((unused))) {
 	return;
 }
 
-void libiotrace_set_wrapper_inactive(const char *wrapper) {
+void libiotrace_set_wrapper_inactive(const char *wrapper __attribute__((unused))) {
 	return;
 }

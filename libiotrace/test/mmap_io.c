@@ -24,7 +24,7 @@ void test_not_filebacked_shared_mem_fork(const size_t mmap_num_arr_elements) {
 
     /* - 1. Init w/ values - */
     puts("Initial values in the `mmap`'ed memory region:");
-    for (int i = 0; i < mmap_num_arr_elements; i++){
+    for (size_t i = 0; i < mmap_num_arr_elements; i++){
         not_file_backed_shared_mem[i] = (i + 1);
         printf("\t%d", not_file_backed_shared_mem[i]);
     }
@@ -36,7 +36,7 @@ void test_not_filebacked_shared_mem_fork(const size_t mmap_num_arr_elements) {
     if (0 == (pid = fork())) {
     /* - 3. Child: Update values - */
         puts("\nCHILD: I'm updating the values in the meantime ...");
-        for (int i = 0; i < mmap_num_arr_elements; i++) {
+        for (size_t i = 0; i < mmap_num_arr_elements; i++) {
             not_file_backed_shared_mem[i] *= (not_file_backed_shared_mem[i] << 1);
         }
         puts("CHILD: I'm done, exiting now ...");
@@ -47,7 +47,7 @@ void test_not_filebacked_shared_mem_fork(const size_t mmap_num_arr_elements) {
         puts("\nPARENT:");
 
         puts("Updated values in the mmap'ed memory region:");
-        for (int i = 0; i < mmap_num_arr_elements; i++) {
+        for (size_t i = 0; i < mmap_num_arr_elements; i++) {
             printf("\t%d", not_file_backed_shared_mem[i] );
         }
         puts("");
@@ -86,7 +86,7 @@ void test_filebacked_anon_mem(const char* const file_to_be_mmaped, const size_t 
     }
 
     /* - 2. `printf` mmap'ed file contents (to stdout) - */
-    for (int i=0; (i < num_bytes) && ('\0' != file_backed_anon_mem[i]); i++) {
+    for (size_t i=0; (i < num_bytes) && ('\0' != file_backed_anon_mem[i]); i++) {
         printf("%c", file_backed_anon_mem[i]);
     }
 

@@ -1,3 +1,6 @@
+# ensure debug info and assert functions are build during compile of tests
+set(CMAKE_BUILD_TYPE Debug)
+
 if (WITH_UNIT_TESTS)
     add_subdirectory(cunit)
 endif()

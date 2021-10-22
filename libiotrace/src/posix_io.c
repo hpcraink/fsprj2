@@ -483,7 +483,7 @@ enum lock_mode get_lock_mode(int type)
 	}
 }
 
-enum lock_mode get_orientation_mode(int mode, char param)
+enum orientation_mode get_orientation_mode(int mode, char param)
 {
 	if (mode > 0)
 	{
@@ -3846,56 +3846,59 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 	CALL_REAL_FUNCTION_RET(data, ret, sendmmsg, sockfd, msgvec, vlen, flags)
 
-	get_basic(&data);
+	if (0 <= ret) {
 
-	for (int i = 0; i < vlen && i < ret && i < MAX_MMSG_MESSAGES; i++)
-	{
-		msg = &((msgvec + i)->msg_hdr);
+		get_basic(&data);
 
-		for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
-			 cmsg = CMSG_NXTHDR(msg, cmsg))
+		for (unsigned int i = 0; i < vlen && i < (size_t)ret && i < MAX_MMSG_MESSAGES; i++)
 		{
+			msg = &((msgvec + i)->msg_hdr);
 
-			if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+			for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+					cmsg = CMSG_NXTHDR(msg, cmsg))
 			{
-				if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
-				{
-					get_sockaddr(msg->msg_name,
-								 &sockaddr_function_data[sockaddr_count],
-								 msg->msg_namelen, hex_addr[sockaddr_count]);
-					msg_function_data[sockaddr_count].sockaddr =
-						&sockaddr_function_data[sockaddr_count];
-				}
-				else
-				{
-					msg_function_data[sockaddr_count].sockaddr = NULL;
-				}
-				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
-										  descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+				if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+				{
+					if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
+					{
+						get_sockaddr(msg->msg_name,
+								&sockaddr_function_data[sockaddr_count],
+								msg->msg_namelen, hex_addr[sockaddr_count]);
+						msg_function_data[sockaddr_count].sockaddr =
+								&sockaddr_function_data[sockaddr_count];
+					}
+					else
+					{
+						msg_function_data[sockaddr_count].sockaddr = NULL;
+					}
+					messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				sockaddr_count++;
-				break;
+					fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+					LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+							descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+
+					sockaddr_count++;
+					break;
+				}
 			}
 		}
-	}
 
-	if (sockaddr_count > 0)
-	{
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
-							   mmsg_function_data)
-		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
-									 sockaddr_count)
-		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-							   file_descriptor_data)
-		file_descriptor_data.descriptor = sockfd;
-		data.return_state = ok;
+		if (sockaddr_count > 0)
+		{
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+					mmsg_function_data)
+			LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+					sockaddr_count)
+			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+					file_descriptor_data)
+			file_descriptor_data.descriptor = sockfd;
+			data.return_state = ok;
 
-		WRAP_END(data, sendmmsg)
-		return ret;
+			WRAP_END(data, sendmmsg)
+			return ret;
+		}
 	}
 
 	WRAP_END_WITHOUT_WRITE(data)
@@ -3929,56 +3932,59 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 	CALL_REAL_FUNCTION_RET(data, ret, recvmmsg, sockfd, msgvec, vlen, flags,
 						   timeout)
 
-	get_basic(&data);
+	if (0 <= ret) {
 
-	for (int i = 0; i < vlen && i < ret && i < MAX_MMSG_MESSAGES; i++)
-	{
-		msg = &((msgvec + i)->msg_hdr);
+		get_basic(&data);
 
-		for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
-			 cmsg = CMSG_NXTHDR(msg, cmsg))
+		for (unsigned int i = 0; i < vlen && i < (size_t)ret && i < MAX_MMSG_MESSAGES; i++)
 		{
+			msg = &((msgvec + i)->msg_hdr);
 
-			if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+			for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+					cmsg = CMSG_NXTHDR(msg, cmsg))
 			{
-				if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
-				{
-					get_sockaddr(msg->msg_name,
-								 &sockaddr_function_data[sockaddr_count],
-								 msg->msg_namelen, hex_addr[sockaddr_count]);
-					msg_function_data[sockaddr_count].sockaddr =
-						&sockaddr_function_data[sockaddr_count];
-				}
-				else
-				{
-					msg_function_data[sockaddr_count].sockaddr = NULL;
-				}
-				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
-										  descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+				if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+				{
+					if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
+					{
+						get_sockaddr(msg->msg_name,
+								&sockaddr_function_data[sockaddr_count],
+								msg->msg_namelen, hex_addr[sockaddr_count]);
+						msg_function_data[sockaddr_count].sockaddr =
+								&sockaddr_function_data[sockaddr_count];
+					}
+					else
+					{
+						msg_function_data[sockaddr_count].sockaddr = NULL;
+					}
+					messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				sockaddr_count++;
-				break;
+					fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+					LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+							descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+
+					sockaddr_count++;
+					break;
+				}
 			}
 		}
-	}
 
-	if (sockaddr_count > 0)
-	{
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
-							   mmsg_function_data)
-		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
-									 sockaddr_count)
-		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-							   file_descriptor_data)
-		file_descriptor_data.descriptor = sockfd;
-		data.return_state = ok;
+		if (sockaddr_count > 0)
+		{
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+					mmsg_function_data)
+			LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+					sockaddr_count)
+			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+					file_descriptor_data)
+			file_descriptor_data.descriptor = sockfd;
+			data.return_state = ok;
 
-		WRAP_END(data, recvmmsg)
-		return ret;
+			WRAP_END(data, recvmmsg)
+			return ret;
+		}
 	}
 
 	WRAP_END_WITHOUT_WRITE(data)

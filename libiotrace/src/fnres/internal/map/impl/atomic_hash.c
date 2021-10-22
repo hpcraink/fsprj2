@@ -27,6 +27,8 @@
 // unused variables removed
 // uninitialized variables initialized to 0
 
+// solved comparison of integer with different signedness
+
 // Added 'static' keyword to all 'inline'd functions (https://stackoverflow.com/a/54875926)
 // $$ OWN ADDITIONS $$
 
@@ -96,12 +98,12 @@ create_mem_pool (unsigned int max_nodes, unsigned int node_size)
 #define PW2_MAX_BLK_PTR 9   /* hard code one 4K-page for max 512 block pointers */
 #define PW2_MIN_BLK_SIZ 12  /* 2^12 = 4K page size */
 
-    for (pwr2_max_nodes = 0; (1 << pwr2_max_nodes) < max_nodes; pwr2_max_nodes++);
+    for (pwr2_max_nodes = 0; (1u << pwr2_max_nodes) < max_nodes; pwr2_max_nodes++);
     if (pwr2_max_nodes == 0 || pwr2_max_nodes > 32) /* auto resize for exceeption, use 1MB as mem index and 1MB block size*/
         pwr2_max_nodes = 32;
 
-    for (pwr2_node_size = 0; (1 << pwr2_node_size) < node_size; pwr2_node_size++);
-    if ((1 << pwr2_node_size) != node_size || pwr2_node_size < 5 || pwr2_node_size > 12)
+    for (pwr2_node_size = 0; (1u << pwr2_node_size) < node_size; pwr2_node_size++);
+    if ((1u << pwr2_node_size) != node_size || pwr2_node_size < 5 || pwr2_node_size > 12)
     {
 #ifdef DEBUG
         printf("node_size should be N powe of 2, 5 <= N <= 12(4KB page)");

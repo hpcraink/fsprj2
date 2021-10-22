@@ -58,7 +58,7 @@ Steps to build _libiotrace_:
     2. go to &lt;libiotrace-folder&gt;
     3. `cd fsprj2/libiotrace/`
     4. `git rm --cached ext/cunit`
-    5. `rm -rf ext`
+    5. `rm -rf ext/cunit`
     6. `cd ..`
     7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
     8. `cd libiotrace/`

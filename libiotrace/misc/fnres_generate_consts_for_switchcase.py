@@ -169,6 +169,7 @@ case_strings = [
 
     # - Irrelevant -
     "fork", "vfork",                # Handeled by libiotrace
+    "execl", "execlp", "execle", "execv", "execvp", "execvpe",
 
 
 

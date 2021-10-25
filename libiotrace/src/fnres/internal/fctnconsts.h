@@ -166,6 +166,12 @@ static u_int64_t hash_string(const char *str) {
 #define CASE_RECVMSG 0xd0b63e09c05c
 #define CASE_FORK 0x17c96e577
 #define CASE_VFORK 0x311090218d
+#define CASE_EXECL 0x310f663356
+#define CASE_EXECLP 0x652fc2c9e86
+#define CASE_EXECLE 0x652fc2c9e7b
+#define CASE_EXECV 0x310f663360
+#define CASE_EXECVP 0x652fc2c9fd0
+#define CASE_EXECVPE 0xd0b281c09a35
 #define CASE_MPI_FILE_OPEN 0xb63288054d21a95b
 #define CASE_MPI_FILE_CLOSE 0x7c8388aef07ba8bf
 #define CASE_MPI_FILE_IREAD 0x7c8388aef0eb592e

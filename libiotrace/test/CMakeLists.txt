@@ -376,6 +376,13 @@ endif()
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=pipe_ipc_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./pipe_ipc
+    add_executable(pipe_ipc pipe_ipc.c)
+endif()
+
+##########################################################################################################
+
+if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args
     add_executable(open_var_args open_var_args.c)
 endif()

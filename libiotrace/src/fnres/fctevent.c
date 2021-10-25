@@ -349,6 +349,13 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_FORK:             /* Handled by hook `reset_on_fork` in event.c, which is automatically called on `fork` */
         case CASE_VFORK:
+
+        case CASE_EXECL:            /* TODO: ASK -> Old (but still inherited) fildes will be gone */
+        case CASE_EXECLP:
+        case CASE_EXECLE:
+        case CASE_EXECV:
+        case CASE_EXECVP:
+        case CASE_EXECVPE:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
             return;
 

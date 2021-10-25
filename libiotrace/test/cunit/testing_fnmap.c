@@ -64,4 +64,4 @@ void test_same_value(void) {
 
 
 CUNIT_CI_RUN("Suite_1",
-             CUNIT_CI_TEST(test_same_value));
+             CUNIT_CI_TEST(test_same_value))

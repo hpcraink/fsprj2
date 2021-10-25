@@ -87,7 +87,7 @@ typedef struct mem_pool
 } mem_pool_t;
 
 typedef union {
-    struct { nid mi, rfn; };
+    struct { nid mi, rfn; } cas;
     uint64_t all;
 } cas_t;
 

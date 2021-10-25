@@ -46,7 +46,12 @@
 #ifdef _GNU_SOURCE
 #  define DLSYM(function_macro) __DLSYM(function_macro)
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
-                                 __real_##function = dlsym(RTLD_NEXT, #function); \
+                                 __extension__({ \
+                                     /* dlsym returns a void pointer (data pointer) */ \
+									 /* ISO C forbids cast to function pointer      */ \
+									 /* => __extension__ to suppress the warning    */ \
+                                     __real_##function = dlsym(RTLD_NEXT, #function); \
+                                 }); \
                                  char * dlsym_dlerror_##function = dlerror(); \
                                  if (NULL != dlsym_dlerror_##function) { \
                                      LIBIOTRACE_ERROR("dlsym error (%s)", dlsym_dlerror_##function); \
@@ -71,7 +76,7 @@
 #endif
 #define REAL_DEFINITION_TYPE
 #define REAL_DEFINITION REAL
-#define REAL_DEFINITION_INIT = NULL;
+#define REAL_DEFINITION_INIT = NULL
 
 #define WRAP(function_macro) __WRAP(function_macro)
 #ifdef IO_LIB_TEST

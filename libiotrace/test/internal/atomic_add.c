@@ -35,4 +35,4 @@ static void test_atomic_add(void) {
 }
 
 CUNIT_CI_RUN("atomic_add",
-             CUNIT_CI_TEST(test_atomic_add));
+             CUNIT_CI_TEST(test_atomic_add))

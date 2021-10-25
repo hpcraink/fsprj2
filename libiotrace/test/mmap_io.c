@@ -19,7 +19,7 @@ void test_not_filebacked_shared_mem_fork(const size_t mmap_num_arr_elements) {
         perror("`mmap`'ing file failed: ");
         exit(1);
     } else {
-        printf("-> `mmap`'ed memory [address=%p, length=%zu]\n", not_file_backed_shared_mem, not_file_backed_shared_mem_len);
+        printf("-> `mmap`'ed memory [address=%p, length=%zu]\n", (void *)not_file_backed_shared_mem, not_file_backed_shared_mem_len);
     }
 
     /* - 1. Init w/ values - */
@@ -58,7 +58,7 @@ void test_not_filebacked_shared_mem_fork(const size_t mmap_num_arr_elements) {
         perror("`munmap`'ing failed: ");
         exit(1);
     } else {
-        printf("-> `munmap`'ed file in memory [address=%p, length=%zu]\n", not_file_backed_shared_mem, not_file_backed_shared_mem_len);
+        printf("-> `munmap`'ed file in memory [address=%p, length=%zu]\n", (void *)not_file_backed_shared_mem, not_file_backed_shared_mem_len);
     }
 }
 

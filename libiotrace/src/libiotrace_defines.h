@@ -355,7 +355,7 @@
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ESCAPE(name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_ESCAPE(name)
 #  define LIBIOTRACE_STRUCT_CLOCK_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_FILE_P(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_FILE_P(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", (void *)libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_LONG_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
@@ -783,12 +783,12 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                     struct name *libiotrace_struct_copy ATTRIBUTE_UNUSED = (struct name *)libiotrace_struct_buf; \
                                     size_t libiotrace_struct_ret ATTRIBUTE_UNUSED; \
                                     memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data, sizeof(struct name)); \
-                                    libiotrace_struct_buf += sizeof(struct name);
+                                    libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(struct name);
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_buf;}
 
 #  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->name) { \
                                                              libiotrace_struct_copy->name = (struct type **)libiotrace_struct_buf; \
-                                                             libiotrace_struct_buf += sizeof(struct type *) \
+                                                             libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(struct type *) \
                                                                                 * libiotrace_struct_data->size_##name; \
                                                              size_t libiotrace_struct_count_##name; \
                                                              for (libiotrace_struct_count_##name = 0; \
@@ -817,7 +817,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                     libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
                                                                         libiotrace_struct_data->name, max_length); \
                                                     libiotrace_struct_copy->name = (char *)libiotrace_struct_buf; \
-                                                    libiotrace_struct_buf += libiotrace_struct_ret; \
+                                                    libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                   }
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_CSTRING_P(name, max_length)
 #  define LIBIOTRACE_STRUCT_CLOCK_T(name)
@@ -832,7 +832,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_FD_SET_P(name) if (NULL != libiotrace_struct_data->name) { \
                                        memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data->name, sizeof(fd_set)); \
                                        libiotrace_struct_copy->name = (fd_set *)libiotrace_struct_buf; \
-                                       libiotrace_struct_buf += sizeof(fd_set); \
+                                       libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(fd_set); \
                                      }
 #  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define LIBIOTRACE_STRUCT_LMID_T(name)
@@ -842,7 +842,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_INO_T(name)
 #  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->name) { \
                                                                                     libiotrace_struct_copy->name = (char **) libiotrace_struct_buf; \
-                                                                                    libiotrace_struct_buf += sizeof(char *) * (libiotrace_struct_data->size_##name \
+                                                                                    libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(char *) * (libiotrace_struct_data->size_##name \
                                                                                                                          - libiotrace_struct_data->start_##name); \
                                                                                     for (size_t libiotrace_struct_count_##name = libiotrace_struct_data->start_##name; \
                                                                                          libiotrace_struct_count_##name < libiotrace_struct_data->size_##name && \
@@ -854,7 +854,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                                         libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
                                                                                                                                      libiotrace_struct_data->name[libiotrace_struct_count_##name], \
                                                                                                                                      max_length_per_element); \
-                                                                                        libiotrace_struct_buf += libiotrace_struct_ret; \
+                                                                                        libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                                                       } else { \
                                                                                         libiotrace_struct_copy->name[libiotrace_struct_count_##name] = NULL; \
                                                                                       } \
@@ -868,7 +868,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                                   }
 #  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
                                                          libiotrace_struct_copy->name = (void *) libiotrace_struct_buf; \
-                                                         libiotrace_struct_buf += sizeof(void *) * (libiotrace_struct_data->size_##name \
+                                                         libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(void *) * (libiotrace_struct_data->size_##name \
                                                                             - libiotrace_struct_data->start_##name); \
                                                          for (size_t libiotrace_struct_count_##name = libiotrace_struct_data->start_##name; \
                                                               libiotrace_struct_count_##name < libiotrace_struct_data->size_##name && \
@@ -892,14 +892,14 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                   memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data->name, \
                                                          sizeof(int) * libiotrace_struct_copy->size_##name); \
                                                   libiotrace_struct_copy->name = (int *) libiotrace_struct_buf; \
-                                                  libiotrace_struct_buf += sizeof(int) * libiotrace_struct_copy->size_##name; \
+                                                  libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(int) * libiotrace_struct_copy->size_##name; \
                                                 }
 #  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name)
 #  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->keys_##name) { \
                                                                                 libiotrace_struct_copy->keys_##name = (char **) libiotrace_struct_buf; \
-                                                                                libiotrace_struct_buf += sizeof(char *) * libiotrace_struct_data->size_##name; \
+                                                                                libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(char *) * libiotrace_struct_data->size_##name; \
                                                                                 libiotrace_struct_copy->values_##name = (char **) libiotrace_struct_buf; \
-                                                                                libiotrace_struct_buf += sizeof(char *) * libiotrace_struct_data->size_##name; \
+                                                                                libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(char *) * libiotrace_struct_data->size_##name; \
                                                                                 for (size_t libiotrace_struct_count_##name = 0; \
                                                                                      libiotrace_struct_count_##name < libiotrace_struct_data->size_##name && \
                                                                                      libiotrace_struct_count_##name < max_size; \
@@ -909,7 +909,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                                     libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
                                                                                                                                  libiotrace_struct_data->keys_##name[libiotrace_struct_count_##name], \
                                                                                                                                  max_length_per_cstring); \
-                                                                                    libiotrace_struct_buf += libiotrace_struct_ret; \
+                                                                                    libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                                                   } else { \
                                                                                     libiotrace_struct_copy->keys_##name[libiotrace_struct_count_##name] = NULL; \
                                                                                   } \
@@ -918,7 +918,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                                     libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
                                                                                                                                  libiotrace_struct_data->values_##name[libiotrace_struct_count_##name], \
                                                                                                                                  max_length_per_cstring); \
-                                                                                    libiotrace_struct_buf += libiotrace_struct_ret; \
+                                                                                    libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                                                   } else { \
                                                                                     libiotrace_struct_copy->values_##name[libiotrace_struct_count_##name] = NULL; \
                                                                                   } \
@@ -1210,7 +1210,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CLOCK_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_FILE_P(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_FILE_P(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", (void *)libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_LONG_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)

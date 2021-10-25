@@ -182,19 +182,19 @@ new_mem_block (mem_pool_t * pmp, volatile cas_t * recv_queue)
     m = pmp->mask;
     head = i * (m + 1);
     for (i = 0; i < m; i++)
-        *(nid *) (p + i * sz) = head + i + 1;
-    pn = (cas_t *) (p + m * sz);
-    pn->mi = NNULL;
-    pn->rfn = 0;
-    x.mi = head;
+        *(nid *) ((char *)p + i * sz) = head + i + 1;
+    pn = (cas_t *) ((char *)p + m * sz);
+    pn->cas.mi = NNULL;
+    pn->cas.rfn = 0;
+    x.cas.mi = head;
     do
     {
         n.all = recv_queue->all;
-        pn->mi = n.mi;
-        x.rfn = n.rfn + 1;
+        pn->cas.mi = n.cas.mi;
+        x.cas.rfn = n.cas.rfn + 1;
     }
     while (!cas (&recv_queue->all, n.all, x.all));
-    return (nid *) (p + m * sz);
+    return (nid *) ((char *)p + m * sz);
 }
 
 int default_func_reset_ttl (void *hash_data, void *return_data)
@@ -290,7 +290,7 @@ atomic_hash_create (unsigned int max_nodes, int reset_ttl)
     h->nkey = NKEY;   /* uint32_t # of hash function's output */
     h->npos = h->nkey * NCLUSTER; /* pos # in one hash table */
     h->nseat = h->npos * h->nmht; /* pos # in all hash tables */
-    h->freelist.mi = NNULL;
+    h->freelist.cas.mi = NNULL;
 
     ht1 = &h->ht[0];
     ht2 = &h->ht[1];
@@ -418,15 +418,15 @@ static inline nid
 new_node (hash_t * h)
 {
     memword cas_t n, m;
-    while (h->freelist.mi != NNULL || new_mem_block (h->mp, &h->freelist))
+    while (h->freelist.cas.mi != NNULL || new_mem_block (h->mp, &h->freelist))
     {
         n.all = h->freelist.all;
-        if (n.mi == NNULL)
+        if (n.cas.mi == NNULL)
             continue;
-        m.mi = ((cas_t *) (i2p (h->mp, node_t, n.mi)))->mi;
-        m.rfn = n.rfn + 1;
+        m.cas.mi = ((cas_t *) (i2p (h->mp, node_t, n.cas.mi)))->cas.mi;
+        m.cas.rfn = n.cas.rfn + 1;
         if (cas (&h->freelist.all, n.all, m.all))
-            return n.mi;
+            return n.cas.mi;
     }
     add1 (h->stats.add_nomem);
     return NNULL;
@@ -437,13 +437,13 @@ free_node (hash_t * h, nid mi)
 {
     memword cas_t n, m;
     cas_t *p = (cas_t *) (i2p (h->mp, node_t, mi));
-    p->rfn = 0;
-    m.mi = mi;
+    p->cas.rfn = 0;
+    m.cas.mi = mi;
     do
     {
         n.all = h->freelist.all;
-        m.rfn = n.rfn + 1;
-        p->mi = n.mi;
+        m.cas.rfn = n.cas.rfn + 1;
+        p->cas.mi = n.cas.mi;
     }
     while (!cas (&h->freelist.all, n.all, m.all));
 }

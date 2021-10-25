@@ -559,9 +559,9 @@
 
 
 #ifdef HAVE_ATTRIBUTE_NONNULL
-#  define ATTRIBUTE_NONNULL(x...)   __attribute__((nonnull(x)))
+#  define ATTRIBUTE_NONNULL(...)   __attribute__((nonnull(__VA_ARGS__)))
 #else
-#  define ATTRIBUTE_NONNULL(x...)
+#  define ATTRIBUTE_NONNULL(...)
 #endif
 
 #if defined(WIN32) || defined(_WIN32)

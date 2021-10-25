@@ -229,7 +229,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MMAP:
         case CASE_MMAP64:
         {
-            if (((struct memory_map_flags)((struct memory_map_function*)fctevent->function_data)->map_flags).anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
+            if (((struct memory_map_function*)(fctevent->function_data))->map_flags.anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
                 SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP);
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent);

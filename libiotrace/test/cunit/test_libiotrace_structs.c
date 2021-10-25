@@ -355,4 +355,4 @@ static void test_struct_basic(void) {
 	check_basic_print(&data, print_buf, len);
 }
 
-CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic));
+CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic))

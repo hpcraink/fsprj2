@@ -3076,7 +3076,10 @@ int WRAP(socket)(int domain, int type, int protocol)
 	return ret;
 }
 
-int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
 	int ret;
 	struct basic data;
@@ -3109,7 +3112,10 @@ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 }
 
 #ifdef HAVE_ACCEPT4
-int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
 				  int flags)
 {
 	int ret;
@@ -3176,7 +3182,10 @@ int WRAP(socketpair)(int domain, int type, int protocol, int sv[2])
 	return ret;
 }
 
-int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
 	int ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
@@ -3209,7 +3218,10 @@ int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 	return ret;
 }
 
-int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
 	int ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address

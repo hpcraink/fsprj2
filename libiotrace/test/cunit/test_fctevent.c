@@ -371,4 +371,4 @@ CUNIT_CI_RUN("Suite_1",
              CUNIT_CI_TEST(test_posix_stream_fildes_fileno_fwrite),
              CUNIT_CI_TEST(test_posix_creat_mmap_msync_mremap_munmap),
              CUNIT_CI_TEST(test_mpi_open_immediate_close),
-             CUNIT_CI_TEST(test_posix_freopen_same_file));
+             CUNIT_CI_TEST(test_posix_freopen_same_file))

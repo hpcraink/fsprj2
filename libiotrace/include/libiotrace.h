@@ -26,44 +26,44 @@ BEGIN_C_DECLS
 /**
  * Start logging in actual thread.
  */
-void libiotrace_start_log();
+void libiotrace_start_log(void);
 
 /**
  * End logging in actual thread.
  */
-void libiotrace_end_log();
+void libiotrace_end_log(void);
 
 /**
  * Start sending log in actual thread.
  */
-void libiotrace_start_send();
+void libiotrace_start_send(void);
 
 /**
  * End sending log in actual thread.
  */
-void libiotrace_end_send();
+void libiotrace_end_send(void);
 
 /**
  * Start logging of stacktrace pointer in actual thread
  * (if logging is active and stacktrace depth is greater than 0).
  */
-void libiotrace_start_stacktrace_ptr();
+void libiotrace_start_stacktrace_ptr(void);
 
 /**
  * End logging of stacktrace pointer in actual thread.
  */
-void libiotrace_end_stacktrace_ptr();
+void libiotrace_end_stacktrace_ptr(void);
 
 /**
  * Start logging of stacktrace symbols in actual thread
  * (if logging is active and stacktrace depth is greater than 0).
  */
-void libiotrace_start_stacktrace_symbol();
+void libiotrace_start_stacktrace_symbol(void);
 
 /**
  * End logging of stacktrace symbols in actual thread.
  */
-void libiotrace_end_stacktrace_symbol();
+void libiotrace_end_stacktrace_symbol(void);
 
 /**
  * Set stacktrace depth for logging in actual thread.
@@ -78,7 +78,7 @@ void libiotrace_set_stacktrace_depth(int depth);
  *
  * @return stacktrace depth
  */
-int libiotrace_get_stacktrace_depth();
+int libiotrace_get_stacktrace_depth(void);
 
 /**
  * Set wrapper for a function with name equals "wrapper" active.

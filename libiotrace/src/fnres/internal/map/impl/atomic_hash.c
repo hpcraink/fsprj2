@@ -57,7 +57,6 @@
 #define MAXTAB NNULL
 #define MINTAB 64
 #define COLLISION 1000 /* 0.01 ~> avg 25 in seat */
-#define MAXBLOCKS 1024
 #define MAXSPIN (1<<20) /* 2^20 loops 40ms with pause + sched_yield on xeon E5645 */
 
 #define memword ATTRIBUTE_ALIGNED(sizeof(void *))
@@ -82,7 +81,7 @@
 
 
 static inline unsigned long
-nowms ()
+nowms (void)
 {
     struct timeval tv;
     gettimeofday (&tv, NULL);
@@ -369,7 +368,7 @@ atomic_hash_stats (hash_t * h, unsigned long escaped_milliseconds)
             t->mem_htabs / d, t->mem_nodes / d, (t->mem_htabs + t->mem_nodes) / d);
     printf ("mem_in_use:\thtabs[%.2f]MB, nodes[%.2f]MB, total[%.2f]MB\n",
             t->mem_htabs / d, mem / d, (t->mem_htabs + mem) / d);
-    printf ("n1[%ld]/n2[%ld]=[%.3f],  nb1[%ld]/nb2[%ld]=[%.2f]\n",
+    printf ("n1[%lu]/n2[%lu]=[%.3f],  nb1[%lu]/nb2[%lu]=[%.2f]\n",
             ht1->n, ht2->n, ht1->n * 1.0 / ht2->n, ht1->nb, ht2->nb,
             ht1->nb * 1.0 / ht2->nb);
     printf ("r1[%f]/r2[%f],  performance_wall[%.1f%%]\n",
@@ -384,17 +383,17 @@ atomic_hash_stats (hash_t * h, unsigned long escaped_milliseconds)
         ndup += p->ndup;
         nget += p->nget;
         ndel += p->ndel;
-        printf ("%-4ld%-14ld%-14ld%-14ld%-14ld%-14ld\n", j, p->ncur, p->nadd, p->ndup, p->nget, p->ndel);
+        printf ("%-4lu%-14lu%-14lu%-14lu%-14lu%-14lu\n", j, p->ncur, p->nadd, p->ndup, p->nget, p->ndel);
     }
     op = ncur + nadd + ndup + nget + ndel + t->get_nohit + t->del_nohit + t->add_nosit + t->add_nomem + t->escapes;
-    printf ("sum %-14ld%-14ld%-14ld%-14ld%-14ld\n", ncur, nadd, ndup, nget, ndel);
+    printf ("sum %-14lu%-14lu%-14lu%-14lu%-14lu\n", ncur, nadd, ndup, nget, ndel);
     printf ("---------------------------------------------------------------------------\n");
     printf ("del_nohit %sget_nohit %sadd_nosit %sadd_nomem %sexpires %sescapes\n", b, b, b, b, b);
-    printf ("%-14ld%-14ld%-14ld%-14ld%-12ld%-12ld\n", t->del_nohit,
+    printf ("%-14lu%-14lu%-14lu%-14lu%-12lu%-12lu\n", t->del_nohit,
             t->get_nohit, t->add_nosit, t->add_nomem, t->expires, t->escapes);
     printf ("---------------------------------------------------------------------------\n");
     if (escaped_milliseconds > 0)
-        printf ("escaped_time=%.3fs, op=%ld, ops=%.2fM/s\n", escaped_milliseconds * 1.0 / 1000, op,
+        printf ("escaped_time=%.3fs, op=%lu, ops=%.2fM/s\n", escaped_milliseconds * 1.0 / 1000, op,
                 (double) op / 1000.0 / escaped_milliseconds);
     printf ("\n");
     fflush (stdout);

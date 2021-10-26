@@ -12,6 +12,8 @@ function (CheckCompilerAttributes)
     "  HAVE_ATTRIBUTE_NONNULL)
     # message ("HAVE_ATTRIBUTE_NONNULL: ${HAVE_ATTRIBUTE_NONNULL}")
 
+	# TODO: HAVE_BUILTIN_EXPECT
+
     check_c_source_compiles ("
         typedef int more_aligned_int __attribute__ ((aligned (64)));
         more_aligned_int testFunc();

@@ -517,7 +517,7 @@ REAL_TYPE int REAL(__open64_2)(const char *__file, int __oflag) REAL_INIT;
 
 
 #ifndef IO_LIB_STATIC
-void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
+void posix_io_init(void) ATTRIBUTE_CONSTRUCTOR;
 #endif
 
 char toggle_posix_wrapper(const char *line, const char toggle);

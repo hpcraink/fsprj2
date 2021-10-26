@@ -15,8 +15,6 @@
 /* -- Constants -- */
 #define DEFAULT_FNMAP_MAX_SIZE 100
 
-#define STRINGS_ARE_EQUAL 0
-
 /* -- Globals -- */
 // int64_t next_dummy_id = 3;     /* Avoid colliding ids */
 

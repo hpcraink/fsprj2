@@ -33,7 +33,7 @@
 #  define LIBIOTRACE_STRUCT_PUSH              8 /* generate function to generate POST request */
 
 /* #defines for error handling */
-#  define LIBIOTRACE_STRUCT_ENUM_ERROR(value) LIBIOTRACE_ERROR("unknown value \"%d\" of enum", value);
+#  define LIBIOTRACE_STRUCT_ENUM_ERROR(value) LIBIOTRACE_ERROR("unknown value \"%u\" of enum", value);
 #  define LIBIOTRACE_STRUCT_SIZE_ERROR(ret, size) if (ret >= size) { \
                                                 LIBIOTRACE_ERROR("output buffer not big enough"); \
                                             }
@@ -199,7 +199,7 @@
 #  define LIBIOTRACE_STRUCT_LONG_INT(name) long int name;
 #  define LIBIOTRACE_STRUCT_SIZE_T(name) size_t name;
 #  define LIBIOTRACE_STRUCT_SSIZE_T(name) ssize_t name;
-#  if HAVE_OFF64_T
+#  ifdef HAVE_OFF64_T
 #    define LIBIOTRACE_STRUCT_OFF_T(name) off64_t name;
 #  else
 #    define LIBIOTRACE_STRUCT_OFF_T(name) off_t name;
@@ -490,7 +490,7 @@
                                                                         + sizeValue \
                                                                         + 4; /* quotation marks (for key), colon and comma */
 
-#  define LIBIOTRACE_STRUCT_ENUM_START(name) size_t libiotrace_struct_max_size_enum_##name() { \
+#  define LIBIOTRACE_STRUCT_ENUM_START(name) size_t libiotrace_struct_max_size_enum_##name(void) { \
                                          size_t libiotrace_struct_size_value = 0;
 #  define LIBIOTRACE_STRUCT_ENUM_ELEMENT(name) if (sizeof(#name) > libiotrace_struct_size_value) \
                                            libiotrace_struct_size_value = sizeof(#name); /* get greatest possible value */
@@ -498,7 +498,7 @@
                                       - 1   /* trailing null character */ \
                                       + 2;} /* quotation marks (for value) */
 
-#  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_START(name) size_t libiotrace_struct_max_size_array_##name() { \
+#  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_START(name) size_t libiotrace_struct_max_size_array_##name(void) { \
                                                    char libiotrace_struct_hasElements = 0; \
                                                    size_t libiotrace_struct_size = 1; /* open parentheses */
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_ELEMENT(name) libiotrace_struct_hasElements = 1; \
@@ -508,7 +508,7 @@
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_END if (libiotrace_struct_hasElements) libiotrace_struct_size--; /* remove last comma */ \
                                          return libiotrace_struct_size + 1;} /* close parentheses */
 
-#  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_max_size_##name() { \
+#  define LIBIOTRACE_STRUCT_START(name) size_t libiotrace_struct_max_size_##name(void) { \
                                     char libiotrace_struct_hasElements = 0; \
                                     size_t libiotrace_struct_size_void_p ATTRIBUTE_UNUSED; \
                                     size_t libiotrace_struct_size_void_p_tmp ATTRIBUTE_UNUSED; \
@@ -556,7 +556,7 @@
 #  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(size_t))
 #  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(ssize_t) \
                                                                    + 1) /* for sign (-) */
-#  if HAVE_OFF64_T
+#  ifdef HAVE_OFF64_T
 #    define LIBIOTRACE_STRUCT_OFF_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(off64_t) \
                                                                    + 1) /* for sign (-) */
 #  else
@@ -640,7 +640,7 @@
                                                       libiotrace_struct_size += libiotrace_struct_sizeof_##element( \
                                                                             (struct element*) libiotrace_struct_data->name); \
                                                       break;
-#  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
+#  define LIBIOTRACE_STRUCT_VOID_P_END(name) default: LIBIOTRACE_STRUCT_ENUM_ERROR(libiotrace_struct_data->void_p_enum_##name) } }
 
 #  define LIBIOTRACE_STRUCT_START(name) int libiotrace_struct_sizeof_##name(struct name *libiotrace_struct_data ATTRIBUTE_UNUSED) { \
                                     size_t libiotrace_struct_size = sizeof(struct name);
@@ -777,7 +777,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                       libiotrace_struct_buf = libiotrace_struct_copy_##element(libiotrace_struct_buf, \
                                                                           (struct element*) libiotrace_struct_data->name); \
                                                       break;
-#  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
+#  define LIBIOTRACE_STRUCT_VOID_P_END(name) default: LIBIOTRACE_STRUCT_ENUM_ERROR(libiotrace_struct_data->void_p_enum_##name) } }
 
 #  define LIBIOTRACE_STRUCT_START(name) void* libiotrace_struct_copy_##name(void *libiotrace_struct_buf, struct name *libiotrace_struct_data) { \
                                     struct name *libiotrace_struct_copy ATTRIBUTE_UNUSED = (struct name *)libiotrace_struct_buf; \
@@ -957,7 +957,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) case void_p_enum_##name##_##element: \
                                                       libiotrace_struct_free_##element((struct element*) libiotrace_struct_data->name); \
                                                       break;
-#  define LIBIOTRACE_STRUCT_VOID_P_END(name) } }
+#  define LIBIOTRACE_STRUCT_VOID_P_END(name) default: LIBIOTRACE_STRUCT_ENUM_ERROR(libiotrace_struct_data->void_p_enum_##name) } }
 
 #  define LIBIOTRACE_STRUCT_START(name) void libiotrace_struct_free_##name(struct name *libiotrace_struct_data ATTRIBUTE_UNUSED) {
 #  define LIBIOTRACE_STRUCT_END }
@@ -1031,7 +1031,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                         + 2; /* equal sign and comma */
 #  define LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(type) COUNT_DEC_AS_CHAR(type)
 
-#  define LIBIOTRACE_STRUCT_ENUM_START(name) size_t libiotrace_struct_push_max_size_enum_##name() { \
+#  define LIBIOTRACE_STRUCT_ENUM_START(name) size_t libiotrace_struct_push_max_size_enum_##name(void) { \
                                          size_t libiotrace_struct_size_value = 0;
 #  define LIBIOTRACE_STRUCT_ENUM_ELEMENT(name) if (sizeof(#name) > libiotrace_struct_size_value) \
                                            libiotrace_struct_size_value = sizeof(#name); /* get greatest possible value */
@@ -1079,7 +1079,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(size_t))
 #  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(ssize_t) \
                                                                                + 1) /* for sign (-) */
-#  if HAVE_OFF64_T
+#  ifdef HAVE_OFF64_T
 #    define LIBIOTRACE_STRUCT_OFF_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(off64_t) \
                                                                                + 1) /* for sign (-) */
 #  else

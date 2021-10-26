@@ -7,11 +7,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libiotrace_config.h"
+
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
                                } while (0)
 
 static int /* Start function for cloned child */
-childFunc() {
+childFunc(void *p ATTRIBUTE_UNUSED) {
 
 	printf("in child\n");
 
@@ -20,7 +22,7 @@ childFunc() {
 
 #define STACK_SIZE (1024 * 1024)    /* Stack size for cloned child */
 
-int main() {
+int main(void) {
 	char *stack; /* Start of stack buffer */
 	char *stackTop; /* End of stack buffer */
 	pid_t pid;

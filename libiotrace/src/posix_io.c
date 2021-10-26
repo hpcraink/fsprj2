@@ -3024,6 +3024,7 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 							   fcntl_hint_data)
 #endif
 		break;
+	case unknown_fcntl_cmd:
 	default:
 		LIBIOTRACE_STRUCT_SET_VOID_P_NULL(fcntl_function_data, cmd_data)
 		LIBIOTRACE_WARN("Unknown cmd value in call to %s.", data.function_name);

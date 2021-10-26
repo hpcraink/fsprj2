@@ -16,9 +16,9 @@
 
 BEGIN_C_DECLS
 
-extern pid_t iotrace_get_tid();
+extern pid_t iotrace_get_tid(void);
 
-extern u_int64_t iotrace_get_boot_time();
+extern u_int64_t iotrace_get_boot_time(void);
 
 #if !defined(HAVE_MEMRCHR)
 void *memrchr(const void *s, int c, size_t n);

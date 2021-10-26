@@ -17,8 +17,10 @@
 
 // #define WANT_OPENMP
 // #define WANT_CLEAR_CACHES
-#define SIZE_L3_CACHE    (8 * 1024 * 1024) // 8 MB
-#define CLEAR_CACHES_PER_ITERATIONS 1
+#ifdef WANT_CLEAR_CACHES
+#  define SIZE_L3_CACHE    (8 * 1024 * 1024) // 8 MB
+#  define CLEAR_CACHES_PER_ITERATIONS 1
+#endif
 
 #ifdef WANT_OPENMP
 #  ifndef WANT_THREADS

@@ -297,6 +297,6 @@ void llhttp__debug(llhttp_t* s, const char* p, const char* endp,
             s->flags, msg);
   } else {
     fprintf(stderr, "p=%p type=%d flags=%02x next=%02x   debug=%s\n", (void *)s,
-            s->type, s->flags, *p, msg);
+            s->type, s->flags, (unsigned int)*p, msg);
   }
 }

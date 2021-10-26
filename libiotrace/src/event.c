@@ -301,7 +301,7 @@ static ATTRIBUTE_THREAD SOCKET socket_peer = -1;
 #endif
 
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-void cleanup() ATTRIBUTE_DESTRUCTOR;
+void cleanup(void) ATTRIBUTE_DESTRUCTOR;
 #endif
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
@@ -522,7 +522,7 @@ static char event_init_done = 0;
  *
  *  Wrappers use them to call the real functions.
  */
-void event_init() {
+void event_init(void) {
 	if (!event_init_done) {
 
 #undef WRAPPER_NAME_TO_SOURCE
@@ -600,7 +600,7 @@ void toggle_wrapper(const char *line, const char toggle) {
  * these pointers.
  */
 #ifndef IO_LIB_STATIC
-void init_wrapper() {
+void init_wrapper(void) {
 	event_init();
 
 #ifdef WITH_POSIX_IO
@@ -624,7 +624,7 @@ void init_wrapper() {
  * @return the newly created socket
  */
 #ifdef IOTRACE_ENABLE_INFLUXDB
-SOCKET create_socket() {
+SOCKET create_socket(void) {
 	SOCKET new_socket = -1;
 	/* Call of getaddrinfo calls other posix functions. These other
 	 * functions could be wrapped. Call of a wrapper out of getaddrinfo
@@ -747,7 +747,7 @@ SOCKET create_socket() {
  * stored in the array "recv_sockets".
  */
 #ifdef IOTRACE_ENABLE_INFLUXDB
-void prepare_socket() {
+void prepare_socket(void) {
 	socket_peer = create_socket();
 
 	// save socket globally to create thread that listens to / reads from all sockets
@@ -914,7 +914,7 @@ void write_filesystem_into_influxdb(struct filesystem *data) {
 		(defined(IOTRACE_ENABLE_LOGFILE) \
 				|| defined(IOTRACE_ENABLE_INFLUXDB))
 #ifdef __linux__ // TODO: RAY MacOS; Windows?
-void print_filesystem()
+void print_filesystem(void)
 {
 	FILE *file;
 #ifdef HAVE_GETMNTENT_R
@@ -1071,7 +1071,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data) {
  * hostname and the process id as a json object.
  */
 #ifdef IOTRACE_ENABLE_LOGFILE
-void print_working_directory() {
+void print_working_directory(void) {
 	char buf_working_dir[libiotrace_struct_max_size_working_dir()
 			+ sizeof(LINE_BREAK)];
 	struct working_dir working_dir_data;
@@ -1125,7 +1125,7 @@ void print_working_directory() {
  * Is registered by pthread_atfork. Must be async-signal-safe. Should only
  * make assignments to constant values.
  */
-void reset_values_in_forked_process() {
+void reset_values_in_forked_process(void) {
 	init_done = 0;
 	tid = -1;
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -1242,7 +1242,7 @@ void open_std_file(FILE *file)
 }
 #endif
 
-void init_on_load() ATTRIBUTE_CONSTRUCTOR;
+void init_on_load(void) ATTRIBUTE_CONSTRUCTOR;
 
 /**
  * Calls "init_process" during execution of "ctor" section.
@@ -1250,7 +1250,7 @@ void init_on_load() ATTRIBUTE_CONSTRUCTOR;
  * Guarantees that "init_process" is called before main() of
  * the observed program is started.
  */
-void init_on_load() {
+void init_on_load(void) {
 #ifdef LOG_WRAPPER_TIME
 	struct basic data;
 	data.time_start = 0;
@@ -1423,10 +1423,10 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 	}
 	else if (parser->method == HTTP_GET)
 	{
-		const char *message_header = "HTTP/1.1 200 OK" LINE_BREAK
-				"Content-Length: %ld" LINE_BREAK
-				"Content-Type: application/json" LINE_BREAK
-				LINE_BREAK
+		const char message_header[] = "HTTP/1.1 200 OK" LINE_BREAK \
+				"Content-Length: %d" LINE_BREAK \
+				"Content-Type: application/json" LINE_BREAK \
+				LINE_BREAK \
 				"%s";
 
 		// buffer for body
@@ -1462,7 +1462,7 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
  * can be used to control the wrappers in the thread.
  */
 #if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
-void write_metadata_into_influxdb()
+void write_metadata_into_influxdb(void)
 {
 	struct influx_meta data;
 
@@ -1489,12 +1489,12 @@ void write_metadata_into_influxdb()
 	char short_log_name[50];
 	shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
 
-	const char labels[] = "libiotrace_control,jobname=%s,hostname=%s,processid=%u,thread=%u";
+	const char labels[] = "libiotrace_control,jobname=%s,hostname=%s,processid=%d,thread=%d";
 	int body_labels_length = strlen(labels)
 			+ sizeof(short_log_name) /* jobname */
 			+ HOST_NAME_MAX /* hostname */
-			+ COUNT_DEC_AS_CHAR(pid) /* processid */
-			+ COUNT_DEC_AS_CHAR(tid); /* thread */
+			+ COUNT_DEC_AS_CHAR(pid) + 1 /* processid with sign */
+			+ COUNT_DEC_AS_CHAR(tid) + 1; /* thread with sign */
 	char body_labels[body_labels_length];
 	snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, pid, tid);
 	body_labels_length = strlen(body_labels);
@@ -1549,7 +1549,7 @@ void write_metadata_into_influxdb()
  * @return control socket
  */
 #ifdef ENABLE_INPUT
-SOCKET prepare_control_socket() {
+SOCKET prepare_control_socket(void) {
 	SOCKET socket_control;
 
 	// Open Socket to receive control information
@@ -1799,7 +1799,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
 						if (err != HPE_OK)
 						{
 							const char *errno_text = llhttp_errno_name(err);
-							snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request" LINE_BREAK "Content-Length: %ld" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s: %s",
+							snprintf(read, sizeof(read), "HTTP/1.1 400 Bad Request" LINE_BREAK "Content-Length: %lu" LINE_BREAK "Content-Type: application/json" LINE_BREAK LINE_BREAK "%s: %s",
 									strlen(errno_text) + 2 + strlen(open_control_sockets[i]->parser.reason), errno_text, open_control_sockets[i]->parser.reason);
 							send_data(read, socket_peer);
 						}
@@ -1876,7 +1876,7 @@ int libiotrace_get_env(const char *env_name, char *dst, const int max_len,
  * function with a corresponding name exists that wrapper
  * is set to active. An active wrapper logs/sends his data.
  */
-void read_whitelist() {
+void read_whitelist(void) {
 	int fd;
 	int ret;
 	struct stat statbuf;
@@ -2311,7 +2311,7 @@ void get_stacktrace(struct basic *data) {
  *
  * Is called from get_basic() during first call of a wrapper in a thread.
  */
-void init_thread() {
+void init_thread(void) {
 	tid = iotrace_get_tid();
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	if (-1 == socket_peer) {
@@ -2366,7 +2366,7 @@ void get_basic(struct basic *data) {
  * called from a synchronized code.
  */
 #ifdef IOTRACE_ENABLE_LOGFILE
-void print_buffer() {
+void print_buffer(void) {
 	struct basic *data;
 	int ret;
 	int count;
@@ -2433,11 +2433,11 @@ void write_into_influxdb(struct basic *data) {
 			log_name_len);
 
 	const char labels[] =
-			"libiotrace,jobname=%s,hostname=%s,processid=%u,thread=%u,functionname=%s";
+			"libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s";
 	int body_labels_length = strlen(labels) + sizeof(short_log_name) /* jobname */
 	+ HOST_NAME_MAX /* hostname */
-	+ COUNT_DEC_AS_CHAR(data->process_id) /* processid */
-	+ COUNT_DEC_AS_CHAR(data->thread_id) /* thread */
+	+ COUNT_DEC_AS_CHAR(data->process_id) + 1 /* processid with sign */
+	+ COUNT_DEC_AS_CHAR(data->thread_id) + 1 /* thread with sign */
 	+ MAX_FUNCTION_NAME; /* functionname */
 	char body_labels[body_labels_length];
 	snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
@@ -2548,7 +2548,7 @@ void free_memory(struct basic *data) {
  * closes open connections (sockets) and destroys mutexes.
  */
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-void cleanup() {
+void cleanup(void) {
 	event_cleanup_done = 1;
 
 #ifdef IOTRACE_ENABLE_LOGFILE

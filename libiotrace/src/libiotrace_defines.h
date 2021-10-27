@@ -1103,7 +1103,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element)
 #  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size)
 #  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size)
-#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name)
+#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(sa_family_t))
 #  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
 
 /* insert new line for new data-type here */
@@ -1229,7 +1229,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element)
 #  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size)
 #  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size)
-#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name)
+#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %hu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
 
 /* insert new line for new data-type here */

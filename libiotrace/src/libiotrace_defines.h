@@ -1093,7 +1093,8 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                                     + 2) /* quotation marks (for value) */
 #  define LIBIOTRACE_STRUCT_FD_SET_P(name)
 #  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
-#    define LIBIOTRACE_STRUCT_LMID_T(name)
+#    define LIBIOTRACE_STRUCT_LMID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(Lmid_t) \
+                                                                                + 1) /* for sign (-) */
 #  endif
 #  define LIBIOTRACE_STRUCT_SHORT(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(short) \
                                                                              + 1) /* for sign (-) */
@@ -1220,7 +1221,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_VOID_P_CONST(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_FD_SET_P(name)
 #  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
-#    define LIBIOTRACE_STRUCT_LMID_T(name)
+#    define LIBIOTRACE_STRUCT_LMID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
 #  endif
 #  define LIBIOTRACE_STRUCT_SHORT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_DEV_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)

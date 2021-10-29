@@ -26,6 +26,7 @@
  *
  * KNOWN ISSUES:
  *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in fnmap (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
+ *  - On an `exec*` call, the global file-map (of the process) will be overwritten, removing fildes which WILL BE inherited (since they weren't opened w/ `O_CLOEXEC` flag) by the new (replaced) executable
  */
 
 
@@ -349,6 +350,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_FORK:             /* Handled by hook `reset_on_fork` in event.c, which is automatically called on `fork` */
         case CASE_VFORK:
+            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
+            return;
 
         case CASE_EXECL:            /* TODO: ASK -> Old (but still inherited) fildes will be gone */
         case CASE_EXECLP:
@@ -356,6 +359,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_EXECV:
         case CASE_EXECVP:
         case CASE_EXECVPE:
+            LIBIOTRACE_WARN("exec detected: Internal mappings pertinent for filename tracing will be overwritten (which may affect filename tracing)");
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
             return;
 
@@ -705,7 +709,6 @@ static int __create_fnmap_key_using_fctevent_function_data(struct basic* fcteven
         case void_p_enum_function_data_asynchronous_suspend_function:
         case void_p_enum_function_data_asynchronous_cancel_function:
         case void_p_enum_function_data_asynchronous_init_function:
-        case void_p_enum_function_data_dlopen_function:
         case void_p_enum_function_data_fcntl_function:
         case void_p_enum_function_data_readdir_function:
         case void_p_enum_function_data_dirfd_function:
@@ -717,6 +720,10 @@ static int __create_fnmap_key_using_fctevent_function_data(struct basic* fcteven
         case void_p_enum_function_data_mpi_delete_function:
         case void_p_enum_function_data_mpi_waitall:
         case void_p_enum_function_data_alloc_function:
+        case void_p_enum_function_data_dlopen_function:
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
+        case void_p_enum_function_data_dlmopen_function:
+#endif
         	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
         	return 0;
         default:
@@ -798,7 +805,7 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
 		case void_p_enum_function_data_mpi_wait:
 		case void_p_enum_function_data_mpi_immediate_at:
 		case void_p_enum_function_data_mpi_waitall:
-		case void_p_enum_function_data_alloc_function:
+        case void_p_enum_function_data_alloc_function:
 			LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
 			return NULL;
         default:

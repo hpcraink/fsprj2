@@ -69,11 +69,13 @@
 
 /* defines for socket handling */
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-#define ISVALIDSOCKET(s) ((s) >= 0)
 #define CLOSESOCKET(s)          \
 	CALL_REAL_POSIX_SYNC(close) \
 	(s)
 #define SOCKET int
+#endif
+#if defined(IOTRACE_ENABLE_INFLUXDB)
+#define ISVALIDSOCKET(s) ((s) >= 0)
 #define GETSOCKETERRNO() (errno)
 #endif
 

@@ -35,10 +35,10 @@ int main(void) {
         close(fd_pipe[0]);
         close(fd_pipe[1]);
 
-        char* const exec_argv_producer[] = { PRODUCER_EXEC_COMMAND_ARG0, PRODUCER_EXEC_COMMAND_ARG1, NULL };
         fprintf(stderr, ">  Child-1 [PRODUCER]: I'll be executing `%s %s`  <\n", PRODUCER_EXEC_COMMAND_ARG0, PRODUCER_EXEC_COMMAND_ARG1);
 
-        execvp(exec_argv_producer[0], exec_argv_producer);
+        execlp(PRODUCER_EXEC_COMMAND_ARG0,
+               PRODUCER_EXEC_COMMAND_ARG0, PRODUCER_EXEC_COMMAND_ARG1, NULL);
         perror("Child-1 [PRODUCER]: execvp() failed, exiting ...");
         return 1;
     }
@@ -53,10 +53,10 @@ int main(void) {
         close(fd_pipe[0]);
         close(fd_pipe[1]);
 
-        char* const exec_argv_consumer[] = { COMSUMER_EXEC_COMMAND_ARG0, CONSUMER_EXEC_COMMAND_ARG1, NULL };
         fprintf(stderr, ">  Child-2 [CONSUMER]: I'll be executing `%s %s`  <\n", COMSUMER_EXEC_COMMAND_ARG0, CONSUMER_EXEC_COMMAND_ARG1);
 
-        execvp(exec_argv_consumer[0], exec_argv_consumer);
+        execlp(COMSUMER_EXEC_COMMAND_ARG0,
+               COMSUMER_EXEC_COMMAND_ARG0, CONSUMER_EXEC_COMMAND_ARG1, NULL);
         perror("Child-2 [CONSUMER]: execvp() failed, exiting ...");
         return 1;
     }

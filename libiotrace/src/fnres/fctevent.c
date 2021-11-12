@@ -31,9 +31,9 @@
 
 
 /* --- Function prototypes for helper functions --- */
-static int __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_length, fnmap_key* new_key);
-static int __create_fnmap_key_using_fctevent_file_type(struct basic* fctevent, fnmap_key* new_key);
-static int __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2);
+static void __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_length, fnmap_key* new_key);
+static void __create_fnmap_key_using_fctevent_file_type(struct basic* fctevent, fnmap_key* new_key);
+static void __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2);
 
 static const char* __get_file_name_from_fctevent_function_data(struct basic* fctevent);
 
@@ -558,7 +558,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
 /* - Helper functions - */
-static int __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_length, fnmap_key *new_key) {
+static void __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_length, fnmap_key *new_key) {
     memset(new_key, 0, FNMAP_KEY_SIZE);      /* Avoid garbage in key's id union */
 
     new_key->type = type;
@@ -566,117 +566,135 @@ static int __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_len
     switch(type) {
         case F_DESCRIPTOR:
             new_key->id.fildes = *((int*) id);
-            return 0;
+            return;
 
         case F_STREAM:
             new_key->id.stream = (FILE*) id;
-            return 0;
+            return;
 
         case F_DIR:
             new_key->id.dir = id;
-            return 0;
+            return;
 
         case F_MEMORY:
             new_key->id.mmap_start = id;
             new_key->mmap_length = mmap_length;
-            return 0;
+            return;
 
         case F_MPI:
             new_key->id.mpi_id = *((int*) id);
-            return 0;
+            return;
 
         case R_MPI:
             new_key->id.mpi_req_id = *((int*) id);
-            return 0;
+            return;
 
         default:
             LIBIOTRACE_WARN("Unhandled `id_type` w/ enum-value %u", type);
-            return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
-static int __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key *new_key) {
+static void __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key *new_key) {
     switch(fctevent->void_p_enum_file_type) {
         case void_p_enum_file_type_file_descriptor:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR,
+            __create_fnmap_key_using_vals(F_DESCRIPTOR,
                         &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
+            return;
 
         case void_p_enum_file_type_file_stream:
-            return __create_fnmap_key_using_vals(F_STREAM,
+            __create_fnmap_key_using_vals(F_STREAM,
                         ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
+            return;
 
         case void_p_enum_file_type_file_dir:
-            return __create_fnmap_key_using_vals(F_DIR,
+            __create_fnmap_key_using_vals(F_DIR,
                          ((struct file_dir *) fctevent->file_type)->directory_stream, 0, new_key);
+            return;
 
         case void_p_enum_file_type_file_memory:
-            return __create_fnmap_key_using_vals(F_MEMORY,
+            __create_fnmap_key_using_vals(F_MEMORY,
                         ((struct file_memory *) fctevent->file_type)->address,
                         ((struct file_memory *) fctevent->file_type)->length, new_key);
+            return;
 
         case void_p_enum_file_type_file_mpi:
-            return __create_fnmap_key_using_vals(F_MPI,
+            __create_fnmap_key_using_vals(F_MPI,
                         &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
+            return;
 
         case void_p_enum_file_type_request_mpi:
-            return __create_fnmap_key_using_vals(R_MPI,
+            __create_fnmap_key_using_vals(R_MPI,
                         &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
+            return;
 
         case void_p_enum_file_type_file_async:
         case void_p_enum_file_type_shared_library:
         case void_p_enum_file_type_file_alloc:
         	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_file_type` w/ value %u", fctevent->void_p_enum_file_type);
-        	return 0;
+        	return;
         default:
             LIBIOTRACE_WARN("Unknown case for `fctevent->void_p_enum_file_type` w/ value %u", fctevent->void_p_enum_file_type);
-            return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
-static int __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2) {
+static void __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2) {
     switch (fctevent->void_p_enum_function_data) {
         case void_p_enum_function_data_dup_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_dup3_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup3_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup3_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_fileno_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fileno_function*)fctevent->function_data)->file_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fileno_function*)fctevent->function_data)->file_descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_fdopen_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fdopen_function*)fctevent->function_data)->descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fdopen_function*)fctevent->function_data)->descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_accept_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct accept_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct accept_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_file_pair:               /* Note: Creates 2 keys (2 fildes) */
             __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor1, 0, new_key1);
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor2, 0, new_key2);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor2, 0, new_key2);
+            return;
 
         case void_p_enum_function_data_socketpair_function:     /* Note: Creates 2 keys (2 fildes) */
             __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor1, 0, new_key1);
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor2, 0, new_key2);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor2, 0, new_key2);
+            return;
 
         case void_p_enum_function_data_memory_map_function:
-            return __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function*)fctevent->function_data)->address, ((struct memory_map_function*) fctevent->function_data)->length, new_key1);
+            __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function*)fctevent->function_data)->address, ((struct memory_map_function*) fctevent->function_data)->length, new_key1);
+            return;
 
         case void_p_enum_function_data_memory_remap_function:
-            return __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_remap_function*)fctevent->function_data)->new_address, ((struct memory_remap_function*) fctevent->function_data)->new_length, new_key1);
+            __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_remap_function*)fctevent->function_data)->new_address, ((struct memory_remap_function*) fctevent->function_data)->new_length, new_key1);
+            return;
 
         case void_p_enum_function_data_mpi_immediate:
-            return __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate*)fctevent->function_data)->request_id, 0, new_key1);
+            __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate*)fctevent->function_data)->request_id, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_mpi_immediate_at:
-            return __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at*)fctevent->function_data)->request_id, 0, new_key1);
+            __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at*)fctevent->function_data)->request_id, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_mpi_open_function:
-            return __create_fnmap_key_using_vals(F_MPI, &((struct file_mpi*)fctevent->function_data)->mpi_file, 0, new_key1);
+            __create_fnmap_key_using_vals(F_MPI, &((struct file_mpi*)fctevent->function_data)->mpi_file, 0, new_key1);
+            return;
 
 
         case void_p_enum_function_data_copy_write_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_write_function*)fctevent->function_data)->from_file_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_write_function*)fctevent->function_data)->from_file_descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_copy_read_function:
-            return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_read_function*)fctevent->function_data)->to_file_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_read_function*)fctevent->function_data)->to_file_descriptor, 0, new_key1);
+            return;
 
         case void_p_enum_function_data_fork_function:
         case void_p_enum_function_data_open_function:
@@ -725,10 +743,9 @@ static int __create_fnmap_key_using_fctevent_function_data(struct basic* fcteven
         case void_p_enum_function_data_dlmopen_function:
 #endif
         	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
-        	return 0;
+        	return;
         default:
             LIBIOTRACE_WARN("Unknown case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
-            return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 

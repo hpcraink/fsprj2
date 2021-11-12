@@ -144,10 +144,12 @@ Steps to build _libiotrace_:
         * _STACKTRACE_PTR_:
         
           If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the memory address of stack trace entries is collected.
+          WARNING: Might affect async-signal safety of traced functions
           
         * _STACKTRACE_SYMBOL_:
         
           If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the symbol name of stack trace entries is collected.
+          WARNING: Might affect async-signal safety of traced functions
           
         * _WITH_DL_IO_:
         
@@ -185,6 +187,7 @@ Steps to build _libiotrace_:
           If set to _ON_ libiotrace will create a mapping between filenames and file identifiers (e.g., fildes) during runtime and write the traced filenames to the trace.
           Supports by default up to 100 open files. This limit can be raised to max. 10000 using the environment variable _IOTRACE_FNRES_MAX_FILENAMES_.
           Note: This mapping can also be created post-mortem using the tool _IOTrace_Analyze_.
+          WARNING: Might affect async-signal safety of functions which open/close files (affects mostly functions which aren't async-signal safe from the get-go)
           
     14. press “c” again (this brings up the option “g” to generate)
     15. press “g” and wait until _ccmake_ exits

@@ -62,8 +62,8 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic* fct
   __create_fnmap_key_using_fctevent_function_data(fctevent, &insert_key1, &insert_key2);\
   fnmap_add_or_update(&insert_key1, filename);\
   \
-  if (void_p_enum_function_data_file_pair == (fctevent)->void_p_enum_function_data || \
-        void_p_enum_function_data_socketpair_function == (fctevent)->void_p_enum_function_data) {\
+  if (__void_p_enum_function_data_file_pair == (fctevent)->__void_p_enum_function_data || \
+        __void_p_enum_function_data_socketpair_function == (fctevent)->__void_p_enum_function_data) {\
     fnmap_add_or_update(&insert_key2, filename);\
   }\
 } while(0)
@@ -268,8 +268,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         }
 
         case CASE_FCNTL:
-            if (void_p_enum_cmd_data_dup_function ==
-                ((struct fcntl_function*)fctevent->function_data)->void_p_enum_cmd_data) { goto case_dup; }
+            if (__void_p_enum_cmd_data_dup_function ==
+                ((struct fcntl_function*)fctevent->function_data)->__void_p_enum_cmd_data) { goto case_dup; }
             goto case_fcntl_no_dup;
 
         case CASE_FDOPEN:       /* Fildes -> Stream */
@@ -317,7 +317,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
             const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->function_data;
 
             if (NULL == fctevent_function_data->requests) { return; }
-            for (size_t i = 0; i < fctevent_function_data->size_requests; i++) {
+            for (size_t i = 0; i < fctevent_function_data->__size_requests; i++) {
                 int* req_id = &((*((fctevent_function_data->requests) + i))->request_id);
 
                 fnmap_key delete_key;
@@ -591,218 +591,221 @@ static int __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_len
     }
 }
 static int __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key *new_key) {
-    switch(fctevent->void_p_enum_file_type) {
-        case void_p_enum_file_type_file_descriptor:
+    switch(fctevent->__void_p_enum_file_type) {
+        case __void_p_enum_file_type_file_descriptor:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR,
                         &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
 
-        case void_p_enum_file_type_file_stream:
+        case __void_p_enum_file_type_file_stream:
             return __create_fnmap_key_using_vals(F_STREAM,
                         ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
 
-        case void_p_enum_file_type_file_dir:
+        case __void_p_enum_file_type_file_dir:
             return __create_fnmap_key_using_vals(F_DIR,
                          ((struct file_dir *) fctevent->file_type)->directory_stream, 0, new_key);
 
-        case void_p_enum_file_type_file_memory:
+        case __void_p_enum_file_type_file_memory:
             return __create_fnmap_key_using_vals(F_MEMORY,
                         ((struct file_memory *) fctevent->file_type)->address,
                         ((struct file_memory *) fctevent->file_type)->length, new_key);
 
-        case void_p_enum_file_type_file_mpi:
+        case __void_p_enum_file_type_file_mpi:
             return __create_fnmap_key_using_vals(F_MPI,
                         &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
 
-        case void_p_enum_file_type_request_mpi:
+        case __void_p_enum_file_type_request_mpi:
             return __create_fnmap_key_using_vals(R_MPI,
                         &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
 
-        case void_p_enum_file_type_file_async:
-        case void_p_enum_file_type_shared_library:
-        case void_p_enum_file_type_file_alloc:
-        	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_file_type` w/ value %u", fctevent->void_p_enum_file_type);
+        case __void_p_enum_file_type_file_async:
+        case __void_p_enum_file_type_shared_library:
+        case __void_p_enum_file_type_file_alloc:
+        	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
         	return 0;
         default:
-            LIBIOTRACE_WARN("Unknown case for `fctevent->void_p_enum_file_type` w/ value %u", fctevent->void_p_enum_file_type);
+            LIBIOTRACE_WARN("Unknown case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
             return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 static int __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2) {
-    switch (fctevent->void_p_enum_function_data) {
-        case void_p_enum_function_data_dup_function:
+    switch (fctevent->__void_p_enum_function_data) {
+        case __void_p_enum_function_data_dup_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_dup3_function:
+        case __void_p_enum_function_data_dup3_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup3_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_fileno_function:
+        case __void_p_enum_function_data_fileno_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fileno_function*)fctevent->function_data)->file_descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_fdopen_function:
+        case __void_p_enum_function_data_fdopen_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fdopen_function*)fctevent->function_data)->descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_accept_function:
+        case __void_p_enum_function_data_accept_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct accept_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_file_pair:               /* Note: Creates 2 keys (2 fildes) */
+        case __void_p_enum_function_data_file_pair:               /* Note: Creates 2 keys (2 fildes) */
             __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor1, 0, new_key1);
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor2, 0, new_key2);
 
-        case void_p_enum_function_data_socketpair_function:     /* Note: Creates 2 keys (2 fildes) */
+        case __void_p_enum_function_data_socketpair_function:     /* Note: Creates 2 keys (2 fildes) */
             __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor1, 0, new_key1);
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor2, 0, new_key2);
 
-        case void_p_enum_function_data_memory_map_function:
+        case __void_p_enum_function_data_memory_map_function:
             return __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function*)fctevent->function_data)->address, ((struct memory_map_function*) fctevent->function_data)->length, new_key1);
 
-        case void_p_enum_function_data_memory_remap_function:
+        case __void_p_enum_function_data_memory_remap_function:
             return __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_remap_function*)fctevent->function_data)->new_address, ((struct memory_remap_function*) fctevent->function_data)->new_length, new_key1);
 
-        case void_p_enum_function_data_mpi_immediate:
+        case __void_p_enum_function_data_mpi_immediate:
             return __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate*)fctevent->function_data)->request_id, 0, new_key1);
 
-        case void_p_enum_function_data_mpi_immediate_at:
+        case __void_p_enum_function_data_mpi_immediate_at:
             return __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at*)fctevent->function_data)->request_id, 0, new_key1);
 
-        case void_p_enum_function_data_mpi_open_function:
+        case __void_p_enum_function_data_mpi_open_function:
             return __create_fnmap_key_using_vals(F_MPI, &((struct file_mpi*)fctevent->function_data)->mpi_file, 0, new_key1);
 
 
-        case void_p_enum_function_data_copy_write_function:
+        case __void_p_enum_function_data_copy_write_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_write_function*)fctevent->function_data)->from_file_descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_copy_read_function:
+        case __void_p_enum_function_data_copy_read_function:
             return __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_read_function*)fctevent->function_data)->to_file_descriptor, 0, new_key1);
 
-        case void_p_enum_function_data_fork_function:
-        case void_p_enum_function_data_open_function:
-        case void_p_enum_function_data_openat_function:
-        case void_p_enum_function_data_information_function:
-        case void_p_enum_function_data_lock_mode_function:
-        case void_p_enum_function_data_orientation_mode_function:
-        case void_p_enum_function_data_write_function:
-        case void_p_enum_function_data_pwrite_function:
-        case void_p_enum_function_data_pwrite2_function:
-        case void_p_enum_function_data_read_function:
-        case void_p_enum_function_data_pread_function:
-        case void_p_enum_function_data_pread2_function:
-        case void_p_enum_function_data_unget_function:
-        case void_p_enum_function_data_position_function:
-        case void_p_enum_function_data_positioning_function:
-        case void_p_enum_function_data_lpositioning_function:
-        case void_p_enum_function_data_buffer_function:
-        case void_p_enum_function_data_bufsize_function:
-        case void_p_enum_function_data_memory_sync_function:
-        case void_p_enum_function_data_memory_madvise_function:
-        case void_p_enum_function_data_select_function:
-        case void_p_enum_function_data_memory_posix_madvise_function:
-        case void_p_enum_function_data_asynchronous_read_function:
-        case void_p_enum_function_data_asynchronous_write_function:
-        case void_p_enum_function_data_asynchronous_listio_function:
-        case void_p_enum_function_data_asynchronous_error_function:
-        case void_p_enum_function_data_asynchronous_return_function:
-        case void_p_enum_function_data_asynchronous_sync_function:
-        case void_p_enum_function_data_asynchronous_suspend_function:
-        case void_p_enum_function_data_asynchronous_cancel_function:
-        case void_p_enum_function_data_asynchronous_init_function:
-        case void_p_enum_function_data_dlopen_function:
-        case void_p_enum_function_data_fcntl_function:
-        case void_p_enum_function_data_readdir_function:
-        case void_p_enum_function_data_dirfd_function:
-        case void_p_enum_function_data_msg_function:
-        case void_p_enum_function_data_mmsg_function:
-        case void_p_enum_function_data_sockaddr_function:
-        case void_p_enum_function_data_socket_function:
-        case void_p_enum_function_data_mpi_wait:
-        case void_p_enum_function_data_mpi_delete_function:
-        case void_p_enum_function_data_mpi_waitall:
-        case void_p_enum_function_data_alloc_function:
-        	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
+        case __void_p_enum_function_data_fork_function:
+        case __void_p_enum_function_data_open_function:
+        case __void_p_enum_function_data_openat_function:
+        case __void_p_enum_function_data_information_function:
+        case __void_p_enum_function_data_lock_mode_function:
+        case __void_p_enum_function_data_orientation_mode_function:
+        case __void_p_enum_function_data_write_function:
+        case __void_p_enum_function_data_pwrite_function:
+        case __void_p_enum_function_data_pwrite2_function:
+        case __void_p_enum_function_data_read_function:
+        case __void_p_enum_function_data_pread_function:
+        case __void_p_enum_function_data_pread2_function:
+        case __void_p_enum_function_data_unget_function:
+        case __void_p_enum_function_data_position_function:
+        case __void_p_enum_function_data_positioning_function:
+        case __void_p_enum_function_data_lpositioning_function:
+        case __void_p_enum_function_data_buffer_function:
+        case __void_p_enum_function_data_bufsize_function:
+        case __void_p_enum_function_data_memory_sync_function:
+        case __void_p_enum_function_data_memory_madvise_function:
+        case __void_p_enum_function_data_select_function:
+        case __void_p_enum_function_data_memory_posix_madvise_function:
+        case __void_p_enum_function_data_asynchronous_read_function:
+        case __void_p_enum_function_data_asynchronous_write_function:
+        case __void_p_enum_function_data_asynchronous_listio_function:
+        case __void_p_enum_function_data_asynchronous_error_function:
+        case __void_p_enum_function_data_asynchronous_return_function:
+        case __void_p_enum_function_data_asynchronous_sync_function:
+        case __void_p_enum_function_data_asynchronous_suspend_function:
+        case __void_p_enum_function_data_asynchronous_cancel_function:
+        case __void_p_enum_function_data_asynchronous_init_function:
+        case __void_p_enum_function_data_dlopen_function:
+        case __void_p_enum_function_data_fcntl_function:
+        case __void_p_enum_function_data_readdir_function:
+        case __void_p_enum_function_data_dirfd_function:
+        case __void_p_enum_function_data_msg_function:
+        case __void_p_enum_function_data_mmsg_function:
+        case __void_p_enum_function_data_sockaddr_function:
+        case __void_p_enum_function_data_socket_function:
+        case __void_p_enum_function_data_mpi_wait:
+        case __void_p_enum_function_data_mpi_delete_function:
+        case __void_p_enum_function_data_mpi_waitall:
+        case __void_p_enum_function_data_alloc_function:
+#if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
+        case __void_p_enum_function_data_dlmopen_function:
+#endif
+        	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
         	return 0;
         default:
-            LIBIOTRACE_WARN("Unknown case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
+            LIBIOTRACE_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
             return -1;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 
 static const char* __get_file_name_from_fctevent_function_data(struct basic* fctevent) {
-    switch(fctevent->void_p_enum_function_data) {
-        case void_p_enum_function_data_open_function:
+    switch(fctevent->__void_p_enum_function_data) {
+        case __void_p_enum_function_data_open_function:
             return ((struct open_function*)fctevent->function_data)->file_name;
 
-        case void_p_enum_function_data_openat_function:
+        case __void_p_enum_function_data_openat_function:
             return ((struct openat_function*)fctevent->function_data)->file_name;
 
-        case void_p_enum_function_data_mpi_open_function:
+        case __void_p_enum_function_data_mpi_open_function:
             return ((struct mpi_open_function*)fctevent->function_data)->file_name;
 
-        case void_p_enum_function_data_mpi_delete_function:
+        case __void_p_enum_function_data_mpi_delete_function:
             return ((struct mpi_delete_function*)fctevent->function_data)->file_name;
 
-        case void_p_enum_function_data_dlopen_function:
+        case __void_p_enum_function_data_dlopen_function:
             return ((struct dlopen_function*)fctevent->function_data)->file_name;
 
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
-        case void_p_enum_function_data_dlmopen_function:
+        case __void_p_enum_function_data_dlmopen_function:
             return ((struct dlmopen_function*)fctevent->function_data)->file_name;
 #endif
 
-        case void_p_enum_function_data_fork_function:
-        case void_p_enum_function_data_fdopen_function:
-		case void_p_enum_function_data_information_function:
-		case void_p_enum_function_data_lock_mode_function:
-		case void_p_enum_function_data_orientation_mode_function:
-		case void_p_enum_function_data_write_function:
-		case void_p_enum_function_data_pwrite_function:
-		case void_p_enum_function_data_pwrite2_function:
-		case void_p_enum_function_data_read_function:
-		case void_p_enum_function_data_pread_function:
-		case void_p_enum_function_data_pread2_function:
-		case void_p_enum_function_data_copy_read_function:
-		case void_p_enum_function_data_copy_write_function:
-		case void_p_enum_function_data_unget_function:
-		case void_p_enum_function_data_position_function:
-		case void_p_enum_function_data_positioning_function:
-		case void_p_enum_function_data_lpositioning_function:
-		case void_p_enum_function_data_buffer_function:
-		case void_p_enum_function_data_fileno_function:
-		case void_p_enum_function_data_bufsize_function:
-		case void_p_enum_function_data_memory_map_function:
-		case void_p_enum_function_data_memory_sync_function:
-		case void_p_enum_function_data_memory_remap_function:
-		case void_p_enum_function_data_memory_madvise_function:
-		case void_p_enum_function_data_select_function:
-		case void_p_enum_function_data_memory_posix_madvise_function:
-		case void_p_enum_function_data_asynchronous_read_function:
-		case void_p_enum_function_data_asynchronous_write_function:
-		case void_p_enum_function_data_asynchronous_listio_function:
-		case void_p_enum_function_data_asynchronous_error_function:
-		case void_p_enum_function_data_asynchronous_return_function:
-		case void_p_enum_function_data_asynchronous_sync_function:
-		case void_p_enum_function_data_asynchronous_suspend_function:
-		case void_p_enum_function_data_asynchronous_cancel_function:
-		case void_p_enum_function_data_asynchronous_init_function:
-		case void_p_enum_function_data_dup_function:
-		case void_p_enum_function_data_dup3_function:
-		case void_p_enum_function_data_fcntl_function:
-		case void_p_enum_function_data_file_pair:
-		case void_p_enum_function_data_readdir_function:
-		case void_p_enum_function_data_dirfd_function:
-		case void_p_enum_function_data_msg_function:
-		case void_p_enum_function_data_mmsg_function:
-		case void_p_enum_function_data_sockaddr_function:
-		case void_p_enum_function_data_accept_function:
-		case void_p_enum_function_data_socketpair_function:
-		case void_p_enum_function_data_socket_function:
-		case void_p_enum_function_data_mpi_immediate:
-		case void_p_enum_function_data_mpi_wait:
-		case void_p_enum_function_data_mpi_immediate_at:
-		case void_p_enum_function_data_mpi_waitall:
-		case void_p_enum_function_data_alloc_function:
-			LIBIOTRACE_DEBUG("Unhandled case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
+        case __void_p_enum_function_data_fork_function:
+        case __void_p_enum_function_data_fdopen_function:
+		case __void_p_enum_function_data_information_function:
+		case __void_p_enum_function_data_lock_mode_function:
+		case __void_p_enum_function_data_orientation_mode_function:
+		case __void_p_enum_function_data_write_function:
+		case __void_p_enum_function_data_pwrite_function:
+		case __void_p_enum_function_data_pwrite2_function:
+		case __void_p_enum_function_data_read_function:
+		case __void_p_enum_function_data_pread_function:
+		case __void_p_enum_function_data_pread2_function:
+		case __void_p_enum_function_data_copy_read_function:
+		case __void_p_enum_function_data_copy_write_function:
+		case __void_p_enum_function_data_unget_function:
+		case __void_p_enum_function_data_position_function:
+		case __void_p_enum_function_data_positioning_function:
+		case __void_p_enum_function_data_lpositioning_function:
+		case __void_p_enum_function_data_buffer_function:
+		case __void_p_enum_function_data_fileno_function:
+		case __void_p_enum_function_data_bufsize_function:
+		case __void_p_enum_function_data_memory_map_function:
+		case __void_p_enum_function_data_memory_sync_function:
+		case __void_p_enum_function_data_memory_remap_function:
+		case __void_p_enum_function_data_memory_madvise_function:
+		case __void_p_enum_function_data_select_function:
+		case __void_p_enum_function_data_memory_posix_madvise_function:
+		case __void_p_enum_function_data_asynchronous_read_function:
+		case __void_p_enum_function_data_asynchronous_write_function:
+		case __void_p_enum_function_data_asynchronous_listio_function:
+		case __void_p_enum_function_data_asynchronous_error_function:
+		case __void_p_enum_function_data_asynchronous_return_function:
+		case __void_p_enum_function_data_asynchronous_sync_function:
+		case __void_p_enum_function_data_asynchronous_suspend_function:
+		case __void_p_enum_function_data_asynchronous_cancel_function:
+		case __void_p_enum_function_data_asynchronous_init_function:
+		case __void_p_enum_function_data_dup_function:
+		case __void_p_enum_function_data_dup3_function:
+		case __void_p_enum_function_data_fcntl_function:
+		case __void_p_enum_function_data_file_pair:
+		case __void_p_enum_function_data_readdir_function:
+		case __void_p_enum_function_data_dirfd_function:
+		case __void_p_enum_function_data_msg_function:
+		case __void_p_enum_function_data_mmsg_function:
+		case __void_p_enum_function_data_sockaddr_function:
+		case __void_p_enum_function_data_accept_function:
+		case __void_p_enum_function_data_socketpair_function:
+		case __void_p_enum_function_data_socket_function:
+		case __void_p_enum_function_data_mpi_immediate:
+		case __void_p_enum_function_data_mpi_wait:
+		case __void_p_enum_function_data_mpi_immediate_at:
+		case __void_p_enum_function_data_mpi_waitall:
+		case __void_p_enum_function_data_alloc_function:
+			LIBIOTRACE_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
 			return NULL;
         default:
-            LIBIOTRACE_WARN("Unknown case for `fctevent->void_p_enum_function_data` w/ value %u", fctevent->void_p_enum_function_data);
+            LIBIOTRACE_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
             return NULL;                      /* Note: Currently NOT checked by all callers (ISSUE: Has sometimes special meaning, e.g., for `dlopen`; Note: Proceeding w/o checking return value might lead to SIGSEGV)  */
     }
 }

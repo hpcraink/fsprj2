@@ -84,9 +84,9 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 		CU_ASSERT_FATAL(NULL == copy->file_type);
 	} else {
 		CU_ASSERT_FATAL(
-				data->void_p_enum_file_type == copy->void_p_enum_file_type);
-		if (void_p_enum_file_type_file_descriptor
-				== data->void_p_enum_file_type) {
+				data->__void_p_enum_file_type == copy->__void_p_enum_file_type);
+		if (__void_p_enum_file_type_file_descriptor
+				== data->__void_p_enum_file_type) {
 			CU_ASSERT_FATAL(
 					((struct file_descriptor* )(data->file_type))->descriptor
 							== ((struct file_descriptor* )(copy->file_type))->descriptor);
@@ -96,10 +96,10 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 		CU_ASSERT_FATAL(NULL == copy->function_data);
 	} else {
 		CU_ASSERT_FATAL(
-				data->void_p_enum_function_data
-						== copy->void_p_enum_function_data);
-		if (void_p_enum_function_data_mpi_waitall
-				== data->void_p_enum_function_data) {
+				data->__void_p_enum_function_data
+						== copy->__void_p_enum_function_data);
+		if (__void_p_enum_function_data_mpi_waitall
+				== data->__void_p_enum_function_data) {
 			CU_ASSERT_FATAL(
 					((struct mpi_waitall* )(data->function_data))->requests
 							== ((struct mpi_waitall* )(copy->function_data))->requests);
@@ -227,8 +227,8 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	if (NULL != data->file_type) {
 		check_json_string(print_buf, &tokens[i++], "file_type");
 		CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
-		if (void_p_enum_file_type_file_descriptor
-				== data->void_p_enum_file_type) {
+		if (__void_p_enum_file_type_file_descriptor
+				== data->__void_p_enum_file_type) {
 			CU_ASSERT_FATAL(tokens[i - 1].size == 1);
 			check_json_string(print_buf, &tokens[i++], "descriptor");
 			check_json_number(print_buf, &tokens[i++],
@@ -239,8 +239,8 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	if (NULL != data->function_data) {
 		check_json_string(print_buf, &tokens[i++], "function_data");
 		CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
-		if (void_p_enum_function_data_mpi_waitall
-				== data->void_p_enum_function_data) {
+		if (__void_p_enum_function_data_mpi_waitall
+				== data->__void_p_enum_function_data) {
 			if (NULL
 					== ((struct mpi_waitall*) (data->function_data))->requests) {
 				CU_ASSERT_FATAL(tokens[i - 1].size == 0);

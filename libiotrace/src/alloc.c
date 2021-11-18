@@ -47,7 +47,7 @@ char toggle_alloc_wrapper(const char *line, const char toggle)
 #ifndef IO_LIB_STATIC
 char alloc_init_done = 0;
 /* Initialize pointers for alloc functions. */
-void alloc_init() {
+void alloc_init(void) {
 	if (!alloc_init_done) {
 
 #undef WRAPPER_NAME_TO_SOURCE
@@ -120,7 +120,11 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	char *old_value;
 	char *new_value;
 
-	if (NULL == (void*) CALL_REAL(calloc)) {
+	/* gcc assumes the address of ‘__real_calloc’ will never be NULL
+	 * this produces wrong warnings in the following if-statement */
+#pragma GCC diagnostic ignored "-Waddress"
+	if (NULL == CALL_REAL(calloc)) {
+#pragma GCC diagnostic pop
 		/* dlsym compiled with pthread uses calloc: first call of dlsym calls
 		 * calloc before initialization of pointer to real calloc is done.
 		 * That will start initialization via alloc_init() which calls dlsym
@@ -150,8 +154,8 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 			/* check if static_calloc_buffer has enough free memory left for
 			 * needed size (do it without adding size to static_calloc_buffer_pos
 			 * to prevent wrap around during evaluation) */
-			if (&(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE
-					- old_value >= real_size) {
+			if ((size_t)(&(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE
+					- old_value) >= real_size) {
 				new_value = (void*) (old_value + real_size);
 			} else {
 				errno = ENOMEM;

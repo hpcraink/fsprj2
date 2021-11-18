@@ -51,20 +51,20 @@ void test_posix_fildes_open_read_close(void) {
     struct basic af1_open = {
             .function_name = "open",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
-            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af1_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_open_function
     };
 
     struct basic bf1_read = {
             .function_name = "read",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor
     };
 
     struct basic cf1_close = {
             .function_name = "close",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor
     };
     /* -- Create test data -- */
 
@@ -95,21 +95,21 @@ void test_posix_pipe2_lseek(void) {
     struct basic af1_pipe2 = {
             .function_name = "pipe2",
             .return_state = ok,
-            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_file_pair
+            .function_data = &tmp_af1_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_file_pair
     };
 
     struct file_descriptor tmp_bf1_file_type = { .descriptor = tmp_af1_function_data_fildes1 };
     struct basic bf1_lseek = {
             .function_name = "lseek",
             .return_state = ok,
-            .file_type = &tmp_bf1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor
+            .file_type = &tmp_bf1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor
     };
 
     struct file_descriptor tmp_bf2_file_type = { .descriptor = tmp_af1_function_data_fildes2 };
     struct basic bf2_pread = {
             .function_name = "pread",
             .return_state = ok,
-            .file_type = &tmp_bf2_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor
+            .file_type = &tmp_bf2_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor
     };
     /* -- Create test data -- */
 
@@ -136,29 +136,29 @@ void test_posix_stream_fildes_fileno_fwrite(void) {
     struct basic af1_fopen = {
             .function_name = "fopen",
             .return_state = ok,
-            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_stream
+            .function_data = &tmp_af1_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_open_function,
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_stream
     };
 
     struct fileno_function tmp_af2_function_data = { .file_descriptor = (int)next_dummy_id++ };
     struct basic af2_fileno = {
             .function_name = "fileno",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_stream,
-            .function_data = &tmp_af2_function_data, .void_p_enum_function_data = void_p_enum_function_data_fileno_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_stream,
+            .function_data = &tmp_af2_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_fileno_function
     };
 
     struct file_descriptor tmp_bf1_file_type = { .descriptor = tmp_af2_function_data.file_descriptor };
     struct basic bf1_write = {
             .function_name = "write",
             .return_state = ok,
-            .file_type = &tmp_bf1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor
+            .file_type = &tmp_bf1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor
     };
 
     struct basic bf2_fgetpos = {
             .function_name = "fgetpos",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_stream
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_stream
     };
     /* -- Create test data -- */
 
@@ -186,8 +186,8 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
     struct basic af1_creat = {
             .function_name = "creat",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
-            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af1_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_open_function
     };
 
 
@@ -196,23 +196,23 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
     struct basic af2_mmap = {
             .function_name = "mmap",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
-            .function_data = &tmp_af2_function_data, .void_p_enum_function_data = void_p_enum_function_data_memory_map_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af2_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_memory_map_function
     };
 
     struct file_memory tmp_bf1_file_type = { .address = tmp_af2_function_data.address, .length = tmp_af2_function_data.length };
     struct basic bf1_msync = {
             .function_name = "msync",
             .return_state = ok,
-            .file_type = &tmp_bf1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_memory
+            .file_type = &tmp_bf1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_memory
     };
 
     struct memory_remap_function tmp_bf2_function_data = { .new_address = (void*)next_dummy_id++, .new_length = tmp_af2_function_data.length };
     struct basic bf2_mremap = {
             .function_name = "mremap",
             .return_state = ok,
-            .file_type = &tmp_bf1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_memory,
-            .function_data = &tmp_bf2_function_data, .void_p_enum_function_data = void_p_enum_function_data_memory_remap_function
+            .file_type = &tmp_bf1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_memory,
+            .function_data = &tmp_bf2_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_memory_remap_function
     };
 
     struct basic bf3_msync_old;
@@ -226,7 +226,7 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
     struct basic cf1_munmap = {
             .function_name = "munmap",
             .return_state = ok,
-            .file_type = &tmp_bf4_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_memory,
+            .file_type = &tmp_bf4_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_memory,
     };
     /* -- Create test data -- */
 
@@ -270,41 +270,41 @@ void test_mpi_open_immediate_close(void) {
     struct basic af1_MPI_File_open = {
             .function_name = "MPI_File_open",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_mpi,
-            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_mpi_open_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_mpi,
+            .function_data = &tmp_af1_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_mpi_open_function
     };
 
     struct basic bf1_MPI_File_set_view = {
             .function_name = "MPI_File_set_view",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_mpi
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_mpi
     };
 
     struct mpi_immediate tmp_bf2_function_data = { .request_id = (int)next_dummy_id++ };
     struct basic bf2_MPI_File_iwrite = {
             .function_name = "MPI_File_iwrite",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_mpi,
-            .function_data = &tmp_bf2_function_data, .void_p_enum_function_data = void_p_enum_function_data_mpi_immediate
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_mpi,
+            .function_data = &tmp_bf2_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_mpi_immediate
     };
 
     struct request_mpi tmp_bf3_file_type = { .request_id = tmp_bf2_function_data.request_id };
     struct basic bf3_MPI_Wait = {
             .function_name = "MPI_Wait",
             .return_state = ok,
-            .file_type = &tmp_bf3_file_type, .void_p_enum_file_type = void_p_enum_file_type_request_mpi
+            .file_type = &tmp_bf3_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_request_mpi
     };
 
     struct basic cf1_MPI_Request_free = {
             .function_name = "MPI_Request_free",
             .return_state = ok,
-            .file_type = &tmp_bf2_function_data, .void_p_enum_file_type = void_p_enum_file_type_request_mpi
+            .file_type = &tmp_bf2_function_data, .__void_p_enum_file_type = __void_p_enum_file_type_request_mpi
     };
 
     struct basic cf2_MPI_File_close = {
             .function_name = "MPI_File_close",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_mpi
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_mpi
     };
     /* -- Create test data -- */
 
@@ -341,8 +341,8 @@ void test_posix_freopen_same_file(void) {
     struct basic af1_creat = {
             .function_name = "creat",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
-            .function_data = &tmp_af1_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af1_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_open_function
     };
 
 
@@ -350,8 +350,8 @@ void test_posix_freopen_same_file(void) {
     struct basic af2_freopen = {
             .function_name = "freopen",
             .return_state = ok,
-            .file_type = &tmp_af1_file_type, .void_p_enum_file_type = void_p_enum_file_type_file_descriptor,
-            .function_data = &tmp_af2_function_data, .void_p_enum_function_data = void_p_enum_function_data_open_function
+            .file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_descriptor,
+            .function_data = &tmp_af2_function_data, .__void_p_enum_function_data = __void_p_enum_function_data_open_function
     };
     /* -- Create test data -- */
 

@@ -220,17 +220,17 @@
 #ifndef WITH_STD_IO
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          if(data.file_type == NULL || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_mpi || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_shared_library || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_alloc || \
-                            (data.void_p_enum_file_type == void_p_enum_file_type_file_descriptor \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_memory || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_async || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_mpi || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_shared_library || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_alloc || \
+                            (data.__void_p_enum_file_type == __void_p_enum_file_type_file_descriptor \
                              && STDIN_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
                              && STDOUT_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
                              && STDERR_FILENO != ((struct file_descriptor *)data.file_type)->descriptor) \
                             || \
-                            (data.void_p_enum_file_type == void_p_enum_file_type_file_stream \
+                            (data.__void_p_enum_file_type == __void_p_enum_file_type_file_stream \
                              && stdin != ((struct file_stream *)data.file_type)->stream \
                              && stdout != ((struct file_stream *)data.file_type)->stream \
                              && stderr != ((struct file_stream *)data.file_type)->stream)) { \

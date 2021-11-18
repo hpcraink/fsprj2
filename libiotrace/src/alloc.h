@@ -21,7 +21,7 @@ REAL_TYPE void* REAL(reallocarray)(void *ptr, size_t nmemb, size_t size) REAL_IN
 #endif
 
 #ifndef IO_LIB_STATIC
-void alloc_init() ATTRIBUTE_CONSTRUCTOR;
+void alloc_init(void) ATTRIBUTE_CONSTRUCTOR;
 #endif
 
 char toggle_alloc_wrapper(const char *line, const char toggle);

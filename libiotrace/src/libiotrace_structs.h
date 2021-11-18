@@ -1101,7 +1101,7 @@ LIBIOTRACE_STRUCT_START(wrapper_status)
 #endif
 LIBIOTRACE_STRUCT_END
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_REMOTE_CONTROL)
 /* influx meta data */
 LIBIOTRACE_STRUCT_START(influx_meta)
   LIBIOTRACE_STRUCT_CSTRING_P(ip, 39)
@@ -1110,7 +1110,7 @@ LIBIOTRACE_STRUCT_START(influx_meta)
 LIBIOTRACE_STRUCT_END
 #endif
 
-#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
+#if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 /* control commands meta data*/
 LIBIOTRACE_STRUCT_START(control_meta)
   LIBIOTRACE_STRUCT_PID_T(process_id)

@@ -68,12 +68,14 @@
 #endif
 
 /* defines for socket handling */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
-#define ISVALIDSOCKET(s) ((s) >= 0)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 #define CLOSESOCKET(s)          \
 	CALL_REAL_POSIX_SYNC(close) \
 	(s)
 #define SOCKET int
+#endif
+#if defined(IOTRACE_ENABLE_INFLUXDB)
+#define ISVALIDSOCKET(s) ((s) >= 0)
 #define GETSOCKETERRNO() (errno)
 #endif
 
@@ -103,7 +105,7 @@
 #endif
 
 /* defines for control connection */
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 
 #ifndef PORT_RANGE_MIN
 #define PORT_RANGE_MIN 50000
@@ -116,7 +118,7 @@
 #endif
 
 /* defines for all connections */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 #ifndef SELECT_TIMEOUT_SECONDS
 #define SELECT_TIMEOUT_SECONDS 1
 #endif
@@ -172,7 +174,7 @@ int host_name_max;
 #endif
 
 /* struct for socket and corresponding parser */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 typedef struct libiotrace_sockets {
 	SOCKET socket;
 	llhttp_t parser;
@@ -186,7 +188,7 @@ static pthread_mutex_t lock;
 #ifdef IOTRACE_ENABLE_INFLUXDB
 static pthread_mutex_t socket_lock;
 #endif
-#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_REMOTE_CONTROL)
 static pthread_mutex_t ip_lock;
 #endif
 
@@ -216,7 +218,7 @@ static char *hostname;
 static char log_name[MAXFILENAME];
 static int log_name_len;
 #endif
-#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
+#if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 static char control_log_name[MAXFILENAME];
 #endif
 
@@ -243,7 +245,7 @@ static int recv_sockets_len = 0;
 
 static char whitelist[MAXFILENAME];
 
-#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 static char event_cleanup_done = 0;
 #endif
 
@@ -274,7 +276,7 @@ static char has_whitelist;
 static u_int64_t system_start_time;
 #endif
 
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 
 static libiotrace_socket **open_control_sockets = NULL;
 static int open_control_sockets_len = 0;
@@ -287,7 +289,7 @@ static char local_ip[39] = "";
 
 #endif
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 static llhttp_settings_t settings;
 #endif
 
@@ -296,19 +298,19 @@ struct wrapper_status active_wrapper_status;
 // once per thread
 static ATTRIBUTE_THREAD pid_t tid = -1;
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 static ATTRIBUTE_THREAD SOCKET socket_peer = -1;
 #endif
 
-#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void cleanup(void) ATTRIBUTE_DESTRUCTOR;
 #endif
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void* communication_thread(void *arg);
 #endif
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void send_data(const char *message, SOCKET socket);
 #endif
 
@@ -355,7 +357,7 @@ static const size_t FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
  * @return Pointer to a new created libiotrace_socket. Must be freed
  *         with "free" if no longer used.
  */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 libiotrace_socket* create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
 	libiotrace_socket *socket = CALL_REAL_ALLOC_SYNC(malloc)(
 			sizeof(libiotrace_socket));
@@ -394,7 +396,7 @@ libiotrace_socket* create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
  *                      one element. This new element holds the
  *                      value of "socket".
  */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len,
 		libiotrace_socket ***array) {
 	void *ret;
@@ -438,7 +440,7 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len,
  *                      After function call "array" is decreased by
  *                      one element (if "socket" was in "array").
  */
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_socket ***array)
 {
 	void *ret;
@@ -755,7 +757,7 @@ void prepare_socket(void) {
 			HTTP_RESPONSE);
 	save_socket(socket, &socket_lock, &recv_sockets_len, &recv_sockets);
 
-#if defined(ENABLE_INPUT)
+#if defined(ENABLE_REMOTE_CONTROL)
 	// save local ip (for sending ip to influx)
 	pthread_mutex_lock(&ip_lock);
 	if ('\0' == local_ip[0]) {
@@ -1132,7 +1134,7 @@ void reset_values_in_forked_process(void) {
 	recv_sockets = NULL;
 	recv_sockets_len = 0;
 #endif
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 	open_control_sockets = NULL;
 	open_control_sockets_len = 0;
 #endif
@@ -1300,7 +1302,7 @@ void init_on_load(void) {
  * @param[in] message "\0" terminated message to send.
  * @param[in] socket  Socket to send to.
  */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void send_data(const char *message, SOCKET socket) {
 	size_t bytes_to_send = strlen(message);
 	const char *message_to_send = message;
@@ -1391,7 +1393,7 @@ int url_callback_responses(llhttp_t *parser, const char *at ATTRIBUTE_UNUSED, si
  *
  * @return Error state of the callback (not used; gives "0" back).
  */
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
 	// TODO: parser will call callback multiple times for partial messages:
 	//       if (url_chunk) { build TLS_URL } else
@@ -1461,7 +1463,7 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
  * process and host an entry in influxdb is made. This entry
  * can be used to control the wrappers in the thread.
  */
-#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_REMOTE_CONTROL)
 void write_metadata_into_influxdb(void)
 {
 	struct influx_meta data;
@@ -1548,7 +1550,7 @@ void write_metadata_into_influxdb(void)
  *
  * @return control socket
  */
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 SOCKET prepare_control_socket(void) {
 	SOCKET socket_control;
 
@@ -1677,7 +1679,7 @@ SOCKET prepare_control_socket(void) {
  * @param[in] arg Not used.
  * @return Not used (allways NULL)
  */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
 	struct timeval select_timeout;
 
@@ -1699,7 +1701,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
 		pthread_mutex_unlock(&socket_lock);
 #endif
 
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 		// Add listening socket for establishing control connections to fd_set
 		FD_SET(socket_control, &fd_recv_sockets);
 		if (socket_control > socket_max)
@@ -1760,7 +1762,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
 			pthread_mutex_unlock(&socket_lock);
 #endif
 
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 			// If socket to establish new connections is ready
 			if (FD_ISSET(socket_control, &fd_recv_sockets))
 			{
@@ -1810,7 +1812,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
 		}
 	}
 
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 	CLOSESOCKET(socket_control);
 	for (int i = 0; i < open_control_sockets_len; i++)
 	{
@@ -2070,7 +2072,7 @@ void init_process() {
 		strcpy(filesystem_log_name, log_name);
 		strcpy(working_dir_log_name, log_name);
 #endif
-#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
+#if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 		strcpy(control_log_name, log_name);
 #endif
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -2085,7 +2087,7 @@ void init_process() {
 						+ strlen(hostname), filesystem_extension);
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 #endif
-#if defined(ENABLE_INPUT) && defined(IOTRACE_ENABLE_LOGFILE)
+#if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 		strcpy(control_log_name + length, "_control.log");
 #endif
 
@@ -2176,17 +2178,17 @@ void init_process() {
 #ifdef IOTRACE_ENABLE_INFLUXDB
 		pthread_mutex_init(&socket_lock, NULL);
 #endif
-#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_REMOTE_CONTROL)
 		pthread_mutex_init(&ip_lock, NULL);
 #endif
 
 		/* Initialize user callbacks and settings */
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 		llhttp_settings_init(&settings);
 #endif
 
 		/* Set user callback */
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 		settings.on_url = url_callback_requests;
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -2194,7 +2196,7 @@ void init_process() {
 #endif
 
 		/* open and configure control socket */
-#ifdef ENABLE_INPUT
+#ifdef ENABLE_REMOTE_CONTROL
 		socket_control = prepare_control_socket();
 #endif
 
@@ -2202,7 +2204,7 @@ void init_process() {
 		 * are done: set corresponding flag */
 		init_done = 1;
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 		//Create receive thread per process
 		pthread_t recv_thread;
 
@@ -2317,7 +2319,7 @@ void init_thread(void) {
 	if (-1 == socket_peer) {
 		prepare_socket();
 	}
-#  ifdef ENABLE_INPUT
+#  ifdef ENABLE_REMOTE_CONTROL
 	write_metadata_into_influxdb();
 #  endif
 #endif
@@ -2547,7 +2549,7 @@ void free_memory(struct basic *data) {
  * wrapper of a "exit*" function. Writes buffer contents to file,
  * closes open connections (sockets) and destroys mutexes.
  */
-#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void cleanup(void) {
 	event_cleanup_done = 1;
 
@@ -2631,7 +2633,7 @@ void cleanup(void) {
 	pthread_mutex_destroy(&socket_lock);
 #endif
 
-#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_REMOTE_CONTROL)
 	pthread_mutex_destroy(&ip_lock);
 #endif
 }

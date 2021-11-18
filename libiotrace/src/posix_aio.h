@@ -49,7 +49,7 @@ REAL_TYPE int REAL(shm_open)(const char *name, int oflag, mode_t mode) REAL_INIT
 //ToDo: io_submit
 
 #ifndef IO_LIB_STATIC
-void posix_aio_init() ATTRIBUTE_CONSTRUCTOR;
+void posix_aio_init(void) ATTRIBUTE_CONSTRUCTOR;
 #endif
 
 char toggle_posix_aio_wrapper(const char *line, const char toggle);

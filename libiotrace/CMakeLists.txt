@@ -170,7 +170,6 @@ if(WITH_MPI_IO)
 endif()
 
 include(CheckIncludeFiles)
-include(WriteCompilerDetectionHeader)
 include(${libiotrace_SOURCE_DIR}/cmake/CheckCompilerAttributes.cmake)
 CheckCompilerAttributes() 
 

@@ -47,40 +47,40 @@
 /* macros for setting VOID_P elements */
 #define LIBIOTRACE_STRUCT_SET_VOID_P(struct_name, element, substruct_type, value) struct_name.__void_p_enum_##element = \
                                                                                 __void_p_enum_##element##_##substruct_type; \
-                                                                            struct_name.element = (void*) (&value);
-#define LIBIOTRACE_STRUCT_SET_VOID_P_NULL(struct_name, element) struct_name.element = NULL;
+                                                                            struct_name.__##element = (void*) (&value);
+#define LIBIOTRACE_STRUCT_SET_VOID_P_NULL(struct_name, element) struct_name.__##element = NULL;
 
 /* macros for setting malloced string array */
 #define LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY(struct_name, array_name, malloced_array, start, size) struct_name.__size_##array_name = size; \
                                                                                                   struct_name.__start_##array_name = start; \
-                                                                                                  struct_name.array_name = malloced_array;
-#define LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
+                                                                                                  struct_name.__##array_name = malloced_array;
+#define LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY_NULL(struct_name, array_name) struct_name.__##array_name = NULL;
 
 /* macros for setting malloced ptr array */
 #define LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY(struct_name, array_name, malloced_array, start, size) struct_name.__size_##array_name = size; \
                                                                                                struct_name.__start_##array_name = start; \
-                                                                                               struct_name.array_name = malloced_array;
-#define LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
+                                                                                               struct_name.__##array_name = malloced_array;
+#define LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY_NULL(struct_name, array_name) struct_name.__##array_name = NULL;
 
 /* macros for setting int array */
 #define LIBIOTRACE_STRUCT_SET_INT_ARRAY(struct_name, array_name, array, size) struct_name.__size_##array_name = size; \
-                                                                        struct_name.array_name = array;
-#define LIBIOTRACE_STRUCT_SET_INT_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
+                                                                        struct_name.__##array_name = array;
+#define LIBIOTRACE_STRUCT_SET_INT_ARRAY_NULL(struct_name, array_name) struct_name.__##array_name = NULL;
 
 /* macros for setting struct array */
 #define LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(struct_name, array_name, array, size) struct_name.__size_##array_name = size; \
-                                                                           struct_name.array_name = array;
-#define LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY_NULL(struct_name, array_name) struct_name.array_name = NULL;
+                                                                           struct_name.__##array_name = array;
+#define LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY_NULL(struct_name, array_name) struct_name.__##array_name = NULL;
 
 /* macros for setting key value array */
 #define LIBIOTRACE_STRUCT_INIT_KEY_VALUE_ARRAY(struct_name, array_name, keys_array, values_array) struct_name.__size_##array_name = 0; \
-                                                                                            struct_name.keys_##array_name = keys_array; \
-                                                                                            struct_name.values_##array_name = values_array;
+                                                                                            struct_name.__##keys_##array_name = keys_array; \
+                                                                                            struct_name.__##values_##array_name = values_array;
 #define LIBIOTRACE_STRUCT_SET_KEY_VALUE_ARRAY_NULL(struct_name, array_name) struct_name.__size_##array_name = 0; \
-                                                                      struct_name.keys_##array_name = NULL; \
-                                                                      struct_name.values_##array_name = NULL;
-#define LIBIOTRACE_STRUCT_ADD_KEY_VALUE(struct_name, array_name, key, value) struct_name.keys_##array_name[struct_name.__size_##array_name] = key; \
-                                                                       struct_name.values_##array_name[struct_name.__size_##array_name] = value; \
+                                                                      struct_name.__##keys_##array_name = NULL; \
+                                                                      struct_name.__##values_##array_name = NULL;
+#define LIBIOTRACE_STRUCT_ADD_KEY_VALUE(struct_name, array_name, key, value) struct_name.__##keys_##array_name[struct_name.__size_##array_name] = key; \
+                                                                       struct_name.__##values_##array_name[struct_name.__size_##array_name] = value; \
                                                                        struct_name.__size_##array_name++;
 
 #define COUNT_DEC_AS_CHAR(type) ceil(log10(pow(2, sizeof(type) * CHAR_BIT)))
@@ -181,14 +181,14 @@
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_ELEMENT(name) unsigned int name : 1;
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_END };
 
-#  define LIBIOTRACE_STRUCT_VOID_P_START(name) void *name; enum {
+#  define LIBIOTRACE_STRUCT_VOID_P_START(name) void *__##name; enum {
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) __void_p_enum_##name##_##element,
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) } __void_p_enum_##name;
 
 #  define LIBIOTRACE_STRUCT_START(name) struct name {
 #  define LIBIOTRACE_STRUCT_END };
 
-#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) struct type **name; size_t __size_##name;
+#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) struct type **__##name; size_t __size_##name;
 
 #  define LIBIOTRACE_STRUCT_STRUCT_P(type, name) struct type *name;
 #  define LIBIOTRACE_STRUCT_STRUCT(type, name) struct type name;
@@ -220,11 +220,11 @@
 #  define LIBIOTRACE_STRUCT_SHORT(name) short name;
 #  define LIBIOTRACE_STRUCT_DEV_T(name) dev_t name;
 #  define LIBIOTRACE_STRUCT_INO_T(name) ino_t name;
-#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) size_t __start_##name; size_t __size_##name; char ** name;
-#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) size_t __start_##name; size_t __size_##name; void ** name;
-#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) size_t __size_##name; int * name;
+#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) size_t __start_##name; size_t __size_##name; char **__##name;
+#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) size_t __start_##name; size_t __size_##name; void **__##name;
+#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) size_t __size_##name; int *__##name;
 #  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) sa_family_t name;
-#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) size_t __size_##name; char ** keys_##name; char ** values_##name;
+#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) size_t __size_##name; char **__keys_##name; char **__values_##name;
 /* insert new line for new data-type here */
 
 /* ----------------------------------------------------------------------------------------------------------------------- */
@@ -303,14 +303,14 @@
                           LIBIOTRACE_STRUCT_WRITE("}") \
                           return libiotrace_struct_start_size - libiotrace_struct_size;}
 
-#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->__##name) { \
                                            libiotrace_struct_hasElements = 1; \
                                            LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":") \
                                            switch (libiotrace_struct_data->__void_p_enum_##name) {
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) case __void_p_enum_##name##_##element: \
                                                       libiotrace_struct_ret = libiotrace_struct_print_##element(libiotrace_struct_buf, \
                                                                           libiotrace_struct_size, (struct element*) \
-                                                                          libiotrace_struct_data->name); \
+                                                                          libiotrace_struct_data->__##name); \
                                                       libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
                                                       libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */\
                                                       break;
@@ -320,7 +320,7 @@
                                          LIBIOTRACE_STRUCT_WRITE(",") \
                                        }
 
-#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->__##name) { \
                                                              libiotrace_struct_hasElements = 1; \
                                                              LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":[") \
                                                              size_t libiotrace_struct_count_##name; \
@@ -329,7 +329,7 @@
                                                                   libiotrace_struct_count_##name++) { \
                                                                libiotrace_struct_ret = libiotrace_struct_print_##type(libiotrace_struct_buf, \
                                                                                                           libiotrace_struct_size, \
-                                                                                                          *((libiotrace_struct_data->name) + libiotrace_struct_count_##name)); \
+                                                                                                          *((libiotrace_struct_data->__##name) + libiotrace_struct_count_##name)); \
                                                                libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
                                                                libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */ \
                                                                LIBIOTRACE_STRUCT_WRITE(",") \
@@ -390,7 +390,7 @@
 #  define LIBIOTRACE_STRUCT_SHORT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_DEV_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_INO_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->__##name) { \
                                                                                     libiotrace_struct_hasElements = 1; \
                                                                                     LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":[") \
                                                                                     size_t libiotrace_struct_count_##name; \
@@ -398,7 +398,7 @@
                                                                                          libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                                                          libiotrace_struct_count_##name++) { \
                                                                                       libiotrace_struct_ret = libiotrace_struct_print_cstring(libiotrace_struct_buf, libiotrace_struct_size, \
-                                                                                                                                  libiotrace_struct_data->name[libiotrace_struct_count_##name]); \
+                                                                                                                                  libiotrace_struct_data->__##name[libiotrace_struct_count_##name]); \
                                                                                       LIBIOTRACE_STRUCT_SIZE_ERROR(libiotrace_struct_ret, libiotrace_struct_size) \
                                                                                       libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
                                                                                       libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */ \
@@ -410,14 +410,14 @@
                                                                                     } \
                                                                                     LIBIOTRACE_STRUCT_WRITE("],") \
                                                                                   }
-#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
                                                          libiotrace_struct_hasElements = 1; \
                                                          LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":[") \
                                                          size_t libiotrace_struct_count_##name; \
                                                          for (libiotrace_struct_count_##name = libiotrace_struct_data->__start_##name; \
                                                               libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                               libiotrace_struct_count_##name++) { \
-                                                           LIBIOTRACE_STRUCT_SNPRINTF("\"%p\",", libiotrace_struct_data->name[libiotrace_struct_count_##name]) \
+                                                           LIBIOTRACE_STRUCT_SNPRINTF("\"%p\",", libiotrace_struct_data->__##name[libiotrace_struct_count_##name]) \
                                                          } \
                                                          if (libiotrace_struct_count_##name > 0) { \
                                                            libiotrace_struct_buf--;  /* remove last comma */ \
@@ -425,14 +425,14 @@
                                                          } \
                                                          LIBIOTRACE_STRUCT_WRITE("],") \
                                                        }
-#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
                                                   libiotrace_struct_hasElements = 1; \
                                                   LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":[") \
                                                   size_t libiotrace_struct_count_##name; \
                                                   for (libiotrace_struct_count_##name = 0; \
                                                        libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                        libiotrace_struct_count_##name++) { \
-                                                    LIBIOTRACE_STRUCT_SNPRINTF("%d,", libiotrace_struct_data->name[libiotrace_struct_count_##name]) \
+                                                    LIBIOTRACE_STRUCT_SNPRINTF("%d,", libiotrace_struct_data->__##name[libiotrace_struct_count_##name]) \
                                                   } \
                                                   if (libiotrace_struct_count_##name > 0) { \
                                                     libiotrace_struct_buf--;  /* remove last comma */ \
@@ -441,7 +441,7 @@
                                                   LIBIOTRACE_STRUCT_WRITE("],") \
                                                 }
 #  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %hu, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->keys_##name) { \
+#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->__keys_##name) { \
                                                                                 libiotrace_struct_hasElements = 1; \
                                                                                 LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":{") \
                                                                                 size_t libiotrace_struct_count_##name; \
@@ -449,13 +449,13 @@
                                                                                      libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                                                      libiotrace_struct_count_##name++) { \
                                                                                   libiotrace_struct_ret = libiotrace_struct_print_cstring(libiotrace_struct_buf, libiotrace_struct_size, \
-                                                                                                      libiotrace_struct_data->keys_##name[libiotrace_struct_count_##name]); \
+                                                                                                      libiotrace_struct_data->__keys_##name[libiotrace_struct_count_##name]); \
                                                                                   LIBIOTRACE_STRUCT_SIZE_ERROR(libiotrace_struct_ret, libiotrace_struct_size) \
                                                                                   libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
                                                                                   libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */ \
                                                                                   LIBIOTRACE_STRUCT_WRITE(":") \
                                                                                   libiotrace_struct_ret = libiotrace_struct_print_cstring(libiotrace_struct_buf, libiotrace_struct_size, \
-                                                                                                      libiotrace_struct_data->values_##name[libiotrace_struct_count_##name]); \
+                                                                                                      libiotrace_struct_data->__values_##name[libiotrace_struct_count_##name]); \
                                                                                   LIBIOTRACE_STRUCT_SIZE_ERROR(libiotrace_struct_ret, libiotrace_struct_size) \
                                                                                   libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
                                                                                   libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */ \
@@ -640,11 +640,11 @@
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_END
 
-#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->__##name) { \
                                            switch (libiotrace_struct_data->__void_p_enum_##name) {
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) case __void_p_enum_##name##_##element: \
                                                       libiotrace_struct_size += libiotrace_struct_sizeof_##element( \
-                                                                            (struct element*) libiotrace_struct_data->name); \
+                                                                            (struct element*) libiotrace_struct_data->__##name); \
                                                       break;
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) default: LIBIOTRACE_STRUCT_ENUM_ERROR(libiotrace_struct_data->__void_p_enum_##name) } }
 
@@ -652,7 +652,7 @@
                                     size_t libiotrace_struct_size = sizeof(struct name);
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_size;}
 
-#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->__##name) { \
                                                              libiotrace_struct_size += sizeof(struct type *) \
                                                                                  * libiotrace_struct_data->__size_##name; \
                                                              size_t libiotrace_struct_count_##name; \
@@ -660,7 +660,7 @@
                                                                   libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                                   libiotrace_struct_count_##name++) { \
                                                                libiotrace_struct_size += libiotrace_struct_sizeof_##type( \
-                                                                                     *((libiotrace_struct_data->name) + libiotrace_struct_count_##name)); \
+                                                                                     *((libiotrace_struct_data->__##name) + libiotrace_struct_count_##name)); \
                                                              } \
                                                            }
 
@@ -698,37 +698,37 @@
 #  define LIBIOTRACE_STRUCT_SHORT(name)
 #  define LIBIOTRACE_STRUCT_DEV_T(name)
 #  define LIBIOTRACE_STRUCT_INO_T(name)
-#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->__##name) { \
                                                                                     libiotrace_struct_size += sizeof(char *) * (libiotrace_struct_data->__size_##name \
                                                                                                         - libiotrace_struct_data->__start_##name); \
                                                                                     for (size_t libiotrace_struct_count_##name = libiotrace_struct_data->__start_##name; \
                                                                                          libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name && \
                                                                                          libiotrace_struct_count_##name < max_size; \
                                                                                          libiotrace_struct_count_##name++) { \
-                                                                                      libiotrace_struct_size += strnlen(libiotrace_struct_data->name[libiotrace_struct_count_##name], \
+                                                                                      libiotrace_struct_size += strnlen(libiotrace_struct_data->__##name[libiotrace_struct_count_##name], \
                                                                                                                   max_length_per_element) \
                                                                                                           + 1; /* +1 for trailing null character */ \
                                                                                     } \
                                                                                   }
-#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
                                                          libiotrace_struct_size += sizeof(void *) * (libiotrace_struct_data->__size_##name \
                                                                              - libiotrace_struct_data->__start_##name); \
                                                        }
-#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
                                                   libiotrace_struct_size += sizeof(int) * libiotrace_struct_data->__size_##name; \
                                                 }
 #  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name)
-#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->keys_##name) { \
+#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->__keys_##name) { \
                                                                                 libiotrace_struct_size += sizeof(char *) * libiotrace_struct_data->__size_##name \
                                                                                                     * 2; /* key and value arrays */ \
                                                                                 for (size_t libiotrace_struct_count_##name = 0; \
                                                                                      libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name && \
                                                                                      libiotrace_struct_count_##name < max_size; \
                                                                                      libiotrace_struct_count_##name++) { \
-                                                                                  libiotrace_struct_size += strnlen(libiotrace_struct_data->keys_##name[libiotrace_struct_count_##name], \
+                                                                                  libiotrace_struct_size += strnlen(libiotrace_struct_data->__keys_##name[libiotrace_struct_count_##name], \
                                                                                                               max_length_per_cstring) \
                                                                                                       + 1; /* +1 for trailing null character */ \
-                                                                                  libiotrace_struct_size += strnlen(libiotrace_struct_data->values_##name[libiotrace_struct_count_##name], \
+                                                                                  libiotrace_struct_size += strnlen(libiotrace_struct_data->__values_##name[libiotrace_struct_count_##name], \
                                                                                                               max_length_per_cstring) \
                                                                                                       + 1; /* +1 for trailing null character */ \
                                                                                 } \
@@ -776,12 +776,12 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_END
 
-#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->__##name) { \
                                            switch (libiotrace_struct_data->__void_p_enum_##name) {
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) case __void_p_enum_##name##_##element: \
-                                                      libiotrace_struct_copy->name = libiotrace_struct_buf; \
+                                                      libiotrace_struct_copy->__##name = libiotrace_struct_buf; \
                                                       libiotrace_struct_buf = libiotrace_struct_copy_##element(libiotrace_struct_buf, \
-                                                                          (struct element*) libiotrace_struct_data->name); \
+                                                                          (struct element*) libiotrace_struct_data->__##name); \
                                                       break;
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) default: LIBIOTRACE_STRUCT_ENUM_ERROR(libiotrace_struct_data->__void_p_enum_##name) } }
 
@@ -792,17 +792,17 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                     libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(struct name);
 #  define LIBIOTRACE_STRUCT_END return libiotrace_struct_buf;}
 
-#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->name) { \
-                                                             libiotrace_struct_copy->name = (struct type **)libiotrace_struct_buf; \
+#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->__##name) { \
+                                                             libiotrace_struct_copy->__##name = (struct type **)libiotrace_struct_buf; \
                                                              libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(struct type *) \
                                                                                 * libiotrace_struct_data->__size_##name; \
                                                              size_t libiotrace_struct_count_##name; \
                                                              for (libiotrace_struct_count_##name = 0; \
                                                                   libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                                   libiotrace_struct_count_##name++) { \
-                                                               libiotrace_struct_copy->name[libiotrace_struct_count_##name] = (struct type *)libiotrace_struct_buf; \
+                                                               libiotrace_struct_copy->__##name[libiotrace_struct_count_##name] = (struct type *)libiotrace_struct_buf; \
                                                                libiotrace_struct_buf = libiotrace_struct_copy_##type(libiotrace_struct_buf, \
-                                                                                                         *((libiotrace_struct_data->name) \
+                                                                                                         *((libiotrace_struct_data->__##name) \
                                                                                                            + libiotrace_struct_count_##name)); \
                                                              } \
                                                            }
@@ -846,23 +846,23 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_SHORT(name)
 #  define LIBIOTRACE_STRUCT_DEV_T(name)
 #  define LIBIOTRACE_STRUCT_INO_T(name)
-#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->name) { \
-                                                                                    libiotrace_struct_copy->name = (char **) libiotrace_struct_buf; \
+#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->__##name) { \
+                                                                                    libiotrace_struct_copy->__##name = (char **) libiotrace_struct_buf; \
                                                                                     libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(char *) * (libiotrace_struct_data->__size_##name \
                                                                                                                          - libiotrace_struct_data->__start_##name); \
                                                                                     for (size_t libiotrace_struct_count_##name = libiotrace_struct_data->__start_##name; \
                                                                                          libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name && \
                                                                                          libiotrace_struct_count_##name - libiotrace_struct_data->__start_##name < max_size; \
                                                                                          libiotrace_struct_count_##name++) { \
-                                                                                      if (NULL != libiotrace_struct_data->name[libiotrace_struct_count_##name]) { \
-                                                                                        libiotrace_struct_copy->name[libiotrace_struct_count_##name \
+                                                                                      if (NULL != libiotrace_struct_data->__##name[libiotrace_struct_count_##name]) { \
+                                                                                        libiotrace_struct_copy->__##name[libiotrace_struct_count_##name \
                                                                                                                - libiotrace_struct_data->__start_##name] = (char *) libiotrace_struct_buf; \
                                                                                         libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
-                                                                                                                                     libiotrace_struct_data->name[libiotrace_struct_count_##name], \
+                                                                                                                                     libiotrace_struct_data->__##name[libiotrace_struct_count_##name], \
                                                                                                                                      max_length_per_element); \
                                                                                         libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                                                       } else { \
-                                                                                        libiotrace_struct_copy->name[libiotrace_struct_count_##name] = NULL; \
+                                                                                        libiotrace_struct_copy->__##name[libiotrace_struct_count_##name] = NULL; \
                                                                                       } \
                                                                                     } \
                                                                                     libiotrace_struct_copy->__start_##name = 0; \
@@ -872,19 +872,19 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                                                       libiotrace_struct_copy->__size_##name = max_size; \
                                                                                     } \
                                                                                   }
-#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
-                                                         libiotrace_struct_copy->name = (void *) libiotrace_struct_buf; \
+#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
+                                                         libiotrace_struct_copy->__##name = (void *) libiotrace_struct_buf; \
                                                          libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(void *) * (libiotrace_struct_data->__size_##name \
                                                                             - libiotrace_struct_data->__start_##name); \
                                                          for (size_t libiotrace_struct_count_##name = libiotrace_struct_data->__start_##name; \
                                                               libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name && \
                                                               libiotrace_struct_count_##name - libiotrace_struct_data->__start_##name < max_size; \
                                                               libiotrace_struct_count_##name++) { \
-                                                           if (NULL != libiotrace_struct_data->name[libiotrace_struct_count_##name]) { \
-                                                             libiotrace_struct_copy->name[libiotrace_struct_count_##name \
+                                                           if (NULL != libiotrace_struct_data->__##name[libiotrace_struct_count_##name]) { \
+                                                             libiotrace_struct_copy->__##name[libiotrace_struct_count_##name \
                                                                                     - libiotrace_struct_data->__start_##name] = (void *) libiotrace_struct_buf; \
                                                            } else { \
-                                                             libiotrace_struct_copy->name[libiotrace_struct_count_##name] = NULL; \
+                                                             libiotrace_struct_copy->__##name[libiotrace_struct_count_##name] = NULL; \
                                                            } \
                                                          } \
                                                          libiotrace_struct_copy->__start_##name = 0; \
@@ -894,39 +894,39 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                                            libiotrace_struct_copy->__size_##name = max_size; \
                                                          } \
                                                        }
-#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
-                                                  memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data->name, \
+#  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
+                                                  memcpy(libiotrace_struct_buf, (void *) libiotrace_struct_data->__##name, \
                                                          sizeof(int) * libiotrace_struct_copy->__size_##name); \
-                                                  libiotrace_struct_copy->name = (int *) libiotrace_struct_buf; \
+                                                  libiotrace_struct_copy->__##name = (int *) libiotrace_struct_buf; \
                                                   libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(int) * libiotrace_struct_copy->__size_##name; \
                                                 }
 #  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name)
-#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->keys_##name) { \
-                                                                                libiotrace_struct_copy->keys_##name = (char **) libiotrace_struct_buf; \
+#  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring) if (NULL != libiotrace_struct_data->__keys_##name) { \
+                                                                                libiotrace_struct_copy->__keys_##name = (char **) libiotrace_struct_buf; \
                                                                                 libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(char *) * libiotrace_struct_data->__size_##name; \
-                                                                                libiotrace_struct_copy->values_##name = (char **) libiotrace_struct_buf; \
+                                                                                libiotrace_struct_copy->__values_##name = (char **) libiotrace_struct_buf; \
                                                                                 libiotrace_struct_buf = (char *)libiotrace_struct_buf + sizeof(char *) * libiotrace_struct_data->__size_##name; \
                                                                                 for (size_t libiotrace_struct_count_##name = 0; \
                                                                                      libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name && \
                                                                                      libiotrace_struct_count_##name < max_size; \
                                                                                      libiotrace_struct_count_##name++) { \
-                                                                                  if (NULL != libiotrace_struct_data->keys_##name[libiotrace_struct_count_##name]) { \
-                                                                                    libiotrace_struct_copy->keys_##name[libiotrace_struct_count_##name] = (char *) libiotrace_struct_buf; \
+                                                                                  if (NULL != libiotrace_struct_data->__keys_##name[libiotrace_struct_count_##name]) { \
+                                                                                    libiotrace_struct_copy->__keys_##name[libiotrace_struct_count_##name] = (char *) libiotrace_struct_buf; \
                                                                                     libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
-                                                                                                                                 libiotrace_struct_data->keys_##name[libiotrace_struct_count_##name], \
+                                                                                                                                 libiotrace_struct_data->__keys_##name[libiotrace_struct_count_##name], \
                                                                                                                                  max_length_per_cstring); \
                                                                                     libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                                                   } else { \
-                                                                                    libiotrace_struct_copy->keys_##name[libiotrace_struct_count_##name] = NULL; \
+                                                                                    libiotrace_struct_copy->__keys_##name[libiotrace_struct_count_##name] = NULL; \
                                                                                   } \
-                                                                                  if (NULL != libiotrace_struct_data->values_##name[libiotrace_struct_count_##name]) { \
-                                                                                    libiotrace_struct_copy->values_##name[libiotrace_struct_count_##name] = (char *) libiotrace_struct_buf; \
+                                                                                  if (NULL != libiotrace_struct_data->__values_##name[libiotrace_struct_count_##name]) { \
+                                                                                    libiotrace_struct_copy->__values_##name[libiotrace_struct_count_##name] = (char *) libiotrace_struct_buf; \
                                                                                     libiotrace_struct_ret = libiotrace_struct_copy_cstring_p((char *)libiotrace_struct_buf, \
-                                                                                                                                 libiotrace_struct_data->values_##name[libiotrace_struct_count_##name], \
+                                                                                                                                 libiotrace_struct_data->__values_##name[libiotrace_struct_count_##name], \
                                                                                                                                  max_length_per_cstring); \
                                                                                     libiotrace_struct_buf = (char *)libiotrace_struct_buf + libiotrace_struct_ret; \
                                                                                   } else { \
-                                                                                    libiotrace_struct_copy->values_##name[libiotrace_struct_count_##name] = NULL; \
+                                                                                    libiotrace_struct_copy->__values_##name[libiotrace_struct_count_##name] = NULL; \
                                                                                   } \
                                                                                 } \
                                                                                 if (libiotrace_struct_copy->__size_##name > max_size) { \
@@ -958,22 +958,22 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_END
 
-#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->__##name) { \
                                            switch (libiotrace_struct_data->__void_p_enum_##name) {
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) case __void_p_enum_##name##_##element: \
-                                                      libiotrace_struct_free_##element((struct element*) libiotrace_struct_data->name); \
+                                                      libiotrace_struct_free_##element((struct element*) libiotrace_struct_data->__##name); \
                                                       break;
 #  define LIBIOTRACE_STRUCT_VOID_P_END(name) default: LIBIOTRACE_STRUCT_ENUM_ERROR(libiotrace_struct_data->__void_p_enum_##name) } }
 
 #  define LIBIOTRACE_STRUCT_START(name) void libiotrace_struct_free_##name(struct name *libiotrace_struct_data ATTRIBUTE_UNUSED) {
 #  define LIBIOTRACE_STRUCT_END }
 
-#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_STRUCT_ARRAY(type, name, max_length) if (NULL != libiotrace_struct_data->__##name) { \
                                                              size_t libiotrace_struct_count_##name; \
                                                              for (libiotrace_struct_count_##name = 0; \
                                                                   libiotrace_struct_count_##name < libiotrace_struct_data->__size_##name; \
                                                                   libiotrace_struct_count_##name++) { \
-                                                                 libiotrace_struct_free_##type(*((libiotrace_struct_data->name) \
+                                                                 libiotrace_struct_free_##type(*((libiotrace_struct_data->__##name) \
                                                                                            + libiotrace_struct_count_##name)); \
                                                              } \
                                                            }
@@ -1006,13 +1006,13 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_SHORT(name)
 #  define LIBIOTRACE_STRUCT_DEV_T(name)
 #  define LIBIOTRACE_STRUCT_INO_T(name)
-#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->name) { \
-                                                                                    CALL_REAL_ALLOC_SYNC(free)(libiotrace_struct_data->name); \
-                                                                                    libiotrace_struct_data->name = NULL; \
+#  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element) if (NULL != libiotrace_struct_data->__##name) { \
+                                                                                    CALL_REAL_ALLOC_SYNC(free)(libiotrace_struct_data->__##name); \
+                                                                                    libiotrace_struct_data->__##name = NULL; \
                                                                                   }
-#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->name) { \
-                                                         CALL_REAL_ALLOC_SYNC(free)(libiotrace_struct_data->name); \
-                                                         libiotrace_struct_data->name = NULL; \
+#  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size) if (NULL != libiotrace_struct_data->__##name) { \
+                                                         CALL_REAL_ALLOC_SYNC(free)(libiotrace_struct_data->__##name); \
+                                                         libiotrace_struct_data->__##name = NULL; \
                                                        }
 #  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size)
 #  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name)
@@ -1154,7 +1154,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_ELEMENT(name)
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD_END
 
-#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->name) { \
+#  define LIBIOTRACE_STRUCT_VOID_P_START(name) if (NULL != libiotrace_struct_data->__##name) { \
                                             char prefix_new [strlen(prefix) + sizeof(#name) +1]; /* +1: underscore between prefix and name */\
                                             if(*prefix == '\0') { \
                                               snprintf(prefix_new, sizeof(prefix_new),"%s", #name);\
@@ -1165,7 +1165,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_VOID_P_ELEMENT(name, element) case __void_p_enum_##name##_##element: \
                                                       libiotrace_struct_ret = libiotrace_struct_push_##element(libiotrace_struct_buf, \
                                                                           libiotrace_struct_size, \
-                                                                          (struct element*) libiotrace_struct_data->name, prefix_new); \
+                                                                          (struct element*) libiotrace_struct_data->__##name, prefix_new); \
                                                       libiotrace_struct_buf += libiotrace_struct_ret;  /* set pointer to end of written characters */ \
                                                       libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */\
                                                       break;

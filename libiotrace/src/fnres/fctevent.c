@@ -230,7 +230,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MMAP:
         case CASE_MMAP64:
         {
-            if (((struct memory_map_function*)(fctevent->function_data))->map_flags.anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
+            if (((struct memory_map_function*)(fctevent->__function_data))->map_flags.anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
                 SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP);
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent);
@@ -270,7 +270,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_FCNTL:
             if (__void_p_enum_cmd_data_dup_function ==
-                ((struct fcntl_function*)fctevent->function_data)->__void_p_enum_cmd_data) { goto case_dup; }
+                ((struct fcntl_function*)fctevent->__function_data)->__void_p_enum_cmd_data) { goto case_dup; }
             goto case_fcntl_no_dup;
 
         case CASE_FDOPEN:       /* Fildes -> Stream */
@@ -315,11 +315,11 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_MPI_WAITALL:              /* ... TODO: Removes only requests from fnmap (to prevent leak), but doesn't set traced_filename(s) ...  */
         {
-            const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->function_data;
+            const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->__function_data;
 
-            if (NULL == fctevent_function_data->requests) { return; }
+            if (NULL == fctevent_function_data->__requests) { return; }
             for (size_t i = 0; i < fctevent_function_data->__size_requests; i++) {
-                int* req_id = &((*((fctevent_function_data->requests) + i))->request_id);
+                int* req_id = &((*((fctevent_function_data->__requests) + i))->request_id);
 
                 fnmap_key delete_key;
                 __create_fnmap_key_using_vals(R_MPI, req_id, 0, &delete_key);
@@ -598,33 +598,33 @@ static void __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, 
     switch(fctevent->__void_p_enum_file_type) {
         case __void_p_enum_file_type_file_descriptor:
             __create_fnmap_key_using_vals(F_DESCRIPTOR,
-                        &((struct file_descriptor *) fctevent->file_type)->descriptor, 0, new_key);
+                        &((struct file_descriptor *) fctevent->__file_type)->descriptor, 0, new_key);
             return;
 
         case __void_p_enum_file_type_file_stream:
             __create_fnmap_key_using_vals(F_STREAM,
-                        ((struct file_stream *) fctevent->file_type)->stream, 0, new_key);
+                        ((struct file_stream *) fctevent->__file_type)->stream, 0, new_key);
             return;
 
         case __void_p_enum_file_type_file_dir:
             __create_fnmap_key_using_vals(F_DIR,
-                         ((struct file_dir *) fctevent->file_type)->directory_stream, 0, new_key);
+                         ((struct file_dir *) fctevent->__file_type)->directory_stream, 0, new_key);
             return;
 
         case __void_p_enum_file_type_file_memory:
             __create_fnmap_key_using_vals(F_MEMORY,
-                        ((struct file_memory *) fctevent->file_type)->address,
-                        ((struct file_memory *) fctevent->file_type)->length, new_key);
+                        ((struct file_memory *) fctevent->__file_type)->address,
+                        ((struct file_memory *) fctevent->__file_type)->length, new_key);
             return;
 
         case __void_p_enum_file_type_file_mpi:
             __create_fnmap_key_using_vals(F_MPI,
-                        &((struct file_mpi *) fctevent->file_type)->mpi_file, 0, new_key);
+                        &((struct file_mpi *) fctevent->__file_type)->mpi_file, 0, new_key);
             return;
 
         case __void_p_enum_file_type_request_mpi:
             __create_fnmap_key_using_vals(R_MPI,
-                        &((struct request_mpi *) fctevent->file_type)->request_id, 0, new_key);
+                        &((struct request_mpi *) fctevent->__file_type)->request_id, 0, new_key);
             return;
 
         case __void_p_enum_file_type_file_async:
@@ -641,61 +641,61 @@ static void __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, 
 static void __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2) {
     switch (fctevent->__void_p_enum_function_data) {
         case __void_p_enum_function_data_dup_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup_function*)fctevent->__function_data)->new_descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_dup3_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup3_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct dup3_function*)fctevent->__function_data)->new_descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_fileno_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fileno_function*)fctevent->function_data)->file_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fileno_function*)fctevent->__function_data)->file_descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_fdopen_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fdopen_function*)fctevent->function_data)->descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct fdopen_function*)fctevent->__function_data)->descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_accept_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct accept_function*)fctevent->function_data)->new_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct accept_function*)fctevent->__function_data)->new_descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_file_pair:               /* Note: Creates 2 keys (2 fildes) */
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor1, 0, new_key1);
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->function_data)->descriptor2, 0, new_key2);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->__function_data)->descriptor1, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair*)fctevent->__function_data)->descriptor2, 0, new_key2);
             return;
 
         case __void_p_enum_function_data_socketpair_function:     /* Note: Creates 2 keys (2 fildes) */
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor1, 0, new_key1);
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->function_data)->descriptor2, 0, new_key2);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->__function_data)->descriptor1, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct socketpair_function*)fctevent->__function_data)->descriptor2, 0, new_key2);
             return;
 
         case __void_p_enum_function_data_memory_map_function:
-            __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function*)fctevent->function_data)->address, ((struct memory_map_function*) fctevent->function_data)->length, new_key1);
+            __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function*)fctevent->__function_data)->address, ((struct memory_map_function*) fctevent->__function_data)->length, new_key1);
             return;
 
         case __void_p_enum_function_data_memory_remap_function:
-            __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_remap_function*)fctevent->function_data)->new_address, ((struct memory_remap_function*) fctevent->function_data)->new_length, new_key1);
+            __create_fnmap_key_using_vals(F_MEMORY, ((struct memory_remap_function*)fctevent->__function_data)->new_address, ((struct memory_remap_function*) fctevent->__function_data)->new_length, new_key1);
             return;
 
         case __void_p_enum_function_data_mpi_immediate:
-            __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate*)fctevent->function_data)->request_id, 0, new_key1);
+            __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate*)fctevent->__function_data)->request_id, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_mpi_immediate_at:
-            __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at*)fctevent->function_data)->request_id, 0, new_key1);
+            __create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at*)fctevent->__function_data)->request_id, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_mpi_open_function:
-            __create_fnmap_key_using_vals(F_MPI, &((struct file_mpi*)fctevent->function_data)->mpi_file, 0, new_key1);
+            __create_fnmap_key_using_vals(F_MPI, &((struct file_mpi*)fctevent->__function_data)->mpi_file, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_copy_write_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_write_function*)fctevent->function_data)->from_file_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_write_function*)fctevent->__function_data)->from_file_descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_copy_read_function:
-            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_read_function*)fctevent->function_data)->to_file_descriptor, 0, new_key1);
+            __create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct copy_read_function*)fctevent->__function_data)->to_file_descriptor, 0, new_key1);
             return;
 
         case __void_p_enum_function_data_fork_function:
@@ -755,23 +755,23 @@ static void __create_fnmap_key_using_fctevent_function_data(struct basic* fcteve
 static const char* __get_file_name_from_fctevent_function_data(struct basic* fctevent) {
     switch(fctevent->__void_p_enum_function_data) {
         case __void_p_enum_function_data_open_function:
-            return ((struct open_function*)fctevent->function_data)->file_name;
+            return ((struct open_function*)fctevent->__function_data)->file_name;
 
         case __void_p_enum_function_data_openat_function:
-            return ((struct openat_function*)fctevent->function_data)->file_name;
+            return ((struct openat_function*)fctevent->__function_data)->file_name;
 
         case __void_p_enum_function_data_mpi_open_function:
-            return ((struct mpi_open_function*)fctevent->function_data)->file_name;
+            return ((struct mpi_open_function*)fctevent->__function_data)->file_name;
 
         case __void_p_enum_function_data_mpi_delete_function:
-            return ((struct mpi_delete_function*)fctevent->function_data)->file_name;
+            return ((struct mpi_delete_function*)fctevent->__function_data)->file_name;
 
         case __void_p_enum_function_data_dlopen_function:
-            return ((struct dlopen_function*)fctevent->function_data)->file_name;
+            return ((struct dlopen_function*)fctevent->__function_data)->file_name;
 
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
-            return ((struct dlmopen_function*)fctevent->function_data)->file_name;
+            return ((struct dlmopen_function*)fctevent->__function_data)->file_name;
 #endif
 
         case __void_p_enum_function_data_fork_function:

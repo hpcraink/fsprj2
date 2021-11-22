@@ -50,7 +50,7 @@ void test_same_value(void) {
     };
 
     for (int i = 0; i <= 30; i++) {             // Failure cause: `i <=` --> Too many entries for fnmap
-        printf("Added nr. %d\n", i);
+        // printf("Added nr. %d\n", i);
         fnmap_add_or_update(&key, "_TEST_");
         // key.id.fildes++;
     }

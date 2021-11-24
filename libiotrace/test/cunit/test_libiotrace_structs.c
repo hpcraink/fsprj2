@@ -48,6 +48,19 @@ static void fill_number(void *number, const ssize_t len) {
 	}
 }
 
+static void check_msg_function_copy(const struct msg_function *data,
+		const struct msg_function *copy) {
+	CU_ASSERT_FATAL(data->sockaddr != copy->sockaddr);
+	CU_ASSERT_FATAL(data->sockaddr->family == copy->sockaddr->family);
+	CU_ASSERT_FATAL(data->sockaddr->address != copy->sockaddr->address);
+	CU_ASSERT_FATAL(
+			0 == strcmp(data->sockaddr->address, copy->sockaddr->address));
+	CU_ASSERT_FATAL(data->__size_descriptors == copy->__size_descriptors);
+	for (size_t i = 0; i < data->__size_descriptors; i++) {
+		CU_ASSERT_FATAL(data->__descriptors[i] == copy->__descriptors[i]);
+	}
+}
+
 static void check_mpi_waitall_copy(const struct mpi_waitall *data,
 		const struct mpi_waitall *copy) {
 	if (NULL == data->__requests) {
@@ -187,6 +200,11 @@ static void check_json_number(const char *print_buf, const jsmntok_t *token,
 	CU_ASSERT_FATAL(number == value_number);
 }
 
+static void check_json_sa_family_t(const char *print_buf,
+		const jsmntok_t *token, sa_family_t family) {
+	check_json_number(print_buf, token, family, 1);
+}
+
 static void check_json_enum_read_write_state(const char *print_buf,
 		const jsmntok_t *token, enum read_write_state read_write_state) {
 	CU_ASSERT_FATAL(token->type == JSMN_STRING);
@@ -200,6 +218,41 @@ static void check_json_enum_read_write_state(const char *print_buf,
 			0
 					== strncmp(print_buf + token->start - 1, buf,
 							token->end - token->start + 2));
+}
+
+static void check_msg_function_print(const struct msg_function *data,
+		const char *print_buf, const int len) {
+	jsmn_parser parser;
+	jsmn_init(&parser);
+	int token_count = jsmn_parse(&parser, print_buf, len, NULL, 0);
+
+	CU_ASSERT_FATAL(0 < token_count);
+
+	jsmntok_t tokens[token_count];
+	jsmn_init(&parser);
+	int ret = jsmn_parse(&parser, print_buf, len, tokens, token_count);
+
+	CU_ASSERT_FATAL(token_count == ret);
+
+	size_t i = 0;
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 2);
+
+	check_json_string(print_buf, &tokens[i++], "sockaddr");
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 2);
+	check_json_string(print_buf, &tokens[i++], "family");
+	check_json_sa_family_t(print_buf, &tokens[i++], data->sockaddr->family);
+	check_json_string(print_buf, &tokens[i++], "address");
+	check_json_string(print_buf, &tokens[i++], data->sockaddr->address);
+
+	check_json_string(print_buf, &tokens[i++], "descriptors");
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_ARRAY);
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == MAX_MSG_FILE_DESCRIPTORS);
+	for (int l = 0; l < MAX_MSG_FILE_DESCRIPTORS; l++) {
+		check_json_number(print_buf, &tokens[i++], data->__descriptors[l], 0);
+	}
 }
 
 static void check_mpi_waitall_print(const struct mpi_waitall *data,
@@ -338,6 +391,59 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	}
 }
 
+/* struct msg_function has a LIBIOTRACE_STRUCT_INT_ARRAY element:
+ * a array of integers must be handled */
+static void test_struct_msg_function(void) {
+	struct msg_function msg_function_data;
+	struct sockaddr_function sockaddr_function_data;
+	char address[MAX_SOCKADDR_LENGTH * 2 + 1];
+	int descriptors[MAX_MSG_FILE_DESCRIPTORS];
+	int int_value;
+
+	// initialize msg_function structure
+
+	fill_string(address, sizeof(address), 'a');
+	fill_number(&int_value, sizeof(int_value));
+	sockaddr_function_data.family = AF_UNIX;
+	sockaddr_function_data.address = address;
+	msg_function_data.sockaddr = &sockaddr_function_data;
+
+	for (int i = 0; i < MAX_MSG_FILE_DESCRIPTORS; i++) {
+		descriptors[i] = int_value;
+	}
+	LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data, descriptors,
+			(int* )descriptors, MAX_MSG_FILE_DESCRIPTORS)
+
+	// copy msg_function structure
+
+	char copy_buf[libiotrace_struct_sizeof_msg_function(&msg_function_data)];
+	memset(copy_buf, 0, sizeof(copy_buf));
+	void *pos = (void*) libiotrace_struct_copy_msg_function((void*) copy_buf,
+			&msg_function_data);
+	struct msg_function *copy = (struct msg_function*) (void*) copy_buf;
+
+	// check copy of msg_function structure
+
+	CU_ASSERT_FATAL(copy_buf + sizeof(copy_buf) == pos);
+	check_msg_function_copy(&msg_function_data, copy);
+
+	// print msg_function structure as json
+
+	char print_buf[libiotrace_struct_max_size_msg_function()];
+	memset(print_buf, 0, sizeof(print_buf));
+	size_t len = libiotrace_struct_print_msg_function(print_buf,
+			sizeof(print_buf), &msg_function_data);
+
+	// check print of msg_function structure
+
+	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[0] == '{');
+	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_msg_function_print(&msg_function_data, print_buf, len);
+}
+
+/* struct mpi_waitall has a LIBIOTRACE_STRUCT_STRUCT_ARRAY element:
+ * a array of substructures must be handled */
 static void test_struct_mpi_waitall(void) {
 	struct mpi_waitall mpi_waitall_data;
 	struct mpi_waitall_element mpi_waitall_element_data;
@@ -394,7 +500,8 @@ static void test_struct_mpi_waitall(void) {
 		mpi_waitall_element_array[i] = &mpi_waitall_element_data;
 	}
 
-	LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mpi_waitall_data, requests, mpi_waitall_element_array, MAX_MPI_IMESSAGES)
+	LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mpi_waitall_data, requests,
+			mpi_waitall_element_array, MAX_MPI_IMESSAGES)
 
 	// copy mpi_waitall structure with substructures
 
@@ -423,6 +530,8 @@ static void test_struct_mpi_waitall(void) {
 	check_mpi_waitall_print(&mpi_waitall_data, print_buf, len);
 }
 
+/* struct basic has LIBIOTRACE_STRUCT_VOID_P_START elements:
+ * different substructures must be handled */
 static void test_struct_basic(void) {
 	struct basic data;
 	struct errno_detail errno_detail_data;
@@ -527,4 +636,5 @@ static void test_struct_basic(void) {
 }
 
 CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic),
-		CUNIT_CI_TEST(test_struct_mpi_waitall))
+		CUNIT_CI_TEST(test_struct_mpi_waitall),
+		CUNIT_CI_TEST(test_struct_msg_function))

@@ -1,13 +1,13 @@
-/**
-* Filename map (fnmap)
-*   Implements abstraction (API) for map implementation (which is used for tracking filenames)
-*/
+/*
+ * Filename map (fnmap)
+ *   Implements abstraction (API) for map implementation (which is used for tracking filenames)
+ */
 
 #ifndef LIBIOTRACE_FNMAP_H
 #define LIBIOTRACE_FNMAP_H
 
-#include <stdio.h>          /* FILE struct */
-#include <sys/types.h>      /* sizt_t */
+#include <stdio.h>
+#include <sys/types.h>
 
 
 // - Data structures -

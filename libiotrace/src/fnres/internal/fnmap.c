@@ -3,8 +3,8 @@
 #include <stdbool.h>
 
 #include "fnmap.h"
-#include "impl/atomic_hash.h"
-#include "../../../error.h"
+#include "../../libs/hashmap/atomic_hash.h"
+#include "../../error.h"
 #include "libiotrace_config.h"
 
 

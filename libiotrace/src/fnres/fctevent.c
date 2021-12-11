@@ -1,6 +1,6 @@
 #include "fctevent.h"
 #include "internal/fctnconsts.h"
-#include "internal/map/fnmap.h"
+#include "internal/fnmap.h"
 #include "../error.h"
 
 #include <string.h>

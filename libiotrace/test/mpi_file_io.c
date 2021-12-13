@@ -17,8 +17,10 @@
 
 // #define WANT_OPENMP
 // #define WANT_CLEAR_CACHES
-#define SIZE_L3_CACHE    (8 * 1024 * 1024) // 8 MB
-#define CLEAR_CACHES_PER_ITERATIONS 1
+#ifdef WANT_CLEAR_CACHES
+#  define SIZE_L3_CACHE    (8 * 1024 * 1024) // 8 MB
+#  define CLEAR_CACHES_PER_ITERATIONS 1
+#endif
 
 #ifdef WANT_OPENMP
 #  ifndef WANT_THREADS
@@ -131,7 +133,7 @@ int main (int argc, char * argv[]) {
 #pragma omp master
         {
 #       endif
-            MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, "/home/es/es_es/es_juruess/Projects/fsprj2/libiotrace/test/testscripts/mpi_file_io.txt", MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+            MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, "mpi_file_io.txt", MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
             // MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL));
 #       ifdef WANT_OPENMP
         }

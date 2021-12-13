@@ -5,7 +5,7 @@
 int main(void) {
 	FILE * file;
 	char buffer;
-	int ret;
+	int ret = 0;
 
 #   pragma omp parallel private(file, buffer, ret)
     {
@@ -18,5 +18,5 @@ int main(void) {
 
     }
 
-    return 0;
+    return ret;
 }

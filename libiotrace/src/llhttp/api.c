@@ -29,6 +29,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string.h>
 
 #include "llhttp.h"
+#include "libiotrace_config.h"
 
 #define CALLBACK_MAYBE(PARSER, NAME, ...)                                     \
   do {                                                                        \
@@ -188,7 +189,7 @@ void llhttp_set_lenient_chunked_length(llhttp_t* parser, int enabled) {
 /* Callbacks */
 
 
-int llhttp__on_message_begin(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_message_begin(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_message_begin, s);
   return err;
@@ -202,7 +203,7 @@ int llhttp__on_url(llhttp_t* s, const char* p, const char* endp) {
 }
 
 
-int llhttp__on_url_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_url_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_url_complete, s);
   return err;
@@ -216,7 +217,7 @@ int llhttp__on_status(llhttp_t* s, const char* p, const char* endp) {
 }
 
 
-int llhttp__on_status_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_status_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_status_complete, s);
   return err;
@@ -230,7 +231,7 @@ int llhttp__on_header_field(llhttp_t* s, const char* p, const char* endp) {
 }
 
 
-int llhttp__on_header_field_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_header_field_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_header_field_complete, s);
   return err;
@@ -244,21 +245,21 @@ int llhttp__on_header_value(llhttp_t* s, const char* p, const char* endp) {
 }
 
 
-int llhttp__on_header_value_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_header_value_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_header_value_complete, s);
   return err;
 }
 
 
-int llhttp__on_headers_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_headers_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_headers_complete, s);
   return err;
 }
 
 
-int llhttp__on_message_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_message_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_message_complete, s);
   return err;
@@ -272,14 +273,14 @@ int llhttp__on_body(llhttp_t* s, const char* p, const char* endp) {
 }
 
 
-int llhttp__on_chunk_header(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_chunk_header(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_chunk_header, s);
   return err;
 }
 
 
-int llhttp__on_chunk_complete(llhttp_t* s, const char* p, const char* endp) {
+int llhttp__on_chunk_complete(llhttp_t* s, const char* p ATTRIBUTE_UNUSED, const char* endp ATTRIBUTE_UNUSED) {
   int err;
   CALLBACK_MAYBE(s, on_chunk_complete, s);
   return err;
@@ -292,10 +293,10 @@ int llhttp__on_chunk_complete(llhttp_t* s, const char* p, const char* endp) {
 void llhttp__debug(llhttp_t* s, const char* p, const char* endp,
                    const char* msg) {
   if (p == endp) {
-    fprintf(stderr, "p=%p type=%d flags=%02x next=null debug=%s\n", s, s->type,
+    fprintf(stderr, "p=%p type=%d flags=%02x next=null debug=%s\n", (void *)s, s->type,
             s->flags, msg);
   } else {
-    fprintf(stderr, "p=%p type=%d flags=%02x next=%02x   debug=%s\n", s,
-            s->type, s->flags, *p, msg);
+    fprintf(stderr, "p=%p type=%d flags=%02x next=%02x   debug=%s\n", (void *)s,
+            s->type, s->flags, (unsigned int)*p, msg);
   }
 }

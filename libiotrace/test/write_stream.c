@@ -4,8 +4,8 @@
 #include <assert.h>
 
 int main(void) {
-	fprintf(stderr, "test error\n");
-	fprintf(stdout, "test output\n");
+	fprintf(stderr, "test stderr\n");
+	fprintf(stdout, "test stdout\n");
 
 	return 0;
 }

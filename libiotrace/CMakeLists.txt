@@ -5,7 +5,9 @@ enable_language(C)
 
 # XXX For production version, these should be deleted (it's a user-option)
 # set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Debug)
+
+add_compile_options(-Wall -Wextra -pedantic -pedantic-errors -Wformat=2 -Wformat-signedness -Walloc-zero -Wdouble-promotion -Wdouble-promotion -Wduplicated-cond -Wfloat-equal -Winit-self -Wstrict-prototypes -Wundef -Wunused-macros -Wswitch-enum -Wswitch-default -Werror -frecord-gcc-switches)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -23,9 +25,10 @@ option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (WITH_ALLOC "build wrappers for memory allocations" OFF)
+option (WITH_FILENAME_RESOLUTION "create mapping b/w ids and associated filenames during runtime" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
-option (ENABLE_INPUT "enable input via REST-API" ON)
+option (ENABLE_REMOTE_CONTROL "Remotely control wrappers (toggle on/off) via REST-API" ON)
 option (ENABLE_FILESYSTEM_METADATA "writes mount points to LOGFILE and/or to INFLUXDB if ENABLE_OUTPUT is set to LOGFILE, INFLUXDB or LOGFILE_AND_INFLUXDB" ON)
 
 set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
@@ -97,8 +100,8 @@ if(REALTIME)
     list(APPEND OPTIONS -DREALTIME)
 endif()
 
-if(ENABLE_INPUT)
-    list(APPEND OPTIONS -DENABLE_INPUT)
+if(ENABLE_REMOTE_CONTROL)
+    list(APPEND OPTIONS -DENABLE_REMOTE_CONTROL)
 endif()
 
 if(ENABLE_FILESYSTEM_METADATA)
@@ -152,6 +155,10 @@ if(WITH_ALLOC)
     list(APPEND OPTIONS -DWITH_ALLOC)
 endif()
 
+# Compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w ids and filenames during runtime
+if (WITH_FILENAME_RESOLUTION)
+    list(APPEND OPTIONS -DWITH_FILENAME_RESOLUTION)
+endif()
 
 if(WITH_MPI_IO)
     find_package(MPI REQUIRED)
@@ -163,7 +170,6 @@ if(WITH_MPI_IO)
 endif()
 
 include(CheckIncludeFiles)
-include(WriteCompilerDetectionHeader)
 include(${libiotrace_SOURCE_DIR}/cmake/CheckCompilerAttributes.cmake)
 CheckCompilerAttributes() 
 
@@ -190,7 +196,9 @@ if (WITH_UNIT_TESTS)
     # might be to find_package(CUnit REQUIRED) and check for pre-installed version.
 
     add_git_submodule(ext/cunit)
-    add_subdirectory(ext/cunit)
+    
+    add_subdirectory(ext)
+    
     set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/ext/cunit/CUnit/;${CMAKE_PREFIX_PATH}")
     
     enable_testing()

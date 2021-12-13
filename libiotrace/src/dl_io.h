@@ -16,7 +16,7 @@ REAL_TYPE void * REAL(dlmopen)(Lmid_t lmid, const char *filename, int flags) REA
 #endif
 
 #ifndef IO_LIB_STATIC
-void dl_io_init() ATTRIBUTE_CONSTRUCTOR;
+void dl_io_init(void) ATTRIBUTE_CONSTRUCTOR;
 #endif
 
 char toggle_dl_wrapper(const char *line, const char toggle);

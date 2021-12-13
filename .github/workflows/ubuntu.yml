@@ -25,7 +25,7 @@ jobs:
         run: |
           cd $LIBIOTRACE_BASE_PATH
           git rm --cached ext/cunit
-          rm -rf ext
+          rm -rf ext/cunit
           git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
 
@@ -63,7 +63,7 @@ jobs:
           automatic_release_tag: "latest"
           title: "libiotrace-#${{github.run_number}}"
           files: |
-            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace.so
+            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_control.so
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so
             ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_static.a
             ${{env.LIBIOTRACE_BASE_PATH}}/include/libiotrace.h

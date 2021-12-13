@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #endif
 
-//ToDo: test for existance
+//ToDo: test for existence
 #include <sys/un.h> //<afunix.h> on Windows?
 //#include <netinet/in.h>
 //#include <linux/netlink.h>
@@ -39,6 +39,18 @@
 #include "wrapper_name.h"
 
 #ifndef IO_LIB_STATIC
+#ifdef HAVE___OPEN
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open)(const char *__file, int __oflag, ...) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___OPEN64
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open64)(const char *__file, int __oflag, ...) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___OPEN_2
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open_2)(const char *__file, int __oflag) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___OPEN64_2
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__open64_2)(const char *__file, int __oflag) REAL_DEFINITION_INIT;
+#endif
 #define HAVE_OPEN_ELLIPSES
 #ifdef HAVE_OPEN_ELLIPSES
 REAL_DEFINITION_TYPE int REAL_DEFINITION(open)(const char *filename, int flags, ...) REAL_DEFINITION_INIT;
@@ -50,7 +62,7 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(open)(const char *filename, int flags, 
 #ifdef HAVE_OPEN64
 REAL_DEFINITION_TYPE int REAL_DEFINITION(open64)(const char *filename, int flags, mode_t mode) REAL_DEFINITION_INIT;
 #endif
-#endif
+#endif /* HAVE_OPEN_ELLIPSES */
 #ifdef HAVE_OPENAT
 REAL_DEFINITION_TYPE int REAL_DEFINITION(openat)(int dirfd, const char *pathname, int flags, ...) REAL_DEFINITION_INIT;
 //ToDo: test HAVE_OPEN_ELLIPSE
@@ -302,11 +314,11 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(ungetc)(int c, FILE *stream) REAL_DEFIN
 REAL_DEFINITION_TYPE wint_t REAL_DEFINITION(ungetwc)(wint_t wc, FILE *stream) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #ifdef HAVE_FREAD_UNLOCKED
-REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fread_unlocked_MACRO)(void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #ifdef HAVE_FWRITE_UNLOCKED
-REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite_unlocked)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE size_t REAL_DEFINITION(fwrite_unlocked_MACRO)(const void *data, size_t size, size_t count, FILE *stream) REAL_DEFINITION_INIT;
 #endif
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fprintf)(FILE *stream, const char *template, ...) REAL_DEFINITION_INIT;
 #ifdef HAVE_FWPRINTF
@@ -471,7 +483,7 @@ enum lock_mode get_lock_mode(int type)
 	}
 }
 
-enum lock_mode get_orientation_mode(int mode, char param)
+enum orientation_mode get_orientation_mode(int mode, char param)
 {
 	if (mode > 0)
 	{
@@ -1186,7 +1198,6 @@ int WRAP(open)(const char *filename, int flags, mode_t mode)
 {
 #endif
 	int ret;
-	char expanded_symlinks[MAXFILENAME];
 	struct basic data;
 	struct file_descriptor file_descriptor_data;
 	struct open_function open_data;
@@ -3013,6 +3024,11 @@ int WRAP(fcntl)(int fd, int cmd, ...)
 							   fcntl_hint_data)
 #endif
 		break;
+	case unknown_fcntl_cmd:
+	default:
+		LIBIOTRACE_STRUCT_SET_VOID_P_NULL(fcntl_function_data, cmd_data)
+		LIBIOTRACE_WARN("Unknown cmd value in call to %s.", data.function_name);
+		ret = -1;
 	}
 	va_end(ap);
 
@@ -3061,7 +3077,10 @@ int WRAP(socket)(int domain, int type, int protocol)
 	return ret;
 }
 
-int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
 	int ret;
 	struct basic data;
@@ -3094,7 +3113,10 @@ int WRAP(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 }
 
 #ifdef HAVE_ACCEPT4
-int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen,
 				  int flags)
 {
 	int ret;
@@ -3161,7 +3183,10 @@ int WRAP(socketpair)(int domain, int type, int protocol, int sv[2])
 	return ret;
 }
 
-int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
 	int ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
@@ -3194,7 +3219,10 @@ int WRAP(connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 	return ret;
 }
 
-int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+/* gcc generates "function types not truly compatible in ISO C"
+ * on second parameter (with _GNU_SOURCE enabled)
+ * => __extension__ ignores the warning */
+__extension__ int WRAP(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
 	int ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
@@ -3703,7 +3731,6 @@ ssize_t WRAP(sendmsg)(int sockfd, const struct msghdr *msg, int flags)
 	ssize_t ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
-	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
@@ -3761,7 +3788,6 @@ ssize_t WRAP(recvmsg)(int sockfd, struct msghdr *msg, int flags)
 	ssize_t ret;
 	char hex_addr[MAX_SOCKADDR_LENGTH * 2 + 1]; // see struct sockaddr_function.address
 	int fd_count;
-	int fd;
 	struct cmsghdr *cmsg = NULL;
 	struct basic data;
 	struct msg_function msg_function_data;
@@ -3833,56 +3859,59 @@ int WRAP(sendmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
 	CALL_REAL_FUNCTION_RET(data, ret, sendmmsg, sockfd, msgvec, vlen, flags)
 
-	get_basic(&data);
+	if (0 <= ret) {
 
-	for (int i = 0; i < vlen && i < ret && i < MAX_MMSG_MESSAGES; i++)
-	{
-		msg = &((msgvec + i)->msg_hdr);
+		get_basic(&data);
 
-		for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
-			 cmsg = CMSG_NXTHDR(msg, cmsg))
+		for (unsigned int i = 0; i < vlen && i < (size_t)ret && i < MAX_MMSG_MESSAGES; i++)
 		{
+			msg = &((msgvec + i)->msg_hdr);
 
-			if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+			for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+					cmsg = CMSG_NXTHDR(msg, cmsg))
 			{
-				if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
-				{
-					get_sockaddr(msg->msg_name,
-								 &sockaddr_function_data[sockaddr_count],
-								 msg->msg_namelen, hex_addr[sockaddr_count]);
-					msg_function_data[sockaddr_count].sockaddr =
-						&sockaddr_function_data[sockaddr_count];
-				}
-				else
-				{
-					msg_function_data[sockaddr_count].sockaddr = NULL;
-				}
-				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
-										  descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+				if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+				{
+					if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
+					{
+						get_sockaddr(msg->msg_name,
+								&sockaddr_function_data[sockaddr_count],
+								msg->msg_namelen, hex_addr[sockaddr_count]);
+						msg_function_data[sockaddr_count].sockaddr =
+								&sockaddr_function_data[sockaddr_count];
+					}
+					else
+					{
+						msg_function_data[sockaddr_count].sockaddr = NULL;
+					}
+					messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				sockaddr_count++;
-				break;
+					fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+					LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+							descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+
+					sockaddr_count++;
+					break;
+				}
 			}
 		}
-	}
 
-	if (sockaddr_count > 0)
-	{
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
-							   mmsg_function_data)
-		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
-									 sockaddr_count)
-		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-							   file_descriptor_data)
-		file_descriptor_data.descriptor = sockfd;
-		data.return_state = ok;
+		if (sockaddr_count > 0)
+		{
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+					mmsg_function_data)
+			LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+					sockaddr_count)
+			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+					file_descriptor_data)
+			file_descriptor_data.descriptor = sockfd;
+			data.return_state = ok;
 
-		WRAP_END(data, sendmmsg)
-		return ret;
+			WRAP_END(data, sendmmsg)
+			return ret;
+		}
 	}
 
 	WRAP_END_WITHOUT_WRITE(data)
@@ -3916,56 +3945,59 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 	CALL_REAL_FUNCTION_RET(data, ret, recvmmsg, sockfd, msgvec, vlen, flags,
 						   timeout)
 
-	get_basic(&data);
+	if (0 <= ret) {
 
-	for (int i = 0; i < vlen && i < ret && i < MAX_MMSG_MESSAGES; i++)
-	{
-		msg = &((msgvec + i)->msg_hdr);
+		get_basic(&data);
 
-		for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
-			 cmsg = CMSG_NXTHDR(msg, cmsg))
+		for (unsigned int i = 0; i < vlen && i < (size_t)ret && i < MAX_MMSG_MESSAGES; i++)
 		{
+			msg = &((msgvec + i)->msg_hdr);
 
-			if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+			for (cmsg = CMSG_FIRSTHDR(msg); cmsg != NULL;
+					cmsg = CMSG_NXTHDR(msg, cmsg))
 			{
-				if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
-				{
-					get_sockaddr(msg->msg_name,
-								 &sockaddr_function_data[sockaddr_count],
-								 msg->msg_namelen, hex_addr[sockaddr_count]);
-					msg_function_data[sockaddr_count].sockaddr =
-						&sockaddr_function_data[sockaddr_count];
-				}
-				else
-				{
-					msg_function_data[sockaddr_count].sockaddr = NULL;
-				}
-				messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
-				LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
-										  descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+				if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_RIGHTS))
+				{
+					if (0 < msg->msg_namelen && MAX_SOCKADDR_LENGTH <= msg->msg_namelen)
+					{
+						get_sockaddr(msg->msg_name,
+								&sockaddr_function_data[sockaddr_count],
+								msg->msg_namelen, hex_addr[sockaddr_count]);
+						msg_function_data[sockaddr_count].sockaddr =
+								&sockaddr_function_data[sockaddr_count];
+					}
+					else
+					{
+						msg_function_data[sockaddr_count].sockaddr = NULL;
+					}
+					messages[sockaddr_count] = &(msg_function_data[sockaddr_count]);
 
-				sockaddr_count++;
-				break;
+					fd_count = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+					LIBIOTRACE_STRUCT_SET_INT_ARRAY(msg_function_data[sockaddr_count],
+							descriptors, (int *)CMSG_DATA(cmsg), fd_count)
+
+					sockaddr_count++;
+					break;
+				}
 			}
 		}
-	}
 
-	if (sockaddr_count > 0)
-	{
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
-							   mmsg_function_data)
-		LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
-									 sockaddr_count)
-		POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-		LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-							   file_descriptor_data)
-		file_descriptor_data.descriptor = sockfd;
-		data.return_state = ok;
+		if (sockaddr_count > 0)
+		{
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mmsg_function,
+					mmsg_function_data)
+			LIBIOTRACE_STRUCT_SET_STRUCT_ARRAY(mmsg_function_data, messages, messages,
+					sockaddr_count)
+			POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+			LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+					file_descriptor_data)
+			file_descriptor_data.descriptor = sockfd;
+			data.return_state = ok;
 
-		WRAP_END(data, recvmmsg)
-		return ret;
+			WRAP_END(data, recvmmsg)
+			return ret;
+		}
 	}
 
 	WRAP_END_WITHOUT_WRITE(data)
@@ -5294,7 +5326,7 @@ size_t WRAP(fread)(void *data, size_t size, size_t count, FILE *stream)
 }
 
 #ifdef HAVE_FREAD_UNLOCKED
-size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
+size_t WRAP(fread_unlocked_MACRO)(void *data, size_t size, size_t count, FILE *stream)
 {
 	size_t ret;
 	struct basic _data;
@@ -5308,7 +5340,7 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 	file_stream_data.stream = stream;
 	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
-	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked, data, size, count,
+	CALL_REAL_FUNCTION_RET(_data, ret, fread_unlocked_MACRO, data, size, count,
 						   stream)
 
 	if (0 == ret)
@@ -5322,7 +5354,7 @@ size_t WRAP(fread_unlocked)(void *data, size_t size, size_t count, FILE *stream)
 		read_data.read_bytes = ret * size;
 	}
 
-	WRAP_END(_data, fread_unlocked)
+	WRAP_END(_data, fread_unlocked_MACRO)
 	return ret;
 }
 #endif
@@ -5359,7 +5391,7 @@ size_t WRAP(fwrite)(const void *data, size_t size, size_t count, FILE *stream)
 }
 
 #ifdef HAVE_FWRITE_UNLOCKED
-size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
+size_t WRAP(fwrite_unlocked_MACRO)(const void *data, size_t size, size_t count,
 							 FILE *stream)
 {
 	size_t ret;
@@ -5374,7 +5406,7 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 	file_stream_data.stream = stream;
 	LIBIOTRACE_STRUCT_SET_VOID_P(_data, file_type, file_stream, file_stream_data)
 
-	CALL_REAL_FUNCTION_RET(_data, ret, fwrite_unlocked, data, size, count,
+	CALL_REAL_FUNCTION_RET(_data, ret, fwrite_unlocked_MACRO, data, size, count,
 						   stream)
 
 	if (ret != count)
@@ -5388,7 +5420,7 @@ size_t WRAP(fwrite_unlocked)(const void *data, size_t size, size_t count,
 		write_data.written_bytes = ret * size;
 	}
 
-	WRAP_END(_data, fwrite_unlocked)
+	WRAP_END(_data, fwrite_unlocked_MACRO)
 	return ret;
 }
 #endif
@@ -6873,5 +6905,191 @@ int WRAP(clone)(int (*fn)(void *), void *child_stack, int flags, void *arg, ... 
 
 	WRAP_END(data, clone)
 	return ret;
+}
+#endif
+
+
+
+/* --- Hardened functions (`-D_FORTIFY_SOURCE=2`) --- */
+
+// TODO: is visibility of __open "hidden"? => could be only used internal (no wrapper needed)
+#ifdef HAVE___OPEN
+int WRAP(__open)(const char *__file, int __oflag, ...) {
+    int ret;
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    if (__OPEN_NEEDS_MODE(__oflag))
+    {
+        va_list ap;
+        mode_t mode;
+        va_start(ap, __oflag); //get_mode_flags
+        mode = va_arg(ap, mode_t);
+        va_end(ap);
+        get_mode_flags(mode, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, __open, __file, __oflag, mode)
+    }
+    else
+    {
+        get_mode_flags(0, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, open, __file, __oflag)
+    }
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
+}
+#endif
+
+// TODO: is visibility of __open64 "hidden"? => could be only used internal (no wrapper needed)
+#ifdef HAVE___OPEN64
+int WRAP(__open64)(const char *__file, int __oflag, ...) {
+    int ret;
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    if (__OPEN_NEEDS_MODE(__oflag))
+    {
+        va_list ap;
+        mode_t mode;
+        va_start(ap, __oflag); //get_mode_flags
+        mode = va_arg(ap, mode_t);
+        va_end(ap);
+        get_mode_flags(mode, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, __open64, __file, __oflag, mode)
+    }
+    else
+    {
+        get_mode_flags(0, &open_data.file_mode);
+        CALL_REAL_FUNCTION_RET(data, ret, open, __file, __oflag)
+    }
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
+}
+#endif
+
+#ifdef HAVE___OPEN_2
+int WRAP(__open_2)(const char *__file, int __oflag) {
+    int ret;
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    // ToDo: mode_t mode = os_getmode();
+    get_mode_flags(0, &open_data.file_mode);
+    CALL_REAL_FUNCTION_RET(data, ret, __open_2, __file, __oflag)
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
+}
+#endif
+
+#ifdef HAVE___OPEN64_2
+int WRAP(__open64_2)(const char *__file, int __oflag) {
+    int ret;
+    struct basic data;
+    struct file_descriptor file_descriptor_data;
+    struct open_function open_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, open_function, open_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    open_data.file_name = __file;
+    open_data.mode = get_access_mode(__oflag);
+    get_creation_flags(__oflag, &open_data.creation);
+    get_status_flags(__oflag, &open_data.status);
+
+    // ToDo: mode_t mode = os_getmode();
+    get_mode_flags(0, &open_data.file_mode);
+    CALL_REAL_FUNCTION_RET(data, ret, __open64_2, __file, __oflag)
+
+    if (-1 == ret)
+    {
+        data.return_state = error;
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    file_descriptor_data.descriptor = ret;
+    get_file_id(ret, &(open_data.id));
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+                                 file_descriptor_data)
+
+    WRAP_END(data, open)
+    return ret;
 }
 #endif

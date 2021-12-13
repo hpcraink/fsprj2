@@ -16,8 +16,15 @@ check_include_files("mntent.h" HAVE_MNTENT_H)
 check_include_files("utmp.h" HAVE_UTMP_H)
 check_include_files("utmpx.h" HAVE_UTMPX_H)
 
-list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64)
+# In order to wrap functions which are replacing POSIX calls to check for security-bugs (_FORTIFY_SOURCE)
+# we need to turn on Optimization to make those visible (plus _FORTIFY_SOURCE itselve)
+list(APPEND CMAKE_REQUIRED_FLAGS       -O2)
+list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64 -D_FORTIFY_SOURCE=2)
 
+check_symbol_exists(__open "fcntl.h" HAVE___OPEN)              # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
+check_symbol_exists(__open64 "fcntl.h" HAVE___OPEN64)          # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
+check_symbol_exists(__open_2 "fcntl.h" HAVE___OPEN_2)
+check_symbol_exists(__open64_2 "fcntl.h" HAVE___OPEN64_2)
 check_symbol_exists(open64 "fcntl.h" HAVE_OPEN64)
 check_symbol_exists(openat "fcntl.h" HAVE_OPENAT)
 check_symbol_exists(creat64 "fcntl.h" HAVE_CREAT64)
@@ -185,7 +192,7 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 # Please keep in alphabetical order
 set(SOURCE
     event.c
-    init.c
+    libiotrace_defines_utils.c
     llhttp/api.c
     llhttp/http.c
     llhttp/llhttp.c
@@ -222,17 +229,31 @@ if(WITH_ALLOC)
     list(APPEND SOURCE alloc.c)
 endif()
 
+if(WITH_FILENAME_RESOLUTION)
+    list(APPEND SOURCE
+            fnres/fctevent.c
+            fnres/internal/fnmap.c)
+endif()
+
 add_library(iotrace_shared SHARED ${SOURCE})
 
 add_library(iotrace_static STATIC ${SOURCE})
 
 add_library(iotrace_object OBJECT ${SOURCE})
 
-add_library(iotrace SHARED libiotrace.c)
+add_library(iotrace_control SHARED libiotrace.c)
+
+
+add_subdirectory(libs/hashmap)
 
 # ${CMAKE_DL_LIBS} needed for dlsym-function
 # "-lpthread" needed for pthread_atfork()
-target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} "-lpthread")
+if(WITH_FILENAME_RESOLUTION)
+    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} hashmap pthread)
+    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} hashmap pthread)        # $$$ TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ?? $$$
+else()
+    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} pthread)
+endif()
 
 target_compile_options(iotrace_shared PRIVATE ${OPTIONS})
 target_compile_options(iotrace_static PRIVATE ${OPTIONS})

@@ -1,3 +1,6 @@
+# ensure debug info and assert functions are build during compile of tests
+set(CMAKE_BUILD_TYPE Debug)
+
 if (WITH_UNIT_TESTS)
     add_subdirectory(cunit)
 endif()
@@ -26,6 +29,10 @@ list(APPEND LINK_OPTIONS_STATIC
 if(WITH_POSIX_IO)
     list(APPEND LINK_OPTIONS_STATIC
         "-Wl,-wrap=open"
+        "-Wl,-wrap=__open"
+        "-Wl,-wrap=__open64"
+        "-Wl,-wrap=__open_2"
+        "-Wl,-wrap=__open64_2"
         "-Wl,-wrap=open64"
         "-Wl,-wrap=openat"
         "-Wl,-wrap=creat"
@@ -241,6 +248,14 @@ list(APPEND LINK_OPTIONS
     "-lpthread"
 )
 
+if(WITH_FILENAME_RESOLUTION)
+# TODO: Disable for tests not related to fnres  -->  Requires additional object-library which is compiled w/o fnres
+    list(APPEND LINK_OPTIONS
+        "hashmap"
+    )
+endif()
+
+
 ##########################################################################################################
 
 if(WITH_POSIX_IO)
@@ -258,6 +273,7 @@ if(WITH_POSIX_IO)
     )
     target_link_libraries(read_byte_static ${LINK_OPTIONS_STATIC})
     target_link_libraries(read_byte_static ${LINK_OPTIONS})
+
 endif()
 
 ##########################################################################################################
@@ -286,7 +302,7 @@ if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
     add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
     target_link_libraries(read_byte_and_stream_shared ${LINK_OPTIONS})
-    target_link_libraries(read_byte_and_stream_shared iotrace)
+    target_link_libraries(read_byte_and_stream_shared iotrace_control)
 
     add_library(read_byte_and_stream_object OBJECT read_byte_and_stream.c)
 
@@ -332,6 +348,7 @@ if(WITH_POSIX_IO)
         $<TARGET_OBJECTS:send_recv_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
+
     target_compile_options(send_recv_static PRIVATE "-D_GNU_SOURCE")
     target_link_libraries(send_recv_static ${LINK_OPTIONS_STATIC})
     target_link_libraries(send_recv_static ${LINK_OPTIONS})
@@ -347,6 +364,27 @@ if(WITH_POSIX_IO)
     if(OpenMP_C_FOUND)
         target_link_libraries(OpenMP_read_stream_shared PUBLIC OpenMP::OpenMP_C)
     endif()
+endif()
+
+##########################################################################################################
+
+if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=mmap_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./mmap_io
+    add_executable(mmap_io mmap_io.c)
+endif()
+
+##########################################################################################################
+
+if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=pipe_ipc_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./pipe_ipc
+    add_executable(pipe_ipc pipe_ipc.c)
+endif()
+
+##########################################################################################################
+
+if(WITH_POSIX_IO)
+    # test with: IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args
+    add_executable(open_var_args open_var_args.c)
 endif()
 
 ##########################################################################################################

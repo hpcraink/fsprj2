@@ -9,6 +9,16 @@
 #include "error.h"
 #include "libiotrace_include_struct.h"
 
+
+#ifdef WITH_FILENAME_RESOLUTION
+#  include "fnres/fctevent.h"
+#  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent);
+#else
+#  define FNRES_TRACE_FCTEVENT(fctevent)
+#endif
+
+
+
 #define LINE_BREAK "\r\n"
 
 #ifdef ALL_WRAPPERS_ACTIVE
@@ -36,7 +46,12 @@
 #ifdef _GNU_SOURCE
 #  define DLSYM(function_macro) __DLSYM(function_macro)
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
-                                 __real_##function = dlsym(RTLD_NEXT, #function); \
+                                 __extension__({ \
+                                     /* dlsym returns a void pointer (data pointer) */ \
+									 /* ISO C forbids cast to function pointer      */ \
+									 /* => __extension__ to suppress the warning    */ \
+                                     __real_##function = dlsym(RTLD_NEXT, #function); \
+                                 }); \
                                  char * dlsym_dlerror_##function = dlerror(); \
                                  if (NULL != dlsym_dlerror_##function) { \
                                      LIBIOTRACE_ERROR("dlsym error (%s)", dlsym_dlerror_##function); \
@@ -61,7 +76,7 @@
 #endif
 #define REAL_DEFINITION_TYPE
 #define REAL_DEFINITION REAL
-#define REAL_DEFINITION_INIT = NULL;
+#define REAL_DEFINITION_INIT = NULL
 
 #define WRAP(function_macro) __WRAP(function_macro)
 #ifdef IO_LIB_TEST
@@ -120,7 +135,7 @@
 #  define CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) __CALL_REAL_FUNCTION_NO_RETURN(data, function, __VA_ARGS__)
 #endif
 
-#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_INPUT)
+#if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 #  define CALL_CLEANUP() cleanup()
 #else
 #  define CALL_CLEANUP()
@@ -204,21 +219,22 @@
 
 #ifndef WITH_STD_IO
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
-                         if(data.file_type == NULL || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_memory || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_async || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_mpi || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_shared_library || \
-                            data.void_p_enum_file_type == void_p_enum_file_type_file_alloc || \
-                            (data.void_p_enum_file_type == void_p_enum_file_type_file_descriptor \
-                             && STDIN_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
-                             && STDOUT_FILENO != ((struct file_descriptor *)data.file_type)->descriptor \
-                             && STDERR_FILENO != ((struct file_descriptor *)data.file_type)->descriptor) \
+                         if(data.__file_type == NULL || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_memory || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_async || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_mpi || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_shared_library || \
+                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_alloc || \
+                            (data.__void_p_enum_file_type == __void_p_enum_file_type_file_descriptor \
+                             && STDIN_FILENO != ((struct file_descriptor *)data.__file_type)->descriptor \
+                             && STDOUT_FILENO != ((struct file_descriptor *)data.__file_type)->descriptor \
+                             && STDERR_FILENO != ((struct file_descriptor *)data.__file_type)->descriptor) \
                             || \
-                            (data.void_p_enum_file_type == void_p_enum_file_type_file_stream \
-                             && stdin != ((struct file_stream *)data.file_type)->stream \
-                             && stdout != ((struct file_stream *)data.file_type)->stream \
-                             && stderr != ((struct file_stream *)data.file_type)->stream)) { \
+                            (data.__void_p_enum_file_type == __void_p_enum_file_type_file_stream \
+                             && stdin != ((struct file_stream *)data.__file_type)->stream \
+                             && stdout != ((struct file_stream *)data.__file_type)->stream \
+                             && stderr != ((struct file_stream *)data.__file_type)->stream)) { \
+                            FNRES_TRACE_FCTEVENT(&data) \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \
                               CALL_WRITE_INTO_BUFFER(data); \
@@ -228,6 +244,7 @@
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
+                         FNRES_TRACE_FCTEVENT(&data) \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
@@ -236,6 +253,7 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
+                           FNRES_TRACE_FCTEVENT(&data) \
                            if(active_wrapper_status.functionname){ \
                              CALL_WRITE_INTO_INFLUXDB(data); \
                              CALL_WRITE_INTO_BUFFER(data); \

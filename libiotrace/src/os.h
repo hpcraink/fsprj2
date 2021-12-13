@@ -1,3 +1,5 @@
+#ifndef LIBIOTRACE_OS_H
+#define LIBIOTRACE_OS_H
 /**
  * Headers for OS-dependent functions
  * This are wrappers around the various OS-dependent calls.
@@ -14,12 +16,14 @@
 
 BEGIN_C_DECLS
 
-extern pid_t iotrace_get_tid();
+extern pid_t iotrace_get_tid(void);
 
-extern u_int64_t iotrace_get_boot_time();
+extern u_int64_t iotrace_get_boot_time(void);
 
 #if !defined(HAVE_MEMRCHR)
 void *memrchr(const void *s, int c, size_t n);
 #endif
 
 END_C_DECLS
+
+#endif /* LIBIOTRACE_OS_H */

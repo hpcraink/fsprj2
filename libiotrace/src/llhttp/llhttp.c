@@ -24,7 +24,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#if LLHTTP_STRICT_MODE
+#ifdef LLHTTP_STRICT_MODE
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -38,11 +38,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  #endif  /* _MSC_VER */
 #endif  /* __SSE4_2__ */
 
-#ifdef _MSC_VER
- #define ALIGN(n) _declspec(align(n))
-#else  /* !_MSC_VER */
- #define ALIGN(n) __attribute__((aligned(n)))
-#endif  /* _MSC_VER */
+#include "libiotrace_config.h"
+#include "error.h"
 
 #include "llhttp.h"
 
@@ -71,19 +68,19 @@ static const unsigned char llparse_blob6[] = {
   'c', 'h', 'u', 'n', 'k', 'e', 'd'
 };
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob7[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob7[] = {
   0x9, 0x9, ' ', '~', 0x80, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0
 };
 #endif  /* __SSE4_2__ */
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob8[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob8[] = {
   '!', '!', '#', '\'', '*', '+', '-', '.', '0', '9', 'A',
   'Z', '^', 'z', '|', '|'
 };
 #endif  /* __SSE4_2__ */
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob9[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob9[] = {
   '~', '~', 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0
 };
@@ -1115,6 +1112,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_8;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -1779,6 +1778,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -1803,6 +1804,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -1827,6 +1830,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2132,6 +2137,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_te_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2313,6 +2320,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2338,6 +2347,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2383,6 +2394,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2408,6 +2421,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2433,6 +2448,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2458,6 +2475,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2627,6 +2646,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_30;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2832,6 +2853,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_36;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2856,6 +2879,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_36;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2880,6 +2905,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_36;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3582,6 +3609,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3628,6 +3657,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3653,6 +3684,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3678,6 +3711,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3763,6 +3798,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3788,6 +3825,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3851,6 +3890,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3876,6 +3917,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3918,6 +3961,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3943,6 +3988,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3968,6 +4015,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3993,6 +4042,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4039,6 +4090,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4064,6 +4117,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4089,6 +4144,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4114,6 +4171,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4199,6 +4258,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4253,6 +4314,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4278,6 +4341,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4303,6 +4368,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4328,6 +4395,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4374,6 +4443,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4399,6 +4470,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4424,6 +4497,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4449,6 +4524,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4534,6 +4611,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4614,6 +4693,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4639,6 +4720,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4664,6 +4747,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4689,6 +4774,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4760,6 +4847,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4803,6 +4892,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4870,6 +4961,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4895,6 +4988,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4945,6 +5040,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4970,6 +5067,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5016,6 +5115,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5041,6 +5142,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5066,6 +5169,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5112,6 +5217,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_56;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5579,6 +5686,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_57;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5604,6 +5713,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_55;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5628,6 +5739,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_55;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -7609,11 +7722,8 @@ int llhttp__internal_execute(llhttp__internal_t* state, const char* p, const cha
  #endif  /* _MSC_VER */
 #endif  /* __SSE4_2__ */
 
-#ifdef _MSC_VER
- #define ALIGN(n) _declspec(align(n))
-#else  /* !_MSC_VER */
- #define ALIGN(n) __attribute__((aligned(n)))
-#endif  /* _MSC_VER */
+#include "libiotrace_config.h"
+#include "../error.h"
 
 #include "llhttp.h"
 
@@ -7621,7 +7731,7 @@ typedef int (*llhttp__internal__span_cb)(
              llhttp__internal_t*, const char*, const char*);
 
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob0[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob0[] = {
   0x9, 0x9, 0xc, 0xc, '!', '"', '$', '>', '@', '~', 0x80,
   0xff, 0x0, 0x0, 0x0, 0x0
 };
@@ -7645,19 +7755,19 @@ static const unsigned char llparse_blob6[] = {
   'c', 'h', 'u', 'n', 'k', 'e', 'd'
 };
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob7[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob7[] = {
   0x9, 0x9, ' ', '~', 0x80, 0xff, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0
 };
 #endif  /* __SSE4_2__ */
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob8[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob8[] = {
   ' ', '!', '#', '\'', '*', '+', '-', '.', '0', '9', 'A',
   'Z', '^', 'z', '|', '|'
 };
 #endif  /* __SSE4_2__ */
 #ifdef __SSE4_2__
-static const unsigned char ALIGN(16) llparse_blob9[] = {
+static const unsigned char ATTRIBUTE_ALIGNED(16) llparse_blob9[] = {
   '~', '~', 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
   0x0, 0x0, 0x0, 0x0, 0x0
 };
@@ -8138,8 +8248,8 @@ int llhttp__on_status(
 
 int llhttp__internal__c_update_finish(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->finish = 2;
   return 0;
 }
@@ -8150,15 +8260,15 @@ int llhttp__on_message_begin(
 
 int llhttp__internal__c_load_type(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return state->type;
 }
 
 int llhttp__internal__c_store_method(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   state->method = match;
   return 0;
@@ -8166,23 +8276,23 @@ int llhttp__internal__c_store_method(
 
 int llhttp__internal__c_is_equal_method(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return state->method == 5;
 }
 
 int llhttp__internal__c_update_http_major(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->http_major = 0;
   return 0;
 }
 
 int llhttp__internal__c_update_http_minor(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->http_minor = 9;
   return 0;
 }
@@ -8193,8 +8303,8 @@ int llhttp__on_url_complete(
 
 int llhttp__internal__c_test_flags(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return (state->flags & 128) == 128;
 }
 
@@ -8208,8 +8318,8 @@ int llhttp__on_message_complete(
 
 int llhttp__internal__c_is_equal_upgrade(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return state->upgrade == 1;
 }
 
@@ -8219,23 +8329,23 @@ int llhttp__after_message_complete(
 
 int llhttp__internal__c_update_finish_1(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->finish = 0;
   return 0;
 }
 
 int llhttp__internal__c_test_flags_1(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return (state->flags & 544) == 544;
 }
 
 int llhttp__internal__c_test_lenient_flags(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return (state->lenient_flags & 2) == 2;
 }
 
@@ -8253,16 +8363,16 @@ int llhttp__after_headers_complete(
 
 int llhttp__internal__c_update_content_length(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->content_length = 0;
   return 0;
 }
 
 int llhttp__internal__c_mul_add_content_length(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   /* Multiplication overflow */
   if (state->content_length > 0xffffffffffffffffULL / 16) {
@@ -8291,47 +8401,47 @@ int llhttp__on_chunk_header(
 
 int llhttp__internal__c_is_equal_content_length(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return state->content_length == 0;
 }
 
 int llhttp__internal__c_or_flags(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 128;
   return 0;
 }
 
 int llhttp__internal__c_update_finish_2(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->finish = 1;
   return 0;
 }
 
 int llhttp__internal__c_or_flags_1(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 64;
   return 0;
 }
 
 int llhttp__internal__c_update_upgrade(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->upgrade = 1;
   return 0;
 }
 
 int llhttp__internal__c_store_header_state(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   state->header_state = match;
   return 0;
@@ -8343,23 +8453,23 @@ int llhttp__on_header_field_complete(
 
 int llhttp__internal__c_load_header_state(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return state->header_state;
 }
 
 int llhttp__internal__c_or_flags_3(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 1;
   return 0;
 }
 
 int llhttp__internal__c_update_header_state(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->header_state = 1;
   return 0;
 }
@@ -8370,78 +8480,78 @@ int llhttp__on_header_value_complete(
 
 int llhttp__internal__c_or_flags_4(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 2;
   return 0;
 }
 
 int llhttp__internal__c_or_flags_5(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 4;
   return 0;
 }
 
 int llhttp__internal__c_or_flags_6(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 8;
   return 0;
 }
 
 int llhttp__internal__c_update_header_state_2(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->header_state = 6;
   return 0;
 }
 
 int llhttp__internal__c_test_lenient_flags_1(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return (state->lenient_flags & 1) == 1;
 }
 
 int llhttp__internal__c_update_header_state_4(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->header_state = 0;
   return 0;
 }
 
 int llhttp__internal__c_update_header_state_5(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->header_state = 5;
   return 0;
 }
 
 int llhttp__internal__c_update_header_state_6(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->header_state = 7;
   return 0;
 }
 
 int llhttp__internal__c_test_flags_2(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return (state->flags & 32) == 32;
 }
 
 int llhttp__internal__c_mul_add_content_length_1(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   /* Multiplication overflow */
   if (state->content_length > 0xffffffffffffffffULL / 10) {
@@ -8466,55 +8576,55 @@ int llhttp__internal__c_mul_add_content_length_1(
 
 int llhttp__internal__c_or_flags_15(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 32;
   return 0;
 }
 
 int llhttp__internal__c_or_flags_16(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 512;
   return 0;
 }
 
 int llhttp__internal__c_and_flags(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags &= -9;
   return 0;
 }
 
 int llhttp__internal__c_update_header_state_7(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->header_state = 8;
   return 0;
 }
 
 int llhttp__internal__c_or_flags_17(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->flags |= 16;
   return 0;
 }
 
 int llhttp__internal__c_load_method(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   return state->method;
 }
 
 int llhttp__internal__c_store_http_major(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   state->http_major = match;
   return 0;
@@ -8522,8 +8632,8 @@ int llhttp__internal__c_store_http_major(
 
 int llhttp__internal__c_store_http_minor(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   state->http_minor = match;
   return 0;
@@ -8531,16 +8641,16 @@ int llhttp__internal__c_store_http_minor(
 
 int llhttp__internal__c_update_status_code(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->status_code = 0;
   return 0;
 }
 
 int llhttp__internal__c_mul_add_status_code(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp,
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED,
     int match) {
   /* Multiplication overflow */
   if (state->status_code > 0xffff / 10) {
@@ -8574,16 +8684,16 @@ int llhttp__on_status_complete(
 
 int llhttp__internal__c_update_type(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->type = 1;
   return 0;
 }
 
 int llhttp__internal__c_update_type_1(
     llhttp__internal_t* state,
-    const unsigned char* p,
-    const unsigned char* endp) {
+    const unsigned char* p ATTRIBUTE_UNUSED,
+    const unsigned char* endp ATTRIBUTE_UNUSED) {
   state->type = 2;
   return 0;
 }
@@ -8687,7 +8797,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_body;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_body;
+      });
       goto s_n_llhttp__internal__n_consume_content_length;
       /* UNREACHABLE */;
       abort();
@@ -9035,7 +9147,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_body_1;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_body;
+      });
       goto s_n_llhttp__internal__n_consume_content_length_1;
       /* UNREACHABLE */;
       abort();
@@ -9056,7 +9170,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_body_2;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_body;
+      });
       goto s_n_llhttp__internal__n_eof;
       /* UNREACHABLE */;
       abort();
@@ -9105,7 +9221,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_header_value;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_header_value;
+      });
       goto s_n_llhttp__internal__n_span_end_llhttp__on_header_value;
       /* UNREACHABLE */;
       abort();
@@ -9302,6 +9420,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
+        default:
+        	LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9326,6 +9446,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9350,6 +9472,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9564,7 +9688,6 @@ static llparse_state_t llhttp__internal__run(
       if (endp - p >= 16) {
         __m128i ranges;
         __m128i input;
-        int avail;
         int match_len;
       
         /* Load input */
@@ -9655,6 +9778,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_header_value_te_token;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9665,7 +9790,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_header_value_1;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_header_value;
+      });
       goto s_n_llhttp__internal__n_invoke_load_header_state_2;
       /* UNREACHABLE */;
       abort();
@@ -9751,7 +9878,6 @@ static llparse_state_t llhttp__internal__run(
       if (endp - p >= 16) {
         __m128i ranges;
         __m128i input;
-        int avail;
         int match_len;
       
         /* Load input */
@@ -9836,6 +9962,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9861,6 +9989,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9906,6 +10036,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9931,6 +10063,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9956,6 +10090,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9981,6 +10117,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10020,7 +10158,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_header_field;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_header_field;
+      });
       goto s_n_llhttp__internal__n_header_field;
       /* UNREACHABLE */;
       abort();
@@ -10075,6 +10215,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_20;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10099,6 +10241,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_24;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10304,6 +10448,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_30;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10328,6 +10474,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_30;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10352,6 +10500,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_30;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10553,7 +10703,6 @@ static llparse_state_t llhttp__internal__run(
       if (endp - p >= 16) {
         __m128i ranges;
         __m128i input;
-        int avail;
         int match_len;
       
         /* Load input */
@@ -10870,7 +11019,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_url_1;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_url;
+      });
       goto s_n_llhttp__internal__n_url_start;
       /* UNREACHABLE */;
       abort();
@@ -10881,7 +11032,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_url;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_url;
+      });
       goto s_n_llhttp__internal__n_url_server;
       /* UNREACHABLE */;
       abort();
@@ -10959,6 +11112,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11005,6 +11160,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11030,6 +11187,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11055,6 +11214,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11140,6 +11301,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11165,6 +11328,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11228,6 +11393,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11253,6 +11420,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11295,6 +11464,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11320,6 +11491,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11345,6 +11518,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11370,6 +11545,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11416,6 +11593,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11441,6 +11620,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11466,6 +11647,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11491,6 +11674,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11576,6 +11761,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11630,6 +11817,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11655,6 +11844,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11680,6 +11871,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11705,6 +11898,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11751,6 +11946,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11776,6 +11973,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11801,6 +12000,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11826,6 +12027,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11911,6 +12114,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11991,6 +12196,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12016,6 +12223,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12041,6 +12250,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12066,6 +12277,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12137,6 +12350,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12180,6 +12395,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12247,6 +12464,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12272,6 +12491,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12322,6 +12543,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12347,6 +12570,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12393,6 +12618,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12418,6 +12645,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12443,6 +12672,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12489,6 +12720,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_49;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12657,7 +12890,9 @@ static llparse_state_t llhttp__internal__run(
         return s_n_llhttp__internal__n_span_start_llhttp__on_status;
       }
       state->_span_pos0 = (void*) p;
+      __extension__({
       state->_span_cb0 = llhttp__on_status;
+      });
       goto s_n_llhttp__internal__n_res_status;
       /* UNREACHABLE */;
       abort();
@@ -12949,6 +13184,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_50;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12974,6 +13211,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_48;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12998,6 +13237,8 @@ static llparse_state_t llhttp__internal__run(
         case kMatchMismatch: {
           goto s_n_llhttp__internal__n_error_48;
         }
+        default:
+            LIBIOTRACE_ERROR("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -13090,6 +13331,7 @@ static llparse_state_t llhttp__internal__run(
       /* UNREACHABLE */;
       abort();
     }
+    case s_error:
     default:
       /* UNREACHABLE */
       abort();
@@ -14883,7 +15125,9 @@ int llhttp__internal_execute(llhttp__internal_t* state, const char* p, const cha
   if (state->_span_pos0 != NULL) {
     int error;
   
+    __extension__({
     error = ((llhttp__internal__span_cb) state->_span_cb0)(state, state->_span_pos0, (const char*) endp);
+    });
     if (error != 0) {
       state->error = error;
       state->error_pos = endp;

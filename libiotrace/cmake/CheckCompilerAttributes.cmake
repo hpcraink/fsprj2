@@ -12,6 +12,28 @@ function (CheckCompilerAttributes)
     "  HAVE_ATTRIBUTE_NONNULL)
     # message ("HAVE_ATTRIBUTE_NONNULL: ${HAVE_ATTRIBUTE_NONNULL}")
 
+	# TODO: HAVE_BUILTIN_EXPECT
+
+    check_c_source_compiles ("
+        typedef int more_aligned_int __attribute__ ((aligned (64)));
+        more_aligned_int testFunc();
+        more_aligned_int testFunc() { more_aligned_int i = 0; return i; }
+        int main(void) {
+            return (int)testFunc();
+        }
+    "  HAVE_ATTRIBUTE_ALIGNED)
+    # message ("HAVE_ATTRIBUTE_ALIGNED: ${HAVE_ATTRIBUTE_ALIGNED}")
+
+    check_c_source_compiles ("
+        typedef int more_aligned_int __declspec(align(64));
+        more_aligned_int testFunc();
+        more_aligned_int testFunc() { more_aligned_int i = 0; return i; }
+        int main(void) {
+            return (int)testFunc();
+        }
+    "  HAVE_DECLSPEC_ALIGNED)
+    # message ("HAVE_DECLSPEC_ALIGNED: ${HAVE_DECLSPEC_ALIGNED}")
+
     check_c_source_compiles ("
         int testFunc(char * var __attribute__((unused)));
         int testFunc(char * var) { return 0; }

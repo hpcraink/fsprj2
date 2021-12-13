@@ -32,4 +32,4 @@ static void test_atomic_add_thread(void) {
 }
 
 CUNIT_CI_RUN("atomic_add_thread",
-             CUNIT_CI_TEST(test_atomic_add_thread));
+             CUNIT_CI_TEST(test_atomic_add_thread))

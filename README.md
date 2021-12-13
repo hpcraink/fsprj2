@@ -58,7 +58,7 @@ Steps to build _libiotrace_:
     2. go to &lt;libiotrace-folder&gt;
     3. `cd fsprj2/libiotrace/`
     4. `git rm --cached ext/cunit`
-    5. `rm -rf ext`
+    5. `rm -rf ext/cunit`
     6. `cd ..`
     7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
     8. `cd libiotrace/`
@@ -144,10 +144,12 @@ Steps to build _libiotrace_:
         * _STACKTRACE_PTR_:
         
           If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the memory address of stack trace entries is collected.
+          WARNING: Might affect async-signal safety of traced functions
           
         * _STACKTRACE_SYMBOL_:
         
           If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the symbol name of stack trace entries is collected.
+          WARNING: Might affect async-signal safety of traced functions
           
         * _WITH_DL_IO_:
         
@@ -178,6 +180,14 @@ Steps to build _libiotrace_:
           Which is probably wrong.
           So if you are not sure if the monitored program manipulates the standard (std) _file streams_ or _File Descriptors_ (e.g. with an redirect of standard _file streams_ during start of an new process) set this option to _ON_.
           In any other case you can omit a lot of overhead by setting it to _OFF_.
+
+        * _WITH_FILENAME_RESOLUTION_:
+
+          Disclaimer: This feature requires SSE4.2 support. Also, some POSIX-/MPI-IO functions are currently not supported.
+          If set to _ON_ libiotrace will create a mapping between filenames and file identifiers (e.g., fildes) during runtime and write the traced filenames to the trace.
+          Supports by default up to 100 open files. This limit can be raised to max. 10000 using the environment variable _IOTRACE_FNRES_MAX_FILENAMES_.
+          Note: This mapping can also be created post-mortem using the tool _IOTrace_Analyze_.
+          WARNING: Might affect async-signal safety of functions which open/close files (affects mostly functions which aren't async-signal safe from the get-go)
           
     14. press “c” again (this brings up the option “g” to generate)
     15. press “g” and wait until _ccmake_ exits

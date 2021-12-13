@@ -53,6 +53,18 @@
 #cmakedefine HAVE_UTMPX_H 1
 
 /***************** First the definitions for system functions *****************/
+/* Define to 1 if system supports __open(). */
+#cmakedefine HAVE___OPEN 1
+
+/* Define to 1 if system supports __open64(). */
+#cmakedefine HAVE___OPEN64 1
+
+/* Define to 1 if system supports __open_2(). */
+#cmakedefine HAVE___OPEN_2 1
+
+/* Define to 1 if system supports __open64_2(). */
+#cmakedefine HAVE___OPEN64_2 1
+
 /* Define to 1 if system supports open64(). */
 #cmakedefine HAVE_OPEN64 1
 
@@ -504,8 +516,15 @@
 #cmakedefine HAVE_SEEK_HOLE 1
 
 // These are checked by CheckCompilerAttributes.cmake
+
 /* Define to 1 if compiler supports attribute nonnull. */
 #cmakedefine HAVE_ATTRIBUTE_NONNULL 1
+
+/* Define to 1 if compiler supports attribute aligned. */
+#cmakedefine HAVE_ATTRIBUTE_ALIGNED 1
+
+/* Define to 1 if compiler supports __declspec(align(n)). */
+#cmakedefine HAVE_DECLSPEC_ALIGNED 1
 
 /* Define to 1 if compiler supports attribute unused. */
 #cmakedefine HAVE_ATTRIBUTE_UNUSED 1
@@ -540,38 +559,52 @@
 
 
 #ifdef HAVE_ATTRIBUTE_NONNULL
-#  define ATTRIBUTE_NONNULL(x...)  __attribute__((nonnull(x)))
+#  define ATTRIBUTE_NONNULL(...)   __attribute__((nonnull(__VA_ARGS__)))
 #else
-#  define ATTRIBUTE_NONNULL(x...)
+#  define ATTRIBUTE_NONNULL(...)
+#endif
+
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef HAVE_DECLSPEC_ALIGNED
+#    define ATTRIBUTE_ALIGNED(x)    __declspec(align(x))
+#  else
+#    define ATTRIBUTE_ALIGNED(x)
+#  endif
+#else
+#  ifdef HAVE_ATTRIBUTE_ALIGNED
+#    define ATTRIBUTE_ALIGNED(x)    __attribute__((aligned(x)))
+#  else
+#    define ATTRIBUTE_ALIGNED(x)
+#  endif
 #endif
 
 #ifdef HAVE_ATTRIBUTE_UNUSED
-#  define ATTRIBUTE_UNUSED         __attribute__((unused))
+#  define ATTRIBUTE_UNUSED          __attribute__((unused))
 #else
 #  define ATTRIBUTE_UNUSED
 #endif
 
 #ifdef HAVE_ATTRIBUTE_CONSTRUCTOR
-#  define ATTRIBUTE_CONSTRUCTOR    __attribute__((constructor))
+#  define ATTRIBUTE_CONSTRUCTOR     __attribute__((constructor))
 #else
 #  define ATTRIBUTE_CONSTRUCTOR
 #endif
 
 #ifdef HAVE_ATTRIBUTE_DESTRUCTOR
-#  define ATTRIBUTE_DESTRUCTOR     __attribute__((destructor))
+#  define ATTRIBUTE_DESTRUCTOR      __attribute__((destructor))
 #else
 #  define ATTRIBUTE_DESTRUCTOR
 #endif
 
 #if defined(WIN32) || defined(_WIN32)
 #  if defined(HAVE_DECLSPEC_THREAD)
-#    define ATTRIBUTE_THREAD       __declspec(thread)
+#    define ATTRIBUTE_THREAD        __declspec(thread)
 #  else
 #    define ATTRIBUTE_THREAD
 #  endif
 #else
 #  ifdef HAVE_ATTRIBUTE_THREAD
-#    define ATTRIBUTE_THREAD       __thread
+#    define ATTRIBUTE_THREAD        __thread
 #  else
 #    define ATTRIBUTE_THREAD
 #  endif

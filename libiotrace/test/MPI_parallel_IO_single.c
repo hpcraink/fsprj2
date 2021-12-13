@@ -2,6 +2,7 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include <unistd.h>
 #define BUFSIZE 100
 #define BUFSIZE2 200
 
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < 10; i++)
     {
-        MPI_File_write(file, buf, BUFSIZE2, MPI_INT, MPI_STATUS_IGNORE);
+        MPI_File_write(file, buf2, BUFSIZE2, MPI_INT, MPI_STATUS_IGNORE);
         MPI_Barrier(MPI_COMM_WORLD);
         sleep(3);
     }

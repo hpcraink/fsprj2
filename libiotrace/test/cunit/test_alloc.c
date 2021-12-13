@@ -23,7 +23,7 @@ extern char alloc_init_done;
 
 static struct basic *cached_data = NULL;
 
-void init_process() {
+void init_process(void) {
 	// is called from wrappers if init_done = 0
 }
 
@@ -58,9 +58,16 @@ void get_basic(struct basic *data) {
 //	}
 }
 
-void free_memory(struct basic *data) {
+void free_memory(struct basic *data ATTRIBUTE_UNUSED) {
 //	libiotrace_struct_free_basic(data);
 }
+
+#ifdef WITH_FILENAME_RESOLUTION
+static char filestr[] = "a file";
+void fnres_trace_fctevent(struct basic *fctevent) {
+	strcpy(fctevent->traced_filename, filestr);
+}
+#endif
 
 void check_basic(const struct basic *data, const char *function_name, u_int64_t test_start, u_int64_t test_end) {
 	CU_ASSERT_FATAL(id == data->process_id);
@@ -74,6 +81,9 @@ void check_basic(const struct basic *data, const char *function_name, u_int64_t 
 	CU_ASSERT_FATAL(test_end >= data->time_end);
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	CU_ASSERT_FATAL(data->time_diff >= data->time_end - data->time_start);
+#endif
+#ifdef WITH_FILENAME_RESOLUTION
+	CU_ASSERT_FATAL(0 == strcmp(filestr, data->traced_filename));
 #endif
 }
 
@@ -126,12 +136,12 @@ void* call_and_check_malloc(size_t size, char *function_name) {
 
 	CU_ASSERT_FATAL(NULL != cached_data);
 
-	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+	CU_ASSERT_FATAL(NULL != cached_data->__file_type);
 
 	check_basic(cached_data, function_name, test_start, test_end);
 
-	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
-	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+	CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
 
 	errno = ret_errno;
 	return mem;
@@ -150,12 +160,12 @@ void* call_and_check_calloc(size_t nmemb, size_t size, char *function_name) {
 
 	CU_ASSERT_FATAL(NULL != cached_data);
 
-	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+	CU_ASSERT_FATAL(NULL != cached_data->__file_type);
 
 	check_basic(cached_data, function_name, test_start, test_end);
 
-	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
-	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+	CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
 
 	errno = ret_errno;
 	return mem;
@@ -174,12 +184,12 @@ void* call_and_check_realloc(void *ptr, size_t size, char *function_name) {
 
 	CU_ASSERT_FATAL(NULL != cached_data);
 
-	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+	CU_ASSERT_FATAL(NULL != cached_data->__file_type);
 
 	check_basic(cached_data, function_name, test_start, test_end);
 
-	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
-	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+	CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
 
 	errno = ret_errno;
 	return mem;
@@ -199,35 +209,35 @@ void* call_and_check_reallocarray(void *ptr, size_t nmemb, size_t size, char *fu
 
 	CU_ASSERT_FATAL(NULL != cached_data);
 
-	CU_ASSERT_FATAL(NULL == cached_data->file_type);
+	CU_ASSERT_FATAL(NULL != cached_data->__file_type);
 
 	check_basic(cached_data, function_name, test_start, test_end);
 
-	CU_ASSERT_FATAL(void_p_enum_function_data_alloc_function == cached_data->void_p_enum_function_data)
-	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->function_data))->size)
+	CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
 
 	errno = ret_errno;
 	return mem;
 }
 #endif
 
-void *malloc_ENOMEM(size_t size) {
+void *malloc_ENOMEM(size_t size ATTRIBUTE_UNUSED) {
 	errno = ENOMEM;
 	return NULL;
 }
 
-void *calloc_ENOMEM(size_t nmemb, size_t size) {
+void *calloc_ENOMEM(size_t nmemb ATTRIBUTE_UNUSED, size_t size ATTRIBUTE_UNUSED) {
 	errno = ENOMEM;
 	return NULL;
 }
 
-void *realloc_ENOMEM(void * ptr, size_t nmemb) {
+void *realloc_ENOMEM(void * ptr ATTRIBUTE_UNUSED, size_t nmemb ATTRIBUTE_UNUSED) {
 	errno = ENOMEM;
 	return NULL;
 }
 
 #ifdef HAVE_REALLOCARRAY
-void *reallocarray_ENOMEM(void * ptr, size_t nmemb, size_t size) {
+void *reallocarray_ENOMEM(void * ptr ATTRIBUTE_UNUSED, size_t nmemb ATTRIBUTE_UNUSED, size_t size ATTRIBUTE_UNUSED) {
 	errno = ENOMEM;
 	return NULL;
 }
@@ -516,7 +526,7 @@ static void test_realloc(void) {
 	if (NULL != mem) {
 		/* If the size of the space requested is zero, the behavior is
 		 * implementation-defined: either a null pointer is returned,
-		 * or the behavior is as if the size were some nonzero value,
+		 * or the behavior is as if the size was some nonzero value,
 		 * except that the returned pointer shall not be used to access
 		 * an object (7.20.3.1 for C11, 7.22.3.1 for C1x) */
 		free(mem);
@@ -529,8 +539,8 @@ static void test_realloc(void) {
 	cached_data = NULL;
 }
 
-#ifdef HAVE_REALLOCARRAY
 static void test_reallocarray(void) {
+#ifdef HAVE_REALLOCARRAY
 	char function_name[] = "reallocarray";
 	void *mem;
 	void *tmp_mem;
@@ -618,8 +628,8 @@ static void test_reallocarray(void) {
 
 	free(cached_data);
 	cached_data = NULL;
-}
 #endif
+}
 
 CUNIT_CI_RUN("Suite_1",
 		CUNIT_CI_TEST(test_toggle_alloc_wrapper),
@@ -627,9 +637,6 @@ CUNIT_CI_RUN("Suite_1",
 		CUNIT_CI_TEST(test_malloc),
 		CUNIT_CI_TEST(test_free),
 		CUNIT_CI_TEST(test_calloc),
-		CUNIT_CI_TEST(test_realloc)
-#ifdef HAVE_REALLOCARRAY
-		,
+		CUNIT_CI_TEST(test_realloc),
 		CUNIT_CI_TEST(test_reallocarray)
-#endif
-		);
+		)

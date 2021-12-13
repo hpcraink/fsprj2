@@ -39,7 +39,7 @@ char toggle_dl_wrapper(const char *line, const char toggle)
 #ifndef IO_LIB_STATIC
 char dl_io_init_done = 0;
 /* Initialize pointers for dl functions. */
-void dl_io_init() {
+void dl_io_init(void) {
 	if (!dl_io_init_done) {
 
 #undef WRAPPER_NAME_TO_SOURCE

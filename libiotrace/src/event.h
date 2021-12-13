@@ -32,7 +32,7 @@ BEGIN_C_DECLS
 extern struct wrapper_status active_wrapper_status;
 
 extern char init_done;
-void init_process();
+void init_process(void);
 
 void get_basic(struct basic *data);
 

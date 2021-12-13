@@ -140,4 +140,4 @@ static void test_gettime(void) {
 
 CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_generate_env),
 		CUNIT_CI_TEST(test_read_line), CUNIT_CI_TEST(test_shorten_log_name),
-		CUNIT_CI_TEST(test_gettime));
+		CUNIT_CI_TEST(test_gettime))

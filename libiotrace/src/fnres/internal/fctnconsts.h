@@ -1,4 +1,4 @@
-/**
+/*
  * Function name constants (fctnconsts):
  *   Defines constants + string-hash function for switch-case on function name
  *   Note: To generate constants, use Python script 'fnres_generate_consts_for_switchcase.py' in 'misc'

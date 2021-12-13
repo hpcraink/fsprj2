@@ -5,7 +5,7 @@ enable_testing()
 #
 
 # - CTest config
-# if(${CMAKE_VERSION} VERSION_LESS "3.12.0") 		# Doesn't work (https://stackoverflow.com/a/5757256) ? 
+# if(${CMAKE_VERSION} VERSION_LESS "3.12.0") 		# Doesn't work (https://stackoverflow.com/a/5757256) ?
 #   list(APPEND CMAKE_CTEST_ARGUMENTS "--output-on-failure")
 # else()
 #   set(CTEST_OUTPUT_ON_FAILURE=1) 	# this is for new versions of cmake
@@ -32,11 +32,11 @@ add_test(NAME test_libiotrace_structs COMMAND test_libiotrace_structs)
 if(WITH_ALLOC)
 	# don't include POSIX wrapper during compile of ../../src/alloc.c
 	list(REMOVE_ITEM OPTIONS -DWITH_POSIX_IO)
-	
+
 	# we need exact one output function
 	list(REMOVE_ITEM OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
 	list(APPEND OPTIONS -DENABLE_OUTPUT=LOGFILE)
-	
+
 	# generate functions with prefix "__test_" instead of alloc wrappers
 	# (to prevent wrapping of alloc functions in cunit framework and
 	# enable testing of wrappers with dedicated function calls)
@@ -53,29 +53,22 @@ endif()
 
 
 if (WITH_FILENAME_RESOLUTION)
-	set(CMAKE_C_FLAGS "-march=native -msse4.2 -D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
+	set(CMAKE_C_FLAGS "-D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
 
     # - fctevent -
 	add_executable(test_fctevent test_fctevent.c
-        ../../src/fnres/internal/map/impl/hash_functions/hash_city.c
-        ../../src/fnres/internal/map/impl/atomic_hash.c
-		../../src/fnres/internal/map/fnmap.c
-        ../../src/fnres/fctevent.c)
+															 ../../src/fnres/internal/fnmap.c
+															 ../../src/fnres/fctevent.c)
 	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
-
-	target_link_libraries(test_fctevent PRIVATE cunit m pthread)
-
+	target_link_libraries(test_fctevent PRIVATE cunit hashmap)
 	add_test(NAME test_fctevent COMMAND test_fctevent)
 
 
 	# - fnmap -
 	add_executable(testing_fnmap testing_fnmap.c
-		../../src/fnres/internal/map/impl/hash_functions/hash_city.c
-		../../src/fnres/internal/map/impl/atomic_hash.c
-		../../src/fnres/internal/map/fnmap.c)
+															../../src/fnres/internal/fnmap.c)
 	set_target_properties(testing_fnmap PROPERTIES LINK_FLAGS -W)
-
-	target_link_libraries(testing_fnmap PRIVATE cunit m pthread)
-
+	target_link_libraries(testing_fnmap PRIVATE cunit hashmap)
 	add_test(NAME testing_fnmap COMMAND testing_fnmap)
 endif()
+																

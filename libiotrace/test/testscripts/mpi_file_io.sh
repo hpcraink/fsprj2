@@ -23,6 +23,7 @@ rm $file
 rm -f $IOTRACE_WHITELIST
 echo -e "name\ttest\treal h:m:s\tuser CPU-seconds\tsys CPU-seconds\tavg unshared data kb\tavg data+stack+text kb\tmax kb">>$file
 echo -e "MPI_File_write\nMPI_File_seek">$IOTRACE_WHITELIST
+#echo -e "">$IOTRACE_WHITELIST
 for ((i = 0; i < iterations; i += 1)); do
 
 rm -f mpi_file_io.txt

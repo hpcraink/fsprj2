@@ -20,7 +20,7 @@ echo $IB0ADDR
 
 cd $PWD && ./mpi_file_io.sh $IB0ADDR
 
-sleep 20000000
+#sleep 20000000
 
 # export OMP_NUM_THREADS=$((${SLURM_CPUS_PER_TASK}/2))
 # export MPIRUN_OPTIONS="-binding "domain=omp:compact" -print-rank-map -envall"

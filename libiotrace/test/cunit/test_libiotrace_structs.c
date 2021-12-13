@@ -48,6 +48,41 @@ static void fill_number(void *number, const ssize_t len) {
 	}
 }
 
+static void check_fd_set_copy(const fd_set *data, const fd_set *copy) {
+	for (int i = 0; i < FD_SETSIZE; i++) {
+		CU_ASSERT_FATAL(FD_ISSET(i, data) == FD_ISSET(i, copy));
+	}
+}
+
+static void check_fcntl_seal_copy(const struct fcntl_seal *data,
+		const struct fcntl_seal *copy) {
+	CU_ASSERT_FATAL(data->flags.seal_grow == copy->flags.seal_grow);
+	CU_ASSERT_FATAL(data->flags.seal_seal == copy->flags.seal_seal);
+	CU_ASSERT_FATAL(data->flags.seal_shrink == copy->flags.seal_shrink);
+	CU_ASSERT_FATAL(data->flags.seal_write == copy->flags.seal_write);
+}
+
+static void check_select_function_copy(const struct select_function *data,
+		const struct select_function *copy) {
+	CU_ASSERT_FATAL(data->timeout.sec == copy->timeout.sec);
+	CU_ASSERT_FATAL(data->timeout.micro_sec == copy->timeout.micro_sec);
+	check_fd_set_copy(data->files_waiting_for_read,
+			copy->files_waiting_for_read);
+	check_fd_set_copy(data->files_waiting_for_write,
+			copy->files_waiting_for_write);
+	check_fd_set_copy(data->files_waiting_for_except,
+			copy->files_waiting_for_except);
+	check_fd_set_copy(data->files_ready_for_read, copy->files_ready_for_read);
+	check_fd_set_copy(data->files_ready_for_write, copy->files_ready_for_write);
+	check_fd_set_copy(data->files_ready_for_except,
+			copy->files_ready_for_except);
+}
+
+static void check_fcntl_hint_copy(const struct fcntl_hint *data,
+		const struct fcntl_hint *copy) {
+	CU_ASSERT_FATAL(data->hint == copy->hint);
+}
+
 static void check_msg_function_copy(const struct msg_function *data,
 		const struct msg_function *copy) {
 	CU_ASSERT_FATAL(data->sockaddr != copy->sockaddr);
@@ -218,6 +253,136 @@ static void check_json_enum_read_write_state(const char *print_buf,
 			0
 					== strncmp(print_buf + token->start - 1, buf,
 							token->end - token->start + 2));
+}
+
+size_t check_fd_set(const char *print_buf, const jsmntok_t *tokens,
+		const fd_set *fd_set_data, const char *fd_set_name) {
+	size_t i = 0;
+
+	if (NULL != fd_set_data) {
+
+		check_json_string(print_buf, &tokens[i++], fd_set_name);
+		CU_ASSERT_FATAL(tokens[i++].type == JSMN_ARRAY);
+
+		size_t count_fd = 0;
+		for (size_t l = 0; l < FD_SETSIZE; l++) {
+			if (FD_ISSET(l, fd_set_data)) {
+				check_json_number(print_buf, &tokens[i++], l, 1);
+				count_fd++;
+			}
+		}
+
+		CU_ASSERT_FATAL((size_t )(tokens[1].size) == count_fd);
+	}
+
+	return i;
+}
+
+static void check_select_function_print(const struct select_function *data,
+		const char *print_buf, const int len) {
+	jsmn_parser parser;
+	jsmn_init(&parser);
+	int token_count = jsmn_parse(&parser, print_buf, len, NULL, 0);
+
+	CU_ASSERT_FATAL(0 < token_count);
+
+	jsmntok_t tokens[token_count];
+	jsmn_init(&parser);
+	int ret = jsmn_parse(&parser, print_buf, len, tokens, token_count);
+
+	CU_ASSERT_FATAL(token_count == ret);
+
+	size_t i = 0;
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 7);
+
+	check_json_string(print_buf, &tokens[i++], "timeout");
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+	check_json_string(print_buf, &tokens[i++], "sec");
+	check_json_number(print_buf, &tokens[i++], data->timeout.sec, 0);
+	check_json_string(print_buf, &tokens[i++], "micro_sec");
+	check_json_number(print_buf, &tokens[i++], data->timeout.sec, 0);
+
+	i += check_fd_set(print_buf, &tokens[i], data->files_waiting_for_read,
+			"files_waiting_for_read");
+	i += check_fd_set(print_buf, &tokens[i], data->files_waiting_for_write,
+			"files_waiting_for_write");
+	i += check_fd_set(print_buf, &tokens[i], data->files_waiting_for_except,
+			"files_waiting_for_except");
+	i += check_fd_set(print_buf, &tokens[i], data->files_ready_for_read,
+			"files_ready_for_read");
+	i += check_fd_set(print_buf, &tokens[i], data->files_ready_for_write,
+			"files_ready_for_write");
+	i += check_fd_set(print_buf, &tokens[i], data->files_ready_for_except,
+			"files_ready_for_except");
+}
+
+static void check_fcntl_seal_print(const struct fcntl_seal *data,
+		const char *print_buf, const int len) {
+	jsmn_parser parser;
+	jsmn_init(&parser);
+	int token_count = jsmn_parse(&parser, print_buf, len, NULL, 0);
+
+	CU_ASSERT_FATAL(0 < token_count);
+
+	jsmntok_t tokens[token_count];
+	jsmn_init(&parser);
+	int ret = jsmn_parse(&parser, print_buf, len, tokens, token_count);
+
+	CU_ASSERT_FATAL(token_count == ret);
+
+	size_t i = 0;
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 1);
+
+	check_json_string(print_buf, &tokens[i++], "flags");
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_ARRAY);
+
+	size_t count_array_elements = 0;
+	if (data->flags.seal_seal) {
+		check_json_string(print_buf, &tokens[i++], "seal_seal");
+		count_array_elements++;
+	}
+	if (data->flags.seal_shrink) {
+		check_json_string(print_buf, &tokens[i++], "seal_shrink");
+		count_array_elements++;
+	}
+	if (data->flags.seal_grow) {
+		check_json_string(print_buf, &tokens[i++], "seal_grow");
+		count_array_elements++;
+	}
+	if (data->flags.seal_write) {
+		check_json_string(print_buf, &tokens[i++], "seal_write");
+		count_array_elements++;
+	}
+	CU_ASSERT_FATAL(
+			(size_t )(tokens[i - 1 - count_array_elements].size)
+					== count_array_elements);
+}
+
+static void check_fcntl_hint_print(const char *hint_as_str,
+		const char *print_buf, const int len) {
+	jsmn_parser parser;
+	jsmn_init(&parser);
+	int token_count = jsmn_parse(&parser, print_buf, len, NULL, 0);
+
+	CU_ASSERT_FATAL(0 < token_count);
+
+	jsmntok_t tokens[token_count];
+	jsmn_init(&parser);
+	int ret = jsmn_parse(&parser, print_buf, len, tokens, token_count);
+
+	CU_ASSERT_FATAL(token_count == ret);
+
+	size_t i = 0;
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 1);
+
+	check_json_string(print_buf, &tokens[i++], "hint");
+	check_json_string(print_buf, &tokens[i++], hint_as_str);
 }
 
 static void check_msg_function_print(const struct msg_function *data,
@@ -391,6 +556,187 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	}
 }
 
+static void test_struct_fcntl_seal_impl(struct fcntl_seal *fcntl_seal_data) {
+	// copy fcntl_seal structure
+
+	char copy_buf[libiotrace_struct_sizeof_fcntl_seal(fcntl_seal_data)];
+	memset(copy_buf, 0, sizeof(copy_buf));
+	void *pos = (void*) libiotrace_struct_copy_fcntl_seal((void*) copy_buf,
+			fcntl_seal_data);
+	struct fcntl_seal *copy = (struct fcntl_seal*) (void*) copy_buf;
+
+	// check copy of fcntl_seal structure
+
+	CU_ASSERT_FATAL(copy_buf + sizeof(copy_buf) == pos);
+	check_fcntl_seal_copy(fcntl_seal_data, copy);
+
+	// print fcntl_seal structure as json
+
+	char print_buf[libiotrace_struct_max_size_fcntl_seal() + 1];
+	memset(print_buf, 0, sizeof(print_buf));
+	size_t len = libiotrace_struct_print_fcntl_seal(print_buf,
+			sizeof(print_buf), fcntl_seal_data);
+
+	// check print of fcntl_seal structure
+
+	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[len] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == len);
+	CU_ASSERT_FATAL(print_buf[0] == '{');
+	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_fcntl_seal_print(fcntl_seal_data, print_buf, len);
+}
+
+/* struct select_function has a LIBIOTRACE_STRUCT_FD_SET_P element:
+ * a fd_set must be handled */
+static void test_struct_select_function(void) {
+	struct select_function select_function_data;
+	long long_value;
+	fd_set waiting_for_read;
+	fd_set waiting_for_write;
+	fd_set waiting_for_except;
+	fd_set ready_for_read;
+	fd_set ready_for_write;
+	fd_set ready_for_except;
+
+	// initialize select_function structure
+
+	fill_number(&long_value, sizeof(long_value));
+	select_function_data.timeout.sec = long_value;
+	select_function_data.timeout.micro_sec = long_value;
+	FD_ZERO(&waiting_for_read); // no file descriptor is set
+	FD_ZERO(&waiting_for_write);
+	FD_SET(0, &waiting_for_write); // only first file descriptor is set
+	FD_ZERO(&waiting_for_except);
+	FD_SET(FD_SETSIZE - 1, &waiting_for_except); // only last file descriptor is set
+	FD_ZERO(&ready_for_read);
+	for (int i = 0; i < FD_SETSIZE; i++) {
+		FD_SET(i, &ready_for_read); // all file descriptors are set
+	}
+	FD_ZERO(&ready_for_write);
+	for (int i = 1; i < FD_SETSIZE; i++) {
+		FD_SET(i, &ready_for_write); // only first file descriptors is not set
+	}
+	FD_ZERO(&ready_for_except);
+	for (int i = 0; i < (FD_SETSIZE - 1); i++) {
+		FD_SET(i, &ready_for_except); // only last file descriptors is not set
+	}
+	select_function_data.files_waiting_for_read = &waiting_for_read;
+	select_function_data.files_waiting_for_write = &waiting_for_write;
+	select_function_data.files_waiting_for_except = &waiting_for_except;
+	select_function_data.files_ready_for_read = &ready_for_read;
+	select_function_data.files_ready_for_write = &ready_for_write;
+	select_function_data.files_ready_for_except = &ready_for_except;
+
+	// copy select_function structure
+
+	char copy_buf[libiotrace_struct_sizeof_select_function(
+			&select_function_data)];
+	memset(copy_buf, 0, sizeof(copy_buf));
+	void *pos = (void*) libiotrace_struct_copy_select_function((void*) copy_buf,
+			&select_function_data);
+	struct select_function *copy = (struct select_function*) (void*) copy_buf;
+
+	// check copy of select_function structure
+
+	CU_ASSERT_FATAL(copy_buf + sizeof(copy_buf) == pos);
+	check_select_function_copy(&select_function_data, copy);
+
+	// print select_function structure as json
+
+	char print_buf[libiotrace_struct_max_size_select_function() + 1];
+	memset(print_buf, 0, sizeof(print_buf));
+	size_t len = libiotrace_struct_print_select_function(print_buf,
+			sizeof(print_buf), &select_function_data);
+
+	// check print of select_function structure
+
+	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[len] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == len);
+	CU_ASSERT_FATAL(print_buf[0] == '{');
+	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_select_function_print(&select_function_data, print_buf, len);
+}
+
+/* struct fcntl_seal has a LIBIOTRACE_STRUCT_ARRAY_BITFIELD element:
+ * a bitfield must be handled */
+static void test_struct_fcntl_seal(void) {
+	struct fcntl_seal fcntl_seal_data;
+
+	// initialize fcntl_seal structure
+
+	fcntl_seal_data.flags.seal_seal = 0;
+	fcntl_seal_data.flags.seal_shrink = 0;
+	fcntl_seal_data.flags.seal_grow = 0;
+	fcntl_seal_data.flags.seal_write = 0;
+
+	// test fcntl_seal structure
+
+	test_struct_fcntl_seal_impl(&fcntl_seal_data);
+
+	// initialize fcntl_seal structure
+
+	fcntl_seal_data.flags.seal_seal = 1;
+	fcntl_seal_data.flags.seal_shrink = 0;
+	fcntl_seal_data.flags.seal_grow = 1;
+	fcntl_seal_data.flags.seal_write = 1;
+
+	// test fcntl_seal structure
+
+	test_struct_fcntl_seal_impl(&fcntl_seal_data);
+
+	// initialize fcntl_seal structure
+
+	fcntl_seal_data.flags.seal_seal = 0;
+	fcntl_seal_data.flags.seal_shrink = 1;
+	fcntl_seal_data.flags.seal_grow = 0;
+	fcntl_seal_data.flags.seal_write = 0;
+
+	// test fcntl_seal structure
+
+	test_struct_fcntl_seal_impl(&fcntl_seal_data);
+}
+
+/* struct fcntl_hint has a LIBIOTRACE_STRUCT_ENUM element:
+ * a enum must be handled */
+static void test_struct_fcntl_hint(void) {
+	struct fcntl_hint fcntl_hint_data;
+
+	// initialize fcntl_hint structure
+
+	fcntl_hint_data.hint = hint_write_life_not_set;
+
+	// copy fcntl_hint structure
+
+	char copy_buf[libiotrace_struct_sizeof_fcntl_hint(&fcntl_hint_data)];
+	memset(copy_buf, 0, sizeof(copy_buf));
+	void *pos = (void*) libiotrace_struct_copy_fcntl_hint((void*) copy_buf,
+			&fcntl_hint_data);
+	struct fcntl_hint *copy = (struct fcntl_hint*) (void*) copy_buf;
+
+	// check copy of fcntl_hint structure
+
+	CU_ASSERT_FATAL(copy_buf + sizeof(copy_buf) == pos);
+	check_fcntl_hint_copy(&fcntl_hint_data, copy);
+
+	// print fcntl_hint structure as json
+
+	char print_buf[libiotrace_struct_max_size_fcntl_hint() + 1];
+	memset(print_buf, 0, sizeof(print_buf));
+	size_t len = libiotrace_struct_print_fcntl_hint(print_buf,
+			sizeof(print_buf), &fcntl_hint_data);
+
+	// check print of fcntl_hint structure
+
+	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[len] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == len);
+	CU_ASSERT_FATAL(print_buf[0] == '{');
+	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_fcntl_hint_print("hint_write_life_not_set", print_buf, len);
+}
+
 /* struct msg_function has a LIBIOTRACE_STRUCT_INT_ARRAY element:
  * a array of integers must be handled */
 static void test_struct_msg_function(void) {
@@ -429,7 +775,7 @@ static void test_struct_msg_function(void) {
 
 	// print msg_function structure as json
 
-	char print_buf[libiotrace_struct_max_size_msg_function()];
+	char print_buf[libiotrace_struct_max_size_msg_function() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_msg_function(print_buf,
 			sizeof(print_buf), &msg_function_data);
@@ -437,6 +783,8 @@ static void test_struct_msg_function(void) {
 	// check print of msg_function structure
 
 	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[len] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == len);
 	CU_ASSERT_FATAL(print_buf[0] == '{');
 	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
 	check_msg_function_print(&msg_function_data, print_buf, len);
@@ -471,7 +819,7 @@ static void test_struct_mpi_waitall(void) {
 
 	// print mpi_waitall structure without substructures as json
 
-	char print_buf[libiotrace_struct_max_size_mpi_waitall()];
+	char print_buf[libiotrace_struct_max_size_mpi_waitall() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_mpi_waitall(print_buf,
 			sizeof(print_buf), &mpi_waitall_data);
@@ -525,6 +873,8 @@ static void test_struct_mpi_waitall(void) {
 	// check print of mpi_waitall structure with substructures
 
 	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[len] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == len);
 	CU_ASSERT_FATAL(print_buf[0] == '{');
 	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
 	check_mpi_waitall_print(&mpi_waitall_data, print_buf, len);
@@ -551,6 +901,10 @@ static void test_struct_basic(void) {
 
 	errno_detail_data.errno_value = int_value;
 	errno_detail_data.errno_text = errno_text;
+
+#ifdef WITH_FILENAME_RESOLUTION
+	fill_string(data.traced_filename, sizeof(data.traced_filename), 't');
+#endif
 
 	data.hostname = hostname;
 	data.process_id = pid_t_value;
@@ -586,7 +940,7 @@ static void test_struct_basic(void) {
 
 	// print basic structure without substructures as json
 
-	char print_buf[libiotrace_struct_max_size_basic()];
+	char print_buf[libiotrace_struct_max_size_basic() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf),
 			&data);
@@ -630,6 +984,8 @@ static void test_struct_basic(void) {
 	// check print of basic structure with substructures
 
 	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
+	CU_ASSERT_FATAL(print_buf[len] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == len);
 	CU_ASSERT_FATAL(print_buf[0] == '{');
 	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
 	check_basic_print(&data, print_buf, len);
@@ -637,4 +993,7 @@ static void test_struct_basic(void) {
 
 CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic),
 		CUNIT_CI_TEST(test_struct_mpi_waitall),
-		CUNIT_CI_TEST(test_struct_msg_function))
+		CUNIT_CI_TEST(test_struct_msg_function),
+		CUNIT_CI_TEST(test_struct_fcntl_hint),
+		CUNIT_CI_TEST(test_struct_fcntl_seal),
+		CUNIT_CI_TEST(test_struct_select_function))

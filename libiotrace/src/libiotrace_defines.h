@@ -267,7 +267,7 @@
                                          switch (*libiotrace_struct_data) {
 #  define LIBIOTRACE_STRUCT_ENUM_ELEMENT(name) case name: \
                                            LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)",") \
-                                           break;
+										   break;
 #  define LIBIOTRACE_STRUCT_ENUM_END default: \
                                  LIBIOTRACE_STRUCT_ENUM_ERROR(*libiotrace_struct_data) \
                                } return libiotrace_struct_start_size - libiotrace_struct_size;}
@@ -372,13 +372,14 @@
 #  define LIBIOTRACE_STRUCT_FD_SET_P(name) if (NULL != libiotrace_struct_data->name) { \
                                        libiotrace_struct_hasElements = 1; \
                                        LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)":[") \
-                                       int libiotrace_struct_count_##name; \
-                                       for (libiotrace_struct_count_##name = 0; libiotrace_struct_count_##name < FD_SETSIZE; libiotrace_struct_count_##name++) { \
+                                       char libiotrace_struct_hasElements_##name = 0; \
+                                       for (int libiotrace_struct_count_##name = 0; libiotrace_struct_count_##name < FD_SETSIZE; libiotrace_struct_count_##name++) { \
                                          if (FD_ISSET(libiotrace_struct_count_##name, libiotrace_struct_data->name)) { \
                                            LIBIOTRACE_STRUCT_SNPRINTF("%d,", libiotrace_struct_count_##name) \
+										   libiotrace_struct_hasElements_##name = 1; \
                                          } \
                                        } \
-                                       if (libiotrace_struct_count_##name > 0) { \
+                                       if (libiotrace_struct_hasElements_##name) { \
                                          libiotrace_struct_buf--;  /* remove last comma */ \
                                          libiotrace_struct_size++; /* and resize buffer size */ \
                                        } \
@@ -1124,9 +1125,9 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
  *
  * */
 #  define LIBIOTRACE_STRUCT_TYPE(name, function) if(*prefix=='\0') { \
-                                               LIBIOTRACE_STRUCT_WRITE(#name":") \
+                                               LIBIOTRACE_STRUCT_WRITE(#name"=") \
                                            } else { \
-                                        	   LIBIOTRACE_STRUCT_SNPRINTF("%s_"#name":", prefix) \
+                                        	   LIBIOTRACE_STRUCT_SNPRINTF("%s_"#name"=", prefix) \
                                            } \
                                            libiotrace_struct_ret = function(libiotrace_struct_buf, libiotrace_struct_size, \
                                                                &libiotrace_struct_data->name); \

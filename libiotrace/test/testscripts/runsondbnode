@@ -31,7 +31,7 @@
     rm ~/Projects/scripts/ib0
     ifconfig ib0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' &> ~/Projects/scripts/ib0
 
-    sleep 200000000000
+    sleep 20000000000000000
 
 
 

@@ -1,7 +1,7 @@
-﻿/* 
+﻿/*
  *  atomic_hash.h
  *
- * 2012-2015 Copyright (c) 
+ * 2012-2015 Copyright (c)
  * Fred Huang, <divfor@gmail.com>
  * All rights reserved.
  *
@@ -59,8 +59,7 @@ typedef struct hv { hvu x, y; } hv;
 #define shared ATTRIBUTE_ALIGNED(64)
 
 typedef uint32_t nid;
-typedef struct hstats
-{
+typedef struct {
     unsigned long expires;
     unsigned long escapes;
     unsigned long add_nomem;
@@ -73,13 +72,11 @@ typedef struct hstats
     unsigned long key_collided;
 } hstats_t;
 
-typedef struct hash_counters
-{
+typedef struct {
     unsigned long xadd, xget, xdel, nexp;
 } hc_t; /* 64-bytes cache line */
 
-typedef struct mem_pool
-{
+typedef struct {
     void **ba;
     shared nid mask, shift; /* used for i2p() only */
     shared nid max_blocks, blk_node_num, node_size, blk_size;
@@ -91,22 +88,19 @@ typedef union {
     uint64_t all;
 } cas_t;
 
-typedef struct hash_node
-{
+typedef struct {
     volatile hv v;
     unsigned long expire; /* expire in ms # of gettimeofday(), 0 = never */
     void *data;
 } node_t;
 
-typedef struct htab
-{
+typedef struct {
     nid *b;             /* hash tab (int arrary as memory index */
     unsigned long ncur, n, nb;  /* nb: buckets #, set by n * r */
     unsigned long nadd, ndup, nget, ndel;
 } htab_t;
 
-typedef struct hash
-{
+typedef struct {
 /* hash function, here select cityhash_128 as default */
     shared void (* hash_func) (const void *key, size_t len, void *r);
 
@@ -127,11 +121,11 @@ typedef struct hash
 
 /*
 Summary
-This is a hash table designed with high performance, lock-free and memory-saving. Multiple threads can concurrently perform read/write/delete operations up to 10M ops/s in mordern computer platform. It supports up to 2^32 hash items with O(1) performance for both of successful and unsuccessful search from the hash table.
-By giving max hash item number, atomic_hash calculates two load factors to match expected collision rate and creates array 1 with higer load factor, array 2 with lower load factor, and a small arry 3 to store collision items. memory pool for hash nodes (not for user data) is also designed for both of high performance and memory saving.
+This is a hash table designed with high performance, lock-free and memory-saving. Multiple threads can concurrently perform read/write/delete operations up to 10M ops/s in modern computer platform. It supports up to 2^32 hash items with O(1) performance for both of successful and unsuccessful search from the hash table.
+By giving max hash item number, atomic_hash calculates two load factors to match expected collision rate and creates array 1 with higher load factor, array 2 with lower load factor, and a small array 3 to store collision items. memory pool for hash nodes (not for user data) is also designed for both of high performance and memory saving.
 
 Usage
-Use below functions to create a hash handle that assosiates its arrays and memory pool, print statistics of it, or release it.
+Use below functions to create a hash handle that associates its arrays and memory pool, print statistics of it, or release it.
 
 hash_t * atomic_hash_create (unsigned int max_nodes, int reset_ttl);
 int atomic_hash_stats (hash_t *h, unsigned long escaped_milliseconds);
@@ -147,12 +141,12 @@ Not like normal hash functions that return user data directly, atomic hash funct
 
 typedef int (*hook)(void *hash_data, void *out)
 
-here 'hash_data' will be copied from target hash node's 'data' field by atomic hash functions (generally it is a pointer to link the user data), and 'out' will be given by atomic hash function's caller. There are 5 function pointers (on_ttl, on_del, on_add, on_get and on_dup) to resigster hook functions. The hook function should obey below rules:
+here 'hash_data' will be copied from target hash node's 'data' field by atomic hash functions (generally it is a pointer to link the user data), and 'out' will be given by atomic hash function's caller. There are 5 function pointers (on_ttl, on_del, on_add, on_get and on_dup) to register hook functions. The hook function should obey below rules:
 
 1. must be non-blocking and essential actions only. too much execution time will drop performance remarkablly;
 2. on_ttl and on_del should free user data and must return -1(PLEASE_REMOVE_HASH_NODE).
 3. on_get and on_dup may return either -2 (PLEASE_SET_TTL_TO_DEFAULT) or a positive number that indicates updating ttl;
-4. on_add must return -3 (PLEASE_DO_NOT_CHANGE_TTL) as ttl will be set by intital_ttl;
+4. on_add must return -3 (PLEASE_DO_NOT_CHANGE_TTL) as ttl will be set by initial_ttl;
 
 atomic_hash_create will initialize some built-in functions as default hook functions that only do value-copy for hash node's 'data' field and then return code. So you need to write your own hook functions to replace default ones if you want to free your user data's memeory or adjust ttl in the fly:
 
@@ -160,7 +154,7 @@ h->on_ttl = your_own_on_ttl_hook_func;
 h->on_add = your_own_on_add_hook_func;
 ...
 
-In the call time, instead of hook functions registered in on_dup/on_get/on_del, hash functions atomic_hash_add, atomic_hash_get, atomic_hash_del are able to use an alertative function as long as they obey above hook function rules. This will give flexibility to deal with different user data type in a same hash table.
+In the call time, instead of hook functions registered in on_dup/on_get/on_del, hash functions atomic_hash_add, atomic_hash_get, atomic_hash_del are able to use an alternative function as long as they obey above hook function rules. This will give flexibility to deal with different user data type in a same hash table.
 
 
 About TTL
@@ -173,9 +167,9 @@ hash_node->expire: hash node's 'expire' field. If expire == 0, this hash node wi
 /* return (int): 0 for successful operation and non-zero for unsuccessful operation */
 hash_t * atomic_hash_create (unsigned int max_nodes, int reset_ttl);
 int atomic_hash_destroy (hash_t *h);
-int atomic_hash_add (hash_t *h, void *key, int key_len, void *user_data, int init_ttl, hook func_on_dup, void *out);
-int atomic_hash_del (hash_t *h, void *key, int key_len, hook func_on_del, void *out); //delete all matches
-int atomic_hash_get (hash_t *h, void *key, int key_len, hook func_on_get, void *out); //get the first match
+int atomic_hash_add (hash_t *h, const void *key, int key_len, void *user_data, int init_ttl, hook func_on_dup, void *out);
+int atomic_hash_del (hash_t *h, const void *key, int key_len, hook func_on_del, void *out); //delete all matches
+int atomic_hash_get (hash_t *h, const void *key, int key_len, hook func_on_get, void *out); //get the first match
 int atomic_hash_stats (hash_t *h, unsigned long escaped_milliseconds);
 
 #endif /* ATOMIC_HASH_H */

@@ -1,4 +1,4 @@
-/*
+/**
  * Filename map (fnmap)
  *   Implements abstraction (API) for map implementation (which is used for tracking filenames)
  */
@@ -10,8 +10,8 @@
 #include <sys/types.h>
 
 
-// - Data structures -
-typedef union id {
+/* - Data structures - */
+typedef union {
     int fildes;
     FILE* stream;
     void* dir;              /* Use `void*` instead of `DIR*` (to avoid missing header `dirent.h`) */
@@ -21,7 +21,7 @@ typedef union id {
     int mpi_req_id;
 } id;
 
-typedef enum id_type {
+typedef enum {
     F_DESCRIPTOR,
     F_STREAM,
     F_DIR,
@@ -30,7 +30,7 @@ typedef enum id_type {
     R_MPI                                           /* Immediate mapping for MPI_Request struct */
 } id_type;
 
-typedef struct fnmap_key {
+typedef struct {
     id id;
     id_type type;
     size_t mmap_length;                             /* Only relevant 4 file_memory (0 indicates none) */
@@ -43,9 +43,9 @@ typedef struct fnmap_key {
 void fnmap_create(size_t max_size);
 void fnmap_destroy(void);
 
-int fnmap_get(fnmap_key* key, char** found_fname);
-void fnmap_add_or_update(fnmap_key* key, const char* fname);    /* `const char*` -> avoid compiler warning */
-void fnmap_remove(fnmap_key* key);
+int fnmap_get(const fnmap_key *key, char **found_fname);
+void fnmap_add_or_update(const fnmap_key *key, const char *fname);
+void fnmap_remove(const fnmap_key *key);
 // void fnmap_clear(void);
 
 #endif /* LIBIOTRACE_FNMAP_H */

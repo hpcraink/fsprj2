@@ -31,11 +31,11 @@
 
 
 /* --- Function prototypes for helper functions --- */
-static void __create_fnmap_key_using_vals(id_type type, void* id, size_t mmap_length, fnmap_key* new_key);
-static void __create_fnmap_key_using_fctevent_file_type(struct basic* fctevent, fnmap_key* new_key);
-static void __create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key* new_key1, fnmap_key* new_key2);
+static void __create_fnmap_key_using_vals(id_type type, void *id, size_t mmap_length, fnmap_key *new_key);
+static void __create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key *new_key);
+static void __create_fnmap_key_using_fctevent_function_data(struct basic *fctevent, fnmap_key *new_key1, fnmap_key *new_key2);
 
-static const char* __get_file_name_from_fctevent_function_data(struct basic* fctevent);
+static const char* __get_file_name_from_fctevent_function_data(struct basic *fctevent);
 
 
 /* --- Macros --- */

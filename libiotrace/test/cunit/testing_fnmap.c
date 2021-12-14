@@ -43,7 +43,7 @@ CU_TEST_TEARDOWN() {}
 
 /* -- Tests -- */
 void test_same_value(void) {
-    struct fnmap_key key = {
+    fnmap_key key = {
         .id = { .fildes = 0 },
         .type = F_DESCRIPTOR,
         .mmap_length = 0

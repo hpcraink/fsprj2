@@ -1,7 +1,7 @@
-/* 
+/*
  * atomic_hash.c
  *
- * 2012-2015 Copyright (c) 
+ * 2012-2015 Copyright (c)
  * Fred Huang, <divfor@gmail.com>
  * All rights reserved.
  *
@@ -22,14 +22,14 @@
  */
 
 // $$ OWN ADDITIONS $$
-// added #ifdef DEBUG to some printfs to ommit debug output in non-debug build
+// added #ifdef DEBUG to some `printf`s to omit debug output in non-debug build
 
 // unused variables removed
 // uninitialized variables initialized to 0
 
 // solved comparison of integer with different signedness
 
-// Added 'static' keyword to all 'inline'd functions (https://stackoverflow.com/a/54875926)
+// Added `static` keyword to all `inline`d functions (https://stackoverflow.com/a/54875926)
 // $$ OWN ADDITIONS $$
 
 #include <stdio.h>
@@ -653,7 +653,7 @@ valid_ttl (hash_t *h, unsigned long now, node_t *p, nid *seat, nid mi,
 
 #define idx(j) (j<(NCLUSTER*NKEY)?0:1)
 int
-atomic_hash_add (hash_t *h, void *kwd, int len, void *data,
+atomic_hash_add (hash_t *h, const void *kwd, int len, void *data,
                  int init_ttl, hook cbf_dup, void *arg)
 {
     register unsigned int i, j;
@@ -708,7 +708,7 @@ atomic_hash_add (hash_t *h, void *kwd, int len, void *data,
 }
 
 int
-atomic_hash_get (hash_t *h, void *kwd, int len, hook cbf, void *arg)
+atomic_hash_get (hash_t *h, const void *kwd, int len, hook cbf, void *arg)
 {
     register unsigned int i, j;
     register nid mi;
@@ -741,7 +741,7 @@ atomic_hash_get (hash_t *h, void *kwd, int len, hook cbf, void *arg)
 }
 
 int
-atomic_hash_del (hash_t *h, void *kwd, int len, hook cbf, void *arg)
+atomic_hash_del (hash_t *h, const void *kwd, int len, hook cbf, void *arg)
 {
     register unsigned int i, j;
     register nid mi;

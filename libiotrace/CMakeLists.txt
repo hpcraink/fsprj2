@@ -7,7 +7,7 @@ enable_language(C)
 # set(CMAKE_BUILD_TYPE Release)
 # set(CMAKE_BUILD_TYPE Debug)
 
-add_compile_options(-Wall -Wextra -pedantic -pedantic-errors -Wformat=2 -Wformat-signedness -Walloc-zero -Wdouble-promotion -Wdouble-promotion -Wduplicated-cond -Wfloat-equal -Winit-self -Wstrict-prototypes -Wundef -Wunused-macros -Wswitch-enum -Wswitch-default -Werror -frecord-gcc-switches)
+add_compile_options(-Wall -Wextra -pedantic -pedantic-errors -Wformat=2 -Wformat-signedness -Walloc-zero -Wdouble-promotion -Wduplicated-cond -Wfloat-equal -Winit-self -Wstrict-prototypes -Wundef -Wunused-macros -Wswitch-enum -Wswitch-default -Werror -frecord-gcc-switches)
 
 set(CMAKE_C_STANDARD 99)
 

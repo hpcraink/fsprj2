@@ -62,6 +62,34 @@ static void check_fcntl_seal_copy(const struct fcntl_seal *data,
 	CU_ASSERT_FATAL(data->flags.seal_write == copy->flags.seal_write);
 }
 
+static void check_mpi_delete_function_copy(
+		const struct mpi_delete_function *data,
+		const struct mpi_delete_function *copy) {
+	CU_ASSERT_FATAL(data->file_name != copy->file_name);
+	CU_ASSERT_FATAL(0 == strcmp(data->file_name, copy->file_name));
+	CU_ASSERT_FATAL(data->id.device_id == copy->id.device_id);
+	CU_ASSERT_FATAL(data->id.inode_nr == copy->id.inode_nr);
+	if (0 == data->__size_file_hints) {
+		CU_ASSERT_FATAL(copy->__size_file_hints == 0);
+	} else {
+		for (size_t i = 0; i < data->__size_file_hints; i++) {
+			CU_ASSERT_FATAL(
+					data->__keys_file_hints[i] != copy->__keys_file_hints[i]);
+			CU_ASSERT_FATAL(
+					0
+							== strcmp(data->__keys_file_hints[i],
+									copy->__keys_file_hints[i]));
+			CU_ASSERT_FATAL(
+					data->__values_file_hints[i]
+							!= copy->__values_file_hints[i]);
+			CU_ASSERT_FATAL(
+					0
+							== strcmp(data->__values_file_hints[i],
+									copy->__values_file_hints[i]));
+		}
+	}
+}
+
 static void check_select_function_copy(const struct select_function *data,
 		const struct select_function *copy) {
 	CU_ASSERT_FATAL(data->timeout.sec == copy->timeout.sec);
@@ -189,6 +217,15 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 	}
 }
 
+void check_json_print(const char print_buf[], const size_t print_buf_size,
+		const size_t count_char_in_print_buf) {
+	CU_ASSERT_FATAL(print_buf_size >= count_char_in_print_buf);
+	CU_ASSERT_FATAL(print_buf[count_char_in_print_buf] == '\0');
+	CU_ASSERT_FATAL(strlen(print_buf) == count_char_in_print_buf);
+	CU_ASSERT_FATAL(print_buf[0] == '{');
+	CU_ASSERT_FATAL(print_buf[count_char_in_print_buf - 1] == '}');
+}
+
 static void check_json_string(const char *print_buf, const jsmntok_t *token,
 		const char *string) {
 	CU_ASSERT_FATAL(token->type == JSMN_STRING);
@@ -276,6 +313,55 @@ size_t check_fd_set(const char *print_buf, const jsmntok_t *tokens,
 	}
 
 	return i;
+}
+
+static void check_mpi_delete_function_print(
+		const struct mpi_delete_function *data, const char *print_buf,
+		const int len) {
+	jsmn_parser parser;
+	jsmn_init(&parser);
+	int token_count = jsmn_parse(&parser, print_buf, len, NULL, 0);
+
+	CU_ASSERT_FATAL(0 < token_count);
+
+	jsmntok_t tokens[token_count];
+	jsmn_init(&parser);
+	int ret = jsmn_parse(&parser, print_buf, len, tokens, token_count);
+
+	CU_ASSERT_FATAL(token_count == ret);
+
+	size_t i = 0;
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+
+	if (0 == data->__size_file_hints) {
+		CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 2);
+	} else {
+		CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 3);
+	}
+
+	check_json_string(print_buf, &tokens[i++], "file_name");
+	check_json_string(print_buf, &tokens[i++], data->file_name);
+	check_json_string(print_buf, &tokens[i++], "id");
+	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+	CU_ASSERT_FATAL((size_t )(tokens[i - 1].size) == 2);
+	check_json_string(print_buf, &tokens[i++], "device_id");
+	check_json_number(print_buf, &tokens[i++], data->id.device_id, 1);
+	check_json_string(print_buf, &tokens[i++], "inode_nr");
+	check_json_number(print_buf, &tokens[i++], data->id.inode_nr, 1);
+
+	if (0 != data->__size_file_hints) {
+		check_json_string(print_buf, &tokens[i++], "file_hints");
+		CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+		CU_ASSERT_FATAL(
+				(size_t )(tokens[i - 1].size) == data->__size_file_hints);
+
+		for (size_t l = 0; l < data->__size_file_hints; l++) {
+			check_json_string(print_buf, &tokens[i++],
+					data->__keys_file_hints[l]);
+			check_json_string(print_buf, &tokens[i++],
+					data->__values_file_hints[l]);
+		}
+	}
 }
 
 static void check_select_function_print(const struct select_function *data,
@@ -579,12 +665,88 @@ static void test_struct_fcntl_seal_impl(struct fcntl_seal *fcntl_seal_data) {
 
 	// check print of fcntl_seal structure
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[len] == '\0');
-	CU_ASSERT_FATAL(strlen(print_buf) == len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_fcntl_seal_print(fcntl_seal_data, print_buf, len);
+}
+
+static void test_struct_mpi_delete_function_impl(
+		struct mpi_delete_function *mpi_delete_function_data) {
+	// copy mpi_delete_function structure
+
+	char copy_buf[libiotrace_struct_sizeof_mpi_delete_function(
+			mpi_delete_function_data)];
+	memset(copy_buf, 0, sizeof(copy_buf));
+	void *pos = (void*) libiotrace_struct_copy_mpi_delete_function(
+			(void*) copy_buf, mpi_delete_function_data);
+	struct mpi_delete_function *copy =
+			(struct mpi_delete_function*) (void*) copy_buf;
+
+	// check copy of mpi_delete_function structure
+
+	CU_ASSERT_FATAL(copy_buf + sizeof(copy_buf) == pos);
+	check_mpi_delete_function_copy(mpi_delete_function_data, copy);
+
+	// print mpi_delete_function structure as json
+
+	char print_buf[libiotrace_struct_max_size_mpi_delete_function() + 1];
+	memset(print_buf, 0, sizeof(print_buf));
+	size_t len = libiotrace_struct_print_mpi_delete_function(print_buf,
+			sizeof(print_buf), mpi_delete_function_data);
+
+	// check print of mpi_delete_function structure
+
+	check_json_print(print_buf, sizeof(print_buf), len);
+	check_mpi_delete_function_print(mpi_delete_function_data, print_buf, len);
+}
+
+/* struct mpi_delete_function has a LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY element:
+ * a key value array must be handled */
+static void test_struct_mpi_delete_function(void) {
+	struct mpi_delete_function mpi_delete_function_data;
+	struct file_id file_id_data;
+	char file_name[MAXFILENAME];
+	dev_t dev_value;
+	ino_t ino_t_value;
+	char *keys[MAX_MPI_FILE_HINTS];
+	char *values[MAX_MPI_FILE_HINTS];
+	char key_value_content[MAX_MPI_FILE_HINT_LENGTH];
+
+	// initialize mpi_delete_function structure without key value array
+
+	fill_string(file_name, sizeof(file_name), 's');
+	fill_number(&dev_value, sizeof(dev_value));
+	fill_number(&ino_t_value, sizeof(ino_t_value));
+	file_id_data.device_id = dev_value;
+	file_id_data.inode_nr = ino_t_value;
+	mpi_delete_function_data.file_name = file_name;
+	mpi_delete_function_data.id = file_id_data;
+
+	LIBIOTRACE_STRUCT_SET_KEY_VALUE_ARRAY_NULL(mpi_delete_function_data,
+			file_hints)
+
+	test_struct_mpi_delete_function_impl(&mpi_delete_function_data);
+
+	// add one key value entry to mpi_delete_function structure
+
+	fill_string(key_value_content, sizeof(key_value_content), 'k');
+
+	LIBIOTRACE_STRUCT_INIT_KEY_VALUE_ARRAY(mpi_delete_function_data, file_hints,
+			keys, values)
+	LIBIOTRACE_STRUCT_ADD_KEY_VALUE(mpi_delete_function_data, file_hints,
+			key_value_content, key_value_content)
+
+	test_struct_mpi_delete_function_impl(&mpi_delete_function_data);
+
+	// add max. key value pairs to mpi_delete_function structure
+
+	LIBIOTRACE_STRUCT_INIT_KEY_VALUE_ARRAY(mpi_delete_function_data, file_hints,
+			keys, values)
+	for (int i = 0; i < MAX_MPI_FILE_HINTS; i++) {
+		LIBIOTRACE_STRUCT_ADD_KEY_VALUE(mpi_delete_function_data, file_hints,
+				key_value_content, key_value_content)
+	}
+
+	test_struct_mpi_delete_function_impl(&mpi_delete_function_data);
 }
 
 /* struct select_function has a LIBIOTRACE_STRUCT_FD_SET_P element:
@@ -651,11 +813,7 @@ static void test_struct_select_function(void) {
 
 	// check print of select_function structure
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[len] == '\0');
-	CU_ASSERT_FATAL(strlen(print_buf) == len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_select_function_print(&select_function_data, print_buf, len);
 }
 
@@ -729,11 +887,7 @@ static void test_struct_fcntl_hint(void) {
 
 	// check print of fcntl_hint structure
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[len] == '\0');
-	CU_ASSERT_FATAL(strlen(print_buf) == len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_fcntl_hint_print("hint_write_life_not_set", print_buf, len);
 }
 
@@ -782,11 +936,7 @@ static void test_struct_msg_function(void) {
 
 	// check print of msg_function structure
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[len] == '\0');
-	CU_ASSERT_FATAL(strlen(print_buf) == len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_msg_function_print(&msg_function_data, print_buf, len);
 }
 
@@ -826,9 +976,7 @@ static void test_struct_mpi_waitall(void) {
 
 	// check print of mpi_waitall structure without substructures
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_mpi_waitall_print(&mpi_waitall_data, print_buf, len);
 
 	// add substructures to mpi_waitall structure
@@ -872,11 +1020,7 @@ static void test_struct_mpi_waitall(void) {
 
 	// check print of mpi_waitall structure with substructures
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[len] == '\0');
-	CU_ASSERT_FATAL(strlen(print_buf) == len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_mpi_waitall_print(&mpi_waitall_data, print_buf, len);
 }
 
@@ -947,9 +1091,7 @@ static void test_struct_basic(void) {
 
 	// check print of basic structure without substructures
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_basic_print(&data, print_buf, len);
 
 	// add substructures to basic structure
@@ -983,11 +1125,7 @@ static void test_struct_basic(void) {
 
 	// check print of basic structure with substructures
 
-	CU_ASSERT_FATAL(sizeof(print_buf) >= len);
-	CU_ASSERT_FATAL(print_buf[len] == '\0');
-	CU_ASSERT_FATAL(strlen(print_buf) == len);
-	CU_ASSERT_FATAL(print_buf[0] == '{');
-	CU_ASSERT_FATAL(print_buf[len - 1] == '}');
+	check_json_print(print_buf, sizeof(print_buf), len);
 	check_basic_print(&data, print_buf, len);
 }
 
@@ -996,4 +1134,5 @@ CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic),
 		CUNIT_CI_TEST(test_struct_msg_function),
 		CUNIT_CI_TEST(test_struct_fcntl_hint),
 		CUNIT_CI_TEST(test_struct_fcntl_seal),
-		CUNIT_CI_TEST(test_struct_select_function))
+		CUNIT_CI_TEST(test_struct_select_function),
+		CUNIT_CI_TEST(test_struct_mpi_delete_function))

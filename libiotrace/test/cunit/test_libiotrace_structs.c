@@ -771,10 +771,10 @@ static void check_basic_push(const struct basic *data, const char *line_buf) {
 	}
 #ifdef LOG_WRAPPER_TIME
 	CU_ASSERT_FATAL(0 == strcmp("wrapper_time_end", next_field->key));
-	check_push_integer(data->wrapper.time_start, next_field->value.i);
+	check_push_integer(data->wrapper.time_start, next_field);
 	next_field = next_field->next_item;
 	CU_ASSERT_FATAL(0 == strcmp("wrapper_time_start", next_field->key));
-	check_push_integer(data->wrapper.time_start, next_field->value.i);
+	check_push_integer(data->wrapper.time_start, next_field);
 	next_field = next_field->next_item;
 #endif
 	if (NULL != data->return_state_detail) {

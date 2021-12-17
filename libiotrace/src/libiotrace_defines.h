@@ -89,7 +89,7 @@
 
 #define LIBIOTRACE_STRUCT_SNPRINTF(...) libiotrace_struct_ret_int = snprintf(libiotrace_struct_buf, libiotrace_struct_size, __VA_ARGS__); \
                                     if (0 > libiotrace_struct_ret_int) { \
-                                    	LIBIOTRACE_ERROR("snprintf returned value < 0"); \
+                                        LIBIOTRACE_ERROR("snprintf returned value < 0"); \
                                     } \
                                     LIBIOTRACE_STRUCT_SIZE_ERROR((size_t)libiotrace_struct_ret_int, libiotrace_struct_size) /* don't write more characters then size of buffer */ \
                                     libiotrace_struct_buf += libiotrace_struct_ret_int;  /* set pointer to end of written characters */ \
@@ -267,7 +267,7 @@
                                          switch (*libiotrace_struct_data) {
 #  define LIBIOTRACE_STRUCT_ENUM_ELEMENT(name) case name: \
                                            LIBIOTRACE_STRUCT_WRITE(LIBIOTRACE_STRUCT_QUOT(name)",") \
-										   break;
+                                           break;
 #  define LIBIOTRACE_STRUCT_ENUM_END default: \
                                  LIBIOTRACE_STRUCT_ENUM_ERROR(*libiotrace_struct_data) \
                                } return libiotrace_struct_start_size - libiotrace_struct_size;}
@@ -376,7 +376,7 @@
                                        for (int libiotrace_struct_count_##name = 0; libiotrace_struct_count_##name < FD_SETSIZE; libiotrace_struct_count_##name++) { \
                                          if (FD_ISSET(libiotrace_struct_count_##name, libiotrace_struct_data->name)) { \
                                            LIBIOTRACE_STRUCT_SNPRINTF("%d,", libiotrace_struct_count_##name) \
-										   libiotrace_struct_hasElements_##name = 1; \
+                                           libiotrace_struct_hasElements_##name = 1; \
                                          } \
                                        } \
                                        if (libiotrace_struct_hasElements_##name) { \
@@ -1070,30 +1070,40 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD(type, name)
 #  define LIBIOTRACE_STRUCT_ENUM(type, name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, libiotrace_struct_push_max_size_enum_##type())
 #  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(int) \
-                                                                           + 1) /* for sign (-) */
+                                                                           + 1  /* for sign (-) */ \
+                                                                           + 1) /* for integer postfix (i) */
 #  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(char) \
-                                                                            + 1) /* for sign (-) */
+                                                                            + 1  /* for sign (-) */ \
+                                                                            + 1) /* for integer postfix (i) */
 #  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(pid_t) \
-                                                                             + 1) /* for sign (-) */
+                                                                             + 1  /* for sign (-) */ \
+                                                                             + 1) /* for integer postfix (i) */
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, length + 2) /* +2 for "" in strings --> Influx 2.X */
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_CSTRING(name, max_length)
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_CSTRING(name, max_length)
-#  define LIBIOTRACE_STRUCT_CLOCK_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(clock_t))
+#  define LIBIOTRACE_STRUCT_CLOCK_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(clock_t) \
+                                                                               + 1) /* for unsigned integer postfix (u) */
 #  define LIBIOTRACE_STRUCT_FILE_P(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_HEX(FILE*) \
                                                                               + 2) /* quotation marks (for value) */
 #  define LIBIOTRACE_STRUCT_LONG_INT(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(long int) \
-                                                                                + 1) /* for sign (-) */
-#  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(size_t))
+                                                                                + 1  /* for sign (-) */ \
+                                                                                + 1) /* for integer postfix (i) */
+#  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(size_t) \
+                                                                              + 1) /* for unsigned integer postfix (u) */
 #  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(ssize_t) \
-                                                                               + 1) /* for sign (-) */
+                                                                               + 1  /* for sign (-) */ \
+                                                                               + 1) /* for integer postfix (i) */
 #  ifdef HAVE_OFF64_T
 #    define LIBIOTRACE_STRUCT_OFF_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(off64_t) \
-                                                                               + 1) /* for sign (-) */
+                                                                               + 1  /* for sign (-) */ \
+                                                                               + 1) /* for integer postfix (i) */
 #  else
 #    define LIBIOTRACE_STRUCT_OFF_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(off_t) \
-                                                                               + 1) /* for sign (-) */
+                                                                               + 1  /* for sign (-) */ \
+                                                                               + 1) /* for integer postfix (i) */
 #  endif
-#  define LIBIOTRACE_STRUCT_U_INT64_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(u_int64_t))
+#  define LIBIOTRACE_STRUCT_U_INT64_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(u_int64_t) \
+                                                                                 + 1) /* for unsigned integer postfix (u) */
 #  define LIBIOTRACE_STRUCT_VOID_P(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_HEX(void*) \
                                                                               + 2) /* quotation marks (for value) */
 #  define LIBIOTRACE_STRUCT_VOID_P_CONST(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_HEX(void*) \
@@ -1101,16 +1111,21 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_FD_SET_P(name)
 #  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
 #    define LIBIOTRACE_STRUCT_LMID_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(Lmid_t) \
-                                                                                + 1) /* for sign (-) */
+                                                                                + 1  /* for sign (-) */ \
+                                                                                + 1) /* for integer postfix (i) */
 #  endif
 #  define LIBIOTRACE_STRUCT_SHORT(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(short) \
-                                                                             + 1) /* for sign (-) */
-#  define LIBIOTRACE_STRUCT_DEV_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(dev_t))
-#  define LIBIOTRACE_STRUCT_INO_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(ino_t))
+                                                                             + 1  /* for sign (-) */ \
+                                                                             + 1) /* for integer postfix (i) */
+#  define LIBIOTRACE_STRUCT_DEV_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(dev_t) \
+                                                                             + 1) /* for unsigned integer postfix (u) */
+#  define LIBIOTRACE_STRUCT_INO_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(ino_t) \
+                                                                             + 1) /* for unsigned integer postfix (u) */
 #  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element)
 #  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size)
 #  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size)
-#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(sa_family_t))
+#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT_SIZE(name, LIBIOTRACE_STRUCT_TYPE_SIZE_DEC(sa_family_t) \
+                                                                                   + 1) /* for unsigned integer postfix (u) */
 #  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
 
 /* insert new line for new data-type here */
@@ -1127,7 +1142,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
 #  define LIBIOTRACE_STRUCT_TYPE(name, function) if(*prefix=='\0') { \
                                                LIBIOTRACE_STRUCT_WRITE(#name"=") \
                                            } else { \
-                                        	   LIBIOTRACE_STRUCT_SNPRINTF("%s_"#name"=", prefix) \
+                                               LIBIOTRACE_STRUCT_SNPRINTF("%s_"#name"=", prefix) \
                                            } \
                                            libiotrace_struct_ret = function(libiotrace_struct_buf, libiotrace_struct_size, \
                                                                &libiotrace_struct_data->name); \
@@ -1211,32 +1226,32 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
                                          libiotrace_struct_size -= libiotrace_struct_ret; /* resize buffer size */
 #  define LIBIOTRACE_STRUCT_ARRAY_BITFIELD(type, name)
 #  define LIBIOTRACE_STRUCT_ENUM(type, name) LIBIOTRACE_STRUCT_TYPE(name, libiotrace_struct_push_enum_##type)
-#  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %di, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_CHAR(name) LIBIOTRACE_STRUCT_ELEMENT(name, %di, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_PID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %di, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING(name, length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_CSTRING_P_CONST(name, max_length) LIBIOTRACE_STRUCT_ELEMENT(name, "%s", libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_CLOCK_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_CLOCK_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %luu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_FILE_P(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", (void *)libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_LONG_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_OFF_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_U_INT64_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name) /*mpi_file->written_bytes*/
+#  define LIBIOTRACE_STRUCT_LONG_INT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ldi, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_SIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %luu, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_SSIZE_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ldi, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_OFF_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ldi, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_U_INT64_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %luu, libiotrace_struct_data->name) /*mpi_file->written_bytes*/
 #  define LIBIOTRACE_STRUCT_VOID_P(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_VOID_P_CONST(name) LIBIOTRACE_STRUCT_ELEMENT(name, "%p", libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_FD_SET_P(name)
 #  if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
-#    define LIBIOTRACE_STRUCT_LMID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ld, libiotrace_struct_data->name)
+#    define LIBIOTRACE_STRUCT_LMID_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %ldi, libiotrace_struct_data->name)
 #  endif
-#  define LIBIOTRACE_STRUCT_SHORT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %d, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_DEV_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
-#  define LIBIOTRACE_STRUCT_INO_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %lu, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_SHORT(name) LIBIOTRACE_STRUCT_ELEMENT(name, %di, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_DEV_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %luu, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_INO_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %luu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY(name, max_size, max_length_per_element)
 #  define LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY(name, max_size)
 #  define LIBIOTRACE_STRUCT_INT_ARRAY(name, max_size)
-#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %hu, libiotrace_struct_data->name)
+#  define LIBIOTRACE_STRUCT_SA_FAMILY_T(name) LIBIOTRACE_STRUCT_ELEMENT(name, %huu, libiotrace_struct_data->name)
 #  define LIBIOTRACE_STRUCT_KEY_VALUE_ARRAY(name, max_size, max_length_per_cstring)
 
 /* insert new line for new data-type here */

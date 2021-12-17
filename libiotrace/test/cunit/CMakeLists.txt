@@ -19,7 +19,12 @@ target_link_libraries(test_utils PRIVATE cunit)
 
 add_test(NAME test_utils COMMAND test_utils)
 
-add_executable(test_libiotrace_structs test_libiotrace_structs.c ../../src/libiotrace_defines_utils.c)
+add_executable(
+    test_libiotrace_structs
+    test_libiotrace_structs.c
+    ../../src/libiotrace_defines_utils.c
+    ../../src/line_protocol_parser.c
+)
 set_target_properties(test_libiotrace_structs PROPERTIES LINK_FLAGS -W)
 #list(APPEND OPTIONS -fsanitize=undefined)
 target_compile_options(test_libiotrace_structs PRIVATE ${OPTIONS})

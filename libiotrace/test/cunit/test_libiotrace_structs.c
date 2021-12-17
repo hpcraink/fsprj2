@@ -5,6 +5,8 @@
 #define JSMN_STRICT
 #include "../../src/jsmn.h"
 
+#include "../../src/line_protocol_parser.h"
+
 /* libiotrace_include_function.h uses POSIX functions. The functions
  * are wrapped if WITH_POSIX_IO is defined. In this test file only
  * the structures and no wrappers are tested. So use of wrappers is
@@ -170,16 +172,19 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 	CU_ASSERT_FATAL(data->time_diff == copy->time_diff);
 #endif
 	CU_ASSERT_FATAL(data->return_state == copy->return_state);
-	CU_ASSERT_FATAL(
-			data->return_state_detail->errno_value
-					== copy->return_state_detail->errno_value);
-	CU_ASSERT_FATAL(
-			data->return_state_detail->errno_text
-					!= copy->return_state_detail->errno_text);
-	CU_ASSERT_FATAL(
-			0
-					== strcmp(data->return_state_detail->errno_text,
-							copy->return_state_detail->errno_text));
+	if (NULL != data->return_state_detail) {
+		CU_ASSERT_FATAL(data->return_state_detail != copy->return_state_detail);
+		CU_ASSERT_FATAL(
+				data->return_state_detail->errno_value
+						== copy->return_state_detail->errno_value);
+		CU_ASSERT_FATAL(
+				data->return_state_detail->errno_text
+						!= copy->return_state_detail->errno_text);
+		CU_ASSERT_FATAL(
+				0
+						== strcmp(data->return_state_detail->errno_text,
+								copy->return_state_detail->errno_text));
+	}
 	if (NULL == data->__stacktrace_symbols) {
 		CU_ASSERT_FATAL(NULL == copy->__stacktrace_symbols);
 	}
@@ -214,6 +219,24 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 					((struct mpi_waitall* )(data->__function_data))->__requests
 							== ((struct mpi_waitall* )(copy->__function_data))->__requests);
 		}
+	}
+}
+
+void check_line_push(char line_buf[], const size_t line_buf_size,
+		const size_t count_char_in_line_buf) {
+	// prepend measurement
+	line_buf[0] = 't';
+	line_buf[1] = 'e';
+	line_buf[2] = 's';
+	line_buf[3] = 't';
+	line_buf[4] = ' ';
+
+	CU_ASSERT_FATAL(line_buf_size >= count_char_in_line_buf + 5);
+	CU_ASSERT_FATAL(line_buf[count_char_in_line_buf + 5] == '\0');
+	CU_ASSERT_FATAL(strlen(line_buf) == count_char_in_line_buf + 5);
+	if (count_char_in_line_buf > 5) {
+		// remove last comma
+		line_buf[count_char_in_line_buf + 4] = '\0';
 	}
 }
 
@@ -596,15 +619,17 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	check_json_string(print_buf, &tokens[i++], "return_state");
 	check_json_enum_read_write_state(print_buf, &tokens[i++],
 			data->return_state);
-	check_json_string(print_buf, &tokens[i++], "return_state_detail");
-	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
-	CU_ASSERT_FATAL(tokens[i - 1].size == 2);
-	check_json_string(print_buf, &tokens[i++], "errno_value");
-	check_json_number(print_buf, &tokens[i++],
-			data->return_state_detail->errno_value, 0);
-	check_json_string(print_buf, &tokens[i++], "errno_text");
-	check_json_string(print_buf, &tokens[i++],
-			data->return_state_detail->errno_text);
+	if (NULL != data->return_state_detail) {
+		check_json_string(print_buf, &tokens[i++], "return_state_detail");
+		CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
+		CU_ASSERT_FATAL(tokens[i - 1].size == 2);
+		check_json_string(print_buf, &tokens[i++], "errno_value");
+		check_json_number(print_buf, &tokens[i++],
+				data->return_state_detail->errno_value, 0);
+		check_json_string(print_buf, &tokens[i++], "errno_text");
+		check_json_string(print_buf, &tokens[i++],
+				data->return_state_detail->errno_text);
+	}
 #ifdef LOG_WRAPPER_TIME
 	check_json_string(print_buf, &tokens[i++], "wrapper");
 	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
@@ -642,6 +667,163 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 	}
 }
 
+static void check_push_string(const char *string, struct LP_Item *item) {
+	CU_ASSERT_FATAL(item->type == LP_STRING);
+	CU_ASSERT_FATAL(0 == strcmp(string, item->value.s));
+}
+
+static void check_push_integer(const long long integer, struct LP_Item *item) {
+	CU_ASSERT_FATAL(item->type == LP_INTEGER);
+	CU_ASSERT_FATAL(integer == item->value.i);
+}
+
+static void check_push_unsigned_integer(const unsigned long long integer,
+		struct LP_Item *item) {
+	CU_ASSERT_FATAL(item->type == LP_UINTEGER);
+	CU_ASSERT_FATAL(integer == item->value.u);
+}
+
+static void check_push_enum_read_write_state(struct LP_Item *item,
+		enum read_write_state read_write_state) {
+	CU_ASSERT_FATAL(item->type == LP_STRING);
+
+	char buf[libiotrace_struct_push_max_size_enum_read_write_state() + 1];
+	size_t len = libiotrace_struct_push_enum_read_write_state(buf, sizeof(buf),
+			&read_write_state);
+
+	// remove enclosing '"'
+	buf[len - 1] = '\0';
+	const char *start = buf + 1;
+
+	CU_ASSERT_FATAL(0 == strcmp(item->value.s, start));
+}
+
+static void check_mpi_waitall_push(const struct mpi_waitall *data,
+		const char *line_buf) {
+	struct LP_Point *point;
+	int status = 0;
+
+	point = LP_parse_line(line_buf, &status);
+	if (point == NULL) {
+		if (8 == status) {
+			// struct mpi_waitall has no field element because
+			// LIBIOTRACE_STRUCT_STRUCT_ARRAY is not implemented
+			// for line protocol
+			// TODO: remove after STRUCT_ARRAY is implemented
+			return;
+		}
+		printf("LP_parse_line status: %d\n", status);
+		CU_FAIL_FATAL("LP_parse_line returned an error")
+	}
+
+	CU_ASSERT_FATAL(0 == strcmp("test", point->measurement));
+
+	struct LP_Item *next_field = point->fields;
+	if (NULL == data->__requests) {
+		CU_ASSERT_FATAL(NULL == next_field);
+	} else {
+		CU_ASSERT_FATAL(NULL == next_field);
+		// TODO:
+//		for (size_t l = 0; l < data->__size_requests; l++) {
+//			return_state_detail_errno_text
+//			return_state_detail_errno_value
+//			return_state
+//			request_id
+//			count_bytes
+//		}
+	}
+}
+
+static void check_basic_push(const struct basic *data, const char *line_buf) {
+	struct LP_Point *point;
+	int status = 0;
+
+	point = LP_parse_line(line_buf, &status);
+	if (point == NULL) {
+		printf("LP_parse_line status: %d\n", status);
+		CU_FAIL_FATAL("LP_parse_line returned an error")
+	}
+
+	CU_ASSERT_FATAL(0 == strcmp("test", point->measurement));
+
+	struct LP_Item *next_field = point->fields;
+	if (NULL != data->__function_data) {
+		if (__void_p_enum_function_data_mpi_waitall
+				== data->__void_p_enum_function_data) {
+			if (NULL
+					!= ((struct mpi_waitall*) (data->__function_data))->__requests) {
+				CU_ASSERT_FATAL(
+						0 == strcmp("function_data_requests", next_field->key));
+				next_field = next_field->next_item;
+			}
+		}
+	}
+	if (NULL != data->__file_type) {
+		if (__void_p_enum_file_type_file_descriptor
+				== data->__void_p_enum_file_type) {
+			CU_ASSERT_FATAL(
+					0 == strcmp("file_type_descriptor", next_field->key));
+			check_push_integer(
+					((struct file_descriptor*) (data->__file_type))->descriptor,
+					next_field);
+			next_field = next_field->next_item;
+		}
+	}
+#ifdef LOG_WRAPPER_TIME
+	CU_ASSERT_FATAL(0 == strcmp("wrapper_time_end", next_field->key));
+	check_push_integer(data->wrapper.time_start, next_field->value);
+	next_field = next_field->next_item;
+	CU_ASSERT_FATAL(0 == strcmp("wrapper_time_start", next_field->key));
+	check_push_integer(data->wrapper.time_start, next_field->value);
+	next_field = next_field->next_item;
+#endif
+	if (NULL != data->return_state_detail) {
+		CU_ASSERT_FATAL(
+				0 == strcmp("return_state_detail_errno_text", next_field->key));
+		check_push_string(data->return_state_detail->errno_text, next_field);
+		next_field = next_field->next_item;
+		CU_ASSERT_FATAL(
+				0 == strcmp("return_state_detail_errno_value", next_field->key));
+		check_push_integer(data->return_state_detail->errno_value, next_field);
+		next_field = next_field->next_item;
+	}
+	CU_ASSERT_FATAL(0 == strcmp("return_state", next_field->key));
+	check_push_enum_read_write_state(next_field, data->return_state);
+	next_field = next_field->next_item;
+#ifdef IOTRACE_ENABLE_INFLUXDB
+	CU_ASSERT_FATAL(0 == strcmp("time_diff", next_field->key));
+	check_push_unsigned_integer(data->time_diff, next_field);
+	next_field = next_field->next_item;
+#endif
+	CU_ASSERT_FATAL(0 == strcmp("time_end", next_field->key));
+	check_push_unsigned_integer(data->time_end, next_field);
+	next_field = next_field->next_item;
+	CU_ASSERT_FATAL(0 == strcmp("time_start", next_field->key));
+	check_push_unsigned_integer(data->time_end, next_field);
+	next_field = next_field->next_item;
+	CU_ASSERT_FATAL(0 == strcmp("function_name", next_field->key));
+	check_push_string(data->function_name, next_field);
+	next_field = next_field->next_item;
+	CU_ASSERT_FATAL(0 == strcmp("thread_id", next_field->key));
+	check_push_integer(data->thread_id, next_field);
+	next_field = next_field->next_item;
+	CU_ASSERT_FATAL(0 == strcmp("process_id", next_field->key));
+	check_push_integer(data->process_id, next_field);
+	next_field = next_field->next_item;
+	CU_ASSERT_FATAL(0 == strcmp("hostname", next_field->key));
+	check_push_string(data->hostname, next_field);
+	next_field = next_field->next_item;
+#ifdef WITH_FILENAME_RESOLUTION
+	CU_ASSERT_FATAL(0 == strcmp("traced_filename", next_field->key));
+	check_push_string(data->traced_filename, next_field);
+	next_field = next_field->next_item;
+#endif
+
+	CU_ASSERT_FATAL(NULL == next_field);
+
+	LP_free_point(point);
+}
+
 static void test_struct_fcntl_seal_impl(struct fcntl_seal *fcntl_seal_data) {
 	// copy fcntl_seal structure
 
@@ -661,7 +843,7 @@ static void test_struct_fcntl_seal_impl(struct fcntl_seal *fcntl_seal_data) {
 	char print_buf[libiotrace_struct_max_size_fcntl_seal() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_fcntl_seal(print_buf,
-			sizeof(print_buf), fcntl_seal_data);
+			sizeof(print_buf), copy);
 
 	// check print of fcntl_seal structure
 
@@ -691,7 +873,7 @@ static void test_struct_mpi_delete_function_impl(
 	char print_buf[libiotrace_struct_max_size_mpi_delete_function() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_mpi_delete_function(print_buf,
-			sizeof(print_buf), mpi_delete_function_data);
+			sizeof(print_buf), copy);
 
 	// check print of mpi_delete_function structure
 
@@ -809,7 +991,7 @@ static void test_struct_select_function(void) {
 	char print_buf[libiotrace_struct_max_size_select_function() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_select_function(print_buf,
-			sizeof(print_buf), &select_function_data);
+			sizeof(print_buf), copy);
 
 	// check print of select_function structure
 
@@ -883,7 +1065,7 @@ static void test_struct_fcntl_hint(void) {
 	char print_buf[libiotrace_struct_max_size_fcntl_hint() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_fcntl_hint(print_buf,
-			sizeof(print_buf), &fcntl_hint_data);
+			sizeof(print_buf), copy);
 
 	// check print of fcntl_hint structure
 
@@ -932,7 +1114,7 @@ static void test_struct_msg_function(void) {
 	char print_buf[libiotrace_struct_max_size_msg_function() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_msg_function(print_buf,
-			sizeof(print_buf), &msg_function_data);
+			sizeof(print_buf), copy);
 
 	// check print of msg_function structure
 
@@ -972,12 +1154,24 @@ static void test_struct_mpi_waitall(void) {
 	char print_buf[libiotrace_struct_max_size_mpi_waitall() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_mpi_waitall(print_buf,
-			sizeof(print_buf), &mpi_waitall_data);
+			sizeof(print_buf), copy);
 
 	// check print of mpi_waitall structure without substructures
 
 	check_json_print(print_buf, sizeof(print_buf), len);
 	check_mpi_waitall_print(&mpi_waitall_data, print_buf, len);
+
+	// print mpi_waitall structure without substructures as influxdb line protocol (push)
+
+	char line_buf[libiotrace_struct_push_max_size_mpi_waitall(0) + 1 + 5];
+	memset(line_buf, 0, sizeof(line_buf));
+	len = libiotrace_struct_push_mpi_waitall(line_buf + 5, sizeof(line_buf),
+			copy, "");
+
+	// check push of mpi_waitall structure without substructures
+
+	check_line_push(line_buf, sizeof(line_buf), len);
+	check_mpi_waitall_push(&mpi_waitall_data, line_buf);
 
 	// add substructures to mpi_waitall structure
 
@@ -1016,7 +1210,7 @@ static void test_struct_mpi_waitall(void) {
 
 	memset(print_buf, 0, sizeof(print_buf));
 	len = libiotrace_struct_print_mpi_waitall(print_buf, sizeof(print_buf),
-			&mpi_waitall_data);
+			copy);
 
 	// check print of mpi_waitall structure with substructures
 
@@ -1028,23 +1222,15 @@ static void test_struct_mpi_waitall(void) {
  * different substructures must be handled */
 static void test_struct_basic(void) {
 	struct basic data;
-	struct errno_detail errno_detail_data;
 	char hostname[HOST_NAME_MAX];
-	char errno_text[MAX_ERROR_TEXT];
 	pid_t pid_t_value;
 	u_int64_t u_int64_t_value;
-	int int_value;
 
 	// initialize basic structure without substructures
 
 	fill_string(hostname, sizeof(hostname), 'h');
-	fill_string(errno_text, sizeof(errno_text), 'e');
 	fill_number(&pid_t_value, sizeof(pid_t_value));
 	fill_number(&u_int64_t_value, sizeof(u_int64_t_value));
-	fill_number(&int_value, sizeof(int_value));
-
-	errno_detail_data.errno_value = int_value;
-	errno_detail_data.errno_text = errno_text;
 
 #ifdef WITH_FILENAME_RESOLUTION
 	fill_string(data.traced_filename, sizeof(data.traced_filename), 't');
@@ -1060,7 +1246,7 @@ static void test_struct_basic(void) {
 	data.time_diff = u_int64_t_value;
 #endif
 	data.return_state = unknown_read_write_state;
-	data.return_state_detail = &errno_detail_data;
+	data.return_state_detail = NULL;
 	LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY_NULL(data, stacktrace_symbols)
 	LIBIOTRACE_STRUCT_SET_MALLOC_PTR_ARRAY_NULL(data, stacktrace_pointer)
 #ifdef LOG_WRAPPER_TIME
@@ -1087,14 +1273,39 @@ static void test_struct_basic(void) {
 	char print_buf[libiotrace_struct_max_size_basic() + 1];
 	memset(print_buf, 0, sizeof(print_buf));
 	size_t len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf),
-			&data);
+			copy);
 
 	// check print of basic structure without substructures
 
 	check_json_print(print_buf, sizeof(print_buf), len);
 	check_basic_print(&data, print_buf, len);
 
+	// print basic structure without substructures as influxdb line protocol (push)
+
+	char line_buf[libiotrace_struct_push_max_size_basic(0) + 1 + 5];
+	memset(line_buf, 0, sizeof(line_buf));
+	len = libiotrace_struct_push_basic(line_buf + 5, sizeof(line_buf), copy,
+			"");
+
+	// check push of basic structure without substructures
+
+	check_line_push(line_buf, sizeof(line_buf), len);
+	check_basic_push(&data, line_buf);
+
 	// add substructures to basic structure
+
+	char errno_text[MAX_ERROR_TEXT];
+	int int_value;
+
+	fill_string(errno_text, sizeof(errno_text), 'e');
+	fill_number(&int_value, sizeof(int_value));
+
+	struct errno_detail errno_detail_data;
+
+	errno_detail_data.errno_value = int_value;
+	errno_detail_data.errno_text = errno_text;
+
+	data.return_state_detail = &errno_detail_data;
 
 	struct file_descriptor file_descriptor_data;
 	struct mpi_waitall mpi_waitall_data;
@@ -1121,13 +1332,27 @@ static void test_struct_basic(void) {
 	// print basic structure with substructures as json
 
 	memset(print_buf, 0, sizeof(print_buf));
-	len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf), &data);
+	len = libiotrace_struct_print_basic(print_buf, sizeof(print_buf), copy);
 
 	// check print of basic structure with substructures
 
 	check_json_print(print_buf, sizeof(print_buf), len);
 	check_basic_print(&data, print_buf, len);
+
+	// print basic structure with substructures as influxdb line protocol (push)
+
+	memset(line_buf, 0, sizeof(line_buf));
+	len = libiotrace_struct_push_basic(line_buf + 5, sizeof(line_buf), copy,
+			"");
+
+	// check push of basic structure with substructures
+
+	check_line_push(line_buf, sizeof(line_buf), len);
+	check_basic_push(&data, line_buf);
 }
+
+// TODO: LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY
+// TODO: LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY
 
 CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic),
 		CUNIT_CI_TEST(test_struct_mpi_waitall),

@@ -1,7 +1,6 @@
 /*
  * Function name constants (fctnconsts):
  *   Defines constants + string-hash function for switch-case on function name
- *   Note: To generate constants, use Python script 'fnres_generate_consts_for_switchcase.py' in 'misc'
  */
 
 #ifndef LIBIOTRACE_FCTNCONSTS_H
@@ -21,6 +20,7 @@ static u_int64_t hash_string(const char *str) {
 #define SWITCH_FCTNAME(function_name) switch (hash_string(function_name))
 
 
+/* -- Function names hashed using function above  (generated using scripts/dev/gen_fnres_fct_name_consts.py) */
 #define CASE_OPEN 0x17c9bd777
 #define CASE_OPEN64 0x65312ef9861
 #define CASE_CREAT 0x310f3eb7d4

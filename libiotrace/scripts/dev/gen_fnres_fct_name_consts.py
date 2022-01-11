@@ -1,55 +1,14 @@
 #!/usr/bin/env python
 
-'''
-Generates constants necessary for using switch on strings
-'''
+"""
+Assists in generating constants of function names for the file name resolution (fnres) module
+"""
 
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-'''
-C code for switch-statement:
-
-// djb2 by Dan Bernstein
-static u_int64_t hash_string(const char *str) {
-    unsigned long hash = 5381;
-    int c;
-
-    while ((c = *str++)) hash = ((hash << 5) + hash) + c;
-    return hash;
-}
-
-#define SWITCH_FNAME(function_name) switch (hash_string(function_name))
-
-// ... Generated constants
-'''
-
-# djb2 by Dan Bernstein
+import sys
+from string_utils import str_hash_djb2
 
 
-def hash_djb2(string, hash_max_num):
-    hash = 5381
-    for char in string:
-        hash = ((hash << 5) + hash) + ord(char)
-    return (hash & hash_max_num)
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-def print_constants_for_switch_strings(cases, hash_function, hash_max_num, print_hex):
-    generated_hashes = []           # For checking hash-collisions
-
-    for case in cases:
-        hash = hash_function(case, hash_max_num)
-
-        generated_hashes.append(hash)
-        print(
-            f"#define CASE_{case.upper()} {hex(hash) if print_hex else hash}", end='\n')
-
-    if len(generated_hashes) != len(set(generated_hashes)):
-        print("!! WARNING: POTENTIAL HASH COLLISION !!")
-
-
-ULONG_MAX = 0xffffffffffffffff
-
-case_strings = [
+FUNCTION_NAMES = [
     # --- POSIX ---
     # - Relevant for tracing + traceable -
     "open", "open64",
@@ -247,7 +206,17 @@ case_strings = [
     "cleanup", "init_on_load"
 ]
 
-print_in_hex = True
+PRINT_HASHES_IN_HEX = True
 
-print_constants_for_switch_strings(
-    case_strings, hash_djb2, ULONG_MAX, print_in_hex)
+CONST_PREFIX = "CASE"
+
+
+if __name__ == '__main__':
+    hashed_fct_names = str_hash_djb2(FUNCTION_NAMES, PRINT_HASHES_IN_HEX)
+
+    if hashed_fct_names != None:
+        for string, hash in hashed_fct_names.items():
+            print(f"#define {CONST_PREFIX}_{string.upper()} {hash}", end='\n')
+        sys.exit(0)
+
+    sys.exit(1)

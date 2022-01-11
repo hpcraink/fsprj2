@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #include "fnmap.h"
-#include "../../libs/hashmap/atomic_hash.h"
+#include "../../libs/atomic_hash/atomic_hash.h"
 #include "../../error.h"
 #include "libiotrace_config.h"
 
@@ -74,14 +74,15 @@ static void __log_fnmap_key(const fnmap_key *key) {
  * Shall be called by `init_process` in event.c
  */
 void fnmap_create(size_t max_size) {
-    if (NULL != global_map) {   /* Used to be assert */
+    if (global_map) {
         LIBIOTRACE_ERROR("fnmap has been already init'ed");
     }
 
-    if (NULL == (global_map = atomic_hash_create(max_size, TTL_DISABLE))) {
+    if (!(global_map = atomic_hash_create(max_size, TTL_DISABLE))) {
         LIBIOTRACE_ERROR("Couldn't init fnmap");
     } else {
-        global_map->on_del = __del_hook;
+        atomic_hash_register_hooks(global_map,
+                                   NULL, NULL, NULL, NULL, __del_hook);
     }
 }
 

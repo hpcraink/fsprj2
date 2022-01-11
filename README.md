@@ -183,7 +183,7 @@ Steps to build _libiotrace_:
 
         * _WITH_FILENAME_RESOLUTION_:
 
-          Disclaimer: This feature requires SSE4.2 support. Also, some POSIX-/MPI-IO functions are currently not supported.
+          Disclaimer: This feature requires depending on selected _HASH_FUNCTION_ either SSE4.2 support (`CITY3HASH_128`) or the library `libssl-dev` (`MD5HASH`). Also, some POSIX-/MPI-IO functions are currently not supported.
           If set to _ON_ libiotrace will create a mapping between filenames and file identifiers (e.g., fildes) during runtime and write the traced filenames to the trace.
           Supports by default up to 100 open files. This limit can be raised to max. 10000 using the environment variable _IOTRACE_FNRES_MAX_FILENAMES_.
           Note: This mapping can also be created post-mortem using the tool _IOTrace_Analyze_.

@@ -251,7 +251,7 @@ list(APPEND LINK_OPTIONS
 if(WITH_FILENAME_RESOLUTION)
 # TODO: Disable for tests not related to fnres  -->  Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
-        "hashmap"
+        "atomic_hash_object"
     )
 endif()
 

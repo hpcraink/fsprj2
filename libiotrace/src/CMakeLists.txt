@@ -244,13 +244,13 @@ add_library(iotrace_object OBJECT ${SOURCE})
 add_library(iotrace_control SHARED libiotrace.c)
 
 
-add_subdirectory(libs/hashmap)
+add_subdirectory(libs/atomic_hash)
 
 # ${CMAKE_DL_LIBS} needed for dlsym-function
 # "-lpthread" needed for pthread_atfork()
 if(WITH_FILENAME_RESOLUTION)
-    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} hashmap pthread)
-    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} hashmap pthread)        # $$$ TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ?? $$$
+    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} atomic_hash_object pthread)
+    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} atomic_hash_object pthread)        # $$$ TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ?? $$$
 else()
     target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} pthread)
 endif()

@@ -62,10 +62,10 @@ if (WITH_FILENAME_RESOLUTION)
 
     # - fctevent -
 	add_executable(test_fctevent test_fctevent.c
-															 ../../src/fnres/internal/fnmap.c
-															 ../../src/fnres/fctevent.c)
+				   ../../src/fnres/internal/fnmap.c
+     		       ../../src/fnres/fctevent.c)
 	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
-	target_link_libraries(test_fctevent PRIVATE cunit hashmap)
+	target_link_libraries(test_fctevent PRIVATE cunit atomic_hash_object)
 	add_test(NAME test_fctevent COMMAND test_fctevent)
 
 
@@ -73,7 +73,7 @@ if (WITH_FILENAME_RESOLUTION)
 	add_executable(testing_fnmap testing_fnmap.c
 															../../src/fnres/internal/fnmap.c)
 	set_target_properties(testing_fnmap PROPERTIES LINK_FLAGS -W)
-	target_link_libraries(testing_fnmap PRIVATE cunit hashmap)
+	target_link_libraries(testing_fnmap PRIVATE cunit atomic_hash_object)
 	add_test(NAME testing_fnmap COMMAND testing_fnmap)
 endif()
 																

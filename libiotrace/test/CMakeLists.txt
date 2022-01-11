@@ -5,7 +5,7 @@ if (WITH_UNIT_TESTS)
     add_subdirectory(cunit)
 endif()
 
-add_subdirectory(internal)
+# add_subdirectory(internal)            # !! WARNING: Breaks arm64 build !!
 
 include(CheckSymbolExists)
 

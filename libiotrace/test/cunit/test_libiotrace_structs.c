@@ -187,6 +187,17 @@ static void check_basic_copy(const struct basic *data, const struct basic *copy)
 	}
 	if (NULL == data->__stacktrace_symbols) {
 		CU_ASSERT_FATAL(NULL == copy->__stacktrace_symbols);
+	} else {
+		for (size_t i = copy->__start_stacktrace_symbols;
+				i < copy->__size_stacktrace_symbols; i++) {
+			CU_ASSERT_FATAL(
+					data->__stacktrace_symbols[i]
+							!= copy->__stacktrace_symbols[i]);
+			CU_ASSERT_FATAL(
+					0
+							== strcmp(data->__stacktrace_symbols[i],
+									copy->__stacktrace_symbols[i]));
+		}
 	}
 	if (NULL == data->__stacktrace_pointer) {
 		CU_ASSERT_FATAL(NULL == copy->__stacktrace_pointer);
@@ -629,6 +640,19 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 		check_json_string(print_buf, &tokens[i++], "errno_text");
 		check_json_string(print_buf, &tokens[i++],
 				data->return_state_detail->errno_text);
+	}
+	if (NULL != data->__stacktrace_symbols) {
+		check_json_string(print_buf, &tokens[i++], "stacktrace_symbols");
+		CU_ASSERT_FATAL(tokens[i++].type == JSMN_ARRAY);
+		CU_ASSERT_FATAL(
+				(size_t )tokens[i - 1].size
+						== data->__size_stacktrace_symbols
+								- data->__start_stacktrace_symbols);
+		for (size_t l = data->__start_stacktrace_symbols;
+				l < data->__size_stacktrace_symbols; l++) {
+			check_json_string(print_buf, &tokens[i++],
+					data->__stacktrace_symbols[l]);
+		}
 	}
 #ifdef LOG_WRAPPER_TIME
 	check_json_string(print_buf, &tokens[i++], "wrapper");
@@ -1307,6 +1331,17 @@ static void test_struct_basic(void) {
 
 	data.return_state_detail = &errno_detail_data;
 
+	int size = 10;
+	char **messages = malloc(sizeof(char*) * size);
+	CU_ASSERT_FATAL(NULL != messages)
+	char tmp_string[size];
+	fill_string(tmp_string, sizeof(tmp_string), 's');
+	for (int i = 0; i < size; i++) {
+		messages[i] = tmp_string;
+	}
+	LIBIOTRACE_STRUCT_SET_MALLOC_STRING_ARRAY(data, stacktrace_symbols,
+			messages, 3, size)
+
 	struct file_descriptor file_descriptor_data;
 	struct mpi_waitall mpi_waitall_data;
 
@@ -1351,7 +1386,6 @@ static void test_struct_basic(void) {
 	check_basic_push(&data, line_buf);
 }
 
-// TODO: LIBIOTRACE_STRUCT_MALLOC_STRING_ARRAY
 // TODO: LIBIOTRACE_STRUCT_MALLOC_PTR_ARRAY
 
 CUNIT_CI_RUN("Suite_1", CUNIT_CI_TEST(test_struct_basic),

@@ -39,51 +39,51 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic *fct
 
 
 /* --- Macros --- */
-#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) do {\
-  (fctevent)->traced_filename[sizeof((fctevent)->traced_filename) - 1] = '\0'; /* ensure there is a terminating '\0' after strncpy */\
-  strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename) - 1 /* save space for terminating '\0' */);\
+#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) do {                                                                            \
+  (fctevent)->traced_filename[sizeof((fctevent)->traced_filename) - 1] = '\0'; /* ensure there is a terminating '\0' after strncpy */         \
+  strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename) - 1 /* save space for terminating '\0' */);          \
   /* LIBIOTRACE_DEBUG("Set for fctevent [%s] traced_filename: %s", (fctevent)->function_name, (fctevent)->traced_filename);    // DEBUGGING */\
 } while(0)
 
-#define RETURN_IF_FCTEVENT_FAILED(fctevent) do {\
-  if (error == (fctevent)->return_state) {\
+#define RETURN_IF_FCTEVENT_FAILED(fctevent) do {                                        \
+  if (error == (fctevent)->return_state) {                                              \
     /* LIBIOTRACE_DEBUG("Failed fectevent, not adding to trace ...");    // DEBUGGING */\
-    return;\
-  }\
+    return;                                                                             \
+  }                                                                                     \
 } while(0)
 
 #define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, filename) do {\
-  fnmap_key insert_key;\
-  __create_fnmap_key_using_fctevent_file_type(fctevent, &insert_key);\
-  fnmap_add_or_update(&insert_key, filename);\
+  fnmap_key insert_key;                                                               \
+  __create_fnmap_key_using_fctevent_file_type(fctevent, &insert_key);                 \
+  fnmap_add_or_update(&insert_key, filename);                                         \
 } while(0)
 
-#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, filename) do {\
-  fnmap_key insert_key1; fnmap_key insert_key2;\
-  __create_fnmap_key_using_fctevent_function_data(fctevent, &insert_key1, &insert_key2);\
-  fnmap_add_or_update(&insert_key1, filename);\
-  \
-  if (__void_p_enum_function_data_file_pair == (fctevent)->__void_p_enum_function_data || \
+#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, filename) do {           \
+  fnmap_key insert_key1; fnmap_key insert_key2;                                                      \
+  __create_fnmap_key_using_fctevent_function_data(fctevent, &insert_key1, &insert_key2);             \
+  fnmap_add_or_update(&insert_key1, filename);                                                       \
+                                                                                                     \
+  if (__void_p_enum_function_data_file_pair == (fctevent)->__void_p_enum_function_data ||            \
         __void_p_enum_function_data_socketpair_function == (fctevent)->__void_p_enum_function_data) {\
-    fnmap_add_or_update(&insert_key2, filename);\
-  }\
+    fnmap_add_or_update(&insert_key2, filename);                                                     \
+  }                                                                                                  \
 } while(0)
 
-#define RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent) do {\
-  fnmap_key delete_key;\
+#define RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent) do { \
+  fnmap_key delete_key;                                              \
   __create_fnmap_key_using_fctevent_file_type(fctevent, &delete_key);\
-  fnmap_remove(&delete_key);\
+  fnmap_remove(&delete_key);                                         \
 } while(0)
 
 #define IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_key, search_found_fname)\
-  __create_fnmap_key_using_fctevent_file_type((fctevent), &(search_key));\
+  __create_fnmap_key_using_fctevent_file_type((fctevent), &(search_key));                         \
   if (!fnmap_get(&(search_key), &(search_found_fname)))
 
 #define IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_key, search_found_fname)\
-  __create_fnmap_key_using_fctevent_function_data((fctevent), &(search_key), NULL);\
+  __create_fnmap_key_using_fctevent_function_data((fctevent), &(search_key), NULL);                   \
   if (!fnmap_get(&(search_key), &(search_found_fname)))
 
-#define ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent) else {\
+#define ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent) else {        \
   SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND);\
 }
 
@@ -120,7 +120,9 @@ void fnres_fin(void) {
 
 
 void fnres_trace_fctevent(struct basic *fctevent) {
-    if (!got_init) { LIBIOTRACE_ERROR("Got no init prior usage"); }
+    if (!got_init) {
+        LIBIOTRACE_ERROR("Got no init prior usage");
+    }
 
     char* const extracted_fctname = fctevent->function_name;
     // printf("\n[pid = %d] CALLED W/ %s\n", getpid(), extracted_fctname);    // DEBUGGING

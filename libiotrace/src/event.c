@@ -627,6 +627,7 @@ void init_wrapper(void) {
  */
 #ifdef IOTRACE_ENABLE_INFLUXDB
 SOCKET create_socket(void) {
+	// TODO: close on exec needed (FD O_CLOEXEC)???
 	SOCKET new_socket = -1;
 	/* Call of getaddrinfo calls other posix functions. These other
 	 * functions could be wrapped. Call of a wrapper out of getaddrinfo

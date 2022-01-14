@@ -5,7 +5,7 @@ if (WITH_UNIT_TESTS)
     add_subdirectory(cunit)
 endif()
 
-add_subdirectory(internal)
+# add_subdirectory(internal)            # !! WARNING: Breaks arm64 build !!
 
 include(CheckSymbolExists)
 
@@ -251,7 +251,7 @@ list(APPEND LINK_OPTIONS
 if(WITH_FILENAME_RESOLUTION)
 # TODO: Disable for tests not related to fnres  -->  Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
-        "hashmap"
+        "atomic_hash_object"
     )
 endif()
 

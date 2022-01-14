@@ -48,6 +48,8 @@
  *   - Opaque data type
  */
 
+#include "libiotrace_config.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -94,7 +96,7 @@ typedef struct { hvu x, y; } hv;
 // typedef struct hv { hvu x, y, z; } hv_t;
 #endif
 
-#define shared __attribute__((aligned(64)))
+#define shared ATTRIBUTE_ALIGNED(64)
 
 typedef uint32_t nid;
 typedef struct {
@@ -167,7 +169,7 @@ struct hash_t {
 #define COLLISION 1000 /* 0.01 ~> avg 25 in seat */
 #define MAXSPIN (1<<20) /* 2^20 loops 40ms with pause + sched_yield on xeon E5645 */
 
-#define memword __attribute__((aligned(sizeof(void *))))
+#define memword ATTRIBUTE_ALIGNED(sizeof(void *))
 #define atomic_add1(v) __sync_fetch_and_add(&(v), 1)
 #define atomic_sub1(v) __sync_fetch_and_sub(&(v), 1)
 #define add1(v) __sync_fetch_and_add(&(v), 1)

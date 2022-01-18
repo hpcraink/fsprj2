@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# sbatch -p dev_multiple -N 3 --ntasks-per-node=40 -t 00:30:00 libiotracetest
+# wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.0.6-linux-amd64.tar.gz
+
 
 DBNODE=$(scontrol show hostname | tail -n 1)
 echo $DBNODE

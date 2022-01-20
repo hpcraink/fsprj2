@@ -2518,7 +2518,7 @@ void write_into_buffer(struct basic *data) {
 	if (pos + length > endpos) {
 		// ToDo: solve circular dependency of fprintf
 		LIBIOTRACE_ERROR(
-				"buffer (%ld bytes) not big enough for even one struct basic (%d bytes)",
+				"buffer (%lu bytes) not big enough for even one struct basic (%d bytes)",
 				sizeof(data_buffer), length);
 	}
 

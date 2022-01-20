@@ -448,6 +448,9 @@ if(WITH_MPI_IO)
     add_executable(mpi_file_io mpi_file_io.c)
     target_link_libraries(mpi_file_io PRIVATE ${LINK_OPTIONS})
     
+    add_executable(mpi_file_io_sleep mpi_file_io_sleep.c)
+    target_link_libraries(mpi_file_io_sleep PRIVATE ${LINK_OPTIONS})
+    
     add_executable(mpi_file_io_clear_caches mpi_file_io.c)
     target_compile_options(mpi_file_io_clear_caches PRIVATE "-DWANT_CLEAR_CACHES")
     target_link_libraries(mpi_file_io_clear_caches PRIVATE ${LINK_OPTIONS})

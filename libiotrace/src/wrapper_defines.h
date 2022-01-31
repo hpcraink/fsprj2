@@ -171,6 +171,9 @@
                                                                       return_value = P##function(__VA_ARGS__); \
                                                                       errno_value = errno; \
                                                                       data.time_end = gettime();
+#define CALL_REAL_MPI_FUNCTION(function, ...) if(!active_wrapper_status.function) { \
+                                                  return P##function(__VA_ARGS__); \
+                                              }
 #define SET_MPI_ERROR(errno, status) if (MPI_ERR_IN_STATUS == errno && MPI_STATUS_IGNORE != status) { \
                                          errno_data.errno_value = status->MPI_ERROR; \
                                      } else { \
@@ -254,10 +257,8 @@
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
                            FNRES_TRACE_FCTEVENT(&data) \
-                           if(active_wrapper_status.functionname){ \
-                             CALL_WRITE_INTO_INFLUXDB(data); \
-                             CALL_WRITE_INTO_BUFFER(data); \
-                           } \
+                           CALL_WRITE_INTO_INFLUXDB(data); \
+                           CALL_WRITE_INTO_BUFFER(data); \
                            WRAP_FREE(&data) \
                            errno = errno_value;
 

@@ -117,6 +117,8 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_open, comm, filename, amode, info, fh);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_open_function, open_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -203,6 +205,8 @@ int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatyp
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_write, fh, buf, count, datatype, status);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -250,6 +254,8 @@ int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype dataty
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_iwrite, fh, buf, count, datatype, request);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -283,6 +289,8 @@ int MPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype da
 	struct file_mpi file_mpi_data;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_iwrite_all, fh, buf, count, datatype, request);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
@@ -321,6 +329,8 @@ int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype dat
 	int get_count;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_write_all, fh, buf, count, datatype, status);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, write_function, write_data)
@@ -374,6 +384,8 @@ int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_read, fh, buf, count, datatype, status);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -423,6 +435,8 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_iread, fh, buf, count, datatype, request);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -456,6 +470,8 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 	struct file_mpi file_mpi_data;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_iread_all, fh, buf, count, datatype, request);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate, mpi_immediate_data)
@@ -494,6 +510,8 @@ int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, 
 	int get_count;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_read_all, fh, buf, count, datatype, status);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, read_function, read_data)
@@ -543,6 +561,8 @@ int MPI_File_close(MPI_File *fh)
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_close, fh);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -577,6 +597,8 @@ int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence)
 	MPI_Offset view_offset;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_seek, fh, offset, whence);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
@@ -624,6 +646,8 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count
 	int datatype_size;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_write_at, fh, offset, buf, count, datatype, status);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
@@ -679,6 +703,8 @@ int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int c
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_write_at_all, fh, offset, buf, count, datatype, status);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pwrite_function, pwrite_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -732,6 +758,8 @@ int MPI_File_read_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_D
 	int datatype_size;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_read_at, fh, offset, buf, count, datatype, status);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
@@ -787,6 +815,8 @@ int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, M
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_read_at_all, fh, offset, buf, count, datatype, status);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, pread_function, pread_function_data);
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -837,6 +867,8 @@ int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_iread_at, fh, offset, buf, count, datatype, request);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -872,6 +904,8 @@ int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count, 
 	struct file_mpi file_mpi_data;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_iread_at_all, fh, offset, buf, count, datatype, request);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
@@ -909,6 +943,8 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int coun
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_iwrite_at, fh, offset, buf, count, datatype, request);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -945,6 +981,8 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int 
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_iwrite_at_all, fh, offset, buf, count, datatype, request);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_immediate_at, mpi_immediate_at_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -979,6 +1017,8 @@ int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype data
 	struct file_mpi file_mpi_data;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_read_all_begin, fh, buf, count, datatype);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
@@ -1016,6 +1056,8 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
 	int get_count;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_Wait, request, status);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_wait, mpi_wait_data)
@@ -1075,6 +1117,8 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 	int tmp_len_errno_string;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_Waitall, count, array_of_requests, array_of_statuses);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_waitall, mpi_waitall_data)
@@ -1150,6 +1194,8 @@ int MPI_File_delete(const char *filename, MPI_Info info)
 
 	WRAP_MPI_START(data)
 
+	CALL_REAL_MPI_FUNCTION(MPI_File_delete, filename, info);
+
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, mpi_delete_function, mpi_delete_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
@@ -1215,6 +1261,8 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
 	struct positioning_function positioning_function_data;
 
 	WRAP_MPI_START(data)
+
+	CALL_REAL_MPI_FUNCTION(MPI_File_set_view, fh, disp, etype, filetype, datarep, info);
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);

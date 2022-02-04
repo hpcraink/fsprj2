@@ -192,6 +192,8 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 # Please keep in alphabetical order
 set(SOURCE
     event.c
+    gettime.c
+    init.c
     libiotrace_defines_utils.c
     llhttp/api.c
     llhttp/http.c

@@ -7,8 +7,8 @@
 
 BEGIN_C_DECLS
 
-#ifdef HAVE_SYS_TYPES_H
-#  include <sys/types.h>
+#ifdef HAVE_STDINT_H
+#  include <stdint.h>
 #endif
 
 /**

@@ -17,7 +17,12 @@ add_executable(test_utils test_utils.c ../../src/utils.c)
 set_target_properties(test_utils PROPERTIES LINK_FLAGS -W)
 target_link_libraries(test_utils PRIVATE cunit)
 
+add_executable(test_gettime test_gettime.c ../../src/gettime.c)
+set_target_properties(test_gettime PROPERTIES LINK_FLAGS -W)
+target_link_libraries(test_gettime PRIVATE cunit)
+
 add_test(NAME test_utils COMMAND test_utils)
+add_test(NAME test_gettime COMMAND test_gettime)
 
 add_executable(
     test_libiotrace_structs

@@ -95,21 +95,3 @@ void shorten_log_name(char *short_log_name, const int short_log_name_len,
 				short_log_name_len);
 	}
 }
-
-/**
- * Gets actual time in nano seconds.
- *
- * @return time in nano seconds
- */
-inline u_int64_t gettime(void)
-{
-	struct timespec t;
-	u_int64_t time;
-#ifdef REALTIME
-	clock_gettime(CLOCK_REALTIME, &t);
-#else
-	clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-#endif
-	time = (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
-	return time;
-}

@@ -55,6 +55,7 @@
 
 #include "os.h"
 #include "event.h"
+#include "gettime.h"
 #include "utils.h"
 
 #include "libiotrace.h"

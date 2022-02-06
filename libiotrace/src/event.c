@@ -1888,8 +1888,8 @@ void read_whitelist(void) {
 	char *line = NULL;
 	char *clean_line = NULL;
 	char *end_clean_line = NULL;
-	__off_t toread;
-	__off_t file_len;
+	off_t toread;
+	off_t file_len;
 
 	fd = CALL_REAL_POSIX_SYNC(open)(whitelist, O_RDONLY);
 	if (-1 == fd) {

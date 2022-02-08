@@ -478,9 +478,9 @@
  *
  * following functions are available after include of the macros
  *
- * size_t libiotrace_struct_max_size_<name of struct>()
- * size_t libiotrace_struct_max_size_array_<name of struct>()
- * size_t libiotrace_struct_max_size_enum_<name of struct>()
+ * size_t libiotrace_struct_max_size_<name of struct>(void)
+ * size_t libiotrace_struct_max_size_array_<name of struct>(void)
+ * size_t libiotrace_struct_max_size_enum_<name of struct>(void)
  *
  * for evaluating max size of json-string. The returned size is without trailing
  * null character.
@@ -1027,7 +1027,7 @@ size_t libiotrace_struct_copy_cstring_p(char *libiotrace_struct_to, const char *
  *
  * following functions are available after include of the macros
  *
- * size_t libiotrace_struct_push_max_size_<name of struct>()
+ * size_t libiotrace_struct_push_max_size_<name of struct>(size_t prefix_length)
  *
  * */
 

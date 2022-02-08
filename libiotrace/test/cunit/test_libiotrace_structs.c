@@ -15,7 +15,7 @@
 #undef WITH_POSIX_IO
 #undef WITH_ALLOC
 #include "../../src/libiotrace_include_struct.h"
-#include "../../src/libiotrace_include_function.h"
+#include "../../src/libiotrace_functions.c"
 
 /* run at the start of the suite */
 CU_SUITE_SETUP() {

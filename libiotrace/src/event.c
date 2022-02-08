@@ -58,7 +58,7 @@
 #include "utils.h"
 
 #include "libiotrace.h"
-#include "libiotrace_include_function.h"
+#include "libiotrace_functions.h"
 
 #include "wrapper_name.h"
 
@@ -155,19 +155,6 @@ static ATTRIBUTE_THREAD char stacktrace_symbol = STACKTRACE_SYMBOL;
 static ATTRIBUTE_THREAD char stacktrace_symbol = 0;
 #endif
 
-/* log file write Buffer */
-#ifdef IOTRACE_ENABLE_LOGFILE
-
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE 1048576 // 1 MB
-#endif
-static char data_buffer[BUFFER_SIZE];
-static const char *endpos = data_buffer + BUFFER_SIZE;
-static char *pos;
-static int count_basic;
-
-#endif
-
 /* max length host name */
 #if !defined(HAVE_HOST_NAME_MAX)
 int host_name_max;
@@ -182,9 +169,6 @@ typedef struct libiotrace_sockets {
 #endif
 
 /* Mutex */
-#ifdef IOTRACE_ENABLE_LOGFILE
-static pthread_mutex_t lock;
-#endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
 static pthread_mutex_t socket_lock;
 #endif
@@ -334,7 +318,6 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #endif
 #endif
 
-
 #ifdef WITH_FILENAME_RESOLUTION
 #  include "fnres/fctevent.h"
 
@@ -342,7 +325,6 @@ static const char *FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
 static const size_t FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
 static const size_t FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
-
 
 /**
  * Create a new libiotrace_socket.
@@ -360,7 +342,7 @@ static const size_t FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 libiotrace_socket* create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
 	libiotrace_socket *socket = CALL_REAL_ALLOC_SYNC(malloc)(
-			sizeof(libiotrace_socket));
+	sizeof(libiotrace_socket));
 	if (NULL == socket) {
 		LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
 	}
@@ -398,7 +380,7 @@ libiotrace_socket* create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
  */
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len,
-		libiotrace_socket ***array) {
+libiotrace_socket ***array) {
 	void *ret;
 
 	if (NULL != lock) {
@@ -407,7 +389,7 @@ void save_socket(libiotrace_socket *socket, pthread_mutex_t *lock, int *len,
 
 	(*len)++;
 	ret = CALL_REAL_ALLOC_SYNC(realloc)(*array,
-			sizeof(libiotrace_socket*) * (*len));
+	sizeof(libiotrace_socket*) * (*len));
 	if (NULL == ret) {
 		CALL_REAL_ALLOC_SYNC(free)(*array);
 		LIBIOTRACE_ERROR("realloc() failed");
@@ -1184,7 +1166,9 @@ void open_std_fd(int fd)
 #endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
-	write_into_buffer(&data);
+    if (!no_logging) {
+    	io_file_buffer_write(&data);
+    }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	write_into_influxdb(&data);
@@ -1236,7 +1220,9 @@ void open_std_file(FILE *file)
 
 
 #ifdef IOTRACE_ENABLE_LOGFILE
-	write_into_buffer(&data);
+    if (!no_logging) {
+    	io_file_buffer_write(&data);
+    }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	write_into_influxdb(&data);
@@ -1281,8 +1267,8 @@ void init_on_load(void) {
 #  endif
 
 #  ifdef IOTRACE_ENABLE_LOGFILE
-	if (active_wrapper_status.init_on_load) {
-		write_into_buffer(&data);
+	if (active_wrapper_status.init_on_load && !no_logging) {
+		io_file_buffer_write(&data);
 	}
 #  endif
 #  ifdef IOTRACE_ENABLE_INFLUXDB
@@ -1975,11 +1961,6 @@ void init_process() {
 	int length;
 
 	if (!init_done) {
-#ifdef IOTRACE_ENABLE_LOGFILE
-		pos = data_buffer;
-		count_basic = 0;
-#endif
-
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_VARIABLE
 #include "event_wrapper.h"
@@ -2016,7 +1997,7 @@ void init_process() {
 #endif
 
 #if !defined(IO_LIB_STATIC)
-		init_wrapper();         /* WARNING: glibc calls (CALL_REAL_POSIX_SYNC) will work ONLY AFTER THIS LINE */
+		init_wrapper(); /* WARNING: glibc calls (CALL_REAL_POSIX_SYNC) will work ONLY AFTER THIS LINE */
 #endif
 
 #ifdef WITH_FILENAME_RESOLUTION
@@ -2087,6 +2068,8 @@ void init_process() {
 				filesystem_log_name + length + strlen(filesystem_postfix)
 						+ strlen(hostname), filesystem_extension);
 		strcpy(working_dir_log_name + length, "_working_dir.log");
+
+		io_file_buffer_init(log_name);
 #endif
 #if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 		strcpy(control_log_name + length, "_control.log");
@@ -2146,7 +2129,7 @@ void init_process() {
 
 		// Path to wrapper whitelist
 		length = libiotrace_get_env(env_wrapper_whitelist, whitelist,
-				MAXFILENAME, 0);
+		MAXFILENAME, 0);
 		if (0 != length) {
 #ifndef IO_LIB_STATIC
 			has_whitelist = 1;
@@ -2166,16 +2149,13 @@ void init_process() {
 		strcpy(ld_preload, env_ld_preload);
 		strcpy(ld_preload + length, "=");
 		length = libiotrace_get_env(env_ld_preload, ld_preload + length + 1,
-				MAXFILENAME, 1);
+		MAXFILENAME, 1);
 #endif
 
 #ifndef REALTIME
 		system_start_time = iotrace_get_boot_time();
 #endif
 
-#ifdef IOTRACE_ENABLE_LOGFILE
-		pthread_mutex_init(&lock, NULL);
-#endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
 		pthread_mutex_init(&socket_lock, NULL);
 #endif
@@ -2360,56 +2340,6 @@ void get_basic(struct basic *data) {
 }
 
 /**
- * Prints all structures from buffer to file.
- *
- * Each structure is serialized to json and written to
- * a file. After that the buffer is empty. Serialization
- * and clearing of the buffer is not synchronized with
- * other threads. So "print_buffer" should only be
- * called from a synchronized code.
- */
-#ifdef IOTRACE_ENABLE_LOGFILE
-void print_buffer(void) {
-	struct basic *data;
-	int ret;
-	int count;
-	char buf[libiotrace_struct_max_size_basic() + sizeof(LINE_BREAK)];
-	int fd;
-	pos = data_buffer;
-
-	fd = CALL_REAL_POSIX_SYNC(open)(log_name, O_WRONLY | O_CREAT | O_APPEND,
-	S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-	if (-1 == fd) {
-		LIBIOTRACE_ERROR("open() of file %s returned %d with errno=%d",
-				log_name, fd, errno);
-	}
-
-	for (int i = 0; i < count_basic; i++) {
-		data = (struct basic*) ((void*) pos);
-
-		ret = libiotrace_struct_print_basic(buf, sizeof(buf), data); //Function is present at runtime, built with macros from libiotrace_defines.h
-		strcpy(buf + ret, LINE_BREAK);
-		count = ret + sizeof(LINE_BREAK) - 1;
-		ret = CALL_REAL_POSIX_SYNC(write)(fd, buf, count);
-		if (0 > ret) {
-			LIBIOTRACE_ERROR("write() returned %d", ret);
-		}
-		if (ret < count) {
-			LIBIOTRACE_ERROR("incomplete write() occurred");
-		}
-		ret = libiotrace_struct_sizeof_basic(data);
-
-		pos += ret;
-	}
-
-	CALL_REAL_POSIX_SYNC(close)(fd);
-
-	pos = data_buffer;
-	count_basic = 0;
-}
-#endif
-
-/**
  * Sends a struct basic to influxdb.
  *
  * @param[in] data Pointer to struct basic
@@ -2486,55 +2416,6 @@ void write_into_influxdb(struct basic *data) {
 #endif
 
 /**
- * Writes a struct basic to the buffer for this process.
- *
- * A deep copy of all values from "data" and all in "data"
- * referenced structures and arrays is synchronized written
- * to the central buffer.
- * If the buffer hasn't enough free space for the deep copy
- * the buffer is cleared with a call to "print_buffer"
- * first.
- *
- * @param[in] data Pointer to struct basic
- */
-#ifdef IOTRACE_ENABLE_LOGFILE
-void write_into_buffer(struct basic *data) {
-#ifdef LOG_WRAPPER_TIME
-	static char *old_pos;
-#endif
-
-	if (no_logging) {
-		return;
-	}
-
-	/* write (synchronized) */
-	pthread_mutex_lock(&lock);
-
-	int length = libiotrace_struct_sizeof_basic(data);
-
-	if (pos + length > endpos) {
-		print_buffer();
-	}
-	if (pos + length > endpos) {
-		// ToDo: solve circular dependency of fprintf
-		LIBIOTRACE_ERROR(
-				"buffer (%lu bytes) not big enough for even one struct basic (%d bytes)",
-				sizeof(data_buffer), length);
-	}
-
-#ifdef LOG_WRAPPER_TIME
-	old_pos = pos;
-#endif
-	pos = (void*) libiotrace_struct_copy_basic((void*) pos, data);
-	count_basic++;
-	// insert end time for wrapper in buffer
-	WRAPPER_TIME_END((*((struct basic *)((void *)old_pos))))
-
-	pthread_mutex_unlock(&lock);
-}
-#endif
-
-/**
  * Frees dynamically allocated memory in struct basic
  *
  * @aram[in] data Pointer to struct basic
@@ -2566,9 +2447,7 @@ void cleanup(void) {
 
 	WRAPPER_TIME_START(data)
 
-	pthread_mutex_lock(&lock);
-	print_buffer();
-	pthread_mutex_unlock(&lock);
+	io_file_buffer_clear();
 
 #ifdef LOG_WRAPPER_TIME
 	get_basic(&data);
@@ -2584,17 +2463,14 @@ void cleanup(void) {
     fnres_trace_fctevent(&data);
 #  endif
 
-	if (active_wrapper_status.cleanup) {
-		write_into_buffer(&data);
+	if (active_wrapper_status.cleanup && !no_logging) {
+		io_file_buffer_write(&data);
 	}
 
-	pthread_mutex_lock(&lock);
-	print_buffer();
-	pthread_mutex_unlock(&lock);
+	io_file_buffer_destroy();
+
 	WRAP_FREE(&data)
 #endif /* LOG_WRAPPER_TIME */
-
-	pthread_mutex_destroy(&lock);
 
 #endif /* IOTRACE_ENABLE_LOGFILE */
 

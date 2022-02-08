@@ -3,7 +3,7 @@
 #include "CUnit/CUnitCI.h"
 
 #include "../../src/alloc.h"
-#include "../../src/libiotrace_include_function.h"
+#include "../../src/libiotrace_functions.c"
 #include "../../src/utils.h"
 
 extern void* WRAP(malloc)(size_t size);

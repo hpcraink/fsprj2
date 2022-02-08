@@ -1,5 +1,20 @@
-#ifndef LIBIOTRACE_INCLUDE_FUNCTION_H
-#define LIBIOTRACE_INCLUDE_FUNCTION_H
+#include "libiotrace_functions.h"
+
+#ifdef WITH_POSIX_IO
+#  include "posix_io.h"
+#endif
+#ifdef WITH_POSIX_AIO
+#  include "posix_aio.h"
+#endif
+#ifdef WITH_DL_IO
+#  include "dl_io.h"
+#endif
+#ifdef WITH_MPI_IO
+#  include "mpi_io.h"
+#endif
+#ifdef WITH_ALLOC
+#  include "alloc.h"
+#endif
 
 #undef LIBIOTRACE_STRUCT
 #include "libiotrace_structs.h"
@@ -23,5 +38,3 @@
 #undef LIBIOTRACE_STRUCT
 #define LIBIOTRACE_STRUCT LIBIOTRACE_STRUCT_PUSH
 #include "libiotrace_structs.h"
-
-#endif /* LIBIOTRACE_INCLUDE_FUNCTION_H */

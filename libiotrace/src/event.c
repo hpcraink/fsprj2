@@ -94,11 +94,11 @@
 #define MAX_INFLUX_ORGANIZATION 200
 #endif
 
-#ifndef MAX_DATABSE_IP
+#ifndef MAX_DATABASE_IP
 #define MAX_DATABASE_IP 200
 #endif
 
-#ifndef MAX_DATABSE_PORT
+#ifndef MAX_DATABASE_PORT
 #define MAX_DATABASE_PORT 200
 #endif
 

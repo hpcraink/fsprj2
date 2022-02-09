@@ -190,7 +190,9 @@ endif()
 
 include(CheckIncludeFiles)
 include(${libiotrace_SOURCE_DIR}/cmake/CheckCompilerAttributes.cmake)
+include(${libiotrace_SOURCE_DIR}/cmake/CheckRDTSC.cmake)
 CheckCompilerAttributes() 
+CheckRDTSC()
 
 
 # XXX ToDo: check for __uint128_t support (only on 64-bit architecture and some compiler-versions)

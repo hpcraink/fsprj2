@@ -4,6 +4,7 @@ check_include_files("stdbool.h" HAVE_STDBOOL_H)
 check_include_files("stdlib.h" HAVE_STDLIB_H)
 check_include_files("stdint.h" HAVE_STDINT_H)
 check_include_files("sys/fcntl.h" HAVE_SYS_FCNTL_H)
+check_include_files("sys/time.h" HAVE_SYS_TIME_H)
 check_include_files("sys/types.h" HAVE_SYS_TYPES_H)
 check_include_files("sys/stat.h" HAVE_SYS_STAT_H)
 check_include_files("sys/syscall.h" HAVE_SYS_SYSCALL_H)
@@ -192,6 +193,7 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 # Please keep in alphabetical order
 set(SOURCE
     event.c
+    gettime.c
     io_file.c
     libiotrace_defines_utils.c
     libiotrace_functions.c
@@ -256,6 +258,14 @@ if(WITH_FILENAME_RESOLUTION)
 else()
     target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} pthread)
 endif()
+
+# Let the user chose the gettime functionality
+# XXX Instead of hard-coding these settings, they should be chosen dependant on availability...
+set_property(SOURCE gettime.c CACHE LIBIOTRACE_GETTIME PROPERTY STRINGS "LIBIOTRACE_GETTIME" "WANT_GETTIMEOFDAY;WANT_GETTIME;WANT_RDTSC")
+set(LIBIOTRACE_GETTIME "NOTHING" CACHE STRING "Build with the timing option")
+set(WANT_GETTIMEOFDAY 1 CACHE BOOL "If gettimeofday is selected")
+set(WANT_GETTIME 1 CACHE BOOL "If gettimeof is selected")
+set(WANT_RDTSC 1 CACHE BOOL "If rdtsc is selected")
 
 target_compile_options(iotrace_shared PRIVATE ${OPTIONS})
 target_compile_options(iotrace_static PRIVATE ${OPTIONS})

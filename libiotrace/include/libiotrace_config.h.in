@@ -25,6 +25,9 @@
 /* Define to 1 if system has <sys/fcntl.h> header file. */
 #cmakedefine HAVE_SYS_FCNTL_H 1
 
+/* Define to 1 if system has <sys/time.h> header file. */
+#cmakedefine HAVE_SYS_TIME_H 1
+
 /* Define to 1 if system has <sys/types.h> header file. */
 #cmakedefine HAVE_SYS_TYPES_H 1
 
@@ -552,6 +555,11 @@
 
 /*  Define to 1 if string.h has memrchr(). */
 #cmakedefine HAVE_MEMRCHR 1
+
+/* Definitions for gettime.c */
+#cmakedefine WANT_GETTIMEOFDAY 1
+#cmakedefine WANT_GETTIME 1
+#cmakedefine WANT_RDTSC 1
 
 /*****************************************************************************/
 /*  Following is not dependent on cmake; rather evaluates from the previous  */

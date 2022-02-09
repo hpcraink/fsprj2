@@ -12,8 +12,6 @@ void generate_env(char *env, const char *key, const int key_length,
 char* read_line(const char *buf, const size_t len, char **pos);
 void shorten_log_name(char *short_log_name, const int short_log_name_len,
 		const char *log_name, const int log_name_len);
-// ToDo: as macro with return value?
-u_int64_t gettime(void);
 
 END_C_DECLS
 

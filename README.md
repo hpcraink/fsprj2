@@ -22,6 +22,8 @@ _libiotrace_ is a tool for monitoring a running dynamically linked program witho
 During a monitored run detailed data for many File-I/O related function calls is collected.
 The collected data is written to log files.
 
+![Overview of libiotrace](architecture/libiotrace-overview.png)
+
 ### Prerequisites
 
 _libiotrace_ is currently only available for Linux-Systems.

@@ -211,7 +211,7 @@
 #endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
-#  define CALL_WRITE_INTO_BUFFER(data) io_file_buffer_write(&data)
+#  define CALL_WRITE_INTO_BUFFER(data) io_log_file_buffer_write(&data)
 #else
 #  define CALL_WRITE_INTO_BUFFER(data)
 #endif

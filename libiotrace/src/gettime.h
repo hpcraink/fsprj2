@@ -15,6 +15,6 @@ BEGIN_C_DECLS
  * Returns the 64 bit time in nanosecond resolution since start of the computer
  * @ret   time in ns
  */
-uint64_t gettime();
+uint64_t gettime(void);
 
 END_C_DECLS

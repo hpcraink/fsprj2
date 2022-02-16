@@ -1168,7 +1168,7 @@ void open_std_fd(int fd)
 
 #ifdef IOTRACE_ENABLE_LOGFILE
     if (!no_logging) {
-    	io_file_buffer_write(&data);
+    	io_log_file_buffer_write(&data);
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -1222,7 +1222,7 @@ void open_std_file(FILE *file)
 
 #ifdef IOTRACE_ENABLE_LOGFILE
     if (!no_logging) {
-    	io_file_buffer_write(&data);
+    	io_log_file_buffer_write(&data);
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -1269,7 +1269,7 @@ void init_on_load(void) {
 
 #  ifdef IOTRACE_ENABLE_LOGFILE
 	if (active_wrapper_status.init_on_load && !no_logging) {
-		io_file_buffer_write(&data);
+		io_log_file_buffer_write(&data);
 	}
 #  endif
 #  ifdef IOTRACE_ENABLE_INFLUXDB
@@ -2070,7 +2070,7 @@ void init_process() {
 						+ strlen(hostname), filesystem_extension);
 		strcpy(working_dir_log_name + length, "_working_dir.log");
 
-		io_file_buffer_init(log_name);
+		io_log_file_buffer_init_process(log_name);
 #endif
 #if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 		strcpy(control_log_name + length, "_control.log");
@@ -2297,6 +2297,7 @@ void get_stacktrace(struct basic *data) {
  */
 void init_thread(void) {
 	tid = iotrace_get_tid();
+	io_log_file_buffer_init_thread();
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	if (-1 == socket_peer) {
 		prepare_socket();
@@ -2448,7 +2449,7 @@ void cleanup(void) {
 
 	WRAPPER_TIME_START(data)
 
-	io_file_buffer_clear();
+	io_log_file_buffer_clear();
 
 #ifdef LOG_WRAPPER_TIME
 	get_basic(&data);
@@ -2465,10 +2466,10 @@ void cleanup(void) {
 #  endif
 
 	if (active_wrapper_status.cleanup && !no_logging) {
-		io_file_buffer_write(&data);
+		io_log_file_buffer_write(&data);
 	}
 
-	io_file_buffer_destroy();
+	io_log_file_buffer_destroy();
 
 	WRAP_FREE(&data)
 #endif /* LOG_WRAPPER_TIME */

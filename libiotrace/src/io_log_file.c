@@ -13,7 +13,7 @@
 #include <pthread.h>
 #endif
 
-#include "io_file.h"
+#include "io_log_file.h"
 
 #include "error.h"
 
@@ -37,7 +37,7 @@ static pthread_mutex_t lock;
 
 static char log_name[MAXFILENAME];
 
-void io_file_buffer_flush(void);
+void io_log_file_buffer_flush(void);
 
 /**
  * Initializes buffer.
@@ -45,7 +45,7 @@ void io_file_buffer_flush(void);
  * This function is not thread-safe and destroys an existing buffer.
  * This function should therefore only be called once from one thread.
  **/
-void io_file_buffer_init(const char *logfile_name) {
+void io_log_file_buffer_init_process(const char *logfile_name) {
 	pos = data_buffer;
 	count_basic = 0;
 
@@ -56,20 +56,33 @@ void io_file_buffer_init(const char *logfile_name) {
 }
 
 /**
+ * Initializes buffer.
+ *
+ * This function must be thread-safe and initializes the current buffer
+ * (see io_file_buffer_init_process) for the actual thread.
+ * This function should therefore be called from each thread.
+ **/
+void io_log_file_buffer_init_thread(void) {
+	return;
+}
+
+/**
  * Writes Buffer to file.
  **/
-void io_file_buffer_clear(void) {
+void io_log_file_buffer_clear(void) {
 	pthread_mutex_lock(&lock);
-	io_file_buffer_flush();
+	io_log_file_buffer_flush();
 	pthread_mutex_unlock(&lock);
 }
 
 /**
  * Writes Buffer to file and destroys the buffer.
+ *
+ * Is called on process exit.
  **/
-void io_file_buffer_destroy(void) {
+void io_log_file_buffer_destroy(void) {
 	pthread_mutex_lock(&lock);
-	io_file_buffer_flush();
+	io_log_file_buffer_flush();
 	pthread_mutex_unlock(&lock);
 
 	pthread_mutex_destroy(&lock);
@@ -84,7 +97,7 @@ void io_file_buffer_destroy(void) {
  * other threads. So "print_buffer" should only be
  * called from a synchronized code.
  */
-void io_file_buffer_flush(void) {
+void io_log_file_buffer_flush(void) {
 	struct basic *data;
 	int ret;
 	int count;
@@ -135,7 +148,7 @@ void io_file_buffer_flush(void) {
  *
  * @param[in] data Pointer to struct basic
  */
-void io_file_buffer_write(struct basic *data) {
+void io_log_file_buffer_write(struct basic *data) {
 #ifdef LOG_WRAPPER_TIME
 	static char *old_pos;
 #endif
@@ -146,7 +159,7 @@ void io_file_buffer_write(struct basic *data) {
 	int length = libiotrace_struct_sizeof_basic(data);
 
 	if (pos + length > endpos) {
-		io_file_buffer_flush();
+		io_log_file_buffer_flush();
 	}
 	if (pos + length > endpos) {
 		// ToDo: solve circular dependency of fprintf

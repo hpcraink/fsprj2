@@ -40,7 +40,6 @@ uint64_t gettime(void) {
     uint64_t ret;
 #if defined(WANT_GETTIME)
     struct timespec t;
-    uint64_t time;
 #ifdef REALTIME
     clock_gettime(CLOCK_REALTIME, &t);
 #else

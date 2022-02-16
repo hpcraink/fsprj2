@@ -26,7 +26,7 @@
 
 #include "libiotrace_include_struct.h"
 #include "wrapper_defines.h"
-#include "io_file.h"
+#include "io_log_file.h"
 
 BEGIN_C_DECLS
 

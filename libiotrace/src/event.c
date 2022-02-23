@@ -2297,7 +2297,9 @@ void get_stacktrace(struct basic *data) {
  */
 void init_thread(void) {
 	tid = iotrace_get_tid();
+#ifdef IOTRACE_ENABLE_LOGFILE
 	io_log_file_buffer_init_thread();
+#endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	if (-1 == socket_peer) {
 		prepare_socket();

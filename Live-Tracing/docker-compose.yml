@@ -4,7 +4,6 @@ services:
   grafana:
     container_name: libiotrace_grafana
     image: 'grafana/grafana'
-    user: $UID:$GID
     ports:
       - "3000:3000"
     depends_on:
@@ -19,23 +18,22 @@ services:
   influxdb:
     container_name: libiotrace_influxdb
     image: influxdb:2.0.7
-    user: $UID:$GID
     ports:
       - "8086:8086"
     volumes:
       # NOTE: MIGHT cause issues w/ fs permissions (container tries `chown`) -> if so, comment volume out
       - ./influx-data:/var/lib/influxdb2
 
-#  influxdb_cli:
-#    container_name: libiotrace_influxdb_cli
-#    user: $UID:$GID
-#    links:
-#      - influxdb
-#    image: influxdb:2.0.7
-#    # Use these same configurations parameters in your telegraf configuration, mytelegraf.conf.
-#    entrypoint: influx setup --bucket hsebucket -t OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -o hse --username=admin --password=test12345678 --host=http://influxdb:8086 -f
-#
-#    # Wait for the influxd service in the influxdb container has fully bootstrapped before trying to setup an influxdb instance with the influxdb_cli service.
-#    restart: on-failure:10
-#    depends_on:
-#      - influxdb
+  # WARNING: Required for setting up influxdb instance (!! therefore, must run at first initial startup of influxdb instance !!)
+  influxdb_cli:
+    container_name: libiotrace_influxdb_cli
+    links:
+      - influxdb
+    image: influxdb:2.0.7
+    # Use these same configurations parameters in your telegraf configuration, mytelegraf.conf.
+    entrypoint: influx setup --bucket hsebucket -t OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -o hse --username=admin --password=test12345678 --host=http://influxdb:8086 -f
+
+    # Wait for the influxd service in the influxdb container has fully bootstrapped before trying to setup an influxdb instance with the influxdb_cli service.
+    restart: on-failure:10
+    depends_on:
+      - influxdb

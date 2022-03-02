@@ -1,1 +1,0 @@
-gcc -Wl,-wrap=write -Wl,-wrap=puts bin/test-link.o bin/wrap-link.o -fopenmp -o bin/test-link-bin

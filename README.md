@@ -22,7 +22,7 @@ _libiotrace_ is a tool for monitoring a running dynamically linked program witho
 During a monitored run detailed data for many File-I/O related function calls is collected.
 The collected data is written to log files.
 
-![Overview of libiotrace](architecture/libiotrace-overview.png)
+![Overview of libiotrace](docs/architecture/libiotrace-overview.png)
 
 ### Prerequisites
 
@@ -351,32 +351,32 @@ The bar chart shows the efficiency of the used functions.
 A function that uses a lot of time to read or write a few bytes is less efficient than a function that reads or writes more bytes in the same or even less time.
 So this char shows some optimization potential.
 
-![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_function_summary.png "&lt;prefix-for-log-names&gt;_function_summary.png")
+![alt text](IOTrace_Analyze/test/output/firefox_test221_function_summary.png "&lt;prefix-for-log-names&gt;_function_summary.png")
 
 #### &lt;prefix-for-log-names&gt;_time_pie.png
 
 *&lt;prefix-for-log-names&gt;_time_pie.png*
 
-![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;_time_pie.png")
+![alt text](IOTrace_Analyze/test/output/firefox_test221_time_pie.png "&lt;prefix-for-log-names&gt;_time_pie.png")
 
 #### &lt;prefix-for-log-names&gt;_bytes_pie.png
 
 *&lt;prefix-for-log-names&gt;_bytes_pie.png*
 
-![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_bytes_pie.png "&lt;prefix-for-log-names&gt;_bytes_pie.png")
+![alt text](IOTrace_Analyze/test/output/firefox_test221_bytes_pie.png "&lt;prefix-for-log-names&gt;_bytes_pie.png")
 
 #### &lt;prefix-for-log-names&gt;_1.mp4
 
 *&lt;prefix-for-log-names&gt;_1.mp4*
 
-![alt text](https://raw.githubusercontent.com/hpcraink/fsprj2/master/IOTrace_Analyze/test/output/firefox_test221_1.gif "&lt;prefix-for-log-names&gt;_1.mp4")
+![alt text](IOTrace_Analyze/test/output/firefox_test221_1.gif "&lt;prefix-for-log-names&gt;_1.mp4")
 
 
 
 ## Live-Tracing
 
 
-![alt text](https://github.com/hpcraink/fsprj2/blob/master/Grafana/screenshot_grafana.png?raw=true "&lt;live-tracing&gt;_1.png")
+![alt text](Live-Tracing/_assets/screenshot_grafana.png "&lt;live-tracing&gt;_1.png")
 
 To use Grafana and InfluxDB to trace every function call in real-time and write its values in the databse you have to do the following:
 
@@ -384,8 +384,8 @@ To use Grafana and InfluxDB to trace every function call in real-time and write 
 2. `cd libiotrace/build`
 3. `ccmake ..`
 4. Turn the option "SENDING" on
-5. `cd ../../Grafana`
-6. `sudo docker-compose up -d`
+5. `cd ../../Live-Tracing`
+6. `docker-compose up -d`
 
 InfluxDB is now available under http://localhost:8086 (username: admin password: test12345678) and grafana under http://localhost:3000 (username: admin password: admin). 
 

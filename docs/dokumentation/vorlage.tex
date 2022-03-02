@@ -1,0 +1,65 @@
+% % Preamble BEGINN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% Preamble (Dokumentenklasse)
+\input{preamble/pre-class}
+
+%%% Alle Namen usw. im Titel und im hyperref-Paket
+\input{preamble/pre-work}
+
+%%% Preamble (Pakete)
+\input{preamble/pre-packages}
+
+%%% Neue Befehle
+\input{preamble/pre-newcommands}
+\input{preamble/pre-tablecommands} % Fuer Tabellen
+
+%%% Silbentrennung
+\input{preamble/pre-hyphenation}
+
+% % Nur diese Kapitel (Dateien) einbinden
+%\includeonly{
+%chapters/ch-aa-titel,
+%chapters/ch-aa-vorspiel,
+%chapters/ch-einleitung,
+%chapters/ch-hauptteil,
+%chapters/ch-schluss,
+%chapters/ch-zz-anhang
+%}
+% % Preamble ENDE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% % Inhalt BEGINN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+% Tabellen-Einstellungen
+\input{preamble/pre-tablesettings}
+% % %%%%%% Vorspiel
+\begin{spacing}{1} % Vorspiel immer mit Standard-Zeilenabstand setzen
+	\frontmatter
+	% % Titelblatt
+	\include{chapters/ch-aa-titel}
+	\include{chapters/ch-aa-vorspiel}
+	\include{chapters/ch-aa-zusfasg}
+	% % Verzeichnisse
+	\tableofcontents
+	\listoffigures
+	\listoftables
+	%\lstlistoflistings % Verzeichnis für Code-Listing
+\end{spacing}
+% % %%%%%% Textteil (Eigentliche Arbeit)
+\mainmatter
+%
+\include{chapters/ch-einleitung}
+\include{chapters/ch-hauptteil}
+\include{chapters/ch-schluss}
+
+% % %%%%%% Anhang
+\appendix
+\include{chapters/ch-zz-anhang}
+
+% % %%%%%% Literaturverzeichnis (darf im deutschen nicht in den Anhang!)
+% Einfaches Literaturverzeichnis
+\input{chapters/ch-zz-bibEinfach}
+% Literaturverzeichnis mit Bibtex
+%\bibliography{bib/bib}
+
+% %  Inhalt ENDE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

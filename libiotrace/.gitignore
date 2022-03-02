@@ -51,11 +51,8 @@ Module.symvers
 Mkfile.old
 dkms.confe
 
-# Untrack folders
+
+# Untrack out-of-source build folders
 build/
-
-
-# - CMake
-**/CMakeFiles/
-# CLion
+# CLion CMake convention
 **/cmake-build-*

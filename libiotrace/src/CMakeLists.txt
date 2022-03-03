@@ -197,9 +197,9 @@ set(SOURCE
     io_log_file.c
     libiotrace_defines_utils.c
     libiotrace_functions.c
-    llhttp/api.c
-    llhttp/http.c
-    llhttp/llhttp.c
+    libs/llhttp/api.c
+    libs/llhttp/http.c
+    libs/llhttp/llhttp.c
     os.c
     utils.c
 )

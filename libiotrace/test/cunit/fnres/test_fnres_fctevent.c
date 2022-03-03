@@ -3,8 +3,8 @@
 
 #include "CUnit/CUnitCI.h"
 
-#include "../../src/fnres/fctevent.h"
-#include "../../src/libiotrace_include_struct.h"
+#include "../../../src/fnres/fctevent.h"
+#include "../../../src/libiotrace_include_struct.h"
 
 
 /* -- Constants -- */

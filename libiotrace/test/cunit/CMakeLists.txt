@@ -65,20 +65,20 @@ endif()
 if (WITH_FILENAME_RESOLUTION)
 	set(CMAKE_C_FLAGS "-D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
 
-    # - fctevent -
-	add_executable(test_fctevent test_fctevent.c
+# - fctevent -
+	add_executable(test_fnres_fctevent fnres/test_fnres_fctevent.c
 				   ../../src/fnres/internal/fnmap.c
      		       ../../src/fnres/fctevent.c)
-	set_target_properties(test_fctevent PROPERTIES LINK_FLAGS -W)
-	target_link_libraries(test_fctevent PRIVATE cunit atomic_hash_object)
-	add_test(NAME test_fctevent COMMAND test_fctevent)
+	set_target_properties(test_fnres_fctevent PROPERTIES LINK_FLAGS -W)
+	target_link_libraries(test_fnres_fctevent PRIVATE cunit atomic_hash_object)
+	add_test(NAME test_fnres_fctevent COMMAND test_fnres_fctevent)
 
 
-	# - fnmap -
-	add_executable(testing_fnmap testing_fnmap.c
-															../../src/fnres/internal/fnmap.c)
-	set_target_properties(testing_fnmap PROPERTIES LINK_FLAGS -W)
-	target_link_libraries(testing_fnmap PRIVATE cunit atomic_hash_object)
-	add_test(NAME testing_fnmap COMMAND testing_fnmap)
+# - fnmap -
+	add_executable(validate_fnres_fnmap fnres/validate_fnres_fnmap.c
+					../../src/fnres/internal/fnmap.c)
+	set_target_properties(validate_fnres_fnmap PROPERTIES LINK_FLAGS -W)
+	target_link_libraries(validate_fnres_fnmap PRIVATE cunit atomic_hash_object)
+	add_test(NAME validate_fnres_fnmap COMMAND validate_fnres_fnmap)
 endif()
 																

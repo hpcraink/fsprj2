@@ -248,6 +248,7 @@ add_library(iotrace_object OBJECT ${SOURCE})
 add_library(iotrace_control SHARED libiotrace.c)
 
 
+# NOTE: atomic_hash is only required for `WITH_FILENAME_RESOLUTION` option
 add_subdirectory(libs/atomic_hash)
 
 # ${CMAKE_DL_LIBS} needed for dlsym-function

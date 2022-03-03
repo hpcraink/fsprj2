@@ -1,5 +1,6 @@
 /**
- * Used solely for validating/testing the behaviour of the map implementation (currently `atomic_hash`) via the `fnmap` iface
+ * Used solely for validating/testing the behaviour of the map
+ * implementation (currently `atomic_hash`) via the `fnmap` iface
  * Doesn't test any other functionality of the `fnres` module
  */
 
@@ -8,8 +9,8 @@
 
 #include "CUnit/CUnitCI.h"
 
-#include "../../src/fnres/internal/fnmap.h"
-#include "../../src/libiotrace_include_struct.h"
+#include "../../../src/fnres/internal/fnmap.h"
+#include "../../../src/libiotrace_include_struct.h"
 
 
 /* -- Constants -- */

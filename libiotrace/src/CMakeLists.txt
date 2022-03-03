@@ -267,9 +267,9 @@ set(WANT_GETTIMEOFDAY 1 CACHE BOOL "If gettimeofday is selected")
 set(WANT_GETTIME 1 CACHE BOOL "If gettimeof is selected")
 set(WANT_RDTSC 1 CACHE BOOL "If rdtsc is selected")
 
-target_compile_options(iotrace_shared PRIVATE ${OPTIONS})
-target_compile_options(iotrace_static PRIVATE ${OPTIONS})
-target_compile_options(iotrace_object PRIVATE ${OPTIONS})
+target_compile_options(iotrace_shared PRIVATE ${COMPILE_OPTIONS})
+target_compile_options(iotrace_static PRIVATE ${COMPILE_OPTIONS})
+target_compile_options(iotrace_object PRIVATE ${COMPILE_OPTIONS})
 
 # object for static linking needs
 target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)

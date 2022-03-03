@@ -3,7 +3,7 @@
 #include "CUnit/CUnitCI.h"
 
 #define JSMN_STRICT
-#include "../../src/jsmn.h"
+#include "../../src/libs/jsmn.h"
 
 #include "../../src/line_protocol_parser.h"
 

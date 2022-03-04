@@ -5,7 +5,7 @@
 #define JSMN_STRICT
 #include "../../src/libs/jsmn.h"
 
-#include "../../src/line_protocol_parser.h"
+#include "../../src/libs/line_protocol_parser.h"
 
 /* libiotrace_include_function.h uses POSIX functions. The functions
  * are wrapped if WITH_POSIX_IO is defined. In this test file only

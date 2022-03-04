@@ -18,7 +18,7 @@ check_include_files("utmp.h" HAVE_UTMP_H)
 check_include_files("utmpx.h" HAVE_UTMPX_H)
 
 # In order to wrap functions which are replacing POSIX calls to check for security-bugs (_FORTIFY_SOURCE)
-# we need to turn on Optimization to make those visible (plus _FORTIFY_SOURCE itselve)
+# we need to turn on Optimization to make those visible (plus _FORTIFY_SOURCE itself)
 list(APPEND CMAKE_REQUIRED_FLAGS       -O2)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64 -D_FORTIFY_SOURCE=2)
 

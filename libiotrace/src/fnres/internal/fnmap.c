@@ -73,7 +73,7 @@ static void __log_fnmap_key(const fnmap_key *key) {
 /**
  * Shall be called by `init_process` in event.c
  */
-void fnmap_create(size_t max_size) {
+void fnmap_create(long max_size) {
     if (global_map) {
         LIBIOTRACE_ERROR("fnmap has been already init'ed");
     }

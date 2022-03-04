@@ -1,13 +1,3 @@
-#include "fctevent.h"
-#include "internal/fctnconsts.h"
-#include "internal/fnmap.h"
-#include "../error.h"
-
-#include <string.h>
-#include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
-
-// #include <unistd.h>    // DEBUGGING
-
 /**
  * TODOS:
  *  - Remove memory-mappings after `fork`
@@ -28,6 +18,15 @@
  *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in fnmap (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
  *  - On an `exec*` call, the global file-map (of the process) will be overwritten, removing fildes which WILL BE inherited (since they weren't opened w/ `O_CLOEXEC` flag) by the new (replaced) executable
  */
+#include "fctevent.h"
+#include "internal/fctnconsts.h"
+#include "internal/fnmap.h"
+#include "../error.h"
+
+#include <string.h>
+#include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */
+
+// #include <unistd.h>    // DEBUGGING
 
 
 /* --- Function prototypes for helper functions --- */
@@ -91,12 +90,11 @@ static const char* __get_file_name_from_fctevent_function_data(struct basic *fct
 static bool got_init = false;
 
 
-/* --- Public functions --- */
-/* - 'Hooks' - */
+/* --- Functions --- */
 /**
  * Initializes module; MUST be called prior usage  (by `init_process` in event.c)
  */
-void fnres_init(size_t fnmap_max_size) {
+void fnres_init(long fnmap_max_size) {
     if (!got_init) {
         fnmap_create(fnmap_max_size);
 
@@ -487,7 +485,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 
         case CASE_READDIR:
-            goto not_implemented_yet;   /* TODO: Ask no wrapper for `opendir` (`dirent.h`) ? */
+            goto not_implemented_yet;   /* TODO: No wrapper for `opendir` (`dirent.h`) ? */
 
 
         /* TODO: Functions affecting multiple files -> currently not feasible w/ char* trace_fname in `basic` struct */

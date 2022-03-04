@@ -39,6 +39,7 @@ option (STACKTRACE_PTR "write stacktrace pointer to log (can be changed during e
 option (STACKTRACE_SYMBOL "write stacktrace symbols to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (LOG_WRAPPER_TIME "log start and end time of function wrappers" ON)
 option (WITH_STD_IO "log stdin, stdout and stderr IO" ON)
+option (WITH_SYSCALL_TRACING "trace syscalls" OFF)     # Install required libs: `sudo apt install -y libunwind-dev libdw-dev`
 option (WITH_POSIX_IO "build wrappers for Posix-IO" ON)
 option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
@@ -138,6 +139,16 @@ endif()
 #compile using cmake -DSTACKTRACE_SYMBOL for writing stacktrace symbols to log
 if(STACKTRACE_SYMBOL)
     list(APPEND COMPILE_OPTIONS -DSTACKTRACE_SYMBOL)
+endif()
+
+#compile using cmake -DWITH_SYSCALL_TRACING for syscall tracing
+if(WITH_SYSCALL_TRACING)
+    list(APPEND COMPILE_OPTIONS -DWITH_SYSCALL_TRACING)
+
+    set(LINUX_SRC_DIR "/usr/src/linux-5.16.7" CACHE STRING "Location of kernel source used to parse syscalls")
+else()
+    # Remove CMake option from cache
+    unset(LINUX_SRC_DIR CACHE)
 endif()
 
 #compile using cmake -DWITH_STD_IO for stdin, stdout and stderr

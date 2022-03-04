@@ -248,15 +248,20 @@ add_library(iotrace_object OBJECT ${SOURCE})
 add_library(iotrace_control SHARED libiotrace.c)
 
 
-# NOTE: atomic_hash is only required for `WITH_FILENAME_RESOLUTION` option
-add_subdirectory(libs/atomic_hash)
 
-# ${CMAKE_DL_LIBS} needed for dlsym-function
-# "-lpthread" needed for pthread_atfork()
+# Linking:
+#   - ${CMAKE_DL_LIBS} needed for dlsym-function
+#   - "-lpthread" needed for pthread_atfork()
 if(WITH_FILENAME_RESOLUTION)
+    add_subdirectory(libs/atomic_hash)
+
     target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} atomic_hash_object pthread)
     target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} atomic_hash_object pthread)        # $$$ TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ?? $$$
 else()
+    # Remove atomic_hash's CMake options from cache
+    unset(HASH_FUNCTION CACHE)
+    unset(HASH_FUNCTION_VALUES CACHE)
+
     target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} pthread)
 endif()
 

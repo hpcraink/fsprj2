@@ -174,7 +174,7 @@ if(WITH_ALLOC)
     list(APPEND COMPILE_OPTIONS -DWITH_ALLOC)
 endif()
 
-# Compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w ids and filenames during runtime
+# Compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w file handles and filenames during runtime
 if (WITH_FILENAME_RESOLUTION)
     list(APPEND COMPILE_OPTIONS -DWITH_FILENAME_RESOLUTION)
 endif()

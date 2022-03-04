@@ -22,8 +22,8 @@ check_include_files("utmpx.h" HAVE_UTMPX_H)
 list(APPEND CMAKE_REQUIRED_FLAGS       -O2)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE -D__USE_LARGEFILE64 -D_FORTIFY_SOURCE=2)
 
-check_symbol_exists(__open "fcntl.h" HAVE___OPEN)              # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
-check_symbol_exists(__open64 "fcntl.h" HAVE___OPEN64)          # $$$$$$$$ TODO: DOESN'T WORK SOMEHOW $$$$$$$$
+check_symbol_exists(__open "fcntl.h" HAVE___OPEN)              # TODO: DOESN'T WORK SOMEHOW ??
+check_symbol_exists(__open64 "fcntl.h" HAVE___OPEN64)          # TODO: DOESN'T WORK SOMEHOW ??
 check_symbol_exists(__open_2 "fcntl.h" HAVE___OPEN_2)
 check_symbol_exists(__open64_2 "fcntl.h" HAVE___OPEN64_2)
 check_symbol_exists(open64 "fcntl.h" HAVE_OPEN64)
@@ -237,7 +237,18 @@ if(WITH_FILENAME_RESOLUTION)
     list(APPEND SOURCE
             fnres/fctevent.c
             fnres/internal/fnmap.c)
+
+    add_subdirectory(libs/atomic_hash)
+
+    list(APPEND SHARED_LIB_LINK_OPTIONS atomic_hash_object)
+    list(APPEND STATIC_LIB_LINK_OPTIONS atomic_hash_object)
+else()
+    # Remove atomic_hash's CMake options from cache
+    unset(HASH_FUNCTION CACHE)
+    unset(HASH_FUNCTION_VALUES CACHE)
 endif()
+
+
 
 add_library(iotrace_shared SHARED ${SOURCE})
 
@@ -249,22 +260,6 @@ add_library(iotrace_control SHARED libiotrace.c)
 
 
 
-# Linking:
-#   - ${CMAKE_DL_LIBS} needed for dlsym-function
-#   - "-lpthread" needed for pthread_atfork()
-if(WITH_FILENAME_RESOLUTION)
-    add_subdirectory(libs/atomic_hash)
-
-    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} atomic_hash_object pthread)
-    target_link_libraries(iotrace_static PRIVATE ${CMAKE_DL_LIBS} atomic_hash_object pthread)        # $$$ TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ?? $$$
-else()
-    # Remove atomic_hash's CMake options from cache
-    unset(HASH_FUNCTION CACHE)
-    unset(HASH_FUNCTION_VALUES CACHE)
-
-    target_link_libraries(iotrace_shared PRIVATE ${CMAKE_DL_LIBS} pthread)
-endif()
-
 # Let the user chose the gettime functionality
 # XXX Instead of hard-coding these settings, they should be chosen dependant on availability...
 set_property(SOURCE gettime.c CACHE LIBIOTRACE_GETTIME PROPERTY STRINGS "LIBIOTRACE_GETTIME" "WANT_GETTIMEOFDAY;WANT_GETTIME;WANT_RDTSC")
@@ -273,12 +268,24 @@ set(WANT_GETTIMEOFDAY 1 CACHE BOOL "If gettimeofday is selected")
 set(WANT_GETTIME 1 CACHE BOOL "If gettimeof is selected")
 set(WANT_RDTSC 1 CACHE BOOL "If rdtsc is selected")
 
+
 target_compile_options(iotrace_shared PRIVATE ${COMPILE_OPTIONS})
 target_compile_options(iotrace_static PRIVATE ${COMPILE_OPTIONS})
 target_compile_options(iotrace_object PRIVATE ${COMPILE_OPTIONS})
 
 # object for static linking needs
 target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
+
+
+# Linking:
+#   - ${CMAKE_DL_LIBS} needed for dlsym-function
+#   - "-lpthread" needed for pthread_atfork()
+list(APPEND SHARED_LIB_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
+list(APPEND STATIC_LIB_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
+
+target_link_libraries(iotrace_shared PRIVATE ${SHARED_LIB_LINK_OPTIONS})
+target_link_libraries(iotrace_static PRIVATE ${STATIC_LIB_LINK_OPTIONS})  # TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ??
+
 
 #install(TARGETS iotrace_static
 #        ARCHIVE DESTINATION lib

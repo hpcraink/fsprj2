@@ -233,7 +233,7 @@ if(WITH_ALLOC)
     list(APPEND SOURCE alloc.c)
 endif()
 
-if(WITH_FILENAME_RESOLUTION)
+if (WITH_FILENAME_RESOLUTION)
     list(APPEND SOURCE
             fnres/fctevent.c
             fnres/internal/fnmap.c)
@@ -248,12 +248,12 @@ else()
     unset(HASH_FUNCTION_VALUES CACHE)
 endif()
 
-if(WITH_SYSCALL_TRACING)
+if (WITH_SYSCALL_TRACING)
     # TODO: SOURCE
     list(APPEND SOURCE
             stracing/internal/arch/ptrace_utils.c
             stracing/internal/ptrace_utils.c
-            stracing/_test.h)
+            stracing/entrypoint.c)
 
 
     # Build targets/commands: Parse syscalls + generate source

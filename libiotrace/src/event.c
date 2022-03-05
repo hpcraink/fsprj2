@@ -327,6 +327,10 @@ static const long FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
 static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
 
+#ifdef WITH_SYSCALL_TRACING
+#  include "stracing/entrypoint.h"
+#endif
+
 /**
  * Create a new libiotrace_socket.
  *
@@ -2020,6 +2024,10 @@ void init_process() {
 }
 #endif
 
+#ifdef WITH_SYSCALL_TRACING
+    stracing_launch_tracer();
+#endif
+
 #if !defined(HAVE_HOST_NAME_MAX)
 #if defined(HAVE__POSIX_HOST_NAME_MAX)
 		host_name_max = _POSIX_HOST_NAME_MAX;
@@ -2305,6 +2313,10 @@ void init_thread(void) {
 #  ifdef ENABLE_REMOTE_CONTROL
 	write_metadata_into_influxdb();
 #  endif
+#endif
+
+#ifdef WITH_SYSCALL_TRACING
+    stracing_register_with_tracer();
 #endif
 }
 

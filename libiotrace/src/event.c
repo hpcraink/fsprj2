@@ -2025,7 +2025,7 @@ void init_process() {
 #endif
 
 #ifdef WITH_SYSCALL_TRACING
-    stracing_launch_tracer();
+        stracing_init_tracer();
 #endif
 
 #if !defined(HAVE_HOST_NAME_MAX)

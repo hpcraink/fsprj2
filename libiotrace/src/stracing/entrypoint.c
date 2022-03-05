@@ -24,14 +24,15 @@ void __tracee_send_tracing_request(void);
 
 /* --- Functions --- */
 void stracing_init_tracer(void) {
-    LIBIOTRACE_WARN("(A) Hello  - before fork -  %d!", getpid());
-
 /* (0) Launch tracer as grandchild */
     /* Tracee = parent */
-    if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
+    pid_t tracee;
+    if ((tracee = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() ))) {
+        pause();        // TODO: REVISE (#2)   Tracer must have established UXD reg socket before proceeding
         return;
     }
 
+    /* Child -> not used */
     if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
         pause();
         _exit(0); /* paranoia */
@@ -40,22 +41,25 @@ void stracing_init_tracer(void) {
     /* Grandchild = Tracer */
     kill(getppid(), SIGKILL);
 
-    LIBIOTRACE_WARN("(A) Hello  - after fork -  %d!", getpid());
+
+/* (1) Establish UXD registration socket */
+    int sockfd = __tracer_init_uxd_reg_socket();
+    LIBIOTRACE_DEBUG("[TRACER] Init'ed UXD registration socket (pid=%ld)", getpid());
 
 
-// ...
-    if (0) {  // Circumvent -Werror=unused-function
-        int sockfd = __tracer_init_uxd_reg_socket();
-        __tracer_check_for_new_tracees(sockfd);
-    }
+/* (2) Resume tracee */
+    kill(tracee, SIGCONT);   // TODO: REVISE (#2)
+
+
+/* (3) Start tracing .. */
+    // TODO do_tracer, containing following fct ..
+    __tracer_check_for_new_tracees(sockfd);
 }
 
 void stracing_register_with_tracer(void) {
-    LIBIOTRACE_WARN("(B) Got run!");
-
-    if (0) {  // Circumvent -Werror=unused-function
-        __tracee_send_tracing_request();
-    }
+    LIBIOTRACE_DEBUG("[TRACEE] Sending tracing request (pid=%ld)", getpid());
+    __tracee_send_tracing_request();
+    // TODO: do_tracee
 }
 
 
@@ -98,10 +102,11 @@ static int __tracer_init_uxd_reg_socket(void) {
 }
 
 static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
-    const int sockfd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(accept4)(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK) );
-    if (EWOULDBLOCK == errno) {
-        return -1;
-    } else {
+    int sockfd;
+    if (-1 == (sockfd = CALL_REAL_POSIX_SYNC(accept4)(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK))) {
+        if (EWOULDBLOCK == errno) {
+            return -1;
+        }
         LIBIOTRACE_ERROR("[TRACER] `accept4` - checking for tracees");
     }
 
@@ -110,6 +115,8 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
 
     CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
 
+
+    LIBIOTRACE_DEBUG("[TRACER] Received tracing request from pid=%ld", (pid_t)cr.pid);
     return (pid_t)cr.pid;
 }
 

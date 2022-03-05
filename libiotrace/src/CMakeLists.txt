@@ -251,8 +251,9 @@ endif()
 if(WITH_SYSCALL_TRACING)
     # TODO: SOURCE
     list(APPEND SOURCE
-            stracing/_test.h
-            stracing/internal/_test.h)
+            stracing/internal/arch/ptrace_utils.c
+            stracing/internal/ptrace_utils.c
+            stracing/_test.h)
 
 
     # Build targets/commands: Parse syscalls + generate source

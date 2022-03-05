@@ -1,7 +1,9 @@
 #ifndef LIBIOTRACE_ERROR_H
 #define LIBIOTRACE_ERROR_H
 
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "wrapper_defines.h"
 

@@ -1,6 +1,15 @@
 
+--------------------  Setup  --------------------
 - Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
+
+
+
+--------------------  stracing  --------------------
+Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_SYSCALL_TRACING=ON -DLINUX_SRC_DIR=/usr/src/linux-5.4.0 -DWITH_FILENAME_RESOLUTION=OFF -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+
+
+--------------------  fnres  --------------------
 - Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
                                                                                                                              ^
                                                                                                            LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB

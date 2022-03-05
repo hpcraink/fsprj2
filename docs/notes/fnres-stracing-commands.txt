@@ -43,6 +43,15 @@ EOF
 - Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_SYSCALL_TRACING=ON -DLINUX_SRC_DIR=/usr/src/linux-5.4.0 -DWITH_FILENAME_RESOLUTION=OFF -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
 
 
+- Testing:
+    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork)
+    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork)
+    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --pthread)   ---> !! WE DON'T GET CALLED !!
+
+    (cd test && IOTRACE_LOG_NAME=stracing_descendants_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants)
+
+
+
 
 --------------------  fnres  --------------------
 - Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)

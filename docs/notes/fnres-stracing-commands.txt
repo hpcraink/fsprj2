@@ -1,23 +1,24 @@
+--------------------  General  --------------------
+-----  Compile  -----
+- Setup - Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
---------------------  Setup  --------------------
-- Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
-
-
-
-
---------------------  stracing  --------------------
-Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_SYSCALL_TRACING=ON -DLINUX_SRC_DIR=/usr/src/linux-5.4.0 -DWITH_FILENAME_RESOLUTION=OFF -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+- flags: - IOTRACE_FNRES_MAX_FILENAMES=100
+         - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
+         - IOTRACE_WHITELIST=./whitelist
 
 
---------------------  fnres  --------------------
-- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
-                                                                                                                             ^
-                                                                                                           LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB
+-----  Testing  -----
+- Run test:
+    All: make -C build test ARGS="-R '^test_'"
+    Specific: ./build/test/cunit/test_fctevent
 
-- Validate logs / influx:
-    - Cleanup LOGFILE's: find build/test/ -type f -name "*.log" -delete
+- Cleanup LOGFILE's: find build/test/ -type f -name "*.log" -delete
 
-    - Launch Influx: (cd ../Grafana && docker-compose up -d)
+
+-----  Influx stuff  -----
+- Launch Influx: (cd ../Live-Tracing && docker-compose up -d)
+
+- Influx CLI:
     - Setup Influx-CLI:
         influx config create --config-name local_influx-fspj \
             --host-url http://localhost:8086 \
@@ -25,17 +26,6 @@ Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=De
             --token OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CKf5Eh1bN0Ng==
     - Query InfluxDB using CLI:
         influx query --active-config local_influx-fspj 'from(bucket: "hsebucket")|> range(start: -1d)|> filter(fn: (r) => r._measurement == "libiotrace")|> drop(columns: ["_start", "_stop", "_measurement", "thread", "_time"])'' | grep traced_filename
-
-
-- Run test:
-    All: make -C build test ARGS="-R '^test_'"
-
-    Specific: ./build/test/cunit/test_fctevent
-
-    ---------------------------------------
-        flags: - IOTRACE_FNRES_MAX_FILENAMES=100
-               - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
-               - IOTRACE_WHITELIST=./whitelist
 
 - Create whitelist (for MPI-tests):
 cd build/test && cat<<EOF>./whitelist
@@ -48,6 +38,18 @@ EOF
 
 
 
+
+--------------------  stracing  --------------------
+- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_SYSCALL_TRACING=ON -DLINUX_SRC_DIR=/usr/src/linux-5.4.0 -DWITH_FILENAME_RESOLUTION=OFF -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+
+
+
+--------------------  fnres  --------------------
+- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+                                                                                                                             ^
+                                                                                                           LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB
+
+- Testing results:
     --- Working ---
     - POSIX -
         (cd build/test && IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args; code ../../test/open_var_args.c open_var_args_shared_test1_iotrace.log)

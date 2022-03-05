@@ -249,10 +249,23 @@ list(APPEND LINK_OPTIONS
 )
 
 if(WITH_FILENAME_RESOLUTION)
-# TODO: Disable for tests not related to fnres  -->  Requires additional object-library which is compiled w/o fnres
+# TODO: Disable for tests not related to fnres  --> Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
         "atomic_hash_object"
     )
+endif()
+
+if (WITH_SYSCALL_TRACING)
+# - Programs for testing tracing  -
+    # test with: IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork [--loop] [--fork | --pthread]
+    add_executable(stracing_trace_pthread_fork
+            stracing/trace_pthread_fork.c)
+    target_link_libraries(stracing_trace_pthread_fork
+            pthread)
+
+    # test with: IOTRACE_LOG_NAME=stracing_descendants_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants
+    add_executable(stracing_trace_descendants
+            stracing/trace_descendants.c)
 endif()
 
 

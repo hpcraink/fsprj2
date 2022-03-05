@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <signal.h>
 
 
 /* --- Constants / Globals --- */
@@ -23,11 +24,26 @@ void __tracee_send_tracing_request(void);
 
 /* --- Functions --- */
 void stracing_init_tracer(void) {
-    LIBIOTRACE_WARN("(A) Got run!");
+    LIBIOTRACE_WARN("(A) Hello  - before fork -  %d!", getpid());
 
-    // TODO: Fork tracer (2x fork)
-    // IF PARENT: RETURN ..
+/* (0) Launch tracer as grandchild */
+    /* Tracee = parent */
+    if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
+        return;
+    }
 
+    if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
+        pause();
+        _exit(0); /* paranoia */
+    }
+
+    /* Grandchild = Tracer */
+    kill(getppid(), SIGKILL);
+
+    LIBIOTRACE_WARN("(A) Hello  - after fork -  %d!", getpid());
+
+
+// ...
     if (0) {  // Circumvent -Werror=unused-function
         int sockfd = __tracer_init_uxd_reg_socket();
         __tracer_check_for_new_tracees(sockfd);

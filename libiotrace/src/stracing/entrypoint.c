@@ -2,6 +2,9 @@
 #include "../error.h"
 #include "../wrapper_defines.h"
 
+// #define DEV_DEBUG_ENABLE_LOGS
+#include "debug.h"
+
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -44,7 +47,7 @@ void stracing_init_tracer(void) {
 
 /* (1) Establish UXD registration socket */
     int sockfd = __tracer_init_uxd_reg_socket();
-    LIBIOTRACE_DEBUG("[TRACER] Init'ed UXD registration socket (pid=%ld)", getpid());
+    DEV_DEBUG_PRINT_MSG("[TRACER] Init'ed UXD registration socket (pid=%ld)", getpid());
 
 
 /* (2) Resume tracee */
@@ -57,7 +60,7 @@ void stracing_init_tracer(void) {
 }
 
 void stracing_register_with_tracer(void) {
-    LIBIOTRACE_DEBUG("[TRACEE] Sending tracing request (pid=%ld)", getpid());
+    DEV_DEBUG_PRINT_MSG("[TRACEE] Sending tracing request (pid=%ld)", getpid());
     __tracee_send_tracing_request();
     // TODO: do_tracee
 }
@@ -83,11 +86,11 @@ static int __tracer_init_uxd_reg_socket(void) {
             INIT_UXD_SOCKADDR_STRUCT(sa);
             if (-1 == CALL_REAL_POSIX_SYNC(connect)(uxd_reg_sock_fd, (struct sockaddr*)&sa,
                                                     sizeof(struct sockaddr_un))) {   // TODO-ASK: IS "REUSING" `server_fd` OK  ??!
-                LIBIOTRACE_DEBUG("[TRACER] No parallel instance is running, but socket is still used. Trying to clean up and start over again");
+                DEV_DEBUG_PRINT_MSG("[TRACER] No parallel instance is running, but socket is still used. Trying to clean up and start over again");
                 __tracer_fin_uxd_reg_socket(uxd_reg_sock_fd);
             } else {
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
-                LIBIOTRACE_ERROR("[TRACER] An instance is already running, aborting ...");
+                DEV_DEBUG_PRINT_MSG("[TRACER] An instance is already running, aborting ...");
             }
 
             // Bind succeeded
@@ -116,7 +119,7 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
     CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
 
 
-    LIBIOTRACE_DEBUG("[TRACER] Received tracing request from pid=%ld", (pid_t)cr.pid);
+    DEV_DEBUG_PRINT_MSG("[TRACER] Received tracing request from pid=%ld", (pid_t)cr.pid);
     return (pid_t)cr.pid;
 }
 

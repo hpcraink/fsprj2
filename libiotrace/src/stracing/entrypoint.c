@@ -2,7 +2,7 @@
 #include "../error.h"
 #include "../wrapper_defines.h"
 
-// #define DEV_DEBUG_ENABLE_LOGS
+#define DEV_DEBUG_ENABLE_LOGS
 #include "debug.h"
 
 #include <unistd.h>
@@ -27,40 +27,47 @@ void __tracee_send_tracing_request(void);
 
 /* --- Functions --- */
 void stracing_init_tracer(void) {
-/* (0) Launch tracer as grandchild */
-    /* Tracee = parent */
-    pid_t tracee;
-    if ((tracee = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() ))) {
-        pause();        // TODO: REVISE (#2)   Tracer must have established UXD reg socket before proceeding
+    DEV_DEBUG_PRINT_MSG("[PARENT:pid=%ld] $$$$ TODO  --  PROBLEM: Each fork'd process runs init_process => Tracer tries to register w/ itself ...", getpid());
+
+
+/* (0) Establish tracer's UXD registration socket */
+    int sockfd;
+/* -> Tracer runs already */
+    if (-1 == (sockfd = __tracer_init_uxd_reg_socket())) {
         return;
     }
 
-    /* Child -> not used */
+/* -> Tracer didn't run yet */
+/* (1) Launch tracer as grandchild */
+/* Tracee = parent */
     if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
-        pause();
-        _exit(0); /* paranoia */
+        close(sockfd);
+        return;
     }
 
-    /* Grandchild = Tracer */
+/* Child -> not used */
+    if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
+        close(sockfd);
+        pause();
+        _exit(0);
+    }
+
+/* Grandchild = Tracer */
     kill(getppid(), SIGKILL);
+    DEV_DEBUG_PRINT_MSG("[TRACER:pid=%ld] Ready for tracing requests ..", getpid());
 
 
-/* (1) Establish UXD registration socket */
-    int sockfd = __tracer_init_uxd_reg_socket();
-    DEV_DEBUG_PRINT_MSG("[TRACER] Init'ed UXD registration socket (pid=%ld)", getpid());
-
-
-/* (2) Resume tracee */
-    kill(tracee, SIGCONT);   // TODO: REVISE (#2)
-
-
-/* (3) Start tracing .. */
+/* (2) Start tracing .. */
     // TODO do_tracer, containing following fct ..
-    __tracer_check_for_new_tracees(sockfd);
+    for (int i = 0; i < 3; i++) {           // For testing only ..
+        sleep(1);
+        __tracer_check_for_new_tracees(sockfd);
+    }
 }
 
 void stracing_register_with_tracer(void) {
-    DEV_DEBUG_PRINT_MSG("[TRACEE] Sending tracing request (pid=%ld)", getpid());
+    DEV_DEBUG_PRINT_MSG("[TRACEE:pid=%ld] Sending tracing request", getpid());
+    return;
     __tracee_send_tracing_request();
     // TODO: do_tracee
 }
@@ -76,30 +83,33 @@ void stracing_register_with_tracer(void) {
 
 static int __tracer_init_uxd_reg_socket(void) {
     int uxd_reg_sock_fd;
+    struct sockaddr_un sa;
     for (int i = 0; i < 2; i++) {  /* Max. 2 attempts */
         uxd_reg_sock_fd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(socket)(AF_UNIX, SOCK_STREAM, 0) );
 
-        struct sockaddr_un sa;
         INIT_UXD_SOCKADDR_STRUCT(sa);
         // Bind failed  --> Try to cleanup & start over again
         if (-1 == CALL_REAL_POSIX_SYNC(bind)(uxd_reg_sock_fd, (struct sockaddr*)&sa, sizeof(struct sockaddr_un))) {
             INIT_UXD_SOCKADDR_STRUCT(sa);
             if (-1 == CALL_REAL_POSIX_SYNC(connect)(uxd_reg_sock_fd, (struct sockaddr*)&sa,
                                                     sizeof(struct sockaddr_un))) {   // TODO-ASK: IS "REUSING" `server_fd` OK  ??!
-                DEV_DEBUG_PRINT_MSG("[TRACER] No parallel instance is running, but socket is still used. Trying to clean up and start over again");
+                DEV_DEBUG_PRINT_MSG("[PARENT:pid=%ld] No parallel instance is running, but socket still exists. Trying to clean up and start over again", getpid());
                 __tracer_fin_uxd_reg_socket(uxd_reg_sock_fd);
             } else {
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
-                DEV_DEBUG_PRINT_MSG("[TRACER] An instance is already running, aborting ...");
+                DEV_DEBUG_PRINT_MSG("[PARENT:pid=%ld] A tracer instance is already running", getpid());
+                return -1;
             }
 
-            // Bind succeeded
-        } else
+        // Bind succeeded
+        } else {
             break;
+        }
     }
 
 /* (3) Start listening for connections */
     DIE_WHEN_ERRNO( listen(uxd_reg_sock_fd, UXD_SOCKET_REQUESTS_BACKLOG_SIZE) );
+    DEV_DEBUG_PRINT_MSG("[PARENT:pid=%ld] Inited UXD registration socket \"%s\"", getpid(), sa.sun_path);
 
     return uxd_reg_sock_fd;
 }
@@ -110,7 +120,7 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
         if (EWOULDBLOCK == errno) {
             return -1;
         }
-        LIBIOTRACE_ERROR("[TRACER] `accept4` - checking for tracees");
+        LIBIOTRACE_ERROR("[TRACER:pid=%ld] `accept4` - checking for tracees", getpid());
     }
 
     struct ucred cr; socklen_t cr_len = sizeof (cr);
@@ -119,7 +129,7 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
     CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
 
 
-    DEV_DEBUG_PRINT_MSG("[TRACER] Received tracing request from pid=%ld", (pid_t)cr.pid);
+    DEV_DEBUG_PRINT_MSG("[TRACER:pid=%ld] Received tracing request from pid=%ld", getpid(), (pid_t)cr.pid);
     return (pid_t)cr.pid;
 }
 
@@ -148,5 +158,3 @@ void __tracee_send_tracing_request(void) {
 
     CALL_REAL_POSIX_SYNC(close)(server_fd);
 }
-
-

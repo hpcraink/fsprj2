@@ -1,5 +1,7 @@
 /*
- * Usage: `#define DEV_DEBUG_ENABLE_LOGS` (or not) BEFORE `#include debug.h`
+ * This macro allows printing debug logs which are only of interest during development
+ * Usage: Defining or not defining `DEV_DEBUG_ENABLE_LOGS` BEFORE `#include debug.h`
+ *        either enables or disables logging for the current translation unit
  */
 #ifndef LIBIOTRACE_DEV_DEBUG_H
 #define LIBIOTRACE_DEV_DEBUG_H

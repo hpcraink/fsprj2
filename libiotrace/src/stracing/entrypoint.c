@@ -3,24 +3,17 @@
 #include "../wrapper_defines.h"
 
 #define DEV_DEBUG_ENABLE_LOGS
-#include "debug.h"
+#include "../debug.h"
 
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <signal.h>
 
-
-/* --- Constants / Globals --- */
-#define UXD_SOCKET_REQUESTS_BACKLOG_SIZE 5000
-const char* const UXD_SOCKET_FILEPATH = "libiotrace-tracer.sock";
+#include "stracer/tracer.h"
 
 
 /* --- Function prototypes for helper functions --- */
 static int __tracer_init_uxd_reg_socket(void);
-static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd);
-static void __tracer_fin_uxd_reg_socket(int uxd_reg_sock_fd);
-
 void __tracee_send_tracing_request(void);
 
 
@@ -31,48 +24,35 @@ void stracing_init_tracer(void) {
 
 
 /* (0) Establish tracer's UXD registration socket */
-    int sockfd;
+    int uxd_reg_sock_fd;
 /* -> Tracer runs already */
-    if (-1 == (sockfd = __tracer_init_uxd_reg_socket())) {
+    if (-1 == (uxd_reg_sock_fd = __tracer_init_uxd_reg_socket())) {
         return;
     }
-
-//    return;
 
 /* -> Tracer didn't run yet */
 /* (1) Launch tracer as grandchild */
 /* Tracee = parent */
     if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
-        close(sockfd);
+        close(uxd_reg_sock_fd);
         return;
     }
 
-/* Child -> not used */
-    if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
-        DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Nothing 2 see here ..", gettid());
-        close(sockfd);
-        pause();
-        _exit(0);
-    }
+/* Child -> launches stracer executable (which in turn forks again and becomes the tracer) */
+    int buf_size = snprintf(NULL, 0, "%d", uxd_reg_sock_fd);
+    char uxd_reg_sock_fd_str[buf_size];     // VLA
+    snprintf(NULL, 0, "%d", uxd_reg_sock_fd);
 
-/* Grandchild = Tracer */
-    kill(getppid(), SIGKILL);
-    DEV_DEBUG_PRINT_MSG("[TRACER:tid=%ld] Ready for tracing requests ..", gettid());
-
-
-/* (2) Start tracing .. */
-    // TODO do_tracer, containing following fct ..
-    for (int i = 0; i < 3; i++) {           // For testing only ..
-        sleep(1);
-        __tracer_check_for_new_tracees(sockfd);
-    }
+    CALL_REAL(execvp)(TRACER_EXEC_FILENAME, TRACER_EXEC_FILENAME, uxd_reg_sock_fd_str, NULL);
+    LIBIOTRACE_ERROR("exec failed");
 }
 
 void stracing_register_with_tracer(void) {
     DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%ld] Sending tracing request", gettid());
-    return;
-    __tracee_send_tracing_request();
+
     // TODO: do_tracee
+
+    __tracee_send_tracing_request();
 }
 
 
@@ -97,7 +77,8 @@ static int __tracer_init_uxd_reg_socket(void) {
             if (-1 == CALL_REAL_POSIX_SYNC(connect)(uxd_reg_sock_fd, (struct sockaddr*)&sa,
                                                     sizeof(struct sockaddr_un))) {   // TODO-ASK: IS "REUSING" `server_fd` OK  ??!
                 DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] No parallel instance is running, but socket still exists. Trying to clean up and start over again", gettid());
-                __tracer_fin_uxd_reg_socket(uxd_reg_sock_fd);
+                CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
+                DIE_WHEN_ERRNO( unlink(UXD_SOCKET_FILEPATH) );    // TODO #2: MAY PREVENT APPLICATION RUNNING LATER   ---> in libiotrace: .dtor section ..   --> tracee unlink if connect fails ..
             } else {
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
                 DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A tracer instance is already running", gettid());
@@ -116,31 +97,6 @@ static int __tracer_init_uxd_reg_socket(void) {
 
     return uxd_reg_sock_fd;
 }
-
-static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
-    int sockfd;
-    if (-1 == (sockfd = CALL_REAL_POSIX_SYNC(accept4)(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK))) {
-        if (EWOULDBLOCK == errno) {
-            return -1;
-        }
-        LIBIOTRACE_ERROR("[TRACER:tid=%ld] `accept4` - checking for tracees", gettid());
-    }
-
-    struct ucred cr; socklen_t cr_len = sizeof (cr);
-    DIE_WHEN_ERRNO( getsockopt(sockfd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) );
-
-    CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
-
-
-    DEV_DEBUG_PRINT_MSG("[TRACER:tid=%ld] Received tracing request from pid=%ld", gettid(), (pid_t)cr.pid);
-    return (pid_t)cr.pid;
-}
-
-static void __tracer_fin_uxd_reg_socket(int uxd_reg_sock_fd) {
-    CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
-    DIE_WHEN_ERRNO( unlink(UXD_SOCKET_FILEPATH) );    // TODO #2: MAY PREVENT APPLICATION RUNNING LATER   ---> in libiotrace: .dtor section ..   --> tracee unlink if connect fails ..
-}
-
 
 void __tracee_send_tracing_request(void) {
 /* (1) Create socket */

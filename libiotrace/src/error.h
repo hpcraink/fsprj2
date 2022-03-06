@@ -25,10 +25,10 @@
 //#define LIBIOTRACE_ENOSPC   3
 
 
-#if !defined(NDEBUG)
+#ifndef NDEBUG
 #  define LIBIOTRACE_DEBUG(format, ...)                                                                                                                                           \
 	do {                                                                                                                                                                          \
-		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LIB_NAME">> [DEBUG] In function %s (file %s, line %d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LIB_NAME">> [DEBUG] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 #else
 #  define LIBIOTRACE_DEBUG(format, ...) do {  } while(0)
@@ -37,7 +37,7 @@
 
 #define LIBIOTRACE_WARN(format, ...)                                                                                                                                             \
 	do {                                                                                                                                                                         \
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LIB_NAME">> [WARN] In function %s (file %s, line %d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LIB_NAME">> [WARN] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 
 
@@ -45,7 +45,7 @@
 // ToDo: __func__ dependencies (like in posix_io.c)
 #define LIBIOTRACE_ERROR(format, ...) \
 	do {                                                                                                                                                                          \
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LIB_NAME">> [ERROR] In function %s (file %s, line %d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LIB_NAME">> [ERROR] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 		exit(EXIT_FAILURE);                                                                                                                                                       \
 	} while(0)
 

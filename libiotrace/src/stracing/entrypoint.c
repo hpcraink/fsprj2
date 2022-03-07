@@ -18,7 +18,7 @@
 
 
 /* --- Globals / Consts --- */
-static const char* const STRACER_EXEC_FILENAME = "libiotrace_tracer";
+static const char* const STRACER_EXEC_FILENAME = "libiotrace_stracer";
 
 
 /* --- Function prototypes for helper functions --- */
@@ -62,7 +62,7 @@ void stracing_init_tracer(char *ld_preload_env_val) {
     char *uxd_reg_sock_fd_str;
     DIE_WHEN_ERRNO( asprintf(&uxd_reg_sock_fd_str, "%d", uxd_reg_sock_fd) );
 
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching exectuable as \"%s %s\" as tracer ...", tracer_exec_filename, uxd_reg_sock_fd_str, gettid());
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via \"%s %s\" ...", gettid(), tracer_exec_filename, uxd_reg_sock_fd_str);
     CALL_REAL(execle)(tracer_exec_filename,
                       tracer_exec_filename, uxd_reg_sock_fd_str, NULL,
                       NULL);        /* Make sure NO envp w/ `LD_PRELOAD` is passed */
@@ -80,6 +80,7 @@ void stracing_register_with_tracer(void) {
 
 
 /* -- Registration -- */
+/* - !!!  WARNING REGARDING SOCKET: The socket cannot be created on every fs (e.g., VMWare shares - 'dialout' in `ls -lah`)  !!! - */
 #define INIT_UXD_SOCKADDR_STRUCT(SA_STRUCT) do {   \
   memset(&SA_STRUCT, 0, sizeof(SA_STRUCT));        \
   SA_STRUCT.sun_family = AF_UNIX;                  \

@@ -6,6 +6,7 @@
 
 #include "tracer.h"
 #include "common/error.h"
+#define DEV_DEBUG_ENABLE_LOGS
 #include "common/debug.h"
 
 
@@ -27,7 +28,6 @@ int main(int argc, char** argv) {
 /* (1) Fork grandchild (which will be the actual tracer) */
 /* Child -> not used */
     if (DIE_WHEN_ERRNO( fork() )) {
-        DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Nothing 2 see here ..", gettid());
         close(uxd_reg_sock_fd);
         pause();
         _exit(0);
@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 
 /* Grandchild = Tracer */
     kill(getppid(), SIGKILL);
-    DEV_DEBUG_PRINT_MSG("[TRACER:tid=%d] Ready for tracing requests ..", gettid());
+    DEV_DEBUG_PRINT_MSG("[TRACER:pid=%d] Ready for tracing requests ..", getpid());
 
 
 
@@ -64,7 +64,7 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
         if (EWOULDBLOCK == errno) {
             return -1;
         }
-        LOG_ERROR_AND_EXIT("[TRACER:tid=%d] `accept4` - checking for tracees", gettid());
+        LOG_ERROR_AND_EXIT("[TRACER] `accept4` - checking for tracees");
     }
 
     struct ucred cr; socklen_t cr_len = sizeof (cr);
@@ -73,7 +73,7 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
     close(sockfd);
 
 
-    DEV_DEBUG_PRINT_MSG("[TRACER:tid=%d] Received tracing request from pid=%ld", gettid(), (pid_t)cr.pid);
+    DEV_DEBUG_PRINT_MSG("[TRACER] Received tracing request from pid=%d", (pid_t)cr.pid);
     return (pid_t)cr.pid;
 }
 

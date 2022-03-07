@@ -278,7 +278,7 @@ if (WITH_SYSCALL_TRACING)
             ${GEN_SYSCALLS_TARGET_DIR}/syscallents.h        # TODO: REVISE
             ${GEN_SYSCALLS_TARGET_DIR}/syscallents.c)
 
-
+    # WARNING: Changing the name of the executable requires also an update in the source (otherwise `exec` will fail)
     add_executable(libiotrace_stracer
             ${STRACER_SOURCE})
 

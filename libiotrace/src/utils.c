@@ -118,3 +118,39 @@ int str_to_long(char* str, long* num) {
     }
     return -1;
 }
+
+
+/**
+ * Rudimentary TODO: and NOT PROPERLY VALIDATED implementation of `dirname`(3),
+ * which modifies the provided buffer
+ *
+ * BACKGROUND: The glibc implementation MAY modify the provided buffer OR use
+ *             an internal static buffer (making it not thread safe)
+ *
+ * @param[in,out]  path      Path buffer containing the path from which the
+ *                           dirname shall be derived
+ * @param[out]     path_size Size of allocated path buffer (incl. `\0`)
+ * @return                   0 on success, -1 on failure
+ */
+int dirname_n(char* path, int path_size) {
+  if (!path || path_size < 2) {   // For cwd ('.') we need at least 2 bytes
+    return -1;
+  }
+
+  char* last_slash = NULL;
+  for (char* p = path; *p &&
+                            (p - path +1 <= path_size); // Make sure we're not reading more than we're supposed to (in case of an unterminated string)
+                            p++) {
+    if ('/' == *p) {
+      last_slash = p;
+    }
+  }
+
+  if (!last_slash || path == last_slash) {
+    path[0] = '.';
+    last_slash = path+ 1;
+  }
+
+  *last_slash = '\0';
+  return 0;
+}

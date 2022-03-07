@@ -16,6 +16,8 @@ void shorten_log_name(char *short_log_name, const int short_log_name_len,
 
 int str_to_long(char* str, long* num);
 
+int dirname_n(char* path, int path_size);
+
 END_C_DECLS
 
 #endif /* LIBIOTRACE_UTILS_H_ */

@@ -1,5 +1,8 @@
-#ifndef STRACER_ERROR_H
-#define STRACER_ERROR_H
+/*
+ * Derived version from libiotrace which DOESN'T USE any libiotrace facilities (such as macros)
+ */
+#ifndef STRACER_ERROR_H_
+#define STRACER_ERROR_H_
 
 #include <errno.h>
 #include <stdio.h>
@@ -42,4 +45,4 @@
     (NULL == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); NULL; }) : __val); \
   }); })
 
-#endif /* STRACER_ERROR_H */
+#endif /* STRACER_ERROR_H_ */

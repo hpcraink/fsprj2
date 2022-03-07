@@ -1,7 +1,5 @@
 /*
- * This macro allows printing debug logs which are only of interest during development
- * Usage: Defining or not defining `DEV_DEBUG_ENABLE_LOGS` BEFORE `#include debug.h`
- *        either enables or disables logging for the current translation unit
+ * Derived version from libiotrace which DOESN'T USE any libiotrace facilities (such as macros)
  */
 #ifndef STRACER_DEBUG_H_
 #define STRACER_DEBUG_H_

@@ -177,21 +177,21 @@ static pthread_mutex_t socket_lock;
 static pthread_mutex_t ip_lock;
 #endif
 
-/* environment variables */
+/* environment variables   (NOTE: Uses const char array to ensure `sizeof` returns correct size) */
 #if defined(IOTRACE_ENABLE_LOGFILE) \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
-static const char* const ENV_LOG_NAME = "IOTRACE_LOG_NAME";
+static const char ENV_LOG_NAME[] =  "IOTRACE_LOG_NAME";
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
-static const char* const ENV_INFLUX_TOKEN = "IOTRACE_INFLUX_TOKEN";
-static const char* const ENV_INFLUX_ORGANIZATION = "IOTRACE_INFLUX_ORGANIZATION";
-static const char* const ENV_INFLUX_BUCKET = "IOTRACE_INFLUX_BUCKET";
-static const char* const ENV_DATABASE_IP = "IOTRACE_DATABASE_IP";
-static const char* const ENV_DATABASE_PORT = "IOTRACE_DATABASE_PORT";
+static const char ENV_INFLUX_TOKEN[] =  "IOTRACE_INFLUX_TOKEN";
+static const char ENV_INFLUX_ORGANIZATION[] =  "IOTRACE_INFLUX_ORGANIZATION";
+static const char ENV_INFLUX_BUCKET[] =  "IOTRACE_INFLUX_BUCKET";
+static const char ENV_DATABASE_IP[] =  "IOTRACE_DATABASE_IP";
+static const char ENV_DATABASE_PORT[] =  "IOTRACE_DATABASE_PORT";
 #endif
-static const char* const ENV_WRAPPER_WHITELIST = "IOTRACE_WHITELIST";
+static const char ENV_WRAPPER_WHITELIST[] =  "IOTRACE_WHITELIST";
 #ifndef IO_LIB_STATIC
-static const char* const ENV_LD_PRELOAD = "LD_PRELOAD";
+static const char ENV_LD_PRELOAD[] =  "LD_PRELOAD";
 #endif
 
 // once per process

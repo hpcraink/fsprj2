@@ -180,18 +180,18 @@ static pthread_mutex_t ip_lock;
 /* environment variables */
 #if defined(IOTRACE_ENABLE_LOGFILE) \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
-static const char *env_log_name = "IOTRACE_LOG_NAME";
+static const char* const ENV_LOG_NAME = "IOTRACE_LOG_NAME";
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
-static const char *env_influx_token = "IOTRACE_INFLUX_TOKEN";
-static const char *env_influx_organization = "IOTRACE_INFLUX_ORGANIZATION";
-static const char *env_influx_bucket = "IOTRACE_INFLUX_BUCKET";
-static const char *env_database_ip = "IOTRACE_DATABASE_IP";
-static const char *env_database_port = "IOTRACE_DATABASE_PORT";
+static const char* const ENV_INFLUX_TOKEN = "IOTRACE_INFLUX_TOKEN";
+static const char* const ENV_INFLUX_ORGANIZATION = "IOTRACE_INFLUX_ORGANIZATION";
+static const char* const ENV_INFLUX_BUCKET = "IOTRACE_INFLUX_BUCKET";
+static const char* const ENV_DATABASE_IP = "IOTRACE_DATABASE_IP";
+static const char* const ENV_DATABASE_PORT = "IOTRACE_DATABASE_PORT";
 #endif
-static const char *env_wrapper_whitelist = "IOTRACE_WHITELIST";
+static const char* const ENV_WRAPPER_WHITELIST = "IOTRACE_WHITELIST";
 #ifndef IO_LIB_STATIC
-static const char *env_ld_preload = "LD_PRELOAD";
+static const char* const ENV_LD_PRELOAD = "LD_PRELOAD";
 #endif
 
 // once per process
@@ -236,23 +236,23 @@ static char event_cleanup_done = 0;
 
 #ifndef IO_LIB_STATIC
 
-static char ld_preload[MAXFILENAME + sizeof(env_ld_preload)];
+static char ld_preload[MAXFILENAME + sizeof(ENV_LD_PRELOAD)];
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
-static char log_name_env[MAXFILENAME + sizeof(env_log_name)];
+static char log_name_env[MAXFILENAME + sizeof(ENV_LOG_NAME)];
 #endif
 
 #ifdef IOTRACE_ENABLE_INFLUXDB
-static char database_port_env[MAX_DATABASE_PORT + sizeof(env_database_port)];
-static char database_ip_env[MAX_DATABASE_IP + sizeof(env_database_ip)];
-static char influx_token_env[MAX_INFLUX_TOKEN + sizeof(env_influx_token)];
+static char database_port_env[MAX_DATABASE_PORT + sizeof(ENV_DATABASE_PORT)];
+static char database_ip_env[MAX_DATABASE_IP + sizeof(ENV_DATABASE_IP)];
+static char influx_token_env[MAX_INFLUX_TOKEN + sizeof(ENV_INFLUX_TOKEN)];
 static char influx_organization_env[MAX_INFLUX_ORGANIZATION
-		+ sizeof(env_influx_organization)];
-static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(env_influx_bucket)];
+		+ sizeof(ENV_INFLUX_ORGANIZATION)];
+static char influx_bucket_env[MAX_INFLUX_BUCKET + sizeof(ENV_INFLUX_BUCKET)];
 #endif
 
-static char whitelist_env[MAXFILENAME + sizeof(env_wrapper_whitelist)];
+static char whitelist_env[MAXFILENAME + sizeof(ENV_WRAPPER_WHITELIST)];
 static char has_whitelist;
 
 #endif
@@ -322,7 +322,7 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #ifdef WITH_FILENAME_RESOLUTION
 #  include "fnres/fctevent.h"
 
-static const char *FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
+static const char* const FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
 static const long FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
 static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
@@ -895,7 +895,7 @@ void write_filesystem_into_influxdb(struct filesystem *data) {
  * Prints the filesystem to a file.
  *
  * The file is given in the global variable #filesystem_log_name which is
- * set from environment variable #env_log_name. Each mount point is printed
+ * set from environment variable #ENV_LOG_NAME. Each mount point is printed
  * on a new line. The printed line shows the device, the mount point, the
  * file-system type and the mount options, the dump frequency in days and
  * the mount passno as a json object.
@@ -1056,7 +1056,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data) {
  * Prints the working dir of the actual process to a file.
  *
  * The file is given in the global variable #working_dir_log_name which is
- * set from environment variable #env_log_name. The working dir is printed
+ * set from environment variable #ENV_LOG_NAME. The working dir is printed
  * on a new line. The printed line shows the working dir, a timestamp, the
  * hostname and the process id as a json object.
  */
@@ -2047,14 +2047,14 @@ void init_process() {
 	|| defined(IOTRACE_ENABLE_INFLUXDB) /* log_name is also used to build short_log_name */
 		const char filesystem_postfix[] = "_filesystem_";
 		const char filesystem_extension[] = ".log";
-		length = libiotrace_get_env(env_log_name, log_name,
+		length = libiotrace_get_env(ENV_LOG_NAME, log_name,
 				MAXFILENAME - strlen(filesystem_extension)
 						- strlen(filesystem_postfix) - strlen(hostname), 1);
 		log_name_len = length;
 #endif
 
 #if !defined(IO_LIB_STATIC) && (defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB))
-		generate_env(log_name_env, env_log_name, length, log_name);
+		generate_env(log_name_env, ENV_LOG_NAME, length, log_name);
 #endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -2085,62 +2085,62 @@ void init_process() {
 #ifdef IOTRACE_ENABLE_INFLUXDB
 
 		// get token from environment
-		length = libiotrace_get_env(env_influx_token, influx_token,
+		length = libiotrace_get_env(ENV_INFLUX_TOKEN, influx_token,
 				MAX_INFLUX_TOKEN, 1);
 		influx_token_len = strlen(influx_token);
 
 #ifndef IO_LIB_STATIC
-		generate_env(influx_token_env, env_influx_token, length, influx_token);
+		generate_env(influx_token_env, ENV_INFLUX_TOKEN, length, influx_token);
 #endif
 
 		// get bucket name from environment
-		length = libiotrace_get_env(env_influx_bucket, influx_bucket,
+		length = libiotrace_get_env(ENV_INFLUX_BUCKET, influx_bucket,
 				MAX_INFLUX_BUCKET, 1);
 		influx_bucket_len = strlen(influx_bucket);
 
 #ifndef IO_LIB_STATIC
-		generate_env(influx_bucket_env, env_influx_bucket, length,
+		generate_env(influx_bucket_env, ENV_INFLUX_BUCKET, length,
 				influx_bucket);
 #endif
 
 		// get organization name from environment
-		length = libiotrace_get_env(env_influx_organization,
+		length = libiotrace_get_env(ENV_INFLUX_ORGANIZATION,
 				influx_organization, MAX_INFLUX_ORGANIZATION, 1);
 		influx_organization_len = strlen(influx_organization);
 
 #ifndef IO_LIB_STATIC
-		generate_env(influx_organization_env, env_influx_organization, length,
+		generate_env(influx_organization_env, ENV_INFLUX_ORGANIZATION, length,
 				influx_organization);
 #endif
 
 		// get database ip from environment
-		length = libiotrace_get_env(env_database_ip, database_ip,
+		length = libiotrace_get_env(ENV_DATABASE_IP, database_ip,
 				MAX_DATABASE_IP, 1);
 		database_ip_len = strlen(database_ip);
 
 #ifndef IO_LIB_STATIC
-		generate_env(database_ip_env, env_database_ip, length, database_ip);
+		generate_env(database_ip_env, ENV_DATABASE_IP, length, database_ip);
 #endif
 
 		// get database port from environment
-		length = libiotrace_get_env(env_database_port, database_port,
+		length = libiotrace_get_env(ENV_DATABASE_PORT, database_port,
 				MAX_DATABASE_PORT, 1);
 		database_port_len = strlen(database_port);
 
 #ifndef IO_LIB_STATIC
-		generate_env(database_port_env, env_database_port, length,
+		generate_env(database_port_env, ENV_DATABASE_PORT, length,
 				database_port);
 #endif
 
 #endif
 
 		// Path to wrapper whitelist
-		length = libiotrace_get_env(env_wrapper_whitelist, whitelist,
+		length = libiotrace_get_env(ENV_WRAPPER_WHITELIST, whitelist,
 		MAXFILENAME, 0);
 		if (0 != length) {
 #ifndef IO_LIB_STATIC
 			has_whitelist = 1;
-			generate_env(whitelist_env, env_wrapper_whitelist, length,
+			generate_env(whitelist_env, ENV_WRAPPER_WHITELIST, length,
 					whitelist);
 #endif
 
@@ -2152,10 +2152,10 @@ void init_process() {
 		}
 
 #ifndef IO_LIB_STATIC
-		length = strlen(env_ld_preload);
-		strcpy(ld_preload, env_ld_preload);
+		length = strlen(ENV_LD_PRELOAD);
+		strcpy(ld_preload, ENV_LD_PRELOAD);
 		strcpy(ld_preload + length, "=");
-		length = libiotrace_get_env(env_ld_preload, ld_preload + length + 1,
+		length = libiotrace_get_env(ENV_LD_PRELOAD, ld_preload + length + 1,
 		MAXFILENAME, 1);
 #endif
 

@@ -69,7 +69,7 @@ static pid_t __tracer_check_for_new_tracees(int uxd_reg_sock_fd) {
     struct ucred cr; socklen_t cr_len = sizeof (cr);
     DIE_WHEN_ERRNO( getsockopt(sockfd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) );
 
-    close(uxd_reg_sock_fd);
+    close(sockfd);
 
 
     DEV_DEBUG_PRINT_MSG("[TRACER:tid=%d] Received tracing request from pid=%ld", gettid(), (pid_t)cr.pid);

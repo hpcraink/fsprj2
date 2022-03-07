@@ -1,6 +1,7 @@
 #include "entrypoint.h"
 #include "../error.h"
 #include "../wrapper_defines.h"
+#include "../event.h"
 
 #define DEV_DEBUG_ENABLE_LOGS
 #include "../debug.h"
@@ -10,6 +11,8 @@
 #include <sys/un.h>
 
 #include "stracer/tracer.h"
+
+
 
 
 /* --- Function prototypes for helper functions --- */
@@ -34,17 +37,17 @@ void stracing_init_tracer(void) {
 /* (1) Launch tracer as grandchild */
 /* Tracee = parent */
     if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
-        close(uxd_reg_sock_fd);
+        CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
         return;
     }
 
 /* Child -> launches stracer executable (which in turn forks again and becomes the tracer) */
     int buf_size = snprintf(NULL, 0, "%d", uxd_reg_sock_fd);
-    char uxd_reg_sock_fd_str[buf_size];     // VLA
-    snprintf(NULL, 0, "%d", uxd_reg_sock_fd);
+    char uxd_reg_sock_fd_str[buf_size +1];     // VLA
+    snprintf(uxd_reg_sock_fd_str, sizeof uxd_reg_sock_fd_str, "%d", uxd_reg_sock_fd);
 
-    CALL_REAL(execvp)(TRACER_EXEC_FILENAME, TRACER_EXEC_FILENAME, uxd_reg_sock_fd_str, NULL);
-    LIBIOTRACE_ERROR("exec failed");
+    CALL_REAL(execle)(TRACER_EXEC_FILENAME, TRACER_EXEC_FILENAME, uxd_reg_sock_fd_str, NULL, NULL);
+    LIBIOTRACE_ERROR("exec failed %d", errno);
 }
 
 void stracing_register_with_tracer(void) {

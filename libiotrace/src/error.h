@@ -55,4 +55,9 @@
     (-1 == __val ? ({ LIBIOTRACE_ERROR("%s", strerror(errno)); -1; }) : __val);   \
   }); })
 
+#define DIE_WHEN_ERRNO_VPTR(FUNC) __extension__({ ({                                  \
+    void* __val = (FUNC);                                                             \
+    (NULL == __val ? ({ LIBIOTRACE_ERROR("%s", strerror(errno)); NULL; }) : __val); \
+  }); })
+
 #endif /* LIBIOTRACE_ERROR_H */

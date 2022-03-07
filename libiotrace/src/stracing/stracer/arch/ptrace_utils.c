@@ -3,7 +3,7 @@
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 
-#include "../../../error.h"
+#include "../common/error.h"
 #include "../ptrace_utils.h"
 #include "ptrace_utils.h"
 
@@ -21,7 +21,7 @@ void ptrace_get_regs_content(pid_t tid, struct user_regs_struct_full *regs) {
   errno = 0;
   ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov);
   if (errno) {
-    LIBIOTRACE_ERROR("Reading registers failed (errno=%d)", errno);
+    LOG_ERROR_AND_EXIT("Reading registers failed (errno=%d)", errno);
   }
 }
 

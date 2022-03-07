@@ -1,18 +1,24 @@
-#include "entrypoint.h"
-#include "../error.h"
-#include "../wrapper_defines.h"
-#include "../event.h"
-
-#define DEV_DEBUG_ENABLE_LOGS
-#include "../debug.h"
+#include <assert.h>
 
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <libgen.h>
+
+#include "entrypoint.h"
+#include "../error.h"
+#include "../event.h"
+#include "../wrapper_defines.h"
+#include "../utils.h"
+
+#define DEV_DEBUG_ENABLE_LOGS
+#include "../debug.h"
 
 #include "stracer/tracer.h"
 
 
+/* --- Globals / Consts --- */
+static const char* const STRACER_EXEC_FILENAME = "libiotrace_tracer";
 
 
 /* --- Function prototypes for helper functions --- */
@@ -22,8 +28,8 @@ void __tracee_send_tracing_request(void);
 
 
 /* --- Functions --- */
-void stracing_init_tracer(void) {
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] $$$$ TODO  --  PROBLEM: Each fork'd process runs `init_process` => Tracer tries to register w/ itself ...", gettid());
+void stracing_init_tracer(char *ld_preload_env_val) {
+    assert(ld_preload_env_val);                         // TODO: REVISE `assert`
 
 
 /* (0) Establish tracer's UXD registration socket */
@@ -42,12 +48,25 @@ void stracing_init_tracer(void) {
     }
 
 /* Child -> launches stracer executable (which in turn forks again and becomes the tracer) */
-    int buf_size = snprintf(NULL, 0, "%d", uxd_reg_sock_fd);
-    char uxd_reg_sock_fd_str[buf_size +1];     // VLA
-    snprintf(uxd_reg_sock_fd_str, sizeof uxd_reg_sock_fd_str, "%d", uxd_reg_sock_fd);
+  /* Prepare args for tracer's `argv` */
+    char *tracer_exec_filename;
+{
+    char* ld_preload_basedir;
+    DIE_WHEN_ERRNO_VPTR( (ld_preload_basedir = strdup(ld_preload_env_val)) );           // TODO: SECURITY CONCERNS (LD_PRELOAD IS PASSED BY USER)
+    DIE_WHEN_ERRNO( dirname_n(ld_preload_basedir, strlen(ld_preload_basedir) +1) );
 
-    CALL_REAL(execle)(TRACER_EXEC_FILENAME, TRACER_EXEC_FILENAME, uxd_reg_sock_fd_str, NULL, NULL);
-    LIBIOTRACE_ERROR("exec failed %d", errno);
+    DIE_WHEN_ERRNO( asprintf(&tracer_exec_filename, "%s/%s", ld_preload_basedir, STRACER_EXEC_FILENAME) );
+    CALL_REAL_ALLOC_SYNC(free)(ld_preload_basedir);
+}
+
+    char *uxd_reg_sock_fd_str;
+    DIE_WHEN_ERRNO( asprintf(&uxd_reg_sock_fd_str, "%d", uxd_reg_sock_fd) );
+
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching exectuable as \"%s %s\" as tracer ...", tracer_exec_filename, uxd_reg_sock_fd_str, gettid());
+    CALL_REAL(execle)(tracer_exec_filename,
+                      tracer_exec_filename, uxd_reg_sock_fd_str, NULL,
+                      NULL);        /* Make sure NO envp w/ `LD_PRELOAD` is passed */
+    LIBIOTRACE_ERROR("`exec` failed (errno=%d)", errno);
 }
 
 void stracing_register_with_tracer(void) {
@@ -81,7 +100,7 @@ static int __tracer_init_uxd_reg_socket(void) {
                                                     sizeof(struct sockaddr_un))) {   // TODO-ASK: IS "REUSING" `server_fd` OK  ??!
                 DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] No parallel instance is running, but socket still exists. Trying to clean up and start over again", gettid());
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
-                DIE_WHEN_ERRNO( unlink(UXD_SOCKET_FILEPATH) );    // TODO #2: MAY PREVENT APPLICATION RUNNING LATER   ---> in libiotrace: .dtor section ..   --> tracee unlink if connect fails ..
+                DIE_WHEN_ERRNO( unlink(UXD_SOCKET_FILEPATH) );
             } else {
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
                 DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A tracer instance is already running", gettid());
@@ -95,7 +114,7 @@ static int __tracer_init_uxd_reg_socket(void) {
     }
 
 /* (3) Start listening for connections */
-    DIE_WHEN_ERRNO( listen(uxd_reg_sock_fd, UXD_SOCKET_REQUESTS_BACKLOG_SIZE) );
+    DIE_WHEN_ERRNO( listen(uxd_reg_sock_fd, UXD_REG_SOCKET__BACKLOG_SIZE) );
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Inited UXD registration socket \"%s\"", gettid(), sa.sun_path);
 
     return uxd_reg_sock_fd;

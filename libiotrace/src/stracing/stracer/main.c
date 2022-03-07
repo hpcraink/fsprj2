@@ -38,8 +38,6 @@ int main(int argc, char** argv) {
     DEV_DEBUG_PRINT_MSG("[TRACER:tid=%d] Ready for tracing requests ..", gettid());
 
 
-    // TODO: Register at_exit -> cleanup
-
 
 /* (2) Start tracing .. */
     // TODO do_tracer, containing following fct ..
@@ -48,6 +46,9 @@ int main(int argc, char** argv) {
         __tracer_check_for_new_tracees(uxd_reg_sock_fd);
     }
 
+
+
+    // TODO: Register at_exit -> cleanup
     __tracer_fin_uxd_reg_socket(uxd_reg_sock_fd);
 
     return 0;

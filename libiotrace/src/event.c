@@ -2025,8 +2025,13 @@ void init_process() {
 #endif
 
 #ifdef WITH_SYSCALL_TRACING
-        stracing_init_tracer();
-#endif
+#ifndef IO_LIB_STATIC
+      char *ld_preload_env_val = getenv(ENV_LD_PRELOAD);
+#else
+      char *ld_preload_env_val = ".";			// TODO: CHECK STATICALLY COMPILED VERSION
+#endif /* IO_LIB_STATIC */
+        stracing_init_tracer(ld_preload_env_val);
+#endif /* WITH_SYSCALL_TRACING */
 
 #if !defined(HAVE_HOST_NAME_MAX)
 #if defined(HAVE__POSIX_HOST_NAME_MAX)

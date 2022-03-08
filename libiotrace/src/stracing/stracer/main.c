@@ -19,7 +19,7 @@ static void __tracer_fin_uxd_reg_socket(int uxd_reg_sock_fd);
 int main(int argc, char** argv) {
 /* (0) Get sockfd from CLI options */
     if (argc < 2) {
-        LOG_ERROR_AND_EXIT("Usage: %s uxd_reg_sock_fd\n", argv[0]);
+        fprintf(stderr, "The stracing functionality may only be invoked by libiotrace\n");
     }
 
     const int uxd_reg_sock_fd = atoi(argv[1]);

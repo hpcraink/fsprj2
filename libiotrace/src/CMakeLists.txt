@@ -253,42 +253,7 @@ if (WITH_SYSCALL_TRACING)
     list(APPEND SOURCE
             stracing/entrypoint.c)
 
-
-    list(APPEND STRACER_SOURCE
-            stracing/stracer/main.c
-            # stracing/stracer/arch/ptrace_utils.c
-            # stracing/stracer/ptrace_utils.c
-            )
-
-
-    # Build targets/commands: Parse syscalls + generate source
-    set(GEN_SYSCALLS_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/../scripts/compile/gen_stracing_syscalls_table.py")
-    set(GEN_SYSCALLS_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/stracing/tracer")
-
-    find_package(PythonInterp 3.4 REQUIRED)
-    add_custom_command(
-            COMMENT "Parse syscalls from kernel source and generate source files"
-            DEPENDS ${GEN_SYSCALLS_SCRIPT}
-            OUTPUT "${GEN_SYSCALLS_TARGET_DIR}/syscallents.c" "${GEN_SYSCALLS_TARGET_DIR}/syscallents.h"
-
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${GEN_SYSCALLS_TARGET_DIR}
-            COMMAND ${PYTHON_EXECUTABLE} ${GEN_SYSCALLS_SCRIPT} ${LINUX_SRC_DIR} ${GEN_SYSCALLS_TARGET_DIR})
-
-    list(APPEND STRACER_SOURCE
-            ${GEN_SYSCALLS_TARGET_DIR}/syscallents.h        # TODO: REVISE
-            ${GEN_SYSCALLS_TARGET_DIR}/syscallents.c)
-
-    # WARNING: Changing the name of the executable requires also an update in the source (otherwise `exec` will fail)
-    add_executable(libiotrace_stracer
-            ${STRACER_SOURCE})
-
-    target_compile_options(libiotrace_stracer PRIVATE -D_GNU_SOURCE)
-
-    # target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
-
-    target_include_directories(libiotrace_stracer PRIVATE
-            "${CMAKE_SOURCE_DIR}/src/stracing/stracer"
-            "${stracer_BINARY_DIR}/src/stracing/stracer")
+    add_subdirectory(stracing/stracer)
 endif()
 
 

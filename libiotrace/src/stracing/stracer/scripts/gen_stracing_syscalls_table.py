@@ -40,7 +40,7 @@ LINUX_SRC_PARSING_ARCH_SPECIFIC = {
 
 
 # - Existing src -
-GENERATED_HEADER_INCLUDE_TYPES_HEADER = "syscall_types.h"   # Leverages "${libiotrace_SOURCE_DIR}/include"
+GENERATED_HEADER_INCLUDE_TYPES_HEADER = "syscall_types.h"
 
 class GENERATED_HEADER_STRUCT_ARG_TYPE_ENUM:
     INT = "ARG_INT"

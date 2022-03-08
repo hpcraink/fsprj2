@@ -144,8 +144,6 @@ endif()
 #compile using cmake -DWITH_SYSCALL_TRACING for syscall tracing
 if(WITH_SYSCALL_TRACING)
     list(APPEND COMPILE_OPTIONS -DWITH_SYSCALL_TRACING)
-
-    set(LINUX_SRC_DIR "/usr/src/linux-5.16.7" CACHE STRING "Location of kernel source used to parse syscalls")
 else()
     # Remove CMake option from cache
     unset(LINUX_SRC_DIR CACHE)

@@ -3,7 +3,7 @@
 
 
 /* -- Function prototypes -- */
-void stracing_init_tracer(char*);
-void stracing_register_with_tracer(void);
+void stracing_init_stracer(char*);
+void stracing_register_with_stracer(void);
 
 #endif /* LIBIOTRACE_ENTRYPOINT_H */

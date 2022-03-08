@@ -5,6 +5,7 @@ set(EXECUTABLE_OUTPUT_PATH ${libiotrace_BINARY_DIR}/src)        # Otherwise exec
 # -- Variables --
 list(APPEND STRACER_SOURCE
         common/utils.c
+        ipc/uxd_socket.c
         trace/arch/ptrace_utils.c
         trace/ptrace_utils.c
         trace/syscalls.c

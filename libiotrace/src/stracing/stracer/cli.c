@@ -9,18 +9,17 @@
 #include "common/error.h"
 #include "common/utils.h"
 #include "trace/syscalls.h"
-#include "tracer.h"
+#include "stracer.h"
 
 
 /* -- Functions -- */
 static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
     cli_args *arguments = state->input;
 
-    char* arg_str_start = (arg && '=' == arg[0]) ? (arg +1) : (arg);    /* CLI args may be passed w/ equals sign, e.g., `-key=value`, which messes up parsing */
-
+    char* const arg_str_start = (arg && '=' == arg[0]) ? (arg +1) : (arg);    /* CLI args may be passed w/ equals sign, e.g., `-key=value`, which messes up parsing */
     switch (key) {
     /* Fildes of socket 2 be used for tracing */
-        case CLI_OPTION_SOCKFD:
+        case STRACER_CLI_OPTION_SOCKFD:
         {
             long tmp_parsed_sockfd;
             if (-1 == str_to_long(arg_str_start, &tmp_parsed_sockfd) || tmp_parsed_sockfd < 0) {
@@ -31,7 +30,7 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
             break;
 
     /* Trace only subset of syscalls */
-        case CLI_OPTION_SSUBSET:
+        case STRACER_CLI_OPTION_SSUBSET:
         {
             arguments->trace_only_syscall_subset = true;
             memset(arguments->syscall_subset_to_be_traced, 0,
@@ -61,7 +60,7 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
             break;
 
     /* Warn when function call wasn't traced by libiotrace */
-        case CLI_OPTION_WARN:
+        case STRACER_CLI_OPTION_WARN:
             arguments->warn_not_traced_syscalls = true;
             break;
 
@@ -88,9 +87,9 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
 void parse_cli_args(int argc, char** argv,
                     cli_args* parsed_cli_args_ptr) {
     static const struct argp_option cli_options[] = {
-        {"sockfd", CLI_OPTION_SOCKFD,  "fildes",      0, "File descriptor of opened socket which shall be used for tracing",       1},
-        {"trace",  CLI_OPTION_SSUBSET, "syscall_set", 0, "Trace only the specified (as comma-list seperated) set of system calls", 2},
-        {"warn",   CLI_OPTION_WARN,    NULL,          0, "Warn when function call wasn't traced by libiotrace",                    3},
+        {"sockfd", STRACER_CLI_OPTION_SOCKFD,  "fildes",      0, "File descriptor of opened socket which shall be used for tracing",       1},
+        {"trace",  STRACER_CLI_OPTION_SSUBSET, "syscall_set", 0, "Trace only the specified (as comma-list seperated) set of system calls", 2},
+        {"warn",   STRACER_CLI_OPTION_WARN,    NULL,          0, "Warn when function call wasn't traced by libiotrace",                    3},
         {0}
     };
 

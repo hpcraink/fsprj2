@@ -2030,7 +2030,7 @@ void init_process() {
 #else
       char *ld_preload_env_val = ".";			// TODO: CHECK STATICALLY COMPILED VERSION
 #endif /* IO_LIB_STATIC */
-        stracing_init_tracer(ld_preload_env_val);
+        stracing_init_stracer(ld_preload_env_val);
 #endif /* WITH_SYSCALL_TRACING */
 
 #if !defined(HAVE_HOST_NAME_MAX)
@@ -2321,7 +2321,7 @@ void init_thread(void) {
 #endif
 
 #ifdef WITH_SYSCALL_TRACING
-    stracing_register_with_tracer();
+    stracing_register_with_stracer();
 #endif
 }
 

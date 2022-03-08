@@ -1,11 +1,15 @@
 
+set(EXECUTABLE_OUTPUT_PATH ${libiotrace_BINARY_DIR}/src)        # Otherwise executable will be in 'stracing/stracer'
+
+
 # -- Variables --
 list(APPEND STRACER_SOURCE
         common/utils.c
-        # trace/arch/ptrace_utils.c
-        # trace/ptrace_utils.c
-        main.c
-        )
+        trace/arch/ptrace_utils.c
+        trace/ptrace_utils.c
+        trace/syscalls.c
+        cli.c
+        main.c)
 
 
 # -- CMake options --
@@ -40,6 +44,7 @@ target_compile_options(libiotrace_stracer PRIVATE -D_GNU_SOURCE)
 
 # target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
 
+# message(STATUS "`libiotrace_stracer` include dirs: ${CMAKE_CURRENT_LIST_DIR} AND ${CMAKE_CURRENT_BINARY_DIR}")
 target_include_directories(libiotrace_stracer PRIVATE
-        "${CMAKE_SOURCE_DIR}/src/stracing/stracer"
-        "${stracer_BINARY_DIR}/src/stracing/stracer")
+        "${CMAKE_CURRENT_LIST_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}")

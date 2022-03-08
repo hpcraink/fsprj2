@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <signal.h>
 
+#include "cli.h"
 #include "tracer.h"
 #include "common/error.h"
 #define DEV_DEBUG_ENABLE_LOGS
@@ -17,12 +18,15 @@ static void __tracer_fin_uxd_reg_socket(int uxd_reg_sock_fd);
 
 
 int main(int argc, char** argv) {
-/* (0) Get sockfd from CLI options */
-    if (argc < 2) {
-        fprintf(stderr, "The stracing functionality may only be invoked by libiotrace\n");
-    }
+/* (0) Parse CLI args */
+    cli_args parsed_cli_args;
+    parse_cli_args(argc, argv, &parsed_cli_args);
 
-    const int uxd_reg_sock_fd = atoi(argv[1]);
+    DEV_DEBUG_PRINT_MSG("[TRACER] Got:\n`uxd_reg_sock_fd`=%d", parsed_cli_args.uxd_reg_sock_fd);
+    const int uxd_reg_sock_fd = parsed_cli_args.uxd_reg_sock_fd;
+
+
+/* TODO: CHECK WHETHER VALID FILDES ... */
 
 
 /* (1) Fork grandchild (which will be the actual tracer) */

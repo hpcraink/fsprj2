@@ -24,5 +24,6 @@ typedef struct {
 /* -- Function prototypes -- */
 void parse_cli_args(int argc, char** argv,
                     cli_args* parsed_cli_args_ptr);
+void print_parsed_cli_args(cli_args*);
 
 #endif /* STRACER_CLI_H_ */

@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -21,12 +22,15 @@ int main(int argc, char** argv) {
 /* (0) Parse CLI args */
     cli_args parsed_cli_args;
     parse_cli_args(argc, argv, &parsed_cli_args);
+#ifdef DEV_DEBUG_ENABLE_LOGS
+    print_parsed_cli_args(&parsed_cli_args);
+#endif
 
-    DEV_DEBUG_PRINT_MSG("[TRACER] Got:\n`uxd_reg_sock_fd`=%d", parsed_cli_args.uxd_reg_sock_fd);
     const int uxd_reg_sock_fd = parsed_cli_args.uxd_reg_sock_fd;
-
-
-/* TODO: CHECK WHETHER VALID FILDES ... */
+/* (0.1) Check whether valid fildes (TODO: check whether socket) */
+    if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
+        LOG_ERROR_AND_EXIT("Invalid socket fildes");
+    }
 
 
 /* (1) Fork grandchild (which will be the actual tracer) */

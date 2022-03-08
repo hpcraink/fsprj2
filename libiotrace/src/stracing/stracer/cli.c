@@ -35,10 +35,7 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
                    SYSCALLS_ARR_SIZE * sizeof(*(arguments->syscall_subset_to_be_traced)));
 
             if (strchr(arg, ',')) {
-                char* arg_copy = strdup(arg);
-                if (!arg_copy) {
-                    LOG_ERROR_AND_EXIT("Not enough memory available to duplicate arg-string");
-                }
+                char* arg_copy = DIE_WHEN_ERRNO_VPTR( strdup(arg) );
 
                 char* pch = NULL;
                 while ((pch = strtok((!pch) ? (arg_copy) : (NULL), ","))) {
@@ -107,4 +104,23 @@ void parse_cli_args(int argc, char** argv,
     };
 
     argp_parse(&argp, argc, argv, 0, 0, parsed_cli_args_ptr);
+}
+
+void print_parsed_cli_args(cli_args* parsed_cli_args_ptr) {
+    static const char* const TRUE_STR = "true";
+    static const char* const FALSE_STR = "false";
+
+    puts("Parsed CLI args:");
+
+    printf("\t`uxd_reg_sock_fd`=%d\n", parsed_cli_args_ptr->uxd_reg_sock_fd);
+    printf("\t`trace_only_syscall_subset`=%s { ", parsed_cli_args_ptr->trace_only_syscall_subset ? (TRUE_STR) : (FALSE_STR));
+    for (int i = 0; i < SYSCALLS_ARR_SIZE; i++) {
+        const syscall_entry* const scall = &syscalls[i];
+        if (!parsed_cli_args_ptr->syscall_subset_to_be_traced[i] || !scall->name) {
+            continue;
+        }
+        printf("%s(%d) ", scall->name, i);
+    }
+    printf("}\n");
+    printf("\t`warn_not_traced_syscalls`=%s\n", parsed_cli_args_ptr->warn_not_traced_syscalls ? (TRUE_STR) : (FALSE_STR));
 }

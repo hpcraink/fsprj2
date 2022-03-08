@@ -19,6 +19,7 @@
 
 /* --- Globals / Consts --- */
 static const char* const STRACER_EXEC_FILENAME = "libiotrace_stracer";
+#define SYSCALLS_TO_BE_TRACED "open"
 
 
 /* --- Function prototypes for helper functions --- */
@@ -30,7 +31,6 @@ void __tracee_send_tracing_request(void);
 /* --- Functions --- */
 void stracing_init_tracer(char *ld_preload_env_val) {
     assert(ld_preload_env_val);                         // TODO: REVISE `assert`
-
 
 /* (0) Establish tracer's UXD registration socket */
     int uxd_reg_sock_fd;
@@ -49,23 +49,33 @@ void stracing_init_tracer(char *ld_preload_env_val) {
 
 /* Child -> launches stracer executable (which in turn forks again and becomes the tracer) */
   /* Prepare args for tracer's `argv` */
-    char *tracer_exec_filename;
+    /* Arg: executable filename */
+    char *exec_arg_exec_fname;
 {
     char* ld_preload_basedir;
     DIE_WHEN_ERRNO_VPTR( (ld_preload_basedir = strdup(ld_preload_env_val)) );           // TODO: SECURITY CONCERNS (LD_PRELOAD IS PASSED BY USER)
     DIE_WHEN_ERRNO( dirname_n(ld_preload_basedir, strlen(ld_preload_basedir) +1) );
 
-    DIE_WHEN_ERRNO( asprintf(&tracer_exec_filename, "%s/%s", ld_preload_basedir, STRACER_EXEC_FILENAME) );
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_exec_fname, "%s/%s", ld_preload_basedir, STRACER_EXEC_FILENAME) );
     CALL_REAL_ALLOC_SYNC(free)(ld_preload_basedir);
 }
 
-    char *uxd_reg_sock_fd_str;
-    DIE_WHEN_ERRNO( asprintf(&uxd_reg_sock_fd_str, "%d", uxd_reg_sock_fd) );
+    /* Arg: Fildes of socket */
+    char *exec_arg_sock_fd;
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_sock_fd, "-%c=%d", CLI_OPTION_SOCKFD, uxd_reg_sock_fd) );
 
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via \"%s %s\" ...", gettid(), tracer_exec_filename, uxd_reg_sock_fd_str);
-    CALL_REAL(execle)(tracer_exec_filename,
-                      tracer_exec_filename, uxd_reg_sock_fd_str, NULL,
-                      NULL);        /* Make sure NO envp w/ `LD_PRELOAD` is passed */
+    /* Arg: Syscall subset */
+    char *exec_syscall_subset;
+    DIE_WHEN_ERRNO( asprintf(&exec_syscall_subset, "-%c=%s", CLI_OPTION_SSUBSET, SYSCALLS_TO_BE_TRACED) );
+
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via \"%s %s %s\" ...", gettid(),
+                        exec_arg_exec_fname, exec_arg_sock_fd, exec_syscall_subset);
+    CALL_REAL(execle)(exec_arg_exec_fname,
+                      exec_arg_exec_fname,  /* CLI args */
+                      exec_arg_sock_fd,
+                      exec_syscall_subset,
+                      NULL,
+                      NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */
     LIBIOTRACE_ERROR("`exec` failed (errno=%d)", errno);
 }
 

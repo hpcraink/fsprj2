@@ -4,7 +4,12 @@
 
 /* --- Constants / Globals --- */
 #define UXD_REG_SOCKET__BACKLOG_SIZE 5000
-const char* const UXD_SOCKET_FILEPATH = "libiotrace-tracer.sock";
+#define UXD_SOCKET_FILEPATH "libiotrace-tracer.sock"
+
+/* - CLI flags - */
+#define CLI_OPTION_SOCKFD  's'
+#define CLI_OPTION_SSUBSET 'e'
+#define CLI_OPTION_WARN    'w'
 
 
-#endif //LIBIOTRACE_TRACER_H
+#endif /* LIBIOTRACE_TRACER_H */

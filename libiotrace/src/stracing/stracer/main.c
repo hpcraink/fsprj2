@@ -37,18 +37,40 @@ int main(int argc, char** argv) {
     }
 
     kill(getppid(), SIGKILL);   /* Grandchild = Tracer */
-    DEV_DEBUG_PRINT_MSG("[TRACER:pid=%d] Ready for tracing requests ..", getpid());
 
 
 /* (2) Start tracing .. */
+    const pid_t tracer_pid = getpid();
+    DEV_DEBUG_PRINT_MSG("[TRACER:pid=%d] Ready for tracing requests ..", tracer_pid);
+
     // TODO do_tracer, containing following fct ..
-    for (int i = 0; i < 3; i++) {           // For testing only ..
+    /*
+      Test #1: `(cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants)`
+        Issues:
+            - How to check w/o unblocking
+            - Each request -> 2x registered by tracer
+                <<stracer>> [DEBUG] `main` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/stracer/main.c:50): Received tracing request from pid=7672.
+                <<libiotrace>> [DEBUG] `stracing_register_with_stracer` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/entrypoint.c:80): [PARENT:tid=7672] Sending tracing request.
+                <<stracer>> [DEBUG] `main` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/stracer/main.c:50): Received tracing request from pid=7672.
+
+      Test #2: `(cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork)`
+         Issue:
+            - Sends pid, not tid
+                <<libiotrace>> [DEBUG] `stracing_init_stracer` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/entrypoint.c:29): [PARENT:tid=7827] A stracer instance is already running.
+                <<stracer>> [DEBUG] `main` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/stracer/main.c:50): Received tracing request from pid=7827.
+                <<libiotrace>> [DEBUG] `stracing_register_with_stracer` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/entrypoint.c:80): [PARENT:tid=7827] Sending tracing request.
+                Creating additional thread ...
+                <<stracer>> [DEBUG] `main` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/stracer/main.c:50): Received tracing request from pid=7827.
+                tid =  7827, pid =  7827, ppid =  3017, pgid =  7827, sid =  3017 [Thread-0]
+                tid =  7828, pid =  7827, ppid =  3017, pgid =  7827, sid =  3017 [Thread-1]
+     */
+    for (;;) {           // For testing only ..
         pid_t new_tracee;
         if (-1 != (new_tracee = check_for_new_tracees(uxd_reg_sock_fd))) {
-            DEV_DEBUG_PRINT_MSG("[TRACER] Received tracing request from pid=%d", new_tracee);
+            DEV_DEBUG_PRINT_MSG("Received tracing request from pid=%d", new_tracee);
+        } else {
+            LOG_DEBUG("I'm still running (pid=%d)..", tracer_pid);
         }
-
-        sleep(1);
     }
 
 

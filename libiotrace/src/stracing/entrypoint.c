@@ -77,7 +77,7 @@ void stracing_register_with_stracer(void) {
 //    DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 
 /* (1) Send tracing request */
-    DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%ld] Sending tracing request", gettid());
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
     send_tracing_request(UXD_SOCKET_FILEPATH);
 
 /* (2) Wait for tracer to wake us up ..  */

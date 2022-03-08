@@ -6,7 +6,7 @@
 
 #include "ptrace_utils.h"
 
-#include "../../error.h"
+#include "../../../error.h"
 
 
 char *ptrace_read_string(pid_t tid, unsigned long addr) {

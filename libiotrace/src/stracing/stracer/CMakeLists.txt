@@ -2,8 +2,8 @@
 # -- Variables --
 list(APPEND STRACER_SOURCE
         common/utils.c
-        # arch/ptrace_utils.c
-        # ptrace_utils.c
+        # trace/arch/ptrace_utils.c
+        # trace/ptrace_utils.c
         main.c
         )
 
@@ -15,7 +15,7 @@ set(LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source
 # -- Build targets/commands --
 # Build targets/commands: Parse syscalls + generate source
 set(GEN_SYSCALLS_SCRIPT "${CMAKE_CURRENT_LIST_DIR}/scripts/gen_stracing_syscalls_table.py")
-set(GEN_SYSCALLS_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+set(GEN_SYSCALLS_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/trace/generated")
 
 find_package(PythonInterp 3.4 REQUIRED)
 add_custom_command(

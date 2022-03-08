@@ -3,7 +3,7 @@
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 
-#include "../common/error.h"
+#include "../../common/error.h"
 #include "../ptrace_utils.h"
 #include "ptrace_utils.h"
 

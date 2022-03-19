@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include "../../error.h"
+#include "../../../error.h"
 
 
 /* -- Macros -- */
@@ -20,11 +20,11 @@ int init_uxd_reg_socket(char* socket_filepath, int socket_backlog_size) {
         uxd_reg_sock_fd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(socket)(AF_UNIX, SOCK_STREAM, 0) );
 
         INIT_UXD_SOCKADDR_STRUCT(sa, socket_filepath);
-        // Bind failed  --> Try to cleanup & start over again
+    /* Bind failed  --> Check whether already running (via `connect`) -> if not: Try to cleanup & start over again */
         if (-1 == CALL_REAL_POSIX_SYNC(bind)(uxd_reg_sock_fd, (struct sockaddr*)&sa, sizeof(struct sockaddr_un))) {
             INIT_UXD_SOCKADDR_STRUCT(sa, socket_filepath);
             if (-1 == CALL_REAL_POSIX_SYNC(connect)(uxd_reg_sock_fd, (struct sockaddr*)&sa,
-                                                    sizeof(struct sockaddr_un))) {   // TODO-ASK: IS "REUSING" `server_fd` OK  ??!
+                                                    sizeof(struct sockaddr_un))) {
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
                 DIE_WHEN_ERRNO( unlink(socket_filepath) );
             } else {
@@ -32,7 +32,7 @@ int init_uxd_reg_socket(char* socket_filepath, int socket_backlog_size) {
                 return -1;
             }
 
-            // Bind succeeded
+    /* Bind succeeded */
         } else {
             break;
         }

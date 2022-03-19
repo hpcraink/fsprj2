@@ -328,7 +328,7 @@ static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
 
 #ifdef WITH_SYSCALL_TRACING
-#  include "stracing/entrypoint.h"
+#  include "stracing/libiotrace/entrypoint.h"
 #endif
 
 /**

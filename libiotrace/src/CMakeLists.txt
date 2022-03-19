@@ -251,8 +251,8 @@ endif()
 if (WITH_SYSCALL_TRACING)
     # TODO: SOURCE
     list(APPEND SOURCE
-            stracing/ipc/uxd_socket.c
-            stracing/entrypoint.c)
+            stracing/libiotrace/ipc/uxd_socket.c
+            stracing/libiotrace/entrypoint.c)
 
     add_subdirectory(stracing/stracer)
 endif()

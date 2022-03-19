@@ -1,18 +1,18 @@
 #include <unistd.h>
-#include "../event.h"
+#include "../../event.h"
 
 #include <sys/un.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>
 
 #include "entrypoint.h"
-#include "stracer/stracer.h"
+#include "../common/stracer.h"
 #include "ipc/uxd_socket.h"
 
 #include <assert.h>
-#include "../error.h"  /* NOTE: Already incl. via `event.h` */
+#include "../../error.h"  /* NOTE: Already incl. via `event.h` */
 #define DEV_DEBUG_ENABLE_LOGS
-#include "../debug.h"
+#include "../../debug.h"
 
 
 /* -- Globals / Consts -- */

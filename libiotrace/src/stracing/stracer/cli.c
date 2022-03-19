@@ -9,7 +9,7 @@
 #include "common/error.h"
 #include "common/utils.h"
 #include "trace/syscalls.h"
-#include "stracer.h"
+#include "../common/stracer.h"
 
 
 /* -- Functions -- */

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "stracer.h"
+#include "../common/stracer.h"
 #include "cli.h"
 #include "ipc/uxd_socket.h"
 

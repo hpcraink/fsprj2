@@ -48,10 +48,6 @@ int main(int argc, char** argv) {
       Test #1: `(cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants)`
         Issues:
             - How to check w/o unblocking
-            - Each request -> 2x registered by tracer
-                <<stracer>> [DEBUG] `main` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/stracer/main.c:50): Received tracing request from pid=7672.
-                <<libiotrace>> [DEBUG] `stracing_register_with_stracer` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/entrypoint.c:80): [PARENT:tid=7672] Sending tracing request.
-                <<stracer>> [DEBUG] `main` (/mnt/hgfs/fpj/fsprj2/libiotrace/src/stracing/stracer/main.c:50): Received tracing request from pid=7672.
 
       Test #2: `(cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork)`
          Issue:

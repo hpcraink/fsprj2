@@ -47,10 +47,10 @@ static void uxd_sock_write(int uxd_reg_sock_fd,
 int init_uxd_reg_socket(char* socket_filepath,
                         int socket_backlog_size) {
     int uxd_reg_sock_fd;
-    struct sockaddr_un sa;
     for (int i = 0; i < 2; i++) {  /* Max. 2 attempts */
         uxd_reg_sock_fd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(socket)(AF_UNIX, SOCK_STREAM, 0) );
 
+        struct sockaddr_un sa;
         INIT_UXD_SOCKADDR_STRUCT(sa, socket_filepath);
     /* Bind failed  --> Check whether already running (via `connect`) -> if not: Try to cleanup & start over again */
         if (-1 == CALL_REAL_POSIX_SYNC(bind)(uxd_reg_sock_fd, (struct sockaddr*)&sa, sizeof(struct sockaddr_un))) {

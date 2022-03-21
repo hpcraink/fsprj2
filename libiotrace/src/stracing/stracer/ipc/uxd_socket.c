@@ -11,7 +11,7 @@
 
 /* -- Functions -- */
 /* - Helpers - */
-static void uxd_sock_read(int conn_fd,
+static int uxd_sock_read(int conn_fd,
                           uxd_sock_ipc_requests_t *ipc_request,
                           pid_t *cr_pid) {
     assert( ipc_request && 0 <= conn_fd && "`ipc_request` and `conn_fd` may be valid" );
@@ -25,13 +25,19 @@ static void uxd_sock_read(int conn_fd,
         total_bytes_read += cur_bytes_read;
     } while (cur_bytes_read > 0 && total_bytes_read < sizeof(*ipc_request));
 
+    if (sizeof(*ipc_request) != total_bytes_read) {
+        LOG_WARN("Received incomplete or invalid ipc-request "
+                 "(%zu of %zu expected bytes)", total_bytes_read, sizeof(*ipc_request));
+        return -1;
+    }
+
     if (cr_pid) {
         struct ucred cr; socklen_t cr_len = sizeof (cr);
         DIE_WHEN_ERRNO( getsockopt(conn_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) );
         *cr_pid = (pid_t)cr.pid;
     }
 
-    assert( sizeof(*ipc_request) == total_bytes_read && "Read incomplete ipc_request" );
+    return 0;
 }
 
 
@@ -46,10 +52,10 @@ pid_t check_for_new_tracees(int uxd_reg_sock_fd) {
     }
 
     uxd_sock_ipc_requests_t ipc_request; pid_t cr_pid;
-    uxd_sock_read(conn_fd, &ipc_request, &cr_pid);
+    const int status = uxd_sock_read(conn_fd, &ipc_request, &cr_pid);
     close(conn_fd);
 
-    return (TRACEE_REQUEST_TRACING == ipc_request.request)
+    return (0 == status && TRACEE_REQUEST_TRACING == ipc_request.request)
            ? cr_pid
            : -1;
 }

@@ -149,6 +149,7 @@ else()
     unset(STRACING_LINUX_SRC_DIR CACHE)
     unset(STRACING_UXD_SOCKET_FILEPATH CACHE)
     unset(STRACING_UXD_REG_SOCKET_BACKLOG_SIZE CACHE)
+    unset(STRACING_STRACER_LOGFILE CACHE)
 endif()
 
 #compile using cmake -DWITH_STD_IO for stdin, stdout and stderr

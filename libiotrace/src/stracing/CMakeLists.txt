@@ -18,6 +18,7 @@ list(APPEND STRACER_SOURCE
 set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source used to parse syscalls")
 set(STRACING_UXD_SOCKET_FILEPATH "libiotrace-tracer.sock" CACHE STRING "Filename of socket which is used for IPC b/w tracer & tracee")
 set(STRACING_UXD_REG_SOCKET_BACKLOG_SIZE 5000 CACHE STRING "Backlog size for uxd socket")
+set(STRACING_STRACER_LOGFILE "libiotrace_stracer.log" CACHE STRING "Logfile of stracer")
 
 
 # -- Build targets/commands --
@@ -50,7 +51,8 @@ target_include_directories(libiotrace_stracer PRIVATE
 target_compile_options(libiotrace_stracer PRIVATE
         -D_GNU_SOURCE
         -DSTRACING_UXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
-        -DSTRACING_UXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE})
+        -DSTRACING_UXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE}
+        -DSTRACING_STRACER_LOGFILE="${STRACING_STRACER_LOGFILE}")
 
 # target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
 

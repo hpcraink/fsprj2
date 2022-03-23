@@ -2,7 +2,6 @@
 #include <sys/socket.h>
 
 #include "uxd_socket.h"
-#include "../../common/uxd_socket_types.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -14,10 +13,10 @@
 static int uxd_sock_accept(int uxd_reg_sock_fd) {
     int conn_fd;
     if (-1 == (conn_fd = accept4(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK))) {
-        if (EWOULDBLOCK == errno) {
-            return -1;
+        if (EAGAIN == errno || EWOULDBLOCK == errno) {
+            return -1;      // No connections in backlog ...
         }
-        LOG_ERROR_AND_EXIT("[TRACER] `accept4` - checking for tracees");
+        LOG_ERROR_AND_EXIT("`accept4` - %s", strerror(errno));
     }
 
     return conn_fd;
@@ -38,14 +37,12 @@ static int uxd_sock_read(int conn_fd,
         if (0 <= status) {
             cur_bytes_read = status;
             total_bytes_read += cur_bytes_read;
-// TODO: REVISE (hard spinning as long as requested hasn't been sent completely)
-        } else if (-1 == status) {
-            if (EAGAIN == errno || EWOULDBLOCK == errno) {
-                continue;       // Spin .. since we don't block (see `SOCK_NONBLOCK` flag in `accept4`)
 
-            } else {
-                LOG_ERROR_AND_EXIT("Error reading IPC request - %s", strerror(errno));
+        } else if (-1 == status) {
+            if (EAGAIN == errno || EWOULDBLOCK == errno) {              // TODO: REVISE (hard spinning as long as requested hasn't been sent completely)
+                continue;       // Spin .. since we don't block (see `SOCK_NONBLOCK` flag in `accept4`)
             }
+            LOG_ERROR_AND_EXIT("`read` - %s", strerror(errno));
         }
     } while (cur_bytes_read > 0 && total_bytes_read < sizeof(*ipc_request));
 
@@ -66,19 +63,19 @@ static int uxd_sock_read(int conn_fd,
 
 
 /* - Public - */
-pid_t check_for_new_tracees(int uxd_reg_sock_fd) {
+int receive_new_uxd_ipc_events(int uxd_reg_sock_fd,
+                               uxd_sock_ipc_requests_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
+/* Accept request from backlog */
     int conn_fd;
     if (-1 == (conn_fd = uxd_sock_accept(uxd_reg_sock_fd))) {
         return -1;
     }
 
-    uxd_sock_ipc_requests_t ipc_request; pid_t cr_pid;
-    const int status = uxd_sock_read(conn_fd, &ipc_request, &cr_pid);
+/* Read request (if any) */
+    const int read_status = uxd_sock_read(conn_fd, ipc_req_ptr, cr_pid_ptr);
     close(conn_fd);
 
-    return (0 == status && TRACEE_REQUEST_TRACING == ipc_request.request)
-           ? cr_pid
-           : -1;
+    return read_status;
 }
 
 

@@ -5,6 +5,7 @@
 /* - CLI flags - */
 #define STRACER_CLI_OPTION_SOCKFD  's'
 #define STRACER_CLI_OPTION_SSUBSET 'e'
+
 #define STRACER_CLI_OPTION_WARN    'w'
 
 

@@ -60,13 +60,17 @@ void stracing_init_stracer(char *ld_preload_env_val) {
     char *exec_syscall_subset;
     DIE_WHEN_ERRNO( asprintf(&exec_syscall_subset, "-%c=%s", STRACER_CLI_OPTION_SSUBSET, SYSCALLS_TO_BE_TRACED) );
 
+    /* Prepare `exec` arg: Tasks  (TODO: allow user to choose during runtime) */
+    const char* const exec_arg_tasks = "-w";
+
     /* Perform `exec` */
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via \"%s %s %s\" ...", gettid(),
-                        exec_arg_exec_fname, exec_arg_sock_fd, exec_syscall_subset);
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via \"%s %s %s %s\"", gettid(),
+                        exec_arg_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_tasks);
     CALL_REAL(execle)(exec_arg_exec_fname,
                       exec_arg_exec_fname,      /* CLI args */
                       exec_arg_sock_fd,
                       exec_syscall_subset,
+                      exec_arg_tasks,
                       NULL,
                       NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */
     LIBIOTRACE_ERROR("`exec` failed (errno=%d)", errno);

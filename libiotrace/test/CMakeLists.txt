@@ -255,17 +255,14 @@ if (WITH_FILENAME_RESOLUTION)
     )
 endif()
 
-if (WITH_SYSCALL_TRACING)
+if (WITH_STRACING)
 # - Programs for testing tracing  -
     # test with: IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork [--loop] [--fork | --pthread]
-    add_executable(stracing_trace_pthread_fork
-            stracing/trace_pthread_fork.c)
-    target_link_libraries(stracing_trace_pthread_fork
-            pthread)
+    add_executable(stracing_trace_pthread_fork stracing/trace_pthread_fork.c)
+    target_link_libraries(stracing_trace_pthread_fork pthread)
 
     # test with: IOTRACE_LOG_NAME=stracing_descendants_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants
-    add_executable(stracing_trace_descendants
-            stracing/trace_descendants.c)
+    add_executable(stracing_trace_descendants stracing/trace_descendants.c)
 endif()
 
 

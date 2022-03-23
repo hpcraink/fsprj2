@@ -59,7 +59,7 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
         }
             break;
 
-    /* Warn when function call wasn't traced by libiotrace */
+    /* TASK: Warn when function call wasn't traced by libiotrace */
         case STRACER_CLI_OPTION_WARN:
             arguments->warn_not_traced_syscalls = true;
             break;
@@ -70,9 +70,12 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
           break;
 
         case ARGP_KEY_END:
-          /* Not enough arguments */
-          if (-1 == arguments->uxd_reg_sock_fd) {
-            argp_usage(state);
+          /* Validate args */
+          if (
+                  -1 == arguments->uxd_reg_sock_fd ||                       /* Required args (sockfd) */
+                  (!arguments->warn_not_traced_syscalls /* && !... */)      /* At least 1 "TASK" may be selected */
+             ) {
+              argp_usage(state);
           }
           break;
 

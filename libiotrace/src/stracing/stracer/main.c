@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "../common/stracer.h"
 #include "cli.h"
 #include "ipc/uxd_socket.h"
 
@@ -72,7 +71,7 @@ int main(int argc, char** argv) {
 
 /* (3) Cleanup on exit .. */
     // TODO: Register at_exit -> cleanup
-    fin_uxd_reg_socket(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
+    fin_uxd_reg_socket(uxd_reg_sock_fd, STRACING_UXD_SOCKET_FILEPATH);
 
     return 0;
 }

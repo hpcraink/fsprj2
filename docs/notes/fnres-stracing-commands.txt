@@ -40,7 +40,7 @@ EOF
 
 
 --------------------  stracing  --------------------
-- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_SYSCALL_TRACING=ON -DLINUX_SRC_DIR=/usr/src/linux-5.4.0 -DWITH_FILENAME_RESOLUTION=OFF -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+- Compile: rm -rf build && mkdir build &&  (cd build && cmake -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DWITH_FILENAME_RESOLUTION=OFF  -DWITH_STRACING=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.4.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock ..  &&  cmake --build .)
 
 
 - Testing:

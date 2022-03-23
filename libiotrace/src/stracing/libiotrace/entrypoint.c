@@ -26,13 +26,13 @@ void stracing_init_stracer(char *ld_preload_env_val) {
 
 /* (0) Parent: Establish tracer's UXD registration socket */
     int uxd_reg_sock_fd;
-    if (-1 == (uxd_reg_sock_fd = init_uxd_reg_socket(UXD_SOCKET_FILEPATH, UXD_REG_SOCKET_BACKLOG_SIZE))) {
+    if (-1 == (uxd_reg_sock_fd = init_uxd_reg_socket(STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
         DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A stracer instance is already running", gettid());
         return;
     }
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Inited UXD registration socket \"%s\" w/ backlog=%d for stracer",
                         gettid(),
-                        UXD_SOCKET_FILEPATH, UXD_REG_SOCKET_BACKLOG_SIZE);
+                        STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE);
 
 /* (1) Parent: `fork`, let child launch stracer, and proceed ... */
     if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
@@ -79,7 +79,7 @@ void stracing_register_with_stracer(void) {
 
 /* (1) Send tracing request */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
-    send_tracing_request(UXD_SOCKET_FILEPATH);
+    send_tracing_request(STRACING_UXD_SOCKET_FILEPATH);
 
 /* (2) Wait for tracer to wake us up ..  */
 //    while (wait(NULL) < 0 && EINTR == errno);

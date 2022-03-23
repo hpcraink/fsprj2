@@ -39,7 +39,7 @@ option (STACKTRACE_PTR "write stacktrace pointer to log (can be changed during e
 option (STACKTRACE_SYMBOL "write stacktrace symbols to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (LOG_WRAPPER_TIME "log start and end time of function wrappers" ON)
 option (WITH_STD_IO "log stdin, stdout and stderr IO" ON)
-option (WITH_SYSCALL_TRACING "trace syscalls" OFF)     # Install required libs: `sudo apt install -y libunwind-dev libdw-dev`
+option (WITH_STRACING "trace syscalls" OFF)     # Install required libs: `sudo apt install -y libunwind-dev libdw-dev`
 option (WITH_POSIX_IO "build wrappers for Posix-IO" ON)
 option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
@@ -141,12 +141,14 @@ if(STACKTRACE_SYMBOL)
     list(APPEND COMPILE_OPTIONS -DSTACKTRACE_SYMBOL)
 endif()
 
-#compile using cmake -DWITH_SYSCALL_TRACING for syscall tracing
-if(WITH_SYSCALL_TRACING)
-    list(APPEND COMPILE_OPTIONS -DWITH_SYSCALL_TRACING)
+#compile using cmake -DWITH_STRACING for syscall tracing
+if(WITH_STRACING)
+    list(APPEND COMPILE_OPTIONS -DWITH_STRACING)
 else()
-    # Remove CMake option from cache
-    unset(LINUX_SRC_DIR CACHE)
+    # Remove CMake options from cache
+    unset(STRACING_LINUX_SRC_DIR CACHE)
+    unset(STRACING_UXD_SOCKET_FILEPATH CACHE)
+    unset(STRACING_UXD_REG_SOCKET_BACKLOG_SIZE CACHE)
 endif()
 
 #compile using cmake -DWITH_STD_IO for stdin, stdout and stderr

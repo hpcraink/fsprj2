@@ -16,7 +16,7 @@ static int uxd_sock_accept(int uxd_reg_sock_fd) {
         if (EAGAIN == errno || EWOULDBLOCK == errno) {
             return -1;      // No new connections in backlog ...
         }
-        LOG_ERROR_AND_EXIT("`accept4` - %s", strerror(errno));
+        LOG_ERROR_AND_EXIT("`accept4` -- %s", strerror(errno));
     }
 
     return conn_fd;
@@ -42,13 +42,13 @@ static int uxd_sock_read(int conn_fd,
             if (EAGAIN == errno || EWOULDBLOCK == errno) {              // TODO: REVISE (hard spinning as long as requested hasn't been sent completely)
                 continue;       // Spin .. since we don't block (see `SOCK_NONBLOCK` flag in `accept4`)
             }
-            LOG_ERROR_AND_EXIT("`read` - %s", strerror(errno));
+            LOG_ERROR_AND_EXIT("`read` -- %s", strerror(errno));
         }
     } while (cur_bytes_read > 0 && total_bytes_read < sizeof(*ipc_request));
 
     if (sizeof(*ipc_request) != total_bytes_read) {
         LOG_WARN("Received incomplete ipc-request "
-                 "(%zu of %zu expected bytes)", total_bytes_read, sizeof(*ipc_request));
+                 "(%zu of %zu expected bytes) -- %s", total_bytes_read, sizeof(*ipc_request), strerror(errno));
         return -1;
     }
 

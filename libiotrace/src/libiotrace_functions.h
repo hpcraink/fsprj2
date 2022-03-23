@@ -18,6 +18,8 @@ size_t libiotrace_struct_push_basic(char* libiotrace_struct_buffer_to_post, size
 size_t libiotrace_struct_push_max_size_influx_meta(size_t prefix_length);
 size_t libiotrace_struct_push_influx_meta(char* libiotrace_struct_buffer_to_post, size_t libiotrace_struct_length_of_buffer_to_post, struct influx_meta *libiotrace_struct_data, const char* prefix);
 #endif
+size_t libiotrace_struct_max_size_control_meta(void);
+int libiotrace_struct_print_control_meta(char* buf, size_t size, struct control_meta *data);
 
 size_t libiotrace_struct_max_size_working_dir(void);
 int libiotrace_struct_print_working_dir(char* buf, size_t size, struct working_dir *data);

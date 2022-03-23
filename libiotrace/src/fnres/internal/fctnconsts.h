@@ -20,7 +20,7 @@ static u_int64_t hash_string(const char *str) {
 #define SWITCH_FCTNAME(function_name) switch (hash_string(function_name))
 
 
-/* -- Function names hashed using function above  (generated using scripts/dev/gen_fnres_fct_name_consts.py) */
+/* -- Function names hashed using function above  (generated using scripts/dev/gen_fnres_fctname_consts.py) */
 #define CASE_OPEN 0x17c9bd777
 #define CASE_OPEN64 0x65312ef9861
 #define CASE_CREAT 0x310f3eb7d4

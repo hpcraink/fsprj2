@@ -1,0 +1,8 @@
+Interesting Software:
+---------------------
+ - Vampir:  https://tu-dresden.de/zih/forschung/projekte/vampir
+ - Score-P (Tracing library for Scalasca & Vampir et al): http://www.vi-hps.org/projects/score-p/
+
+
+Interesting Papers:
+-------------------

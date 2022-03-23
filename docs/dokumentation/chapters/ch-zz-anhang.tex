@@ -1,0 +1,24 @@
+\chapter{Anhang}
+\label{sec:a-kapitel}
+
+\section{Testprogramm OpenMP}
+\label{sec:testprogramm_openmp}
+
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/test.c}
+
+\section{dynamischer Wrapper mit zentraler Buffer}
+\label{sec:dynamischer_wrapper_mit_zentraler_buffer}
+
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/wrap-preload_example.c}
+
+\section{statischer Wrapper}
+\label{sec:statischer_wrapper}
+
+Die Funktino writeData ist im folgenden Beispiel nicht definiert. Sie kann analog zu einem dynamischen Wrapper implementiert werden \verw{sec:dynamischer_wrapper_mit_zentraler_buffer}.
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/wrap-link_example.c}
+
+\section{linken statischer Wrapper}
+\label{sec:linken_statischer_wrapper}
+
+Im folgenden Beispiel wurde wrap-link.o aus einem statischen Wrapper \verw{sec:statischer_wrapper} und test-link.o aus einem Testprogramm \verw{sec:testprogramm_openmp} kompiliert.
+\lstinputlisting[language=C,numbers=left,numberstyle=\tiny]{source/wrap-link_link.txt}

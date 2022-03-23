@@ -1,9 +1,0 @@
-static int  (*__real_close)(int filedes) = NULL;
-
-static void posix_io_init() __attribute__((constructor));
-
-static void posix_io_init() {
-	do { __real_close = dlsym(RTLD_NEXT, "close"); \
-	     assert(NULL != __real_close); \
-	   } while (0)
-}

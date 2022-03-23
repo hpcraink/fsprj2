@@ -51,7 +51,7 @@
 
 #include "error.h"
 
-#include "llhttp/llhttp.h"
+#include "libs/llhttp/llhttp.h"
 
 #include "os.h"
 #include "event.h"
@@ -323,8 +323,8 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITIO
 #  include "fnres/fctevent.h"
 
 static const char *FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
-static const size_t FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
-static const size_t FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
+static const long FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
+static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
 
 /**
@@ -2002,24 +2002,22 @@ void init_process() {
 #endif
 
 #ifdef WITH_FILENAME_RESOLUTION
-        {
-            /* Get & parse env for max # of filenames in fnmap */
-            size_t fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
-            char *fnres_fnmap_max_fnames_env_str = NULL;
-            if (NULL != (fnres_fnmap_max_fnames_env_str = getenv(FNRES_ENV_FNMAP_MAX_FNAMES))) {
-                char *p_end_ptr = NULL;
-                fnres_fnmap_max_fnames = strtoul(fnres_fnmap_max_fnames_env_str, &p_end_ptr,10);
-                if ((fnres_fnmap_max_fnames_env_str == p_end_ptr || ERANGE == errno) ||
-                    (0 >= fnres_fnmap_max_fnames || FNRES_MAX_FNMAP_MAX_FNAMES < fnres_fnmap_max_fnames)) {
-                    LIBIOTRACE_WARN("Invalid value for env var `%s`, using default (%zu) as fallback",
-                                    FNRES_ENV_FNMAP_MAX_FNAMES, FNRES_DEFAULT_FNMAP_MAX_FNAMES);
-                    fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
-                }
+{
+    /* (0) Get & parse env for max # of filenames in fnmap  --> TODO: Remove once fmap supports dynamic resizing */
+        long fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
+        char *fnres_fnmap_max_fnames_env_str = NULL;
+        if ((fnres_fnmap_max_fnames_env_str = getenv(FNRES_ENV_FNMAP_MAX_FNAMES))) {
+            if (str_to_long(fnres_fnmap_max_fnames_env_str, &fnres_fnmap_max_fnames) ||
+                (0 >= fnres_fnmap_max_fnames || FNRES_MAX_FNMAP_MAX_FNAMES < fnres_fnmap_max_fnames)) {
+                fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
+                LIBIOTRACE_WARN("Invalid value for env var `%s`, using default (%ld) instead",
+                                FNRES_ENV_FNMAP_MAX_FNAMES, fnres_fnmap_max_fnames);
             }
-
-            /* Init module using parsed env-var */
-            fnres_init(fnres_fnmap_max_fnames);
         }
+
+    /* (1) Init module */
+        fnres_init(fnres_fnmap_max_fnames);
+}
 #endif
 
 #if !defined(HAVE_HOST_NAME_MAX)

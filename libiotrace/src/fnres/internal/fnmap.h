@@ -40,7 +40,7 @@ typedef struct {
 
 
 /* - Function prototypes - */
-void fnmap_create(size_t max_size);
+void fnmap_create(long max_size);
 void fnmap_destroy(void);
 
 int fnmap_get(const fnmap_key *key, char **found_fname);

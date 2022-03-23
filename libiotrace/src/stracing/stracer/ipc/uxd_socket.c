@@ -11,6 +11,18 @@
 
 /* -- Functions -- */
 /* - Helpers - */
+static int uxd_sock_accept(int uxd_reg_sock_fd) {
+    int conn_fd;
+    if (-1 == (conn_fd = accept4(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK))) {
+        if (EWOULDBLOCK == errno) {
+            return -1;
+        }
+        LOG_ERROR_AND_EXIT("[TRACER] `accept4` - checking for tracees");
+    }
+
+    return conn_fd;
+}
+
 static int uxd_sock_read(int conn_fd,
                           uxd_sock_ipc_requests_t *ipc_request,
                           pid_t *cr_pid) {
@@ -19,10 +31,22 @@ static int uxd_sock_read(int conn_fd,
     memset(ipc_request, 0, sizeof(*ipc_request));
 
     size_t total_bytes_read = 0,
-            cur_bytes_read;
+           cur_bytes_read;
     do {
-        cur_bytes_read = DIE_WHEN_ERRNO( read(conn_fd, ipc_request + total_bytes_read, sizeof(*ipc_request) - total_bytes_read) );
-        total_bytes_read += cur_bytes_read;
+        const ssize_t status = read(conn_fd, ipc_request + total_bytes_read, sizeof(*ipc_request) - total_bytes_read);
+
+        if (0 <= status) {
+            cur_bytes_read = status;
+            total_bytes_read += cur_bytes_read;
+// TODO: REVISE (hard spinning as long as requested hasn't been sent completely)
+        } else if (-1 == status) {
+            if (EAGAIN == errno || EWOULDBLOCK == errno) {
+                continue;       // Spin .. since we don't block (see `SOCK_NONBLOCK` flag in `accept4`)
+
+            } else {
+                LOG_ERROR_AND_EXIT("Error reading IPC request - %s", strerror(errno));
+            }
+        }
     } while (cur_bytes_read > 0 && total_bytes_read < sizeof(*ipc_request));
 
     if (sizeof(*ipc_request) != total_bytes_read) {
@@ -44,11 +68,8 @@ static int uxd_sock_read(int conn_fd,
 /* - Public - */
 pid_t check_for_new_tracees(int uxd_reg_sock_fd) {
     int conn_fd;
-    if (-1 == (conn_fd = accept4(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK))) {
-        if (EWOULDBLOCK == errno) {
-            return -1;
-        }
-        LOG_ERROR_AND_EXIT("[TRACER] `accept4` - checking for tracees");
+    if (-1 == (conn_fd = uxd_sock_accept(uxd_reg_sock_fd))) {
+        return -1;
     }
 
     uxd_sock_ipc_requests_t ipc_request; pid_t cr_pid;

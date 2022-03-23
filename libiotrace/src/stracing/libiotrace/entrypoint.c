@@ -64,7 +64,7 @@ void stracing_init_stracer(char *ld_preload_env_val) {
     const char* const exec_arg_tasks = "-w";
 
     /* Perform `exec` */
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via \"%s %s %s %s\"", gettid(),
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s`", gettid(),
                         exec_arg_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_tasks);
     CALL_REAL(execle)(exec_arg_exec_fname,
                       exec_arg_exec_fname,      /* CLI args */

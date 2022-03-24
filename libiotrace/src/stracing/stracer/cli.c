@@ -14,7 +14,7 @@
 
 /* -- Functions -- */
 static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
-    cli_args *arguments = state->input;
+    cli_args_t *arguments = state->input;
 
     char* const arg_str_start = (arg && '=' == arg[0]) ? (arg +1) : (arg);    /* CLI args may be passed w/ equals sign, e.g., `-key=value`, which messes up parsing */
     switch (key) {
@@ -88,7 +88,7 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
 
 
 void parse_cli_args(int argc, char** argv,
-                    cli_args* parsed_cli_args_ptr) {
+                    cli_args_t* parsed_cli_args_ptr) {
     static const struct argp_option cli_options[] = {
         {"sockfd", STRACER_CLI_OPTION_SOCKFD,  "fildes",      0, "File descriptor of opened socket which shall be used for tracing",       1},
         {"trace",  STRACER_CLI_OPTION_SSUBSET, "syscall_set", 0, "Trace only the specified (as comma-list seperated) set of system calls", 2},
@@ -111,7 +111,7 @@ void parse_cli_args(int argc, char** argv,
     argp_parse(&argp, argc, argv, 0, 0, parsed_cli_args_ptr);
 }
 
-void print_parsed_cli_args(cli_args* parsed_cli_args_ptr) {
+void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
     static const char* const TRUE_STR = "true";
     static const char* const FALSE_STR = "false";
 

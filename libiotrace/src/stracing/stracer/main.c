@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 #endif /* TESTING_DISABLE_LOGFILE */
 
 /* (0) Parse CLI args */
-    cli_args parsed_cli_args;
+    cli_args_t parsed_cli_args;
     parse_cli_args(argc, argv, &parsed_cli_args);
 #ifdef DEV_DEBUG_ENABLE_LOGS
     print_parsed_cli_args(&parsed_cli_args);

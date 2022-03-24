@@ -7,7 +7,10 @@ typedef struct {
     enum {
         PROBE_TRACER_RUNNING,
         TRACEE_REQUEST_TRACING
-    } request;
+    } request_type;
+    union {
+        pid_t tracee_tid;
+    } payload;
 } uxd_sock_ipc_requests_t;
 
 

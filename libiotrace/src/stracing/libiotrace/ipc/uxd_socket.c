@@ -63,7 +63,7 @@ int init_uxd_reg_socket(char* socket_filepath,
                 DIE_WHEN_ERRNO( unlink(socket_filepath) );
         /* -> Running */
             } else {
-                uxd_sock_ipc_requests_t ipc_request = { .request = PROBE_TRACER_RUNNING };  // Inform tracer this was "just a probe"
+                uxd_sock_ipc_requests_t ipc_request = { .request_type = PROBE_TRACER_RUNNING };  // Inform tracer this was "just a probe"
                 uxd_sock_write(uxd_reg_sock_fd, &ipc_request);
 
                 CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
@@ -87,7 +87,10 @@ int init_uxd_reg_socket(char* socket_filepath,
 void send_tracing_request(char* socket_filepath) {
     int server_fd = uxd_sock_connect(socket_filepath);
 
-    uxd_sock_ipc_requests_t ipc_request = { .request = TRACEE_REQUEST_TRACING };
+    uxd_sock_ipc_requests_t ipc_request = {
+            .request_type = TRACEE_REQUEST_TRACING,
+            .payload.tracee_tid = gettid()
+    };
     uxd_sock_write(server_fd, &ipc_request);
 
     CALL_REAL_POSIX_SYNC(close)(server_fd);

@@ -4,6 +4,7 @@
 #include "../../common/uxd_socket_types.h"
 
 #include <assert.h>
+#include <fcntl.h>
 #include "../../../error.h"
 
 
@@ -71,6 +72,7 @@ int init_uxd_reg_socket(char* socket_filepath,
 
     /* Bind succeeded */
         } else {
+            DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fcntl)(uxd_reg_sock_fd, F_SETFL, O_NONBLOCK) );
             break;
         }
     }

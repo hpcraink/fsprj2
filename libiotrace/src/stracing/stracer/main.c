@@ -12,8 +12,8 @@
 #include "common/debug.h"
 
 
+# include <time.h>
 
-#define TESTING_DISABLE_LOGFILE   // TODO: RMV LATER ...
 
 // TODO do_tracer, containing following fct ..
 /*
@@ -44,6 +44,8 @@ TODO: Issues:
    No spinning ??!
  */
 
+
+#define TESTING_DISABLE_LOGFILE   // TODO: RMV LATER ...
 
 
 int main(int argc, char** argv) {
@@ -91,10 +93,12 @@ int main(int argc, char** argv) {
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
     for (;;) {           // For testing only ..
+        nanosleep((const struct timespec[]){{0, 250000000L}}, NULL);        // TESTING (reduce spinning) ...
+
+
         uxd_sock_ipc_requests_t ipc_request; pid_t cr_pid;
         if (-1 == receive_new_uxd_ipc_events(uxd_reg_sock_fd,
                                                 &ipc_request, &cr_pid)) {
-            LOG_DEBUG("Spinning");
             continue;
         }
 

@@ -12,7 +12,7 @@
 /* - Helpers - */
 static int uxd_sock_accept(int uxd_reg_sock_fd) {
     int conn_fd;
-    if (-1 == (conn_fd = accept4(uxd_reg_sock_fd, NULL, NULL, SOCK_NONBLOCK))) {
+    if (-1 == (conn_fd = accept(uxd_reg_sock_fd, NULL, NULL))) {
         if (EAGAIN == errno || EWOULDBLOCK == errno) {
             return -1;      // No new connections in backlog ...
         }
@@ -32,18 +32,8 @@ static int uxd_sock_read(int conn_fd,
     size_t total_bytes_read = 0,
            cur_bytes_read;
     do {
-        const ssize_t status = read(conn_fd, ipc_request + total_bytes_read, sizeof(*ipc_request) - total_bytes_read);
-
-        if (0 <= status) {
-            cur_bytes_read = status;
-            total_bytes_read += cur_bytes_read;
-
-        } else if (-1 == status) {
-            if (EAGAIN == errno || EWOULDBLOCK == errno) {              // TODO: REVISE (hard spinning as long as requested hasn't been sent completely)
-                continue;       // Spin .. since we don't block (see `SOCK_NONBLOCK` flag in `accept4`)
-            }
-            LOG_ERROR_AND_EXIT("`read` -- %s", strerror(errno));
-        }
+        cur_bytes_read = DIE_WHEN_ERRNO( read(conn_fd, ipc_request + total_bytes_read, sizeof(*ipc_request) - total_bytes_read) );
+        total_bytes_read += cur_bytes_read;
     } while (cur_bytes_read > 0 && total_bytes_read < sizeof(*ipc_request));
 
     if (sizeof(*ipc_request) != total_bytes_read) {

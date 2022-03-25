@@ -2919,22 +2919,28 @@ struct pthread_create_data {
 
 void* pthread_create_start_routine(void *arg) {
 	struct pthread_create_data *data = (struct pthread_create_data*) arg;
+	void *ret;
 
 	if (tid == -1) {
 		/* call once per new thread */
 		init_thread();
 	}
 
-	return data->start_routine(data->arg);
+	ret = data->start_routine(data->arg);
+	CALL_REAL_ALLOC_SYNC(free)(data);
+	return ret;
 }
 
 int WRAP(pthread_create)(pthread_t *restrict thread,
 		const pthread_attr_t *restrict attr, void* (*start_routine)(void*),
 		void *restrict arg) {
-	struct pthread_create_data data;
-	data.start_routine = start_routine;
-	data.arg = arg;
+	struct pthread_create_data *data = CALL_REAL_ALLOC_SYNC(malloc)(sizeof(struct pthread_create_data));
+	if (NULL == data) {
+		LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
+	}
+	data->start_routine = start_routine;
+	data->arg = arg;
 
 	return CALL_REAL_POSIX_SYNC(pthread_create)(thread, attr,
-			pthread_create_start_routine, &data);
+			pthread_create_start_routine, data);
 }

@@ -279,7 +279,7 @@ target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
 
 # Linking:
 #   - ${CMAKE_DL_LIBS} needed for dlsym-function
-#   - "-lpthread" needed for pthread_atfork()
+#   - "-lpthread" needed for pthread_atfork() and pthread_create()
 list(APPEND SHARED_LIB_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 list(APPEND STATIC_LIB_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 

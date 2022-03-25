@@ -16,3 +16,4 @@ WRAPPER_NAME(_Exit)
 #ifdef HAVE_EXIT_GROUP
 WRAPPER_NAME(exit_group)
 #endif
+WRAPPER_NAME(pthread_create)

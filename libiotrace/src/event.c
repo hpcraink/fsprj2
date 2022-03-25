@@ -317,6 +317,10 @@ REAL_DEFINITION_TYPE void REAL_DEFINITION(_Exit)(int status) REAL_DEFINITION_INI
 #ifdef HAVE_EXIT_GROUP
 REAL_DEFINITION_TYPE void REAL_DEFINITION(exit_group)(int status) REAL_DEFINITION_INIT;
 #endif
+REAL_DEFINITION_TYPE int REAL_DEFINITION(pthread_create)(pthread_t *restrict thread,
+const pthread_attr_t *restrict attr,
+void *(*start_routine)(void *),
+void *restrict arg) REAL_DEFINITION_INIT;
 #endif
 
 #ifdef WITH_FILENAME_RESOLUTION
@@ -2190,7 +2194,7 @@ void init_process() {
 
 		/* pthread_create uses malloc. Call must be done after
 		 * init_done is set (see pthread_atfork call for details). */
-		int ret = pthread_create(&recv_thread, NULL, communication_thread,
+		int ret = CALL_REAL_POSIX_SYNC(pthread_create)(&recv_thread, NULL, communication_thread,
 				NULL);
 		if (0 != ret) {
 			LIBIOTRACE_WARN("pthread_create() failed. (%d)", ret);
@@ -2890,3 +2894,30 @@ void WRAP(exit_group)(int status)
 	CALL_REAL_FUNCTION_NO_RETURN(data, exit_group, status)
 }
 #endif
+
+struct pthread_create_data {
+	void* (*start_routine)(void*);
+	void *restrict arg;
+};
+
+void* pthread_create_start_routine(void *arg) {
+	struct pthread_create_data *data = (struct pthread_create_data*) arg;
+
+	if (tid == -1) {
+		/* call once per new thread */
+		init_thread();
+	}
+
+	return data->start_routine(data->arg);
+}
+
+int WRAP(pthread_create)(pthread_t *restrict thread,
+		const pthread_attr_t *restrict attr, void* (*start_routine)(void*),
+		void *restrict arg) {
+	struct pthread_create_data data;
+	data.start_routine = start_routine;
+	data.arg = arg;
+
+	return CALL_REAL_POSIX_SYNC(pthread_create)(thread, attr,
+			pthread_create_start_routine, &data);
+}

@@ -48,7 +48,6 @@ void write_into_influxdb(struct basic *data);
 #endif
 void free_memory(struct basic *data);
 
-
 /* All exec-functions replace the current process image without calling __attribute__((destructor)).
  * So the data_buffer is not successfully cleaned. Instead all remaining data is overwritten and lost.
  * Thats the reason for the following wrapper functions. */
@@ -71,6 +70,11 @@ REAL_TYPE void REAL(_Exit)(int status) REAL_INIT;
 #ifdef HAVE_EXIT_GROUP
 REAL_TYPE void REAL(exit_group)(int status) REAL_INIT;
 #endif
+
+REAL_TYPE int REAL(pthread_create)(pthread_t *restrict thread,
+const pthread_attr_t *restrict attr,
+void *(*start_routine)(void *),
+void *restrict arg) REAL_INIT;
 
 END_C_DECLS
 

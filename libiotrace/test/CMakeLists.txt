@@ -24,6 +24,7 @@ list(APPEND LINK_OPTIONS_STATIC
         "-Wl,-wrap=_exit"
         "-Wl,-wrap=_Exit"
         "-Wl,-wrap=exit_group"
+        "-Wl,-wrap=pthread_create"
 )
 
 if(WITH_POSIX_IO)
@@ -503,5 +504,22 @@ if(WITH_POSIX_IO)
     target_link_libraries(clone_static ${LINK_OPTIONS_STATIC})
     target_link_libraries(clone_static ${LINK_OPTIONS})
 endif()
+
+##########################################################################################################
+
+# test with: IOTRACE_LOG_NAME=init_thread_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./init_thread_shared
+add_executable(init_thread_shared init_thread_test.c)
+target_link_libraries(init_thread_shared ${LINK_OPTIONS})
+
+add_library(init_thread_object OBJECT init_thread_test.c)
+
+# test with: IOTRACE_LOG_NAME=init_thread_static_test1 ./init_thread_static
+add_executable(init_thread_static
+    $<TARGET_OBJECTS:init_thread_object>
+    $<TARGET_OBJECTS:iotrace_object>
+)
+target_compile_options(init_thread_static PRIVATE "-D_GNU_SOURCE")
+target_link_libraries(init_thread_static ${LINK_OPTIONS_STATIC})
+target_link_libraries(init_thread_static ${LINK_OPTIONS})
 
 ##########################################################################################################

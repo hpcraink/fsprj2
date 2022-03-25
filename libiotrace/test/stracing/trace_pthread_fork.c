@@ -217,7 +217,7 @@ void* routine(void* arg) {
     register_sig_handlers(sig_handler_func_ptr);
 
     do {
-        fprintf(stdout, "tid = %5d, pid = %5d, ppid = %5d, pgid = %5d, sid = %5d [%s]\n",
+        printf("tid = %5d, pid = %5d, ppid = %5d, pgid = %5d, sid = %5d [%s]\n",
                gettid(), getpid(), getppid(), getpgid(0), getsid(0), pname);
         nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);
     } while(loop);

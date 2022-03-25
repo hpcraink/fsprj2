@@ -122,7 +122,7 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
     if (parsed_cli_args_ptr->trace_only_syscall_subset) {
         printf(" { ");
         for (int i = 0; i < SYSCALLS_ARR_SIZE; i++) {
-            const syscall_entry* const scall = &syscalls[i];
+            const syscall_entry_t* const scall = &syscalls[i];
             if (!parsed_cli_args_ptr->syscall_subset_to_be_traced[i] || !scall->name) {
                 continue;
             }

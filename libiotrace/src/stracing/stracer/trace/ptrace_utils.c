@@ -9,6 +9,7 @@
 #include "../../../error.h"
 
 
+/* -- Functions -- */
 char *ptrace_read_string(pid_t tid, unsigned long addr) {
     size_t read_bytes = 0;
     unsigned long ptrace_read_word;

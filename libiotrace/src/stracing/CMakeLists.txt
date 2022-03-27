@@ -9,6 +9,7 @@ list(APPEND STRACER_SOURCE
         stracer/ipc/uxd_socket.c
         stracer/trace/arch/ptrace_utils.c
         stracer/trace/ptrace_utils.c
+        stracer/trace/syscall_types.c
         stracer/trace/syscalls.c
         stracer/cli.c
         stracer/main.c)

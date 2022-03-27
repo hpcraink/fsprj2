@@ -8,21 +8,21 @@
 #include "ptrace_utils.h"
 
 
-
+/* -- Functions -- */
 /* ----------------------- ----------------------- amd64 / i386 ----------------------- ----------------------- */
-#if defined(__x86_64__) || defined(__i386__)
+#if defined(__i386__) || defined(__x86_64__)
 
 void ptrace_get_regs_content(pid_t tid, struct user_regs_struct_full *regs) {
-  struct iovec iov = {
-    .iov_base = regs,
-    .iov_len = sizeof(struct user_regs_struct_full),
-  };
+    struct iovec iov = {
+            .iov_base = regs,
+            .iov_len = sizeof(struct user_regs_struct_full),
+    };
 
-  errno = 0;
-  ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov);
-  if (errno) {
-    LOG_ERROR_AND_EXIT("Reading registers failed (errno=%d)", errno);
-  }
+    errno = 0;
+    ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov);
+    if (errno) {
+        LOG_ERROR_AND_EXIT("Reading registers failed (errno=%d)", errno);
+    }
 }
 
 

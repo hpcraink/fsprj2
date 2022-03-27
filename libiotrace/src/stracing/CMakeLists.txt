@@ -11,6 +11,7 @@ list(APPEND STRACER_SOURCE
         stracer/trace/ptrace_utils.c
         stracer/trace/syscall_types.c
         stracer/trace/syscalls.c
+        stracer/trace/tracing.c
         stracer/cli.c
         stracer/main.c)
 

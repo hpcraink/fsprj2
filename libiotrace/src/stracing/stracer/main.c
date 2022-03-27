@@ -6,6 +6,7 @@
 
 #include "cli.h"
 #include "ipc/uxd_socket.h"
+// #include "trace/tracing.h"
 
 #include "common/error.h"
 #define DEV_DEBUG_ENABLE_LOGS
@@ -95,7 +96,9 @@ int main(int argc, char** argv) {
 
             case TRACEE_REQUEST_TRACING:
                 DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
+//                tracing_attach_tracee(ipc_request.payload.tracee_tid);
 //                tracee_count++;
+//                DEV_DEBUG_PRINT_MSG("Attached tracee w/ tid=%d", ipc_request.payload.tracee_tid);
                 break;
 
             default:

@@ -70,18 +70,17 @@ int main(int argc, char** argv) {
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
     for (;;) {           // For testing only ..
-        nanosleep((const struct timespec[]){{0, 250000000L}}, NULL);        // TESTING (reduce spinning) ...
-
 
         uxd_sock_ipc_requests_t ipc_request;
         if (-1 == receive_new_uxd_ipc_events(uxd_reg_sock_fd,
                                                 &ipc_request, NULL)) {
+            nanosleep((const struct timespec[]){{0, 250000000L}}, NULL);        // TESTING (reduce spinning) ...
             continue;
         }
 
         switch (ipc_request.request_type) {
             case PROBE_TRACER_RUNNING:
-                LOG_DEBUG("I'm still running (pid=%d)..", tracer_pid);
+                DEV_DEBUG_PRINT_MSG("I'm still running (pid=%d)..", tracer_pid);
                 break;
 
             case TRACEE_REQUEST_TRACING:

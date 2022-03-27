@@ -58,18 +58,18 @@ int receive_new_uxd_ipc_events(int uxd_reg_sock_fd,
 /* Accept request from backlog */
     int conn_fd;
     if (-1 == (conn_fd = uxd_sock_accept(uxd_reg_sock_fd))) {
-        return -1;
+        return -1;      // `-1` = No new request
     }
 
-/* Read request (if any) */
+/* Read request */
     const int read_status = uxd_sock_read(conn_fd, ipc_req_ptr, cr_pid_ptr);
-    close(conn_fd);
+    DIE_WHEN_ERRNO( close(conn_fd) );
 
     return read_status;
 }
 
 
 void fin_uxd_reg_socket(int uxd_reg_sock_fd, char* socket_filepath) {
-    close(uxd_reg_sock_fd);
+    DIE_WHEN_ERRNO( close(uxd_reg_sock_fd) );
     DIE_WHEN_ERRNO( unlink(socket_filepath) );
 }

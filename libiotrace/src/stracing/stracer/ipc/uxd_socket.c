@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <sys/poll.h>
 #include "../common/error.h"
 
 
@@ -74,3 +75,12 @@ void uxd_ipc_sock_fin(int uxd_reg_sock_fd, char* socket_filepath) {
     DIE_WHEN_ERRNO( unlink(socket_filepath) );
 }
 
+
+int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd, int timeout_in_msec) {
+    struct pollfd fd;
+    memset(&fd, 0, sizeof(fd));
+    fd.events = POLLIN;
+    fd.fd = uxd_reg_sock_fd;
+
+    return ((DIE_WHEN_ERRNO( poll(&fd, 1, timeout_in_msec) ) > 0) && (fd.revents & POLLIN));
+}

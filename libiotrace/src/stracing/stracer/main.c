@@ -21,8 +21,12 @@ TODO: Issues:
         ...
  */
 
+/* -- Consts -- */
+#define EXIT_TIMEOUT_IN_MSEC (5 * 60 * 1000)
 
 #define TESTING_DISABLE_LOGFILE   // TODO: RMV LATER ...
+
+
 
 
 int main(int argc, char** argv) {
@@ -73,7 +77,7 @@ int main(int argc, char** argv) {
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
     for (;;) {           // For testing only ..
-//        static int tracee_count = 0;
+        static int tracee_count = 0;
 
 
     /* (0) Check for new ipc requests */
@@ -81,7 +85,6 @@ int main(int argc, char** argv) {
         uxd_sock_ipc_requests_t ipc_request;
         if (-1 == uxd_ipc_receive_new_request(uxd_reg_sock_fd,
                                               &ipc_request, NULL)) {
-            nanosleep((const struct timespec[]){{0, 250000000L}}, NULL);        // TESTING (reduce spinning) ...
             continue;
         }
 
@@ -92,6 +95,7 @@ int main(int argc, char** argv) {
 
             case TRACEE_REQUEST_TRACING:
                 DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
+//                tracee_count++;
                 break;
 
             default:
@@ -99,14 +103,21 @@ int main(int argc, char** argv) {
         }
 }
 
+    /* (2) Check whether we can exit */
+        if (0 == tracee_count) {
+            DEV_DEBUG_PRINT_MSG("TIMEOUT: No tracees, will terminate in %d msec", EXIT_TIMEOUT_IN_MSEC);
+            if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MSEC)) {
+                continue;
+            }
+            DEV_DEBUG_PRINT_MSG("TIMEOUT: Has lapsed, terminating ...");
+            break;
+        }
+
     /* (1) TODO: Trace */
         // ...
 
 
-    /* (2) Check whether we can exit */
-//        if (0 == tracee_count) {
-//            break;
-//        }
+
     }
 
 

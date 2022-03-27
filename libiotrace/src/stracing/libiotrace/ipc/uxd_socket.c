@@ -45,7 +45,7 @@ static void uxd_sock_write(int uxd_reg_sock_fd,
 
 
 /* - Public - */
-int init_uxd_reg_socket(char* socket_filepath,
+int init_uxd_ipc_socket(char* socket_filepath,
                         int socket_backlog_size) {
     int uxd_reg_sock_fd;
     for (int i = 0; i < 2; i++) {  /* Max. 2 attempts */
@@ -84,7 +84,7 @@ int init_uxd_reg_socket(char* socket_filepath,
 }
 
 
-void send_tracing_request(char* socket_filepath) {
+void send_tracing_uxd_ipc_request(char* socket_filepath) {
     int server_fd = uxd_sock_connect(socket_filepath);
 
     uxd_sock_ipc_requests_t ipc_request = {

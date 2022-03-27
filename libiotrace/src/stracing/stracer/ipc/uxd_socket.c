@@ -53,8 +53,8 @@ static int uxd_sock_read(int conn_fd,
 
 
 /* - Public - */
-int receive_new_uxd_ipc_events(int uxd_reg_sock_fd,
-                               uxd_sock_ipc_requests_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
+int receive_new_uxd_ipc_request(int uxd_reg_sock_fd,
+                                uxd_sock_ipc_requests_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
 /* Accept request from backlog */
     int conn_fd;
     if (-1 == (conn_fd = uxd_sock_accept(uxd_reg_sock_fd))) {

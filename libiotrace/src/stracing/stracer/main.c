@@ -72,8 +72,8 @@ int main(int argc, char** argv) {
     for (;;) {           // For testing only ..
 
         uxd_sock_ipc_requests_t ipc_request;
-        if (-1 == receive_new_uxd_ipc_events(uxd_reg_sock_fd,
-                                                &ipc_request, NULL)) {
+        if (-1 == receive_new_uxd_ipc_request(uxd_reg_sock_fd,
+                                              &ipc_request, NULL)) {
             nanosleep((const struct timespec[]){{0, 250000000L}}, NULL);        // TESTING (reduce spinning) ...
             continue;
         }

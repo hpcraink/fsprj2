@@ -22,15 +22,15 @@
 
 /* --- Functions --- */
 void stracing_init_stracer(char *ld_preload_env_val) {
-    assert(ld_preload_env_val);                         // TODO: REVISE `assert`
+    assert( ld_preload_env_val && "`ld_preload_env_val` may not be `NULL`" );
 
 /* (0) Parent: Establish tracer's UXD registration socket */
     int uxd_reg_sock_fd;
-    if (-1 == (uxd_reg_sock_fd = init_uxd_ipc_socket(STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
+    if (-1 == (uxd_reg_sock_fd = uxd_ipc_sock_init(STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
         DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A stracer instance is already running", gettid());
         return;
     }
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Inited UXD registration socket \"%s\" w/ backlog=%d for stracer",
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Inited UXD registration socket \"%s\" w/ backlog=%d for to be launched stracer",
                         gettid(),
                         STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE);
 
@@ -73,7 +73,7 @@ void stracing_init_stracer(char *ld_preload_env_val) {
                       exec_arg_tasks,
                       NULL,
                       NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */
-    LIBIOTRACE_ERROR("`exec` failed (errno=%d)", errno);
+    LIBIOTRACE_ERROR("`exec` failed -- %s", strerror(errno));
 }
 
 
@@ -83,8 +83,8 @@ void stracing_register_with_stracer(void) {
 
 /* (1) Send tracing request */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
-    send_tracing_uxd_ipc_request(STRACING_UXD_SOCKET_FILEPATH);
+    uxd_ipc_send_tracing_request(STRACING_UXD_SOCKET_FILEPATH);
 
-/* (2) Wait for tracer to wake us up ...  */
+/* (2) Wait for stracer to wake us up ...  */
 //    while (wait(NULL) < 0 && EINTR == errno);
 }

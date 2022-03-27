@@ -53,7 +53,7 @@ static int uxd_sock_read(int conn_fd,
 
 
 /* - Public - */
-int receive_new_uxd_ipc_request(int uxd_reg_sock_fd,
+int uxd_ipc_receive_new_request(int uxd_reg_sock_fd,
                                 uxd_sock_ipc_requests_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
 /* Accept request from backlog */
     int conn_fd;
@@ -69,7 +69,8 @@ int receive_new_uxd_ipc_request(int uxd_reg_sock_fd,
 }
 
 
-void fin_uxd_reg_socket(int uxd_reg_sock_fd, char* socket_filepath) {
+void uxd_ipc_sock_fin(int uxd_reg_sock_fd, char* socket_filepath) {
     DIE_WHEN_ERRNO( close(uxd_reg_sock_fd) );
     DIE_WHEN_ERRNO( unlink(socket_filepath) );
 }
+

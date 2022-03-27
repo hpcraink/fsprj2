@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     }
 
 
-/* (1) Fork grandchild (which will be the actual tracer) */
+/* (1) Daemonize tracer, i.e., fork grandchild (which will be the actual tracer) */
     if (DIE_WHEN_ERRNO( fork() )) {     /* Child -> not used */
 #ifndef TESTING_DISABLE_LOGFILE
         fclose(stdout_logfile);
@@ -61,18 +61,25 @@ int main(int argc, char** argv) {
         pause();
         _exit(0);
     }
-
     kill(getppid(), SIGKILL);   /* Grandchild = Tracer */
 
 
-/* (2) Start tracing .. */
+/* (2) Setup */
+//    unwind_init();
+
+
+/* (3) Start tracing .. */
     const pid_t tracer_pid = getpid();
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
     for (;;) {           // For testing only ..
+//        static int tracee_count = 0;
 
+
+    /* (0) Check for new ipc requests */
+{
         uxd_sock_ipc_requests_t ipc_request;
-        if (-1 == receive_new_uxd_ipc_request(uxd_reg_sock_fd,
+        if (-1 == uxd_ipc_receive_new_request(uxd_reg_sock_fd,
                                               &ipc_request, NULL)) {
             nanosleep((const struct timespec[]){{0, 250000000L}}, NULL);        // TESTING (reduce spinning) ...
             continue;
@@ -90,12 +97,22 @@ int main(int argc, char** argv) {
             default:
                 LOG_WARN("Invalid ipc-request");
         }
+}
+
+    /* (1) TODO: Trace */
+        // ...
+
+
+    /* (2) Check whether we can exit */
+//        if (0 == tracee_count) {
+//            break;
+//        }
     }
 
 
 /* (3) Cleanup on exit .. */
     // TODO: Register at_exit -> cleanup
-    fin_uxd_reg_socket(uxd_reg_sock_fd, STRACING_UXD_SOCKET_FILEPATH);
+    uxd_ipc_sock_fin(uxd_reg_sock_fd, STRACING_UXD_SOCKET_FILEPATH);
 #ifndef TESTING_DISABLE_LOGFILE
     fclose(stdout_logfile);
     fclose(stderr_logfile);

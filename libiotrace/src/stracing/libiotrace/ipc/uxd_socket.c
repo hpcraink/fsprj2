@@ -45,8 +45,8 @@ static void uxd_sock_write(int uxd_reg_sock_fd,
 
 
 /* - Public - */
-int init_uxd_ipc_socket(char* socket_filepath,
-                        int socket_backlog_size) {
+int uxd_ipc_sock_init(char* socket_filepath,
+                      int socket_backlog_size) {
     int uxd_reg_sock_fd;
     for (int i = 0; i < 2; i++) {  /* Max. 2 attempts */
         uxd_reg_sock_fd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(socket)(AF_UNIX, SOCK_STREAM, 0) );
@@ -84,7 +84,7 @@ int init_uxd_ipc_socket(char* socket_filepath,
 }
 
 
-void send_tracing_uxd_ipc_request(char* socket_filepath) {
+void uxd_ipc_send_tracing_request(char* socket_filepath) {
     int server_fd = uxd_sock_connect(socket_filepath);
 
     uxd_sock_ipc_requests_t ipc_request = {

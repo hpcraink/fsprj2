@@ -1,23 +1,33 @@
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/poll.h>
+#include <time.h>
+#include <stdint.h>
 
 #include "uxd_socket.h"
 
 #include <assert.h>
 #include <errno.h>
-#include <sys/poll.h>
 #include "../common/error.h"
+#define DEV_DEBUG_ENABLE_LOGS
+#include "../common/debug.h"
 
 
 /* -- Functions -- */
 /* - Helpers - */
+static uint64_t gettime(void) {
+    struct timespec t;
+    DIE_WHEN_ERRNO( clock_gettime(CLOCK_REALTIME, &t) );
+    return (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
+}
+
 static int uxd_sock_accept(int uxd_reg_sock_fd) {
     int conn_fd;
     if (-1 == (conn_fd = accept(uxd_reg_sock_fd, NULL, NULL))) {
         if (EAGAIN == errno || EWOULDBLOCK == errno) {
             return -1;      // No new connections in backlog ...
         }
-        LOG_ERROR_AND_EXIT("`accept4` -- %s", strerror(errno));
+        LOG_ERROR_AND_EXIT("`accept` -- %s", strerror(errno));
     }
 
     return conn_fd;
@@ -76,11 +86,29 @@ void uxd_ipc_sock_fin(int uxd_reg_sock_fd, char* socket_filepath) {
 }
 
 
-int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd, int timeout_in_msec) {
+int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd,
+                                           int timeout_in_ms) {
     struct pollfd fd;
     memset(&fd, 0, sizeof(fd));
     fd.events = POLLIN;
     fd.fd = uxd_reg_sock_fd;
 
-    return ((DIE_WHEN_ERRNO( poll(&fd, 1, timeout_in_msec) ) > 0) && (fd.revents & POLLIN));
+
+    for (int remaining_time_in_ms = timeout_in_ms; ; ) {
+        const uint64_t start_time_in_ns = gettime();
+        const int rv = poll(&fd, 1, remaining_time_in_ms);
+        const uint64_t end_time_in_ns = gettime();
+
+        if (-1 == rv) {
+            if (EINTR == errno) {       // Interrupted by signal
+                remaining_time_in_ms -= (end_time_in_ns - start_time_in_ns) / 1000000;
+                DEV_DEBUG_PRINT_MSG("TIMEOUT -- remaining=%d ms: Got interrupted up by signal, "
+                                    "sleeping again ...", remaining_time_in_ms);
+                continue;
+            }
+            LOG_ERROR_AND_EXIT("`poll` -- %s", strerror(errno));
+        }
+
+        return ((rv > 0) && (fd.revents & POLLIN));
+    }
 }

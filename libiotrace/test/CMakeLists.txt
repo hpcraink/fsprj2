@@ -256,7 +256,7 @@ if (WITH_FILENAME_RESOLUTION)
     )
 endif()
 
-if (WITH_STRACING)
+if (STRACING_ENABLED)
 # - Programs for testing tracing  -
     # test with: IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork [--loop] [--fork | --pthread]
     add_executable(stracing_trace_pthread_fork stracing/trace_pthread_fork.c)

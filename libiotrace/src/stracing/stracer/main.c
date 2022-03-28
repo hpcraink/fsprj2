@@ -9,6 +9,9 @@
  *   - Supported 'Tasks': The tracer may perform the following tasks on tracees during tracing
  *     - Warn: Check whether the provided syscalls have been traced by libiotrace, if not, print a warning
  *     - fnres: ...
+ *
+ *   - Things to keep in mind:
+ *     - stracer may NOT include any functionality provided by libiotrace (since it's a independent process)
  */
 #include <errno.h>
 #include <fcntl.h>

@@ -248,7 +248,7 @@ else()
     unset(HASH_FUNCTION_VALUES CACHE)
 endif()
 
-if (WITH_STRACING)
+if (STRACING_ENABLED)
     add_subdirectory(stracing)
 endif()
 

@@ -331,7 +331,7 @@ static const long FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
 static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #endif
 
-#ifdef WITH_STRACING
+#ifdef STRACING_ENABLED
 #  include "stracing/libiotrace/entrypoint.h"
 #endif
 
@@ -2028,14 +2028,14 @@ void init_process() {
 }
 #endif
 
-#ifdef WITH_STRACING
+#ifdef STRACING_ENABLED
 #ifndef IO_LIB_STATIC
       char *ld_preload_env_val = getenv(ENV_LD_PRELOAD);
 #else
       char *ld_preload_env_val = ".";			// TODO: CHECK STATICALLY COMPILED VERSION
 #endif /* IO_LIB_STATIC */
         stracing_init_stracer(ld_preload_env_val);
-#endif /* WITH_STRACING */
+#endif /* STRACING_ENABLED */
 
 #if !defined(HAVE_HOST_NAME_MAX)
 #if defined(HAVE__POSIX_HOST_NAME_MAX)
@@ -2324,7 +2324,7 @@ void init_thread(void) {
 #  endif
 #endif
 
-#ifdef WITH_STRACING
+#ifdef STRACING_ENABLED
     stracing_register_with_stracer();
 #endif
 }

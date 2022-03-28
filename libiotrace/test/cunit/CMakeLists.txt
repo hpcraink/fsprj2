@@ -62,8 +62,8 @@ endif()
 
 
 
-if (WITH_FILENAME_RESOLUTION)
-	set(CMAKE_C_FLAGS "-D_GNU_SOURCE -DWITH_FILENAME_RESOLUTION")
+if (FILENAME_RESOLUTION_ENABLED)
+	set(CMAKE_C_FLAGS "-D_GNU_SOURCE -DFILENAME_RESOLUTION_ENABLED")
 
 # - fctevent -
 	add_executable(test_fnres_fctevent fnres/test_fnres_fctevent.c

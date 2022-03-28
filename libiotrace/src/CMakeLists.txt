@@ -233,7 +233,7 @@ if(WITH_ALLOC)
     list(APPEND SOURCE alloc.c)
 endif()
 
-if (WITH_FILENAME_RESOLUTION)
+if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND SOURCE
             fnres/fctevent.c
             fnres/internal/fnmap.c)

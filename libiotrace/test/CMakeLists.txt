@@ -249,7 +249,7 @@ list(APPEND LINK_OPTIONS
     "-lpthread"
 )
 
-if (WITH_FILENAME_RESOLUTION)
+if (FILENAME_RESOLUTION_ENABLED)
 # TODO: Disable for tests not related to fnres  --> Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
         "atomic_hash_object"

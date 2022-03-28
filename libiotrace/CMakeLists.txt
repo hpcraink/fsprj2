@@ -45,7 +45,7 @@ option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (WITH_ALLOC "build wrappers for memory allocations" OFF)
-option (WITH_FILENAME_RESOLUTION "create mapping b/w file handles and filenames during runtime" OFF)
+option (FILENAME_RESOLUTION_ENABLED "create mapping b/w file handles and filenames during runtime" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
 option (ENABLE_REMOTE_CONTROL "Remotely control wrappers (toggle on/off) via REST-API" ON)
@@ -187,9 +187,9 @@ if(WITH_ALLOC)
     list(APPEND COMPILE_OPTIONS -DWITH_ALLOC)
 endif()
 
-# Compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w file handles and filenames during runtime
-if (WITH_FILENAME_RESOLUTION)
-    list(APPEND COMPILE_OPTIONS -DWITH_FILENAME_RESOLUTION)
+# Compile using cmake -DFILENAME_RESOLUTION_ENABLED for creating mappings b/w file handles and filenames during runtime
+if (FILENAME_RESOLUTION_ENABLED)
+    list(APPEND COMPILE_OPTIONS -DFILENAME_RESOLUTION_ENABLED)
 endif()
 
 if(WITH_MPI_IO)

@@ -40,7 +40,7 @@ EOF
 
 
 --------------------  stracing  --------------------
-- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DWITH_FILENAME_RESOLUTION=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.4.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=CONSOLE ..  &&  cmake --build .)
+- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DFILENAME_RESOLUTION_ENABLED=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.4.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=CONSOLE ..  &&  cmake --build .)
 
 
 - Testing:
@@ -54,7 +54,7 @@ EOF
 
 
 --------------------  fnres  --------------------
-- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DFILENAME_RESOLUTION_ENABLED=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
                                                                                                                              ^
                                                                                                            LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB
 

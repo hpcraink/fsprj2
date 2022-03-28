@@ -323,7 +323,7 @@ void *(*start_routine)(void *),
 void *restrict arg) REAL_DEFINITION_INIT;
 #endif
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 #  include "fnres/fctevent.h"
 
 static const char* const FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
@@ -1170,7 +1170,7 @@ void open_std_fd(int fd)
 	data.return_state_detail = NULL;
 
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
     fnres_trace_fctevent(&data);
 #endif
 
@@ -1223,7 +1223,7 @@ void open_std_file(FILE *file)
 	data.return_state_detail = NULL;
 
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
     fnres_trace_fctevent(&data);
 #endif
 
@@ -1271,7 +1271,7 @@ void init_on_load(void) {
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-#  ifdef WITH_FILENAME_RESOLUTION
+#  ifdef FILENAME_RESOLUTION_ENABLED
     fnres_trace_fctevent(&data);
 #  endif
 
@@ -2009,7 +2009,7 @@ void init_process() {
 		init_wrapper(); /* WARNING: glibc calls (CALL_REAL_POSIX_SYNC) will work ONLY AFTER THIS LINE */
 #endif
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 {
     /* (0) Get & parse env for max # of filenames in fnmap  --> TODO: Remove once fmap supports dynamic resizing */
         long fnres_fnmap_max_fnames = FNRES_DEFAULT_FNMAP_MAX_FNAMES;
@@ -2482,7 +2482,7 @@ void cleanup(void) {
 	WRAPPER_TIME_END(data);
 
 #ifdef LOG_WRAPPER_TIME
-#  ifdef WITH_FILENAME_RESOLUTION
+#  ifdef FILENAME_RESOLUTION_ENABLED
     fnres_trace_fctevent(&data);
 #  endif
 
@@ -2497,7 +2497,7 @@ void cleanup(void) {
 
 #endif /* IOTRACE_ENABLE_LOGFILE */
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
     fnres_fin();
 #endif
 

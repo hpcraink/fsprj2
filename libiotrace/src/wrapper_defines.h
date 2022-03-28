@@ -11,7 +11,7 @@
 #include "libiotrace_include_struct.h"
 
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 #  include "fnres/fctevent.h"
 #  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent)
 #else

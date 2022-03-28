@@ -15,13 +15,26 @@ list(APPEND STRACER_SOURCE
         stracer/cli.c
         stracer/main.c)
 
+set(STRACER_COMPILE_OPTIONS
+        -D_GNU_SOURCE)
+
 
 # -- CMake options --
 set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source used to parse syscalls")
 set(STRACING_UXD_SOCKET_FILEPATH "libiotrace-tracer.sock" CACHE STRING "Filename of socket which is used for IPC b/w tracer & tracee")
 set(STRACING_UXD_REG_SOCKET_BACKLOG_SIZE 5000 CACHE STRING "Backlog size for uxd socket")
-set(STRACING_STRACER_LOGFILE "libiotrace_stracer.log" CACHE STRING "Logfile of stracer")
-set(STRACING_STRACER_TIMEOUT_IN_MSEC 50000 CACHE STRING "Timeout in ms after which stracer will exit if no tracees are attached")
+set(STRACING_STRACER_LOG_OUTPUT "LOGFILE" CACHE STRING "Where the log output of the stracer should go")
+set_property(CACHE STRACING_STRACER_LOG_OUTPUT PROPERTY STRINGS "CONSOLE;LOGFILE")
+set(STRACING_STRACER_TIMEOUT_IN_MSEC 10000 CACHE STRING "Timeout in ms after which stracer will exit if no tracees are attached")
+
+list(APPEND STRACER_COMPILE_OPTIONS
+        -DUXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
+        -DUXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE}
+        -DEXIT_TIMEOUT_IN_MS=${STRACING_STRACER_TIMEOUT_IN_MSEC})
+
+if (STRACING_STRACER_LOG_OUTPUT STREQUAL "LOGFILE")
+    list(APPEND STRACER_COMPILE_OPTIONS "-DUSE_LOGFILE")
+endif()
 
 
 # -- Build targets/commands --
@@ -52,11 +65,7 @@ target_include_directories(libiotrace_stracer PRIVATE
         "${CMAKE_CURRENT_BINARY_DIR}/stracer")
 
 target_compile_options(libiotrace_stracer PRIVATE
-        -D_GNU_SOURCE
-        -DUXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
-        -DUXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE}
-        -DLOGFILE="${STRACING_STRACER_LOGFILE}"
-        -DEXIT_TIMEOUT_IN_MSEC=${STRACING_STRACER_TIMEOUT_IN_MSEC})
+        ${STRACER_COMPILE_OPTIONS})
 
 # target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
 

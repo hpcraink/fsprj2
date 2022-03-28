@@ -12,35 +12,28 @@
 #define DEV_DEBUG_ENABLE_LOGS
 #include "common/debug.h"
 
-
-# include <time.h>
-
-
-// TODO do_tracer, containing following fct ..
-/*
-TODO: Issues:
-        ...
- */
-
 /* -- Consts -- */
-#define TESTING_DISABLE_LOGFILE   // TODO: RMV LATER ...
-
+#ifdef USE_LOGFILE
+#  define LOGFILE_NAME "libiotrace_stracer.log"
+#endif /* USE_LOGFILE */
 
 
 
 int main(int argc, char** argv) {
-#ifndef TESTING_DISABLE_LOGFILE
-/* Setup a logfile (since we can't log to console) */
+/* (0) Init */
     DIE_WHEN_ERRNO( close(STDIN_FILENO) );
-    FILE* stdout_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE, "a+", stdout) );
-    FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE, "a+", stderr) );
+
+#ifdef USE_LOGFILE
+/* (0.1) Setup a logfile (since we can't log to console; must happen asap to ensure ALL logs get 'routed' to correct location) */
+    FILE* stdout_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stdout) );
+    FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stderr) );
     if (0 != setvbuf(stdout_logfile, NULL, _IONBF, 0) ||
         0 != setvbuf(stderr_logfile, NULL, _IONBF, 0)) {
         LOG_ERROR_AND_EXIT("Couldn't set buffering options for logfile");
     }
-#endif /* TESTING_DISABLE_LOGFILE */
+#endif /* USE_LOGFILE */
 
-/* (0) Parse CLI args */
+/* (0.2) Parse CLI args */
     cli_args_t parsed_cli_args;
     parse_cli_args(argc, argv, &parsed_cli_args);
 #ifdef DEV_DEBUG_ENABLE_LOGS
@@ -48,18 +41,18 @@ int main(int argc, char** argv) {
 #endif
     const int uxd_reg_sock_fd = parsed_cli_args.uxd_reg_sock_fd;
 
-/* (0.1) Check whether fildes is valid  (TODO: check whether socket) */
+/* (0.3) Check whether fildes is valid  (TODO: check whether socket) */
     if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
         LOG_ERROR_AND_EXIT("Invalid socket fildes");
     }
 
 
-/* (1) Daemonize tracer, i.e., fork grandchild (which will be the actual tracer) */
+/* (0.4) Daemonize tracer, i.e., fork grandchild (which will be the actual tracer) */
     if (DIE_WHEN_ERRNO( fork() )) {     /* Child -> not used */
-#ifndef TESTING_DISABLE_LOGFILE
+#ifdef USE_LOGFILE
         fclose(stdout_logfile);
         fclose(stderr_logfile);
-#endif /* TESTING_DISABLE_LOGFILE */
+#endif /* USE_LOGFILE */
         close(uxd_reg_sock_fd);
         pause();
         _exit(0);
@@ -78,9 +71,7 @@ int main(int argc, char** argv) {
     for (;;) {           // For testing only ..
         static int tracee_count = 0;
 
-
-    /* (0) Check for new ipc requests */
-{
+    /* (3.0) Check for new ipc requests */
         uxd_sock_ipc_requests_t ipc_request;
         if (-1 == uxd_ipc_receive_new_request(uxd_reg_sock_fd,
                                               &ipc_request, NULL)) {
@@ -104,31 +95,28 @@ int main(int argc, char** argv) {
         }
 }
 
-    /* (2) Check whether we can exit */
+    /* (3.1) Check whether we can exit */
         if (0 == tracee_count) {
-            DEV_DEBUG_PRINT_MSG("TIMEOUT: No tracees, will terminate in %d msec", EXIT_TIMEOUT_IN_MSEC);
-            if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MSEC)) {
+            DEV_DEBUG_PRINT_MSG("TIMEOUT: No tracees, will terminate in %d msec", EXIT_TIMEOUT_IN_MS);
+            if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) {
                 continue;
             }
             DEV_DEBUG_PRINT_MSG("TIMEOUT: Has lapsed, terminating ...");
             break;
         }
 
-    /* (1) TODO: Trace */
+
+    /* (3.2) TODO: Trace */
         // ...
-
-
-
     }
 
 
-/* (3) Cleanup on exit .. */
-    // TODO: Register at_exit -> cleanup
+/* (3) Cleanup */
     uxd_ipc_sock_fin(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
-#ifndef TESTING_DISABLE_LOGFILE
+#ifdef USE_LOGFILE
     fclose(stdout_logfile);
     fclose(stderr_logfile);
-#endif /* TESTING_DISABLE_LOGFILE */
+#endif /* USE_LOGFILE */
 
     return 0;
 }

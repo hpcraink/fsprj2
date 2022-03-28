@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
 #ifndef TESTING_DISABLE_LOGFILE
 /* Setup a logfile (since we can't log to console) */
     DIE_WHEN_ERRNO( close(STDIN_FILENO) );
-    FILE* stdout_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(STRACING_STRACER_LOGFILE, "a+", stdout) );
-    FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(STRACING_STRACER_LOGFILE, "a+", stderr) );
+    FILE* stdout_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE, "a+", stdout) );
+    FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE, "a+", stderr) );
     if (0 != setvbuf(stdout_logfile, NULL, _IONBF, 0) ||
         0 != setvbuf(stderr_logfile, NULL, _IONBF, 0)) {
         LOG_ERROR_AND_EXIT("Couldn't set buffering options for logfile");

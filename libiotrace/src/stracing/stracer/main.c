@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
 
 /* (3) Cleanup on exit .. */
     // TODO: Register at_exit -> cleanup
-    uxd_ipc_sock_fin(uxd_reg_sock_fd, STRACING_UXD_SOCKET_FILEPATH);
+    uxd_ipc_sock_fin(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
 #ifndef TESTING_DISABLE_LOGFILE
     fclose(stdout_logfile);
     fclose(stderr_logfile);

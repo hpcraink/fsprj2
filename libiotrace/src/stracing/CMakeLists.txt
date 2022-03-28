@@ -52,9 +52,9 @@ target_include_directories(libiotrace_stracer PRIVATE
 
 target_compile_options(libiotrace_stracer PRIVATE
         -D_GNU_SOURCE
-        -DSTRACING_UXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
-        -DSTRACING_UXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE}
-        -DSTRACING_STRACER_LOGFILE="${STRACING_STRACER_LOGFILE}")
+        -DUXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
+        -DUXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE}
+        -DLOGFILE="${STRACING_STRACER_LOGFILE}"
 
 # target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
 

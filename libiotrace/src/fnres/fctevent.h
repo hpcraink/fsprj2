@@ -3,18 +3,17 @@
  *   Takes in data from wrapper calls (posix/mpi; are called "function events") for the purpose
  *   of creating a mapping from all types of file handles (fildes, streams, etc.) to filenames
  */
-
 #ifndef LIBIOTRACE_FCTEVENT_H
 #define LIBIOTRACE_FCTEVENT_H
 
 #include <stddef.h>     /* size_t */
 
 
-/* -- Type declarations -- */
+/* -- Forward type declarations -- */
 struct basic;           /* Note: #include "../libiotrace_include_struct.h" causes "Declaration of 'struct basic' will not be visible outside of this function" when incl. in "wrapper_defines.h" */
 
 
-/* --- Constants --- */
+/* -- Constants -- */
 /* Note: All files which aren't actual files have '_' as pre- & suffix */
 #define FNAME_SPECIFIER_NAF             "_ NOT-A-FILE _"
 #define FNAME_SPECIFIER_STD             "_ STD-IO _"
@@ -25,7 +24,7 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
 #define FNAME_SPECIFIER_UNHANDELED_FCT  "__ UNKNOWN (UNHANDLED-FCT) __"
 
 
-/* --- Function prototypes --- */
+/* -- Function prototypes -- */
 void fnres_init(long fnmap_max_size);
 void fnres_fin(void);
 // void fnres_reset_on_fork(void);

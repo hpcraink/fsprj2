@@ -2,7 +2,6 @@
  * Filename map (fnmap)
  *   Implements abstraction (API) for map implementation (which is used for tracking filenames)
  */
-
 #ifndef LIBIOTRACE_FNMAP_H
 #define LIBIOTRACE_FNMAP_H
 
@@ -19,7 +18,7 @@ typedef union {
 
     int mpi_id;
     int mpi_req_id;
-} id;
+} file_handle_t;
 
 typedef enum {
     F_DESCRIPTOR,
@@ -28,24 +27,24 @@ typedef enum {
     F_MEMORY,
     F_MPI,
     R_MPI                                           /* Immediate mapping for MPI_Request struct */
-} id_type;
+} file_handle_type_t;
 
 typedef struct {
-    id id;
-    id_type type;
+    file_handle_t id;
+    file_handle_type_t type;
     size_t mmap_length;                             /* Only relevant 4 file_memory (0 indicates none) */
-} fnmap_key;
+} fnmap_key_t;
 
-#define FNMAP_KEY_SIZE sizeof(fnmap_key)
+#define FNMAP_KEY_SIZE sizeof(fnmap_key_t)
 
 
 /* - Function prototypes - */
 void fnmap_create(long max_size);
 void fnmap_destroy(void);
 
-int fnmap_get(const fnmap_key *key, char **found_fname);
-void fnmap_add_or_update(const fnmap_key *key, const char *fname);
-void fnmap_remove(const fnmap_key *key);
+int fnmap_get(const fnmap_key_t *key, char **found_fname);
+void fnmap_add_or_update(const fnmap_key_t *key, const char *fname);
+void fnmap_remove(const fnmap_key_t *key);
 // void fnmap_clear(void);
 
 #endif /* LIBIOTRACE_FNMAP_H */

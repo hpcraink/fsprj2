@@ -44,7 +44,7 @@ CU_TEST_TEARDOWN() {}
 
 /* -- Tests -- */
 void test_same_value(void) {
-    fnmap_key key = {
+    fnmap_key_t key = {
         .id = { .fildes = 0 },
         .type = F_DESCRIPTOR,
         .mmap_length = 0

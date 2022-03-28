@@ -6,7 +6,7 @@
 
 #include "ptrace_utils.h"
 
-#include "../../../error.h"
+#include "../common/error.h"
 
 
 /* -- Functions -- */
@@ -18,7 +18,7 @@ char *ptrace_read_string(pid_t tid, unsigned long addr) {
     char *read_str;
     size_t read_str_size_bytes = 2048;
     if (!(read_str = malloc(read_str_size_bytes))) {
-        LIBIOTRACE_ERROR("`malloc`: Failed to allocate memory");
+        LOG_ERROR_AND_EXIT("`malloc`: Failed to allocate memory");
     }
 
 /* Read string using ptrace */
@@ -27,7 +27,7 @@ char *ptrace_read_string(pid_t tid, unsigned long addr) {
         if (read_bytes + sizeof(ptrace_read_word) > read_str_size_bytes) {
             read_str_size_bytes *= 2;
             if (!(read_str = realloc(read_str, read_str_size_bytes))) {
-                LIBIOTRACE_ERROR("`realloc`: Failed to allocate memory");
+                LOG_ERROR_AND_EXIT("`realloc`: Failed to allocate memory");
             }
         }
 

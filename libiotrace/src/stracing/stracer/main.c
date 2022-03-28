@@ -1,3 +1,15 @@
+/**
+ * stracer -- System call Tracer
+ *   - Lifecycle:
+ *     - Gets launched by libiotrace as separate process
+ *     - Tracees request to be traced by sending a tracing request (via a Unix Domain Socket)
+ *     - Tracer performs selected 'Task's on tracees (e.g., checking whether syscall has been traced)
+ *     - Tracer terminates itself as soon as last tracee has exited and timeout has expired
+ *
+ *   - Supported 'Tasks': The tracer may perform the following tasks on tracees during tracing
+ *     - Warn: Check whether the provided syscalls have been traced by libiotrace, if not, print a warning
+ *     - fnres: ...
+ */
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -86,7 +98,7 @@ int main(int argc, char** argv) {
                     DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
 //                    tracing_attach_tracee(ipc_request.payload.tracee_tid);
 //                    tracee_count++;
-//                    DEV_DEBUG_PRINT_MSG("Attached tracee w/ tid=%d", ipc_request.payload.tracee_tid);
+//                    DEV_DEBUG_PRINT_MSG("+++ Attached tracee w/ tid=%d +++", ipc_request.payload.tracee_tid);
                     break;
 
                 default:
@@ -97,10 +109,8 @@ int main(int argc, char** argv) {
 
     /* (3.1) Check whether we can exit */
         if (0 == tracee_count) {
-            DEV_DEBUG_PRINT_MSG("TIMEOUT: No tracees, will terminate in %d msec", EXIT_TIMEOUT_IN_MS);
-            if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) {
-                continue;
-            }
+            DEV_DEBUG_PRINT_MSG("TIMEOUT: No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
+            if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) { continue; }
             DEV_DEBUG_PRINT_MSG("TIMEOUT: Has lapsed, terminating ...");
             break;
         }

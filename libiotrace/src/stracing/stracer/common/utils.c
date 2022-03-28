@@ -1,13 +1,12 @@
 #include <errno.h>
+#include <time.h>
 #include <stdlib.h>
 
-/**
- * Parse C string (w/ number in base 10) as signed long
- *
- * @param[in]  str String to be parsed
- * @param[out] num Parsed long
- * @return     0 on success, -1 on failure
- */
+#include "utils.h"
+#include "error.h"
+
+
+/* -- Functions -- */
 int str_to_long(char* str, long* num) {
     char* parse_end_ptr = NULL;
     if (NULL != (parse_end_ptr = str) && NULL != num) {
@@ -20,4 +19,10 @@ int str_to_long(char* str, long* num) {
         }
     }
     return -1;
+}
+
+uint64_t gettime(void) {
+    struct timespec t;
+    DIE_WHEN_ERRNO( clock_gettime(CLOCK_REALTIME, &t) );
+    return (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
 }

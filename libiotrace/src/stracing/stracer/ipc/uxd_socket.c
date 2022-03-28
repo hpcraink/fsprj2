@@ -1,10 +1,10 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/poll.h>
-#include <time.h>
 #include <stdint.h>
 
 #include "uxd_socket.h"
+#include "../common/utils.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -15,17 +15,11 @@
 
 /* -- Functions -- */
 /* - Helpers - */
-static uint64_t gettime(void) {
-    struct timespec t;
-    DIE_WHEN_ERRNO( clock_gettime(CLOCK_REALTIME, &t) );
-    return (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
-}
-
 static int uxd_sock_accept(int uxd_reg_sock_fd) {
     int conn_fd;
     if (-1 == (conn_fd = accept(uxd_reg_sock_fd, NULL, NULL))) {
         if (EAGAIN == errno || EWOULDBLOCK == errno) {
-            return -1;      // No new connections in backlog ...
+            return -1;      /* No new connections in backlog ... */
         }
         LOG_ERROR_AND_EXIT("`accept` -- %s", strerror(errno));
     }
@@ -100,8 +94,8 @@ int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd,
         const uint64_t end_time_in_ns = gettime();
 
         if (-1 == rv) {
-            if (EINTR == errno) {       // Interrupted by signal
-                remaining_time_in_ms -= (end_time_in_ns - start_time_in_ns) / 1000000;
+            if (EINTR == errno) {       /* Interrupted by signal (relevant when signal handlers have been registered) */
+                remaining_time_in_ms -= (int)(end_time_in_ns - start_time_in_ns) / 1000000;
                 DEV_DEBUG_PRINT_MSG("TIMEOUT -- remaining=%d ms: Got interrupted up by signal, "
                                     "sleeping again ...", remaining_time_in_ms);
                 continue;

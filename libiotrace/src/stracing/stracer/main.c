@@ -23,8 +23,6 @@ TODO: Issues:
  */
 
 /* -- Consts -- */
-#define EXIT_TIMEOUT_IN_MSEC (5 * 60 * 1000)
-
 #define TESTING_DISABLE_LOGFILE   // TODO: RMV LATER ...
 
 

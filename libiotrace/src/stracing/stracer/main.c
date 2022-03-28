@@ -72,28 +72,28 @@ int main(int argc, char** argv) {
         static int tracee_count = 0;
 
     /* (3.0) Check for new ipc requests */
-        uxd_sock_ipc_requests_t ipc_request;
-        if (-1 == uxd_ipc_receive_new_request(uxd_reg_sock_fd,
-                                              &ipc_request, NULL)) {
-            continue;
+        for (uxd_sock_ipc_requests_t ipc_request; ; ) {
+            const int status = uxd_ipc_receive_new_request(uxd_reg_sock_fd,&ipc_request, NULL);
+            if (-2 == status) { continue; }
+            else if (-1 == status) { break; }
+
+            switch (ipc_request.request_type) {
+                case PROBE_TRACER_RUNNING:
+                    DEV_DEBUG_PRINT_MSG("I'm still running (pid=%d)..", tracer_pid);
+                    break;
+
+                case TRACEE_REQUEST_TRACING:
+                    DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
+//                    tracing_attach_tracee(ipc_request.payload.tracee_tid);
+//                    tracee_count++;
+//                    DEV_DEBUG_PRINT_MSG("Attached tracee w/ tid=%d", ipc_request.payload.tracee_tid);
+                    break;
+
+                default:
+                    LOG_WARN("Invalid ipc-request");
+            }
         }
 
-        switch (ipc_request.request_type) {
-            case PROBE_TRACER_RUNNING:
-                DEV_DEBUG_PRINT_MSG("I'm still running (pid=%d)..", tracer_pid);
-                break;
-
-            case TRACEE_REQUEST_TRACING:
-                DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
-//                tracing_attach_tracee(ipc_request.payload.tracee_tid);
-//                tracee_count++;
-//                DEV_DEBUG_PRINT_MSG("Attached tracee w/ tid=%d", ipc_request.payload.tracee_tid);
-                break;
-
-            default:
-                LOG_WARN("Invalid ipc-request");
-        }
-}
 
     /* (3.1) Check whether we can exit */
         if (0 == tracee_count) {
@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
 
 
     /* (3.2) TODO: Trace */
+        fprintf(stdout, "TODO: TRACE");
         // ...
     }
 

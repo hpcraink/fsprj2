@@ -63,14 +63,14 @@ int uxd_ipc_receive_new_request(int uxd_reg_sock_fd,
 /* Accept request from backlog */
     int conn_fd;
     if (-1 == (conn_fd = uxd_sock_accept(uxd_reg_sock_fd))) {
-        return -1;      // `-1` = No new request
+        return -1;                      /* `-1` = No new request(s) */
     }
 
 /* Read request */
-    const int read_status = uxd_sock_read(conn_fd, ipc_req_ptr, cr_pid_ptr);
+    const int rv = uxd_sock_read(conn_fd, ipc_req_ptr, cr_pid_ptr);
     DIE_WHEN_ERRNO( close(conn_fd) );
 
-    return read_status;
+    return (rv == -1) ? (-2) : (0);     /* `-2` = incomplete (thus, invalid) request, `0` = valid request */
 }
 
 

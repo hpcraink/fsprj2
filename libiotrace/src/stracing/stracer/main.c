@@ -85,6 +85,7 @@ int main(int argc, char** argv) {
 
     for (;;) {           // For testing only ..
         static int tracee_count = 0;
+        pid_t new_tracee_tid = -1;
 
     /* (3.0) Check for new ipc requests */
         for (uxd_sock_ipc_requests_t ipc_request; ; ) {
@@ -98,10 +99,11 @@ int main(int argc, char** argv) {
                     break;
 
                 case TRACEE_REQUEST_TRACING:
-                    DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
-//                    tracing_attach_tracee(ipc_request.payload.tracee_tid);
+                    new_tracee_tid = ipc_request.payload.tracee_tid;
+                    DEV_DEBUG_PRINT_MSG("Received tracing request from tid=%d", new_tracee_tid);
+//                    tracing_attach_tracee(new_tracee_tid);
 //                    tracee_count++;
-//                    DEV_DEBUG_PRINT_MSG("+++ Attached tracee w/ tid=%d +++", ipc_request.payload.tracee_tid);
+//                    DEV_DEBUG_PRINT_MSG("+++ Attached tracee w/ tid=%d +++", new_tracee_tid);
                     break;
 
                 default:
@@ -131,6 +133,7 @@ int main(int argc, char** argv) {
     fclose(stdout_logfile);
     fclose(stderr_logfile);
 #endif /* USE_LOGFILE */
+//    unwind_fin();
 
     return 0;
 }

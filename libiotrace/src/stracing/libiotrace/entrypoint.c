@@ -79,7 +79,7 @@ void stracing_init_stracer(char *ld_preload_env_val) {
 
 void stracing_register_with_stracer(void) {
 /* (0) Set tracing permissions (only necessary when Yama ptrace_scope = 1; check: `cat /proc/sys/kernel/yama/ptrace_scope`) */
-//    DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
+    DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 
 /* (1) Send tracing request */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());

@@ -46,7 +46,7 @@ EOF
 - Testing:
     (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork)
     (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork)
-    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --pthread)   ---> !! WE DON'T GET CALLED !!
+    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --pthread)
 
     (cd test && IOTRACE_LOG_NAME=stracing_descendants_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants)
 

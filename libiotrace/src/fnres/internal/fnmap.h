@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-/* - Data structures - */
+/* -- Data structures -- */
 typedef union {
     int fildes;
     FILE* stream;
@@ -38,7 +38,7 @@ typedef struct {
 #define FNMAP_KEY_SIZE sizeof(fnmap_key_t)
 
 
-/* - Function prototypes - */
+/* -- Function prototypes -- */
 void fnmap_create(long max_size);
 void fnmap_destroy(void);
 

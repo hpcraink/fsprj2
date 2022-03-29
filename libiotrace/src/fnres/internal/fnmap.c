@@ -48,7 +48,7 @@ static int sprint_fnmap_key(const fnmap_key_t *key, char *str_buf, size_t str_bu
 
 static void log_fnmap_key(const fnmap_key_t *key) {
     char* key_str_buf = NULL;
-    int key_str_buf_size = sprint_fnmap_key(key, NULL, 0) + ((int)sizeof((char)'\0'));
+    int key_str_buf_size = sprint_fnmap_key(key, NULL, 0) + 1;
     if (NULL != (key_str_buf = malloc(key_str_buf_size))) {
         sprint_fnmap_key(key, key_str_buf, key_str_buf_size);
         LIBIOTRACE_DEBUG("fnmap-key: %s", key_str_buf);
@@ -84,7 +84,7 @@ void fnmap_create(long max_size) {
 }
 
 void fnmap_destroy(void) {
-    if (NULL == global_map) {   /* Used to be assert */
+    if (!global_map) {   /* Used to be assert */
         LIBIOTRACE_ERROR("fnmap hasn't been init'ed yet");
     }
 
@@ -96,7 +96,7 @@ void fnmap_destroy(void) {
 }
 
 int fnmap_get(const fnmap_key_t *key, char **found_fname) {
-    if (NULL == global_map || NULL == key) {   /* Used to be assert */
+    if (!global_map || !key) {   /* Used to be assert */
         LIBIOTRACE_ERROR("Invalid key or uninit fnmap");
     }
 
@@ -109,7 +109,7 @@ int fnmap_get(const fnmap_key_t *key, char **found_fname) {
 }
 
 void fnmap_add_or_update(const fnmap_key_t *key, const char *fname) {
-    if (NULL == global_map || NULL == key || NULL == fname) {   /* Used to be assert */
+    if (!global_map || !key || !fname) {   /* Used to be assert */
         LIBIOTRACE_ERROR("Invalid key / fname or uninit fnmap");
     }
 
@@ -142,7 +142,7 @@ void fnmap_add_or_update(const fnmap_key_t *key, const char *fname) {
 }
 
 void fnmap_remove(const fnmap_key_t *key) {
-    if (NULL == global_map || NULL == key) {   /* Used to be assert */
+    if (!global_map || !key) {   /* Used to be assert */
         LIBIOTRACE_ERROR("Invalid key or uninit fnmap");
     }
 

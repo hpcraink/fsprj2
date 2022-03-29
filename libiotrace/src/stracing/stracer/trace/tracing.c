@@ -10,8 +10,14 @@
 
 
 /* -- Functions -- */
-void tracing_attach_tracee(pid_t tid) {
-    DIE_WHEN_ERRNO( ptrace(PTRACE_ATTACH, tid) );
+pid_t tracing_attach_tracee(pid_t tid) {
+    if (-1 == ptrace(PTRACE_ATTACH, tid) ) {
+        if (ESRCH == errno) {
+            LOG_WARN("`PTRACE_ATTACH` %d -- %s", tid, strerror(errno));
+            return -1;          // In case process died shortly after sending request
+        }
+        LOG_ERROR_AND_EXIT("`PTRACE_ATTACH` %d -- %s", tid, strerror(errno));
+    }
 
     int tracee_status;
     do {
@@ -22,6 +28,8 @@ void tracing_attach_tracee(pid_t tid) {
                            tid,
                            0,
                            PTRACE_O_TRACESYSGOOD) );
+
+    return tid;
 }
 
 

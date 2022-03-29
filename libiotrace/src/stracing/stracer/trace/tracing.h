@@ -5,7 +5,7 @@
 
 
 /* -- Function prototypes -- */
-void tracing_attach_tracee(pid_t tid);
+pid_t tracing_attach_tracee(pid_t tid);
 int tracing_set_bp_and_check_trap(pid_t next_bp_tid);
 
 

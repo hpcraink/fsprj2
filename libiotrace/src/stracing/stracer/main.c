@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
         DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
         for (uxd_sock_ipc_requests_t ipc_request; ; ) {
             const int status = uxd_ipc_receive_new_request(uxd_reg_sock_fd,&ipc_request, NULL);
-            if (-2 == status) { continue; }
+            if (-2 == status)      { continue; }
             else if (-1 == status) { break; }
 
             switch (ipc_request.request_type) {
@@ -104,12 +104,14 @@ int main(int argc, char** argv) {
                     continue;
 
                 case TRACEE_REQUEST_TRACING:
-                    new_tracee_tid = ipc_request.payload.tracee_tid;
-                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: Received tracing request from tid=%d", new_tracee_tid);
-                    tracing_attach_tracee(new_tracee_tid);
-                    tracee_count++;
-                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: +++ Attached tracee w/ tid=%d +++", new_tracee_tid);
-                    break;  /* We must exit loop here to set breakpoint for just attached tracee .. */
+                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
+                    new_tracee_tid = tracing_attach_tracee(ipc_request.payload.tracee_tid);
+                    if (-1 != new_tracee_tid) {
+                        tracee_count++;
+                        DEV_DEBUG_PRINT_MSG(">>> IPC requests: +++ Attached tracee w/ tid=%d +++", new_tracee_tid);
+                        break;  /* We must exit loop here to set breakpoint for just attached tracee .. */
+                    }
+                    continue;
 
                 default:
                     LOG_WARN("Invalid ipc-request");

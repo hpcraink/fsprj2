@@ -17,7 +17,7 @@
 
 /* -- Globals / Consts -- */
 #define STRACER_EXEC_FILENAME "libiotrace_stracer"
-#define SYSCALLS_TO_BE_TRACED "open"
+#define SYSCALLS_TO_BE_TRACED "open,openat"
 
 
 /* --- Functions --- */

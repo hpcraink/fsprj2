@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
     for (int tracee_count = 0; ; ) {
-                                #include <time.h>
-                                nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);            // TESTING
+//                                #include <time.h>
+//                                nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);            // TESTING
 
         pid_t new_tracee_tid = -1;
 

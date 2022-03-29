@@ -86,5 +86,5 @@ void stracing_register_with_stracer(void) {
     uxd_ipc_send_tracing_request(STRACING_UXD_SOCKET_FILEPATH);
 
 /* (2) Wait for stracer to wake us up ...  */
-//    while (wait(NULL) < 0 && EINTR == errno);
+    while (wait(NULL) < 0 && EINTR == errno);
 }

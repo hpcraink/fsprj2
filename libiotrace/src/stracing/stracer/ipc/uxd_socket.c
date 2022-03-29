@@ -96,7 +96,7 @@ int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd,
         if (-1 == rv) {
             if (EINTR == errno) {       /* Interrupted by signal (relevant when signal handlers have been registered) */
                 remaining_time_in_ms -= (int)(end_time_in_ns - start_time_in_ns) / 1000000;
-                DEV_DEBUG_PRINT_MSG("TIMEOUT -- remaining=%d ms: Got interrupted up by signal, "
+                DEV_DEBUG_PRINT_MSG("`remaining_time_in_ms`=%d ms: Got interrupted up by signal, "
                                     "sleeping again ...", remaining_time_in_ms);
                 continue;
             }

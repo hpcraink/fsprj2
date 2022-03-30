@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
         pid_t new_tracee_tid = -1;
 
     /* (3.0) Check for new ipc requests */
-        DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
+//        DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
         for (uxd_sock_ipc_requests_t ipc_request; ; ) {
             const int status = uxd_ipc_receive_new_request(uxd_reg_sock_fd,&ipc_request, NULL);
             if (-2 == status)      { continue; }
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
                     new_tracee_tid = tracing_attach_tracee(ipc_request.payload.tracee_tid);
                     if (-1 != new_tracee_tid) {
                         tracee_count++;
-                        DEV_DEBUG_PRINT_MSG(">>> IPC requests: +++ Attached tracee w/ tid=%d +++", new_tracee_tid);
+                        DEV_DEBUG_PRINT_MSG(">>> IPC requests/Tracing: +++ Attached tracee w/ tid=%d +++", new_tracee_tid);
                         break;  /* We must exit loop here to set breakpoint for just attached tracee .. */
                     }
                     continue;
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
 
 
     /* (3.1) Check whether we can exit */
-        DEV_DEBUG_PRINT_MSG(">> Exit condition: Checking tracee count");
+//        DEV_DEBUG_PRINT_MSG(">> Exit condition: Checking tracee count");
         if (0 == tracee_count) {
             DEV_DEBUG_PRINT_MSG(">>> Exit condition -- TIMEOUT: No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
             if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) { continue; }
@@ -130,12 +130,12 @@ int main(int argc, char** argv) {
 
 
     /* (3.2) Trace */
-        DEV_DEBUG_PRINT_MSG(">> Tracing: Setting bp for attached tracees + Checking for new trap");
+//        DEV_DEBUG_PRINT_MSG(">> Tracing: Setting bp for attached tracees + Checking for new trap");
         for (pid_t trapped_tracee_sttid = new_tracee_tid; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
 
         /* 3.2.1. Check whether there's a trapped tracee */
             if (0 == (trapped_tracee_sttid = tracing_set_bp_and_check_trap(trapped_tracee_sttid)) ) {
-                DEV_DEBUG_PRINT_MSG(">>> Tracing: No pending trapped tracees");
+//                DEV_DEBUG_PRINT_MSG(">>> Tracing: No pending trapped tracees");
                 break;
             }
 
@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
         /* 3.2.2. Check status */
             /*   -> Tracee terminated */
             if (0 > trapped_tracee_sttid) {
-                DEV_DEBUG_PRINT_MSG(">>> Tracing: +++ [%d] terminated +++\n", -(trapped_tracee_sttid));
+                DEV_DEBUG_PRINT_MSG(">>> Tracing: +++ [%d] terminated +++", -(trapped_tracee_sttid));
                 tracee_count--;
                 break;
 

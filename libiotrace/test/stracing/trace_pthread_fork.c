@@ -235,7 +235,6 @@ void* routine(void* arg) {
 
 
 int main(int argc, char** argv) {
-
     cli_args_t args;
     if (-1 == parse_cli_args(argc, argv, &args)) {
         usage(argv);
@@ -243,9 +242,13 @@ int main(int argc, char** argv) {
     }
 
 
-    FILE *outfile = (args.to_file) ?
-            (FILE*)DIE_WHEN_ERRNO_VPTR( freopen("trace_pthread_fork_redirected_stdout.log", "a+", stdout) ) :
-            NULL;
+    FILE *outfile = NULL;
+    if (args.to_file) {
+        const char* const logfile = "trace_pthread_fork_redirected_stdout.log";
+        fprintf(stdout, "Redirecting output (after this line) from `stdout` to logfile \"%s\"", logfile);
+        outfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(logfile, "a+", stdout) );
+    }
+
     /* Disable IO buffering */
     if (0 != setvbuf(args.to_file ? outfile : stdout, NULL, _IONBF, 0)) {
         LOG_WARN("Couldn't change buffering options");

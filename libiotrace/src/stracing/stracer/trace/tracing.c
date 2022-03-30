@@ -15,20 +15,20 @@
 pid_t tracing_attach_tracee(pid_t tid) {
     if (-1 == ptrace(PTRACE_ATTACH, tid) ) {
         if (ESRCH == errno) {
-            LOG_WARN("`PTRACE_ATTACH` %d -- %s", tid, strerror(errno));
+            LOG_WARN("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
             return -1;              // In case process died shortly after sending request
         }
-        LOG_ERROR_AND_EXIT("`PTRACE_ATTACH` %d -- %s", tid, strerror(errno));
+        LOG_ERROR_AND_EXIT("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
     }
 
     int tracee_status;
     do {
         if ( -1 == waitpid(tid, &tracee_status, 0) ) {
             if (ECHILD == errno || ESRCH == errno) {
-                LOG_WARN("`waitpid` %d -- %s", tid, strerror(errno));
+                LOG_WARN("`waitpid` on tid=%d -- %s", tid, strerror(errno));
                 return -1;          // In case process died shortly after sending request
             }
-            LOG_ERROR_AND_EXIT("`waitpid` %d -- %s", tid, strerror(errno));
+            LOG_ERROR_AND_EXIT("`waitpid` on tid=%d -- %s", tid, strerror(errno));
         }
     } while (!WIFSTOPPED(tracee_status));
 
@@ -84,7 +84,7 @@ int tracing_set_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = breakpo
 
             /* (IV) Signal-delivery stops */
             } else {
-                fprintf(stderr, "\n+++ [%d] received (not delivered yet) signal \"%s\" +++\n", next_bp_tid, strsignal(stopsig));
+                DEV_DEBUG_PRINT_MSG(">>> Tracing: +++ [%d] received (not delivered yet) signal \"%s\" +++", next_bp_tid, strsignal(stopsig));
                 pending_signal = stopsig;
             }
 

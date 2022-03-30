@@ -13,6 +13,7 @@
 
 /* -- Functions -- */
 pid_t tracing_attach_tracee(pid_t tid) {
+/* 0. Attach tracee (sends `SIGSTOP` to tracee) */
     if (-1 == ptrace(PTRACE_ATTACH, tid) ) {
         if (ESRCH == errno) {
             LOG_WARN("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
@@ -21,6 +22,7 @@ pid_t tracing_attach_tracee(pid_t tid) {
         LOG_ERROR_AND_EXIT("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
     }
 
+/* 1. Wait until tracee has stopped (after receiving `SIGSTOP`) */
     int tracee_status;
     do {
         if ( -1 == waitpid(tid, &tracee_status, 0) ) {
@@ -32,16 +34,20 @@ pid_t tracing_attach_tracee(pid_t tid) {
         }
     } while (!WIFSTOPPED(tracee_status));
 
+/* 2. Set ptrace options for tracee */
     DIE_WHEN_ERRNO( ptrace(PTRACE_SETOPTIONS,
                            tid,
                            0,
                            PTRACE_O_TRACESYSGOOD) );
 
+/* 3. Set 1st breakpoint for tracee (which will resume tracee) */
+    DIE_WHEN_ERRNO( ptrace(PTRACE_SYSCALL, tid, 0, 0) );
+
     return tid;
 }
 
 
-int tracing_set_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = breakpoint; Reports only 'trap events' which are due to termination or stops caused by syscall's */
+int tracing_set_next_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = breakpoint; Reports only 'trap events' which are due to termination or stops caused by syscall's */
 
     for (int pending_signal = 0; ; ) {
     /* (0) Restart stopped tracee but set next breakpoint (on next syscall)   (AND "forward" received signal to tracee) */

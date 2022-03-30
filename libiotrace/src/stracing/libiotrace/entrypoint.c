@@ -26,7 +26,8 @@ void stracing_init_stracer(char *ld_preload_env_val) {
 
 /* (0) Parent: Establish tracer's UXD registration socket */
     int uxd_reg_sock_fd;
-    if (-1 == (uxd_reg_sock_fd = uxd_ipc_sock_init(STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
+    if (-1 == (uxd_reg_sock_fd = uxd_ipc_parent_sock_init(STRACING_UXD_SOCKET_FILEPATH,
+                                                          STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
         DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A stracer instance is already running", gettid());
         return;
     }
@@ -83,9 +84,12 @@ void stracing_register_with_stracer(void) {
 
 /* (1) Send tracing request */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
-    uxd_ipc_send_tracing_request(STRACING_UXD_SOCKET_FILEPATH);
+    int server_conn_fd;
+    uxd_ipc_tracee_send_tracing_req(STRACING_UXD_SOCKET_FILEPATH, &server_conn_fd);
 
-/* (2) Wait for stracer to wake us up ...  */
-    kill(getpid(), SIGSTOP);            // TODO: ASK WHETHER OK ..      --> pause();
-    DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%ld] Got (hopefully) attached by stracer, proceeding ...", gettid());
+/* (2) Block until it's confirmed (or die) */
+    uxd_ipc_tracee_block_until_tracing_ack(server_conn_fd);
+    CALL_REAL_POSIX_SYNC(close)(server_conn_fd);
+
+    DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%ld] Got attached by stracer, proceeding ...", gettid());
 }

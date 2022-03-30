@@ -27,9 +27,22 @@ static int uxd_sock_accept(int uxd_reg_sock_fd) {
     return conn_fd;
 }
 
+static void uxd_sock_write(int uxd_reg_sock_fd,
+                           uxd_sock_ipc_msg_t* ipc_request) {
+    const size_t msg_to_send_len_bytes = sizeof(*ipc_request);
+    size_t total_bytes_sent = 0,
+            cur_bytes_sent;
+    do {
+        cur_bytes_sent = DIE_WHEN_ERRNO( write(uxd_reg_sock_fd, ipc_request + total_bytes_sent, msg_to_send_len_bytes - total_bytes_sent) );
+        total_bytes_sent += cur_bytes_sent;
+    } while (cur_bytes_sent > 0 && total_bytes_sent < msg_to_send_len_bytes);
+
+    assert( sizeof(*ipc_request) == total_bytes_sent && "Wrote incomplete ipc_request" );
+}
+
 static int uxd_sock_read(int conn_fd,
-                          uxd_sock_ipc_requests_t *ipc_request,
-                          pid_t *cr_pid) {
+                         uxd_sock_ipc_msg_t *ipc_request,
+                         pid_t *cr_pid) {
     assert( ipc_request && 0 <= conn_fd && "`ipc_request` and `conn_fd` may be valid" );
 
     memset(ipc_request, 0, sizeof(*ipc_request));
@@ -58,30 +71,27 @@ static int uxd_sock_read(int conn_fd,
 
 
 /* - Public - */
-int uxd_ipc_receive_new_request(int uxd_reg_sock_fd,
-                                uxd_sock_ipc_requests_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
+int uxd_ipc_tracer_recv_new_request(int uxd_reg_sock_fd, int* tracee_conn_fd_ptr,
+                                    uxd_sock_ipc_msg_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
 /* Accept request from backlog */
-    int conn_fd;
-    if (-1 == (conn_fd = uxd_sock_accept(uxd_reg_sock_fd))) {
+    if (-1 == (*tracee_conn_fd_ptr = uxd_sock_accept(uxd_reg_sock_fd))) {
         return -1;                      /* `-1` = No new request(s) */
     }
 
 /* Read request */
-    const int rv = uxd_sock_read(conn_fd, ipc_req_ptr, cr_pid_ptr);
-    DIE_WHEN_ERRNO( close(conn_fd) );
+    const int rv = uxd_sock_read(*tracee_conn_fd_ptr, ipc_req_ptr, cr_pid_ptr);
 
     return (rv == -1) ? (-2) : (0);     /* `-2` = incomplete (thus, invalid) request, `0` = valid request */
 }
 
-
-void uxd_ipc_sock_fin(int uxd_reg_sock_fd, char* socket_filepath) {
-    DIE_WHEN_ERRNO( close(uxd_reg_sock_fd) );
-    DIE_WHEN_ERRNO( unlink(socket_filepath) );
+void uxd_ipc_tracer_send_tracing_ack(int tracee_conn_fd) {
+    uxd_sock_write(
+            tracee_conn_fd,
+            (uxd_sock_ipc_msg_t[]){{ .msg_type = TRACER_REQUEST_ACCEPTED }});
 }
 
-
-int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd,
-                                           int timeout_in_ms) {
+int uxd_ipc_tracer_block_until_request_or_timeout(int uxd_reg_sock_fd,
+                                                  int timeout_in_ms) {
     struct pollfd fd;
     memset(&fd, 0, sizeof(fd));
     fd.events = POLLIN;
@@ -105,4 +115,9 @@ int uxd_ipc_block_until_request_or_timeout(int uxd_reg_sock_fd,
 
         return ((rv > 0) && (fd.revents & POLLIN));
     }
+}
+
+void uxd_ipc_tracer_sock_fin(int uxd_reg_sock_fd, char* socket_filepath) {
+    DIE_WHEN_ERRNO( close(uxd_reg_sock_fd) );
+    DIE_WHEN_ERRNO( unlink(socket_filepath) );
 }

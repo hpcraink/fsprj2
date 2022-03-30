@@ -5,13 +5,14 @@
 /* -- Data types -- */
 typedef struct {
     enum {
-        PROBE_TRACER_RUNNING,
-        TRACEE_REQUEST_TRACING
-    } request_type;
+        PARENT_PROBE_TRACER_RUNNING,
+        PARENT_REQUEST_TRACING,
+        TRACER_REQUEST_ACCEPTED
+    } msg_type;
     union {
         pid_t tracee_tid;
-    } payload;
-} uxd_sock_ipc_requests_t;
+    } msg_payload;
+} uxd_sock_ipc_msg_t;
 
 
 #endif /* LIBIOTRACE_STRACER_IPC_H */

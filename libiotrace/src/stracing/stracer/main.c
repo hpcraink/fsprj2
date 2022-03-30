@@ -81,6 +81,7 @@ int main(int argc, char** argv) {
 //    unwind_init();
 
 
+/* --------------------- --------------------- --------------------- --------------------- --------------------- */
 /* (3) Start tracing .. */
     const pid_t tracer_pid = getpid();
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
@@ -89,33 +90,39 @@ int main(int argc, char** argv) {
 //                                #include <time.h>
 //                                nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);            // TESTING
 
-        pid_t new_tracee_tid = -1;
 
     /* (3.0) Check for new ipc requests */
 //        DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
-        for (uxd_sock_ipc_requests_t ipc_request; ; ) {
-            const int status = uxd_ipc_receive_new_request(uxd_reg_sock_fd,&ipc_request, NULL);
-            if (-2 == status)      { continue; }
-            else if (-1 == status) { break; }
+        for (;;) {
+            int tracee_connfd;
+            uxd_sock_ipc_msg_t ipc_request;
+            const int status = uxd_ipc_tracer_recv_new_request(uxd_reg_sock_fd, &tracee_connfd,
+                                                               &ipc_request, NULL);
+            if (-1 == status)      { break; }
+            else if (-2 == status) { goto cleanup; }
 
-            switch (ipc_request.request_type) {
-                case PROBE_TRACER_RUNNING:
+            switch (ipc_request.msg_type) {
+                case PARENT_PROBE_TRACER_RUNNING:
                     DEV_DEBUG_PRINT_MSG(">>> IPC requests: I'm still running (pid=%d)..", tracer_pid);
-                    continue;
+                    break; /* APPLIES TO SWITCH-CASE !! */
 
-                case TRACEE_REQUEST_TRACING:
-                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: Received tracing request from tid=%d", ipc_request.payload.tracee_tid);
-                    new_tracee_tid = tracing_attach_tracee(ipc_request.payload.tracee_tid);
+                case PARENT_REQUEST_TRACING:
+                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: Received tracing request from tid=%d", ipc_request.msg_payload.tracee_tid);
+                    const pid_t new_tracee_tid = tracing_attach_tracee(ipc_request.msg_payload.tracee_tid);
                     if (-1 != new_tracee_tid) {
                         tracee_count++;
-                        DEV_DEBUG_PRINT_MSG(">>> IPC requests/Tracing: +++ Attached tracee w/ tid=%d +++", new_tracee_tid);
-                        break;  /* We must exit loop here to set breakpoint for just attached tracee .. */
+                        DEV_DEBUG_PRINT_MSG(">>> IPC requests/Tracing: +++ Attached tracee + set 1st bp for %d +++", new_tracee_tid);
+                        uxd_ipc_tracer_send_tracing_ack(tracee_connfd);
                     }
-                    continue;
+                    break; /* APPLIES TO SWITCH-CASE !! */
 
+                case TRACER_REQUEST_ACCEPTED:
                 default:
                     LOG_WARN("Invalid ipc-request");
             }
+
+        cleanup:
+            DIE_WHEN_ERRNO( close(tracee_connfd) );
         }
 
 
@@ -123,7 +130,7 @@ int main(int argc, char** argv) {
 //        DEV_DEBUG_PRINT_MSG(">> Exit condition: Checking tracee count");
         if (0 == tracee_count) {
             DEV_DEBUG_PRINT_MSG(">>> Exit condition -- TIMEOUT: No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
-            if (uxd_ipc_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) { continue; }
+            if (uxd_ipc_tracer_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) { continue; }
             DEV_DEBUG_PRINT_MSG(">>> Exit condition -- TIMEOUT: Has lapsed, terminating ...");
             break;
         }
@@ -131,14 +138,13 @@ int main(int argc, char** argv) {
 
     /* (3.2) Trace */
 //        DEV_DEBUG_PRINT_MSG(">> Tracing: Setting bp for attached tracees + Checking for new trap");
-        for (pid_t trapped_tracee_sttid = new_tracee_tid; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
+        for (pid_t trapped_tracee_sttid = -1; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
 
         /* 3.2.1. Check whether there's a trapped tracee */
-            if (0 == (trapped_tracee_sttid = tracing_set_bp_and_check_trap(trapped_tracee_sttid)) ) {
+            if (! (trapped_tracee_sttid = tracing_set_next_bp_and_check_trap(trapped_tracee_sttid)) ) {
 //                DEV_DEBUG_PRINT_MSG(">>> Tracing: No pending trapped tracees");
                 break;
             }
-
 
         /* 3.2.2. Check status */
             /*   -> Tracee terminated */
@@ -176,12 +182,12 @@ int main(int argc, char** argv) {
                 }
             }
         }
-
     }
+/* --------------------- --------------------- --------------------- --------------------- --------------------- */
 
 
 /* (3) Cleanup */
-    uxd_ipc_sock_fin(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
+    uxd_ipc_tracer_sock_fin(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
 #ifdef USE_LOGFILE
     fclose(stdout_logfile);
     fclose(stderr_logfile);

@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/wait.h>
-#include "../error.h"
+#include "../common/error.h"
 
 #include <stdlib.h>
 

@@ -7,7 +7,7 @@
 #include <unistd.h>         /* execvp, close, dup, dup2, pipe, fork, execvp */
 #include <sys/wait.h>       /* waitpid */
 
-#include "error.h"
+#include "common/error.h"
 
 
 /* -- Constants -- */

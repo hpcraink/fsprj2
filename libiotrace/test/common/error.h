@@ -37,4 +37,9 @@
     (-1 == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); -1; }) : __val); \
   }); })
 
+#define DIE_WHEN_ERRNO_VPTR(FUNC) __extension__({ ({                                  \
+    void* __val = (FUNC);                                                             \
+    (NULL == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); NULL; }) : __val); \
+  }); })
+
 #endif /* TESTING_ERROR_H */

@@ -20,7 +20,7 @@
 
 #include <stdbool.h>
 
-#include "../error.h"
+#include "../common/error.h"
 
 
 
@@ -28,13 +28,15 @@
 #define CLI_FORK_OPTION    "--fork"
 #define CLI_PTHREAD_OPTION "--pthread"
 #define CLI_LOOP_OPTION    "--loop"
+#define CLI_TO_FILE        "--to-file"
 #define CLI_HELP_OPTION    "--help"
 
 void usage(char** argv) {
-    fprintf(stderr, "Usage: %s ["CLI_LOOP_OPTION"] ["CLI_FORK_OPTION" | "CLI_PTHREAD_OPTION"]\n", argv[0]);
+    fprintf(stderr, "Usage: %s ["CLI_TO_FILE"] ["CLI_LOOP_OPTION"] ["CLI_FORK_OPTION" | "CLI_PTHREAD_OPTION"]\n", argv[0]);
 }
 
 typedef struct {
+    bool to_file;
     bool loop;
     bool fork;
     bool pthread;
@@ -42,6 +44,7 @@ typedef struct {
 
 int parse_cli_args(int argc, char** argv, cli_args_t* args) {
     /* - Defaults - */
+    args->to_file = false;
     args->loop = false;
     args->fork = false;
     args->pthread = false;
@@ -50,6 +53,11 @@ int parse_cli_args(int argc, char** argv, cli_args_t* args) {
         if (!strcmp(CLI_HELP_OPTION, argv[i])) {
             usage(argv);
             exit(0);
+        }
+
+        if (!strcmp(CLI_TO_FILE, argv[i])) {
+            args->to_file = true;
+            continue;
         }
 
         if (!strcmp(CLI_LOOP_OPTION, argv[i])) {
@@ -234,9 +242,13 @@ int main(int argc, char** argv) {
         return(1);
     }
 
-    /* Disable IO buffering for stdout */
-    if (0 != setvbuf(stdout, NULL, _IONBF, 0)) {
-        LOG_WARN("Couldn't change buffering for `stdout`");
+
+    FILE *outfile = (args.to_file) ?
+            (FILE*)DIE_WHEN_ERRNO_VPTR( freopen("trace_pthread_fork_redirected_stdout.log", "a+", stdout) ) :
+            NULL;
+    /* Disable IO buffering */
+    if (0 != setvbuf(args.to_file ? outfile : stdout, NULL, _IONBF, 0)) {
+        LOG_WARN("Couldn't change buffering options");
     }
 
 /* - fork - */
@@ -268,6 +280,11 @@ int main(int argc, char** argv) {
     } else {
         puts("Running single threaded ...");
         routine((routine_arg_t[]){{ .pname = "Thread-0", .loop=args.loop, .sig_handler_func_ptr = &parent_signal_handler }});
+    }
+
+
+    if (args.to_file) {
+        fclose(outfile);
     }
 
     return 0;

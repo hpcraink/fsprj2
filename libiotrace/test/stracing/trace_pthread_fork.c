@@ -212,6 +212,7 @@ void register_sig_handlers(void(*sig_handler_func_ptr)(int)) {
 
 /* -- Actual test program -- */
 typedef struct {
+    bool to_file;
     char* pname;
     bool loop;
     void(*sig_handler_func_ptr)(int);
@@ -219,16 +220,28 @@ typedef struct {
 
 void* routine(void* arg) {
     const char* const pname = ((routine_arg_t*)arg)->pname;
+    const bool to_file = ((routine_arg_t*)arg)->to_file;
     const bool loop = ((routine_arg_t*)arg)->loop;
     void(*sig_handler_func_ptr)(int) = ((routine_arg_t*)arg)->sig_handler_func_ptr;
 
+/* 0. Setup */
     register_sig_handlers(sig_handler_func_ptr);
 
+    FILE *outfile = to_file ?
+            DIE_WHEN_ERRNO_VPTR( tmpfile() ) :
+            stdout;
+
+/* 1. Do stuff */
     do {
-        printf("tid = %5d, pid = %5d, ppid = %5d, pgid = %5d, sid = %5d [%s]\n",
+        fprintf(outfile, "tid = %5d, pid = %5d, ppid = %5d, pgid = %5d, sid = %5d [%s]\n",
                gettid(), getpid(), getppid(), getpgid(0), getsid(0), pname);
         nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);
     } while(loop);
+
+/* 2. Cleanup */
+    if (to_file) {
+        fclose(outfile);
+    }
 
     return NULL;
 }
@@ -242,24 +255,15 @@ int main(int argc, char** argv) {
     }
 
 
-    FILE *outfile = NULL;
-    if (args.to_file) {
-        const char* const logfile = "trace_pthread_fork_redirected_stdout.log";
-        fprintf(stdout, "Redirecting output (after this line) from `stdout` to logfile \"%s\"", logfile);
-        outfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(logfile, "a+", stdout) );
-    }
-
-    /* Disable IO buffering */
-    if (0 != setvbuf(args.to_file ? outfile : stdout, NULL, _IONBF, 0)) {
-        LOG_WARN("Couldn't change buffering options");
-    }
-
 /* - fork - */
     if (args.fork) {
         puts("Forking child ...");
         const pid_t child_pid = DIE_WHEN_ERRNO( fork() );
 
-        routine((routine_arg_t[]){{ .pname = (!child_pid) ? "Child" : "Parent", .loop=args.loop, .sig_handler_func_ptr=(!child_pid) ? &child_signal_handler : &parent_signal_handler }});
+        routine((routine_arg_t[]){{ .pname = (!child_pid) ? "Child" : "Parent",
+                                    .to_file = args.to_file,
+                                    .loop=args.loop,
+                                    .sig_handler_func_ptr=(!child_pid) ? &child_signal_handler : &parent_signal_handler }});
 
         if (child_pid) {
             DIE_WHEN_ERRNO( wait(NULL) );         /* Wait for child process to exit */
@@ -270,24 +274,31 @@ int main(int argc, char** argv) {
         puts("Creating additional thread ...");
         pthread_t t1;
 
-        //pthread_create(&t1, NULL, routine, (routine_arg_t[]){{ .pname = "Thread-1", .loop=args.loop, .sig_handler_func_ptr = &child_signal_handler }});
+//        pthread_create(&t1, NULL, routine, (routine_arg_t[]){{ .pname = "Thread-1",
+//                                                               .to_file = args.to_file,
+//                                                               .loop=args.loop,
+//                                                               .sig_handler_func_ptr = &child_signal_handler }});
         // Checking (as shown above) causes it to print "Thread-0" (instead of "Thread-1")
-        if (0 != pthread_create(&t1, NULL, routine, (routine_arg_t[]){{ .pname = "Thread-1", .loop=args.loop, .sig_handler_func_ptr = &child_signal_handler }}) ) {      // NOTE: Child-thread will overwrite parent's signal handler ??
+        if (0 != pthread_create(&t1, NULL, routine, (routine_arg_t[]){{ .pname = "Thread-1",
+                                                                        .to_file = args.to_file,
+                                                                        .loop=args.loop,
+                                                                        .sig_handler_func_ptr = &child_signal_handler }}) ) {      // NOTE: Child-thread will overwrite parent's signal handler ??
             LOG_ERROR_AND_EXIT("Couldn't create additional thread!");
         }
 
-        routine((routine_arg_t[]){{ .pname = "Thread-0", .loop=args.loop, .sig_handler_func_ptr = &parent_signal_handler }});
+        routine((routine_arg_t[]){{ .pname = "Thread-0",
+                                    .to_file = args.to_file,
+                                    .loop=args.loop,
+                                    .sig_handler_func_ptr = &parent_signal_handler }});
         pthread_join(t1, NULL);
 
 /* - default (single threaded) - */
     } else {
         puts("Running single threaded ...");
-        routine((routine_arg_t[]){{ .pname = "Thread-0", .loop=args.loop, .sig_handler_func_ptr = &parent_signal_handler }});
-    }
-
-
-    if (args.to_file) {
-        fclose(outfile);
+        routine((routine_arg_t[]){{ .pname = "Thread-0",
+                                    .to_file = args.to_file,
+                                    .loop=args.loop,
+                                    .sig_handler_func_ptr = &parent_signal_handler }});
     }
 
     return 0;

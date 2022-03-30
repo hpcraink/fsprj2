@@ -3,6 +3,8 @@
 
 #include "tracing.h"
 #include "../common/error.h"
+#define DEV_DEBUG_ENABLE_LOGS
+#include "common/debug.h"
 
 
 /* -- Consts -- */
@@ -14,14 +16,20 @@ pid_t tracing_attach_tracee(pid_t tid) {
     if (-1 == ptrace(PTRACE_ATTACH, tid) ) {
         if (ESRCH == errno) {
             LOG_WARN("`PTRACE_ATTACH` %d -- %s", tid, strerror(errno));
-            return -1;          // In case process died shortly after sending request
+            return -1;              // In case process died shortly after sending request
         }
         LOG_ERROR_AND_EXIT("`PTRACE_ATTACH` %d -- %s", tid, strerror(errno));
     }
 
     int tracee_status;
     do {
-        DIE_WHEN_ERRNO( waitpid(tid, &tracee_status, 0) );
+        if ( -1 == waitpid(tid, &tracee_status, 0) ) {
+            if (ECHILD == errno || ESRCH == errno) {
+                LOG_WARN("`waitpid` %d -- %s", tid, strerror(errno));
+                return -1;          // In case process died shortly after sending request
+            }
+            LOG_ERROR_AND_EXIT("`waitpid` %d -- %s", tid, strerror(errno));
+        }
     } while (!WIFSTOPPED(tracee_status));
 
     DIE_WHEN_ERRNO( ptrace(PTRACE_SETOPTIONS,
@@ -39,6 +47,7 @@ int tracing_set_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = breakpo
     /* (0) Restart stopped tracee but set next breakpoint (on next syscall)   (AND "forward" received signal to tracee) */
         if (-1 != next_bp_tid) {        /* Check only (i.e., don't set breakpoint) */
             DIE_WHEN_ERRNO( ptrace(PTRACE_SYSCALL, next_bp_tid, 0, pending_signal) );
+            DEV_DEBUG_PRINT_MSG(">>> Tracing: Set next bp for %d", next_bp_tid);
         }
 
         /* Reset signal (after it has been delivered) */

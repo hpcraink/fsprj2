@@ -134,7 +134,6 @@ int main(int argc, char** argv) {
         for (pid_t trapped_tracee_sttid = new_tracee_tid; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
 
         /* 3.2.1. Check whether there's a trapped tracee */
-            DEV_DEBUG_PRINT_MSG(">>> Tracing: Setting next bp for %d", trapped_tracee_sttid);
             if (0 == (trapped_tracee_sttid = tracing_set_bp_and_check_trap(trapped_tracee_sttid)) ) {
                 DEV_DEBUG_PRINT_MSG(">>> Tracing: No pending trapped tracees");
                 break;

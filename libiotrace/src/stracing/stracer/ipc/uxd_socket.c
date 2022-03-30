@@ -14,7 +14,7 @@
 
 
 /* -- Functions -- */
-/* - Helpers - */
+/* - Internal - */
 static int uxd_sock_accept(int uxd_reg_sock_fd) {
     int conn_fd;
     if (-1 == (conn_fd = accept(uxd_reg_sock_fd, NULL, NULL))) {

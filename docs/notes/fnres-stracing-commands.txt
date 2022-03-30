@@ -44,9 +44,8 @@ EOF
 
 
 - Testing:
-    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork)
-    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork)
-    (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --pthread)
+    :> test/libiotrace_stracer.log && :> trace_pthread_fork_redirected_stdout.log  && (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork --to-file)
+    codium test/trace_pthread_fork_redirected_stdout.log ./test/libiotrace_stracer.log
 
     (cd test && IOTRACE_LOG_NAME=stracing_descendants_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants)
 

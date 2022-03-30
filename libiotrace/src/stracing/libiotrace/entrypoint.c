@@ -74,7 +74,7 @@ void stracing_init_stracer(char *ld_preload_env_val) {
                       exec_arg_tasks,
                       NULL,
                       NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */
-    LIBIOTRACE_ERROR("`exec` failed -- %s", strerror(errno));
+    LIBIOTRACE_ERROR("`exec` of stracer failed -- %s", strerror(errno));
 }
 
 
@@ -87,7 +87,7 @@ void stracing_register_with_stracer(void) {
     int server_conn_fd;
     uxd_ipc_tracee_send_tracing_req(STRACING_UXD_SOCKET_FILEPATH, &server_conn_fd);
 
-/* (2) Block until it's confirmed (or die) */
+/* (2) Block until it's tracer sends acknowledgement (i.e., we're now being actively traced) */
     uxd_ipc_tracee_block_until_tracing_ack(server_conn_fd);
     CALL_REAL_POSIX_SYNC(close)(server_conn_fd);
 

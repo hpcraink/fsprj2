@@ -17,7 +17,7 @@
 
 
 /* -- Functions -- */
-/* - Helpers - */
+/* - Internal - */
 static int uxd_sock_connect(char* socket_filepath) {
 /* (1) Create socket */
     int server_fd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(socket)(AF_UNIX, SOCK_STREAM, 0) );
@@ -125,8 +125,6 @@ void uxd_ipc_tracee_send_tracing_req(char* socket_filepath, int* server_fd_ptr) 
 
 void uxd_ipc_tracee_block_until_tracing_ack(int server_conn_fd) {
     uxd_sock_ipc_msg_t ipc_request;
-
-    /* Read request */
     const int rv = uxd_sock_read(server_conn_fd, &ipc_request, NULL);
 
     if (!rv && TRACER_REQUEST_ACCEPTED == ipc_request.msg_type) { return; }

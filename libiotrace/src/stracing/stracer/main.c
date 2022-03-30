@@ -1,8 +1,8 @@
 /**
- * stracer -- System call Tracer
+ * stracer (aka. 'System call Tracer')
  *   - Lifecycle:
  *     - Gets launched by libiotrace as separate process
- *     - Tracees request to be traced by sending a tracing request (via a Unix Domain Socket)
+ *     - Tracees request to be traced by sending a tracing request (via a Unix Domain Socket used for IPC)
  *     - Tracer performs selected 'Task's on tracees (e.g., checking whether syscall has been traced)
  *     - Tracer terminates itself as soon as last tracee has exited and timeout has expired
  *
@@ -91,19 +91,19 @@ int main(int argc, char** argv) {
 //                                nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);            // TESTING
 
 
-    /* (3.0) Check for new ipc requests */
+    /* (3.0) Check for new IPC requests */
 //        DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
         for (;;) {
-            int tracee_connfd;
+            int tracee_conn_fd;
             uxd_sock_ipc_msg_t ipc_request;
-            const int status = uxd_ipc_tracer_recv_new_request(uxd_reg_sock_fd, &tracee_connfd,
+            const int status = uxd_ipc_tracer_recv_new_request(uxd_reg_sock_fd, &tracee_conn_fd,
                                                                &ipc_request, NULL);
             if (-1 == status)      { break; }
             else if (-2 == status) { goto cleanup; }
 
             switch (ipc_request.msg_type) {
                 case PARENT_PROBE_TRACER_RUNNING:
-                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: I'm still running (pid=%d)..", tracer_pid);
+                    DEV_DEBUG_PRINT_MSG(">>> IPC requests: Got probed; I'm still running (pid=%d)..", tracer_pid);
                     break; /* APPLIES TO SWITCH-CASE !! */
 
                 case PARENT_REQUEST_TRACING:
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
                     if (-1 != new_tracee_tid) {
                         tracee_count++;
                         DEV_DEBUG_PRINT_MSG(">>> IPC requests/Tracing: +++ Attached tracee + set 1st bp for %d +++", new_tracee_tid);
-                        uxd_ipc_tracer_send_tracing_ack(tracee_connfd);
+                        uxd_ipc_tracer_send_tracing_ack(tracee_conn_fd);
                     }
                     break; /* APPLIES TO SWITCH-CASE !! */
 
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
             }
 
         cleanup:
-            DIE_WHEN_ERRNO( close(tracee_connfd) );
+            DIE_WHEN_ERRNO( close(tracee_conn_fd) );
         }
 
 
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 
             /*   -> Tracee stopped (i.e., hit breakpoint) */
             } else {
-                DEV_DEBUG_PRINT_MSG(">>> Tracing: %d hit a breakpoint", trapped_tracee_sttid);
+//                DEV_DEBUG_PRINT_MSG(">>> Tracing: %d hit a breakpoint", trapped_tracee_sttid);
                 struct user_regs_struct_full regs;
                 ptrace_get_regs_content(trapped_tracee_sttid, &regs);
 
@@ -170,6 +170,7 @@ int main(int argc, char** argv) {
                 if (USER_REGS_STRUCT_SC_HAS_RTNED(regs)) {
                     const char* scall_name = syscalls_get_name(syscall_nr);
 
+                    fprintf(stderr, "[%d] ", trapped_tracee_sttid);
                     fprintf(stderr, "%s(", (scall_name) ? (scall_name) : ("UNKNOWN"));
                     syscalls_print_args(trapped_tracee_sttid, &regs);
                     fprintf(stderr, ")");

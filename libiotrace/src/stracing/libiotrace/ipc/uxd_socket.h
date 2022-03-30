@@ -3,8 +3,7 @@
 
 /* -- Function prototypes -- */
 /**
- * @brief                                 Creates Unix Domain Socket which will be used for IPC b/w stracer & tracees
- *                                        (e.g., request tracing, etc.)
+ * @brief                                 Creates Unix Domain Socket which will be used for IPC by stracer & tracee(s)
  *                                        The returned fd is then supposed to be passed to the `fork`(2)ed stracer
  *
  * @param[in] socket_filepath             Location where the socket file will be created on the fs
@@ -19,7 +18,7 @@ int uxd_ipc_parent_sock_init(char* socket_filepath, int socket_backlog_size);
 /**
  * @brief                                 Sends tracing request to stracer via specified \p socket_filepath
  *
- * @param[in] socket_filepath             The location of the socket file (which is used by the stracer)
+ * @param[in] socket_filepath             The location of the socket file (which is used for IPC w/ the stracer)
  * @param[out] server_fd_ptr              The fd opened for sending the request; used later for receiving acknowledgement
  */
 void uxd_ipc_tracee_send_tracing_req(char* socket_filepath, int* server_fd_ptr);

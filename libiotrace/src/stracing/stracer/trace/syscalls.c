@@ -54,6 +54,7 @@ void syscalls_print_args(__attribute__((unused)) pid_t tid, struct user_regs_str
     for (int arg_nr = 0; arg_nr < nargs; arg_nr++) {
         long arg = from_regs_struct_get_syscall_arg(regs, arg_nr);
         long type = ent ? ent->args[arg_nr] : ARG_PTR;      /* Default to `ARG_PTR` */
+
         switch (type) {
             case ARG_INT:
                 fprintf(stderr, "%ld", arg);
@@ -98,6 +99,7 @@ static void fprint_str_esc(FILE *stream, char *str) {
     for (int i = 0; '\0' != str[i]; i++) {
         const char c = str[i];
         if (isprint(c) && c != '\\') {
+            if ('"' == c) { fputc('\\', stream); }  /* Escape '"' */
             fputc(c, stream);
         } else {
             fprintf(stream, "\\x%02x", (unsigned char)c);

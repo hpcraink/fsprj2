@@ -40,13 +40,11 @@ EOF
 
 
 --------------------  stracing  --------------------
-- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DFILENAME_RESOLUTION_ENABLED=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.4.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=CONSOLE ..  &&  cmake --build .)
+- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.4.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=LOGFILE ..  &&  cmake --build .)
 
 
 - Testing:
-    :> test/libiotrace_stracer.log && (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork --to-file)
-    codium test/trace_pthread_fork_redirected_stdout.log ./test/libiotrace_stracer.log
-
+    :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test && IOTRACE_LOG_NAME=stracing_tasks_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork --fork --to-file)
     (cd test && IOTRACE_LOG_NAME=stracing_descendants_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants)
 
 

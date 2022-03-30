@@ -129,9 +129,9 @@ int main(int argc, char** argv) {
     /* (3.1) Check whether we can exit */
 //        DEV_DEBUG_PRINT_MSG(">> Exit condition: Checking tracee count");
         if (0 == tracee_count) {
-            DEV_DEBUG_PRINT_MSG(">>> Exit condition -- TIMEOUT: No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
+            DEV_DEBUG_PRINT_MSG(">>> Exit condition: TIMEOUT -- No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
             if (uxd_ipc_tracer_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) { continue; }
-            DEV_DEBUG_PRINT_MSG(">>> Exit condition -- TIMEOUT: Has lapsed, terminating ...");
+            DEV_DEBUG_PRINT_MSG(">>> Exit condition: TIMEOUT -- Has lapsed, terminating ..");
             break;
         }
 

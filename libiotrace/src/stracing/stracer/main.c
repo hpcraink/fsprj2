@@ -12,6 +12,13 @@
  *
  *   - Things to keep in mind:
  *     - stracer may NOT include any functionality provided by libiotrace (since it's a independent process)
+ *
+ *   - Known ISSUEs:
+ *     - ...
+ *
+ *   - TODOs:
+ *     - IMPLEMENT WARN / FNRES TASK
+ *       - Check those tasks w/ an executable which is statically linked w/ libiotrace
  */
 #include <errno.h>
 #include <fcntl.h>

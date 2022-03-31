@@ -1,3 +1,9 @@
+/**
+ * "Entrypoint" (for stracing in libiotrace):
+ *   - Tasks:
+ *     - Launch the stracer
+ *     - Register tracee(s) (i.e., the process traced by libiotrace) w/ the running stracer
+ */
 #ifndef LIBIOTRACE_ENTRYPOINT_H
 #define LIBIOTRACE_ENTRYPOINT_H
 

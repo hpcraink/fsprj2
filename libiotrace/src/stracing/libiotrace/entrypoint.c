@@ -1,9 +1,19 @@
+/**
+ * Known ISSUEs:
+ *   - Traced programs which have STATICALLY LINKED functions, which in turn are normally
+ *     (a) wrapped by libiotrace, and (b) used by libiotrace to perform an THREAD init
+ *     (e.g., `pthread_create`(3)), may not be traced properly (won't send a tracing request)
+ *     NOTE: A possible solution would be to set `PTRACE_O_TRACECLONE`, etc. for tracing options
+ *           in stracer (since the process init via '.ctors' is guaranteed)
+ *
+ * TODOs:
+ *   - ...
+ */
 #include <unistd.h>
 #include "../../event.h"
 
 #include <sys/un.h>
 #include <sys/prctl.h>
-#include <sys/wait.h>
 
 #include "entrypoint.h"
 #include "../common/stracer.h"

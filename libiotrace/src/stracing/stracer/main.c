@@ -19,11 +19,12 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include "cli.h"
 #include "ipc/uxd_socket.h"
 #include "trace/tracing.h"
 #include "trace/ptrace_utils.h"
 #include "trace/syscalls.h"
+#include "trace/unwind.h"
+#include "cli.h"
 
 #include "common/error.h"
 #define DEV_DEBUG_ENABLE_LOGS
@@ -78,7 +79,7 @@ int main(int argc, char** argv) {
 
 
 /* (2) Setup */
-//    unwind_init();
+    unwind_init();
 
 
 /* --------------------- --------------------- --------------------- --------------------- --------------------- */
@@ -179,7 +180,7 @@ int main(int argc, char** argv) {
                     fprintf(stderr, " = %ld\n", syscall_rtn_val);
 
 // TODO: WARN + FNRES
-//                    unwind_print_backtrace_of_proc(trapped_tracee_sttid);
+                    unwind_print_backtrace_of_proc(trapped_tracee_sttid);
                 }
             }
         }
@@ -193,7 +194,7 @@ int main(int argc, char** argv) {
     fclose(stdout_logfile);
     fclose(stderr_logfile);
 #endif /* USE_LOGFILE */
-//    unwind_fin();
+    unwind_fin();
 
     return 0;
 }

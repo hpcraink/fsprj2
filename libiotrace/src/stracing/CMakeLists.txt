@@ -12,7 +12,7 @@ list(APPEND STRACER_SOURCE
         stracer/trace/syscall_types.c
         stracer/trace/syscalls.c
         stracer/trace/tracing.c
-#        stracer/trace/unwind.c
+        stracer/trace/unwind.c
         stracer/cli.c
         stracer/main.c)
 
@@ -68,7 +68,7 @@ target_include_directories(libiotrace_stracer PRIVATE
 target_compile_options(libiotrace_stracer PRIVATE
         ${STRACER_COMPILE_OPTIONS})
 
-# target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
+target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw iberty)        # TODO: RMV C++ demangling
 
 
 

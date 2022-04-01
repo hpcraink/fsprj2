@@ -31,9 +31,7 @@
 
 
 /* --- Functions --- */
-void stracing_init_stracer(char *ld_preload_env_val) {
-    assert( ld_preload_env_val && "`ld_preload_env_val` may not be `NULL`" );
-
+void stracing_init_stracer(void) {
 /* (0) Parent: Establish tracer's UXD registration socket */
     int uxd_reg_sock_fd;
     if (-1 == (uxd_reg_sock_fd = uxd_ipc_parent_sock_init(STRACING_UXD_SOCKET_FILEPATH,
@@ -51,16 +49,16 @@ void stracing_init_stracer(char *ld_preload_env_val) {
         return;
     }
 
+
 /* (2) Child: `exec` stracer (which will `fork` again to create the grandchild, which will be the actual tracer) */
     /* Prepare `exec` arg: executable filename */
     char *exec_arg_exec_fname;
 {
-    char* ld_preload_basedir;
-    DIE_WHEN_ERRNO_VPTR( (ld_preload_basedir = strdup(ld_preload_env_val)) );           // TODO: SECURITY CONCERNS (LD_PRELOAD IS PASSED BY USER)
-    DIE_WHEN_ERRNO( dirname_n(ld_preload_basedir, strlen(ld_preload_basedir) +1) );
+    char* libiotrace_so_file_path = DIE_WHEN_ERRNO_VPTR( get_libiotrace_so_file_path() );
+    DIE_WHEN_ERRNO( dirname_n(libiotrace_so_file_path, strlen(libiotrace_so_file_path) + 1) );
 
-    DIE_WHEN_ERRNO( asprintf(&exec_arg_exec_fname, "%s/%s", ld_preload_basedir, STRACER_EXEC_FILENAME) );
-    CALL_REAL_ALLOC_SYNC(free)(ld_preload_basedir);
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_exec_fname, "%s/%s", libiotrace_so_file_path, STRACER_EXEC_FILENAME) );
+    CALL_REAL_ALLOC_SYNC(free)(libiotrace_so_file_path);
 }
 
     /* Prepare `exec` arg: Fildes of socket */

@@ -2029,12 +2029,7 @@ void init_process() {
 #endif
 
 #ifdef STRACING_ENABLED
-#ifndef IO_LIB_STATIC
-      char *ld_preload_env_val = getenv(ENV_LD_PRELOAD);
-#else
-      char *ld_preload_env_val = ".";			// TODO: CHECK STATICALLY COMPILED VERSION
-#endif /* IO_LIB_STATIC */
-        stracing_init_stracer(ld_preload_env_val);
+        stracing_init_stracer();
 #endif /* STRACING_ENABLED */
 
 #if !defined(HAVE_HOST_NAME_MAX)

@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <execinfo.h>
 
 #include "utils.h"
 
@@ -153,4 +154,27 @@ int dirname_n(char* path, int path_size) {
 
   *last_slash = '\0';
   return 0;
+}
+
+/**
+ * Parses the path to the libiotrace so file from the stacktrace
+ * Works ONLY on GNU/Linux (since the returned format on e.g., macOS is different)
+ *
+ * @return                   Pointer to `malloc`'ed path string or `NULL` on failure
+ */
+char* get_libiotrace_so_file_path(void) {
+    char* so_filename;
+
+    void* backtrace_rtn_addr[1];
+    char** backtrace_fct_names = NULL;
+    if (1 != backtrace(backtrace_rtn_addr, sizeof backtrace_rtn_addr / sizeof backtrace_rtn_addr[0]) ||
+        ! (backtrace_fct_names = backtrace_symbols(backtrace_rtn_addr, 1)) ||
+        ! strtok(backtrace_fct_names[0], "(") ||
+        ! (so_filename = strdup(backtrace_fct_names[0])) ) {
+        if (backtrace_fct_names) { free (backtrace_fct_names); }
+        return NULL;
+    }
+    free (backtrace_fct_names);
+
+    return so_filename;
 }

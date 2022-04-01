@@ -13,10 +13,8 @@
  * @brief                        Creates all necessary IPC facilities, forks, and
  *                               launches the stracer (if not running yet)
  *                               May be called during process startup by `init_process`
- *
- * @param[in] ld_preload_env_val Value of `LD_PRELOAD` which was defined by user
  */
-void stracing_init_stracer(char *ld_preload_env_val);
+void stracing_init_stracer(void);
 
 /**
  * @brief                        Sends tracing request to stracer

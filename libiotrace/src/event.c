@@ -2929,13 +2929,32 @@ void* pthread_create_start_routine(void *arg) {
 int WRAP(pthread_create)(pthread_t *restrict thread,
 		const pthread_attr_t *restrict attr, void* (*start_routine)(void*),
 		void *restrict arg) {
-	struct pthread_create_data *data = CALL_REAL_ALLOC_SYNC(malloc)(sizeof(struct pthread_create_data));
-	if (NULL == data) {
+	int ret;
+	struct basic data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+	struct pthread_create_data *pthread_data = CALL_REAL_ALLOC_SYNC(malloc)(
+			sizeof(struct pthread_create_data));
+	if (NULL == pthread_data) {
 		LIBIOTRACE_ERROR("malloc failed, errno=%d", errno);
 	}
-	data->start_routine = start_routine;
-	data->arg = arg;
+	pthread_data->start_routine = start_routine;
+	pthread_data->arg = arg;
 
-	return CALL_REAL_POSIX_SYNC(pthread_create)(thread, attr,
-			pthread_create_start_routine, data);
+	CALL_REAL_FUNCTION_RET(data, ret, pthread_create, thread, attr,
+			pthread_create_start_routine, pthread_data)
+
+	if (0 == ret) {
+		data.return_state = ok;
+	} else {
+		data.return_state = error;
+	}
+
+	WRAP_END(data, pthread_create)
+	return ret;
 }

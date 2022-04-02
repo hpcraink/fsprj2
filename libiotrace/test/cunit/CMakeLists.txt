@@ -52,7 +52,7 @@ if(WITH_ALLOC)
 	# enable testing of wrappers with dedicated function calls)
 	list(APPEND COMPILE_OPTIONS -DIO_LIB_TEST)
 
-	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/utils.c ../../src/libiotrace_defines_utils.c)
+	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/utils.c ../../src/libiotrace_defines_utils.c  ../../src/gettime.c)
 	set_target_properties(test_alloc PROPERTIES LINK_FLAGS -W)
 	target_compile_options(test_alloc PRIVATE ${COMPILE_OPTIONS})
 	target_link_libraries(test_alloc PRIVATE cunit -ldl)

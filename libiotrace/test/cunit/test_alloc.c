@@ -5,6 +5,7 @@
 #include "../../src/alloc.h"
 #include "../../src/libiotrace_functions.c"
 #include "../../src/utils.h"
+#include "../../src/gettime.h"
 
 extern void* WRAP(malloc)(size_t size);
 extern void WRAP(free)(void *ptr);
@@ -28,7 +29,7 @@ void init_process(void) {
 }
 
 // is called from wrappers if active_wrapper_status.<wrapper> = 1
-void write_into_buffer(struct basic *data) {
+void io_log_file_buffer_write(struct basic *data) {
 	CU_ASSERT_FATAL(NULL != data);
 
 	size_t len = libiotrace_struct_sizeof_basic(data);

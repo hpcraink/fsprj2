@@ -167,14 +167,15 @@ char* get_libiotrace_so_file_path(void) {
 
     void* backtrace_rtn_addr[1];
     char** backtrace_fct_names = NULL;
+    char* strtok_r_saveptr = NULL;
     if (1 != backtrace(backtrace_rtn_addr, sizeof backtrace_rtn_addr / sizeof backtrace_rtn_addr[0]) ||
         ! (backtrace_fct_names = backtrace_symbols(backtrace_rtn_addr, 1)) ||
-        ! strtok(backtrace_fct_names[0], "(") ||
+        ! strtok_r(backtrace_fct_names[0], "(", &strtok_r_saveptr) ||
         ! (so_filename = strdup(backtrace_fct_names[0])) ) {
-        if (backtrace_fct_names) { free (backtrace_fct_names); }
+        if (backtrace_fct_names) { free(backtrace_fct_names); }
         return NULL;
     }
-    free (backtrace_fct_names);
+    free(backtrace_fct_names);
 
     return so_filename;
 }

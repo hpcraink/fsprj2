@@ -14,7 +14,8 @@ list(APPEND STRACER_SOURCE
         stracer/trace/tracing.c
         stracer/trace/unwind.c
         stracer/cli.c
-        stracer/main.c)
+        stracer/main.c
+        stracer/tasks.c)
 
 set(STRACER_COMPILE_OPTIONS
         -D_GNU_SOURCE)

@@ -140,6 +140,72 @@ void unwind_print_backtrace_of_proc(pid_t tid) {
 }
 
 
+bool unwind_ioevent_was_traced(pid_t tid,
+                               char* stacktrace_module_name, char* stacktrace_fct_name) {
+    assert( unw_as && "Unwind context may be inited prior usage." );
+
+
+/* 0. Init  */
+    /* 0.1. libunwind */
+    unw_context_t *unw_ctx = _UPT_create(tid);
+    unw_cursor_t cursor;
+    if (0 > unw_init_remote(&cursor, unw_as, unw_ctx)) {
+        LOG_ERROR_AND_EXIT("libunwind -- failed to init context");
+    }
+
+    /* 0.2. libdw */
+    Dwfl* dwfl = init_ldw_for_proc(tid);
+
+
+/* 1. Search ... */
+    bool result_found = false;
+#ifdef MAX_STACKTRACE_DEPTH
+    int cur_stack_depth = 0;
+    do {
+        if (cur_stack_depth++ >= MAX_STACKTRACE_DEPTH) { break; }
+#else
+    do {
+#endif /* MAX_STACKTRACE_DEPTH */
+
+        /* 1.1. Get IP-address */
+        unw_word_t ip = 0;
+        if (0 > unw_get_reg(&cursor, UNW_REG_IP, &ip)) {
+            LOG_ERROR_AND_EXIT("libunwind -- failed to walk the stack of process %d", tid);
+        }
+
+        /* 1.2. Check module name in stacktrace */
+        Dwfl_Module* module = dwfl_addrmodule(dwfl, (uintptr_t)ip);
+        const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        if (! strstr(module_name, stacktrace_module_name) ) { continue; }  /* 'Module name' doesn't match -> proceed ... */
+        else {                                                           /* Matches ... */
+            if (!stacktrace_fct_name) {
+                result_found = true;
+                break;
+            }
+        }
+
+        /* 1.3. Check function- (i.e., symbol) name */
+        unw_word_t offset = 0;
+        char symbol_buf[4096];
+        if (! unw_get_proc_name(&cursor, symbol_buf, sizeof(symbol_buf), &offset) ) {
+            if (strstr(symbol_buf, stacktrace_module_name) ) {            /* 'Function name' matches */
+                result_found = true;
+                break;
+            }
+        }
+
+    } while (unw_step(&cursor) > 0);
+
+
+/* 2. Cleanup (destroy unwinding context of process) */
+    dwfl_end(dwfl);
+    _UPT_destroy(unw_ctx);
+
+
+    return result_found;
+}
+
+
 /* - Helpers - */
 static Dwfl* init_ldw_for_proc(pid_t tid) {
     static const Dwfl_Callbacks dwfl_callbacks = {

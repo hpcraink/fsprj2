@@ -29,13 +29,15 @@
 #include "ipc/uxd_socket.h"
 #include "trace/tracing.h"
 #include "trace/ptrace_utils.h"
-#include "trace/syscalls.h"
 #include "trace/unwind.h"
+#include "tasks.h"
 #include "cli.h"
 
 #include "common/error.h"
 #define DEV_DEBUG_ENABLE_LOGS
 #include "common/debug.h"
+
+
 
 /* -- Consts -- */
 #ifdef USE_LOGFILE
@@ -68,7 +70,7 @@ int main(int argc, char** argv) {
 
 /* 0.3. Check whether fildes is valid  (TODO: check whether socket) */
     if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
-        LOG_ERROR_AND_EXIT("Invalid socket fd");
+        LOG_ERROR_AND_EXIT("Invalid uxd socket fd");
     }
 
 
@@ -84,12 +86,15 @@ int main(int argc, char** argv) {
     }
     kill(getppid(), SIGKILL);   /* Grandchild = Tracer */
 
-/* 0.5. Leave tracee's process group (otherwise we also get signals sent to that group (e.g., Console -> Ctrl-C -> SIGINT)) */
+/* 0.5. Leave tracee's process group (otherwise we also get signals which are sent to that group (e.g., Console -> Ctrl-C -> SIGINT)) */
     DIE_WHEN_ERRNO( setpgid(0, 0) );
 
 
 /* 1. Init tracing functionality */
-    unwind_init();
+    const bool unwind_inited = parsed_cli_args.task_warn_not_traced_ioevents;   // All tasks which require stack unwinding
+    if (unwind_inited) {
+        unwind_init();
+    }
 
 
 /* --------------------- --------------------- --------------------- --------------------- --------------------- */
@@ -181,20 +186,8 @@ int main(int argc, char** argv) {
                     continue;
                 }
 
-                /* >> SYSCALL-EXIT << */
-                if (USER_REGS_STRUCT_SC_HAS_RTNED(regs)) {
-                    const char* scall_name = syscalls_get_name(syscall_nr);
-
-                    fprintf(stderr, "[%d] ", trapped_tracee_sttid);
-                    fprintf(stderr, "%s(", (scall_name) ? (scall_name) : ("UNKNOWN"));
-                    syscalls_print_args(trapped_tracee_sttid, &regs);
-                    fprintf(stderr, ")");
-
-                    const long syscall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL(regs);
-                    fprintf(stderr, " = %ld\n", syscall_rtn_val);
-
-// TODO: WARN + FNRES
-                    unwind_print_backtrace_of_proc(trapped_tracee_sttid);
+                if (USER_REGS_STRUCT_SC_HAS_RTNED(regs)) {   /* SYSCALL-EXIT */
+                    do_tasks(&parsed_cli_args, unwind_inited, trapped_tracee_sttid, &regs);
                 }
             }
         }
@@ -204,11 +197,15 @@ int main(int argc, char** argv) {
 
 /* 3. Cleanup */
     uxd_ipc_tracer_sock_fin(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
+
 #ifdef USE_LOGFILE
     fclose(stdout_logfile);
     fclose(stderr_logfile);
 #endif /* USE_LOGFILE */
-    unwind_fin();
+
+    if (unwind_inited) {
+        unwind_fin();
+    }
 
     return 0;
 }

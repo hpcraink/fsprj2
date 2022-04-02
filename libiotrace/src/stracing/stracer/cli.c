@@ -82,12 +82,12 @@ static error_t parse_cli_opt(int key, char *always_use_arg_and_not_me, struct ar
                 argp_usage(state);
             }
             arguments->unwind_static_linkage = STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC == arg[0];
-            arguments->unwind_exec_filename = arg +2;
+            arguments->unwind_module_name = arg + 2;
             break;
 
     /* TASK: Warn when function call wasn't traced by libiotrace */
         case STRACER_CLI_OPTION_TASK_WARN:
-            arguments->task_warn_not_traced_syscalls = true;
+            arguments->task_warn_not_traced_ioevents = true;
             break;
 
 
@@ -98,13 +98,13 @@ static error_t parse_cli_opt(int key, char *always_use_arg_and_not_me, struct ar
         case ARGP_KEY_END:
           /* Validate ALWAYS required args (sockfd  +  at least 1 selected task must be selected) */
             if ( -1 == arguments->uxd_reg_sock_fd ||
-                 (!arguments->task_warn_not_traced_syscalls /* && !... */) ) {
+                 (!arguments->task_warn_not_traced_ioevents /* && !... */) ) {
                 DEV_DEBUG_PRINT_MSG("CLI validation: UXD fd + at least 1 task may be selected");
                 argp_usage(state);
             }
 
         /* Validate arg(s) which are required depending on selected task(s) */
-            if (arguments->task_warn_not_traced_syscalls && !arguments->unwind_exec_filename) {
+            if (arguments->task_warn_not_traced_ioevents && !arguments->unwind_module_name) {
                 DEV_DEBUG_PRINT_MSG("CLI validation: The warning task requires linkage information (for unwinding)");
                 argp_usage(state);
             }
@@ -131,9 +131,9 @@ void parse_cli_args(int argc, char** argv,
   /* Defaults */
     parsed_cli_args_ptr->uxd_reg_sock_fd = -1;
     parsed_cli_args_ptr->trace_only_syscall_subset = false;
-    parsed_cli_args_ptr->task_warn_not_traced_syscalls = false;
+    parsed_cli_args_ptr->task_warn_not_traced_ioevents = false;
     parsed_cli_args_ptr->unwind_static_linkage = false;
-    parsed_cli_args_ptr->unwind_exec_filename = NULL;
+    parsed_cli_args_ptr->unwind_module_name = NULL;
 
     static const struct argp argp = {
         cli_options, parse_cli_opt,
@@ -167,8 +167,8 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
         printf("}");
     }
 
-    printf("\n\t`warn_not_traced_syscalls`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_syscalls ? (TRUE_STR) : (FALSE_STR));
+    printf("\n\t`task_warn_not_traced_ioevent`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_ioevents ? (TRUE_STR) : (FALSE_STR));
 
     printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? (TRUE_STR) : (FALSE_STR));
-    printf("\t`unwind_exec_filename`=%s\n", __extension__( parsed_cli_args_ptr->unwind_exec_filename ?: (NOT_APPLICABLE_STR) ));
+    printf("\t`unwind_module_name`=%s\n", __extension__(parsed_cli_args_ptr->unwind_module_name ?: (NOT_APPLICABLE_STR) ));
 }

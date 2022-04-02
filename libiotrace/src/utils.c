@@ -131,7 +131,7 @@ int str_to_long(char* str, long* num) {
  * @return                   Pointer to `malloc`'ed path string or `NULL` on failure
  */
 char* get_path_to_file_containing_this_fct(void) {
-    char* exec_file_path;
+    char* current_exec_file_path;
 
     void* backtrace_rtn_addr[1];
     char** backtrace_fct_names = NULL;
@@ -139,14 +139,14 @@ char* get_path_to_file_containing_this_fct(void) {
     if (1 != backtrace(backtrace_rtn_addr, sizeof backtrace_rtn_addr / sizeof backtrace_rtn_addr[0]) ||
         ! (backtrace_fct_names = backtrace_symbols(backtrace_rtn_addr, 1)) ||
         ! strtok_r(backtrace_fct_names[0], "(", &strtok_r_saveptr) ||
-        ! (exec_file_path = strdup(backtrace_fct_names[0])) ) {
+        ! (current_exec_file_path = strdup(backtrace_fct_names[0])) ) {
 
         if (backtrace_fct_names) { free(backtrace_fct_names); }
         return NULL;
     }
 
     free(backtrace_fct_names);
-    return exec_file_path;
+    return current_exec_file_path;
 }
 
 /**

@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 
 /* 0.3. Check whether fildes is valid  (TODO: check whether socket) */
     if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
-        LOG_ERROR_AND_EXIT("Invalid socket fildes");
+        LOG_ERROR_AND_EXIT("Invalid socket fd");
     }
 
 

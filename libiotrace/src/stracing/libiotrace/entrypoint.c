@@ -26,7 +26,6 @@
 
 
 /* -- Globals / Consts -- */
-#define STRACER_EXEC_FILENAME "libiotrace_stracer"
 #define SYSCALLS_TO_BE_TRACED "open,openat"
 
 
@@ -57,7 +56,7 @@ void stracing_init_stracer(void) {
     char* libiotrace_so_file_path = DIE_WHEN_ERRNO_VPTR( get_libiotrace_so_file_path() );
     DIE_WHEN_ERRNO( dirname_n(libiotrace_so_file_path, strlen(libiotrace_so_file_path) + 1) );
 
-    DIE_WHEN_ERRNO( asprintf(&exec_arg_exec_fname, "%s/%s", libiotrace_so_file_path, STRACER_EXEC_FILENAME) );
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_exec_fname, "%s/%s", libiotrace_so_file_path, STRACING_STRACER_EXEC_FILENAME) );
     CALL_REAL_ALLOC_SYNC(free)(libiotrace_so_file_path);
 }
 

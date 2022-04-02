@@ -57,9 +57,8 @@ list(APPEND STRACER_SOURCE
 
 
 # -- Project --
-# WARNING: Changing the name of the executable requires also an update in the source (otherwise `exec` will fail)
-add_executable(libiotrace_stracer
-        ${STRACER_SOURCE})
+set(STRACER_EXEC_FILENAME "libiotrace_stracer")
+add_executable(${STRACER_EXEC_FILENAME} ${STRACER_SOURCE})
 
 target_include_directories(libiotrace_stracer PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/stracer"
@@ -79,6 +78,7 @@ list(APPEND SOURCE
 set(SOURCE ${SOURCE} PARENT_SCOPE)
 
 list(APPEND COMPILE_OPTIONS
+        -DSTRACING_STRACER_EXEC_FILENAME="${STRACER_EXEC_FILENAME}"
         -DSTRACING_UXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
         -DSTRACING_UXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE})
 set(COMPILE_OPTIONS ${COMPILE_OPTIONS} PARENT_SCOPE)

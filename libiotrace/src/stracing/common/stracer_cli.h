@@ -6,7 +6,7 @@
 #define STRACER_CLI_OPTION_SOCKFD             's'
 #define STRACER_CLI_OPTION_SSUBSET            'e'
 
-#define STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE 'l'   // e.g., `-l=d:../src/libiotrace-shared.so`
+#define STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE 'l'
 #define STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC 's'
 #define STRACER_CLI_LIBIOTRACE_LINKAGE_SHARED 'd'
 

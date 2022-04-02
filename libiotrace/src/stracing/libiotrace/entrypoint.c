@@ -55,14 +55,17 @@ void stracing_init_stracer(void) {
     char *exec_arg_stracer_exec_fname,
          *exec_arg_libiotrace_linkage;
 {
-    char* current_exec_file_path = DIE_WHEN_ERRNO_VPTR( get_path_to_file_containing_this_fct() );
-{   /* >>   Derive path to stracer's executable from libiotrace so filepath   (!! MUST THEREFORE BE IN SAME DIR !!) */
-    char* current_exec_dir_path = DIE_WHEN_ERRNO_VPTR( strdup(current_exec_file_path) );
-    DIE_WHEN_ERRNO( dirname_r(current_exec_file_path, current_exec_dir_path, strlen(current_exec_dir_path) + 1) );
-    DIE_WHEN_ERRNO( asprintf(&exec_arg_stracer_exec_fname, "%s/%s", current_exec_dir_path, STRACING_STRACER_EXEC_FILENAME) );
-    CALL_REAL_ALLOC_SYNC(free)(current_exec_dir_path);
-}
-    /* >>   Linkage info */
+    char *tmp_current_exec_file_path = DIE_WHEN_ERRNO_VPTR( get_path_to_file_containing_this_fct() ),
+         *tmp_buf =                    DIE_WHEN_ERRNO_VPTR( strdup(tmp_current_exec_file_path) );
+    const size_t tmp_buf_size = strlen(tmp_buf) +1;
+
+/* >>   `exec_arg_stracer_exec_fname`: Derive path to stracer's executable from libiotrace so filepath   (!! MUST THEREFORE BE IN SAME DIR !!) */
+    DIE_WHEN_ERRNO( dirname_r(tmp_current_exec_file_path, tmp_buf, tmp_buf_size) );
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_stracer_exec_fname, "%s/%s",
+                             tmp_buf, STRACING_STRACER_EXEC_FILENAME) );
+
+/* >>   `exec_arg_libiotrace_linkage`: Derive executable name from libiotrace so filepath */
+    DIE_WHEN_ERRNO( basename_r(tmp_current_exec_file_path, tmp_buf, tmp_buf_size) );
     const char cli_libiotrace_linkage
 #ifdef IO_LIB_STATIC
             = STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC;
@@ -71,9 +74,10 @@ void stracing_init_stracer(void) {
 #endif /* IO_LIB_STATIC */
     DIE_WHEN_ERRNO( asprintf(&exec_arg_libiotrace_linkage, "-%c=%c:%s",
                              STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, cli_libiotrace_linkage,
-                             current_exec_file_path) );
+                             tmp_buf) );
 
-    CALL_REAL_ALLOC_SYNC(free)(current_exec_file_path);
+    CALL_REAL_ALLOC_SYNC(free)(tmp_buf);
+    CALL_REAL_ALLOC_SYNC(free)(tmp_current_exec_file_path);
 }
 
     /* Prepare `exec` arg: Fildes of socket */
@@ -98,7 +102,7 @@ void stracing_init_stracer(void) {
                       exec_arg_tasks,
                       NULL,
                       NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */
-    LIBIOTRACE_ERROR("`exec` of stracer failed -- %s", strerror(errno));
+    LIBIOTRACE_ERROR("stracer `exec` failed -- %s", strerror(errno));
 }
 
 

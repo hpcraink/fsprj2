@@ -124,13 +124,14 @@ int str_to_long(char* str, long* num) {
 
 
 /**
- * Parses the path to the libiotrace so file from the current stacktrace
- * NOTE: Works ONLY on GNU/Linux (since the returned format on e.g., macOS is different)
+ * Parses the path to the file, which contains THIS function in its .TEXT section
+ * (statically linked: the program, dynamic: libiotrace, i.e., 'path/to/libiotrace-shared.so')
+ * NOTE: NOT PORTABLE, i.e., works ONLY on GNU/Linux (since output on e.g., macOS differs)
  *
  * @return                   Pointer to `malloc`'ed path string or `NULL` on failure
  */
-char* get_libiotrace_so_file_path(void) {
-    char* so_filename;
+char* get_path_to_file_containing_this_fct(void) {
+    char* exec_file_path;
 
     void* backtrace_rtn_addr[1];
     char** backtrace_fct_names = NULL;
@@ -138,14 +139,14 @@ char* get_libiotrace_so_file_path(void) {
     if (1 != backtrace(backtrace_rtn_addr, sizeof backtrace_rtn_addr / sizeof backtrace_rtn_addr[0]) ||
         ! (backtrace_fct_names = backtrace_symbols(backtrace_rtn_addr, 1)) ||
         ! strtok_r(backtrace_fct_names[0], "(", &strtok_r_saveptr) ||
-        ! (so_filename = strdup(backtrace_fct_names[0])) ) {
+        ! (exec_file_path = strdup(backtrace_fct_names[0])) ) {
 
         if (backtrace_fct_names) { free(backtrace_fct_names); }
         return NULL;
     }
 
     free(backtrace_fct_names);
-    return so_filename;
+    return exec_file_path;
 }
 
 /**

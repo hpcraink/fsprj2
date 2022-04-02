@@ -17,6 +17,8 @@
 
 #include <assert.h>
 #include "../common/error.h"
+//#define DEV_DEBUG_ENABLE_LOGS
+#include "../common/debug.h"
 
 
 /* -- Macros / Globals  -- */
@@ -159,14 +161,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
 
 /* 1. Search ... */
     bool result_found = false;
-#ifdef MAX_STACKTRACE_DEPTH
-    int cur_stack_depth = 0;
     do {
-        if (cur_stack_depth++ >= MAX_STACKTRACE_DEPTH) { break; }
-#else
-    do {
-#endif /* MAX_STACKTRACE_DEPTH */
-
         /* 1.1. Get IP-address */
         unw_word_t ip = 0;
         if (0 > unw_get_reg(&cursor, UNW_REG_IP, &ip)) {
@@ -176,6 +171,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
         /* 1.2. Check module name in stacktrace */
         Dwfl_Module* module = dwfl_addrmodule(dwfl, (uintptr_t)ip);
         const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        DEV_DEBUG_PRINT_MSG("--> %s", module_name);
         if (! strstr(module_name, stacktrace_module_name) ) { continue; }  /* 'Module name' doesn't match -> proceed ... */
         else {                                                           /* Matches ... */
             if (!stacktrace_fct_name) {
@@ -188,12 +184,12 @@ bool unwind_ioevent_was_traced(pid_t tid,
         unw_word_t offset = 0;
         char symbol_buf[4096];
         if (! unw_get_proc_name(&cursor, symbol_buf, sizeof(symbol_buf), &offset) ) {
+            DEV_DEBUG_PRINT_MSG("--> : %s", symbol_buf);
             if (strstr(symbol_buf, stacktrace_module_name) ) {            /* 'Function name' matches */
                 result_found = true;
                 break;
             }
         }
-
     } while (unw_step(&cursor) > 0);
 
 

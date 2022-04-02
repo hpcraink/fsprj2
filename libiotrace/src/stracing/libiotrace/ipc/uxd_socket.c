@@ -19,10 +19,10 @@
 /* -- Functions -- */
 /* - Internal - */
 static int uxd_sock_connect(char* socket_filepath) {
-/* (1) Create socket */
+/* 1. Create socket */
     int server_fd = DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(socket)(AF_UNIX, SOCK_STREAM, 0) );
 
-/* (2) Connect to server using socket */
+/* 2. Connect to server using socket */
     struct sockaddr_un sa;
     INIT_UXD_SOCKADDR_STRUCT(sa, socket_filepath);
     DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(connect)(server_fd, (struct sockaddr*)&sa, sizeof(struct sockaddr_un)) );
@@ -106,7 +106,7 @@ int uxd_ipc_parent_sock_init(char* socket_filepath,
         }
     }
 
-/* (3) Start listening for connections */
+/* 2. Start listening for connections */
     DIE_WHEN_ERRNO( listen(uxd_reg_sock_fd, socket_backlog_size) );
 
     return uxd_reg_sock_fd;

@@ -3,7 +3,7 @@
 
 #include "tracing.h"
 #include "../common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "common/debug.h"
 
 
@@ -53,7 +53,6 @@ int tracing_set_next_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = br
     /* (0) Restart stopped tracee but set next breakpoint (on next syscall)   (AND "forward" received signal to tracee) */
         if (-1 != next_bp_tid) {        /* Check only (i.e., don't set breakpoint) */
             DIE_WHEN_ERRNO( ptrace(PTRACE_SYSCALL, next_bp_tid, 0, pending_signal) );
-//            DEV_DEBUG_PRINT_MSG(">>> Tracing: Set next bp for %d", next_bp_tid);
         }
 
         /* Reset signal (after it has been delivered) */

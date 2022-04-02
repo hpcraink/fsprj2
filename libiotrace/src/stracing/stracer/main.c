@@ -34,7 +34,7 @@
 #include "cli.h"
 
 #include "common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "common/debug.h"
 
 
@@ -99,16 +99,14 @@ int main(int argc, char** argv) {
 
 /* --------------------- --------------------- --------------------- --------------------- --------------------- */
 /* 2. Start tracing .. */
+#ifdef DEV_DEBUG_ENABLE_LOGS
     const pid_t tracer_pid = getpid();
+#endif /* DEV_DEBUG_ENABLE_LOGS */
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
     for (int tracee_count = 0; ; ) {
-//                                #include <time.h>
-//                                nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);            // TESTING
-
 
     /* 2.1. Check for new IPC requests */
-//        DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
         for (;;) {
             int tracee_conn_fd;
             uxd_sock_ipc_msg_t ipc_request;
@@ -143,7 +141,6 @@ int main(int argc, char** argv) {
 
 
     /* 2.2. Check whether we can exit */
-//        DEV_DEBUG_PRINT_MSG(">> Exit condition: Checking tracee count");
         if (0 == tracee_count) {
             DEV_DEBUG_PRINT_MSG(">>> Exit condition: TIMEOUT -- No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
             if (uxd_ipc_tracer_block_until_request_or_timeout(uxd_reg_sock_fd, EXIT_TIMEOUT_IN_MS)) { continue; }
@@ -153,12 +150,10 @@ int main(int argc, char** argv) {
 
 
     /* 2.3. Trace */
-//        DEV_DEBUG_PRINT_MSG(">> Tracing: Setting bp for attached tracees + Checking for new trap");
         for (pid_t trapped_tracee_sttid = -1; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
 
         /* 2.3.1. Check whether there's a trapped tracee */
             if (! (trapped_tracee_sttid = tracing_set_next_bp_and_check_trap(trapped_tracee_sttid)) ) {
-//                DEV_DEBUG_PRINT_MSG(">>> Tracing: No pending trapped tracees");
                 break;
             }
 
@@ -171,7 +166,6 @@ int main(int argc, char** argv) {
 
             /*   -> Tracee stopped (i.e., hit breakpoint) */
             } else {
-//                DEV_DEBUG_PRINT_MSG(">>> Tracing: %d hit a breakpoint", trapped_tracee_sttid);
                 struct user_regs_struct_full regs;
                 if (-1 == ptrace_get_regs_content(trapped_tracee_sttid, &regs)) {
                     DEV_DEBUG_PRINT_MSG("Couldn't read register contents -- process got probably `SIGKILL`ed");

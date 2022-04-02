@@ -19,7 +19,6 @@
 #include "../common/stracer_cli.h"
 #include "ipc/uxd_socket.h"
 
-#include <assert.h>
 #include "../../error.h"  /* NOTE: Already incl. via `event.h` */
 #define DEV_DEBUG_ENABLE_LOGS
 #include "../../debug.h"
@@ -31,7 +30,7 @@
 
 /* --- Functions --- */
 void stracing_init_stracer(void) {
-/* (0) Parent: Establish tracer's UXD registration socket */
+/* 0. Parent: Establish tracer's UXD registration socket */
     int uxd_reg_sock_fd;
     if (-1 == (uxd_reg_sock_fd = uxd_ipc_parent_sock_init(STRACING_UXD_SOCKET_FILEPATH,
                                                           STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
@@ -43,21 +42,21 @@ void stracing_init_stracer(void) {
                         gettid(),
                         STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE);
 
-/* (1) Parent: `fork`, let child launch stracer, and proceed ... */
+/* 1a. Parent: `fork`, let child launch stracer, and proceed ... */
     if (DIE_WHEN_ERRNO( CALL_REAL_POSIX_SYNC(fork)() )) {
         CALL_REAL_POSIX_SYNC(close)(uxd_reg_sock_fd);
         return;
     }
 
 
-/* (2) Child: `exec` stracer (which will `fork` again to create the grandchild, which will be the actual tracer) */
+/* 1b. Child: `exec` stracer (which will `fork` again to create the grandchild, which will be the actual tracer) */
     /* Prepare `exec` arg: stracer's executable filename + libiotrace linkage info (necessary for stack unwinding) */
     char *exec_arg_stracer_exec_fname,
          *exec_arg_libiotrace_linkage;
 {
     char *tmp_current_exec_file_path = DIE_WHEN_ERRNO_VPTR( get_path_to_file_containing_this_fct() ),
          *tmp_buf =                    DIE_WHEN_ERRNO_VPTR( strdup(tmp_current_exec_file_path) );
-    const size_t tmp_buf_size = strlen(tmp_buf) +1;
+    const size_t tmp_buf_size =        strlen(tmp_buf) +1;
 
 /* >>   `exec_arg_stracer_exec_fname`: Derive path to stracer's executable from libiotrace so filepath   (!! MUST THEREFORE BE IN SAME DIR !!) */
     DIE_WHEN_ERRNO( dirname_r(tmp_current_exec_file_path, tmp_buf, tmp_buf_size) );
@@ -76,8 +75,8 @@ void stracing_init_stracer(void) {
                              STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, cli_libiotrace_linkage,
                              tmp_buf) );
 
-    CALL_REAL_ALLOC_SYNC(free)(tmp_buf);
     CALL_REAL_ALLOC_SYNC(free)(tmp_current_exec_file_path);
+    CALL_REAL_ALLOC_SYNC(free)(tmp_buf);
 }
 
     /* Prepare `exec` arg: Fildes of socket */
@@ -107,15 +106,15 @@ void stracing_init_stracer(void) {
 
 
 void stracing_register_with_stracer(void) {
-/* (0) Set tracing permissions (only necessary when Yama ptrace_scope = 1; check: `cat /proc/sys/kernel/yama/ptrace_scope`) */
+/* 0. Set tracing permissions (only necessary when Yama ptrace_scope = 1; check: `cat /proc/sys/kernel/yama/ptrace_scope`) */
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 
-/* (1) Send tracing request */
+/* 1. Send tracing request */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
     int server_conn_fd;
     uxd_ipc_tracee_send_tracing_req(STRACING_UXD_SOCKET_FILEPATH, &server_conn_fd);
 
-/* (2) Block until it's tracer sends acknowledgement (i.e., we're now being actively traced) */
+/* 2. Block until it's tracer sends acknowledgement (i.e., we're now being actively traced) */
     uxd_ipc_tracee_block_until_tracing_ack(server_conn_fd);
     CALL_REAL_POSIX_SYNC(close)(server_conn_fd);
 

@@ -11,7 +11,7 @@
 
 #include <errno.h>
 #include "common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "common/debug.h"
 
 
@@ -151,9 +151,7 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
     static const char* const FALSE_STR = "false";
 
     puts("Parsed CLI args:");
-
     printf("\t`uxd_reg_sock_fd`=%d\n", parsed_cli_args_ptr->uxd_reg_sock_fd);
-
     printf("\t`trace_only_syscall_subset`=%s", parsed_cli_args_ptr->trace_only_syscall_subset ? (TRUE_STR) : (FALSE_STR));
     if (parsed_cli_args_ptr->trace_only_syscall_subset) {
         printf(" { ");
@@ -166,9 +164,7 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
         }
         printf("}");
     }
-
     printf("\n\t`task_warn_not_traced_ioevent`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_ioevents ? (TRUE_STR) : (FALSE_STR));
-
     printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? (TRUE_STR) : (FALSE_STR));
     printf("\t`unwind_module_name`=%s\n", __extension__(parsed_cli_args_ptr->unwind_module_name ?: (NOT_APPLICABLE_STR) ));
 }

@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (USER_REGS_STRUCT_SC_HAS_RTNED(regs)) {   /* SYSCALL-EXIT */
-                    do_tasks(&parsed_cli_args, unwind_inited, trapped_tracee_sttid, &regs);
+                    do_requested_tasks(&parsed_cli_args, unwind_inited, trapped_tracee_sttid, &regs);
                 }
             }
         }

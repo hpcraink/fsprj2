@@ -15,9 +15,9 @@ void print_syscall(FILE *output,
 
 
 /* -- Functions -- */
-void do_tasks(cli_args_t *parsed_cli_args,
-              bool unwind_inited,
-              pid_t trapped_tracee_tid, struct user_regs_struct *read_regs) {
+void do_requested_tasks(cli_args_t *parsed_cli_args,
+                        bool unwind_inited,
+                        pid_t trapped_tracee_tid, struct user_regs_struct *read_regs) {
 
     const bool ioevent_was_traced = (unwind_inited) ? ( unwind_ioevent_was_traced(trapped_tracee_tid,
                                                         parsed_cli_args->unwind_module_name,

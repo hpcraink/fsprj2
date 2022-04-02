@@ -45,11 +45,11 @@
 
 
 int main(int argc, char** argv) {
-/* (0) Init */
+/* 0. Setup stracer process */
     DIE_WHEN_ERRNO( close(STDIN_FILENO) );
 
 #ifdef USE_LOGFILE
-/* (0.1) Setup a logfile (since we can't log to console; must happen asap to ensure ALL logs get 'routed' to correct location) */
+/* 0.1. Setup a logfile (since we can't log to console; must happen asap to ensure ALL logs get 'routed' to correct location) */
     FILE* stdout_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stdout) );
     FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stderr) );
     if (0 != setvbuf(stdout_logfile, NULL, _IONBF, 0) ||
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     }
 #endif /* USE_LOGFILE */
 
-/* (0.2) Parse CLI args */
+/* 0.2. Parse CLI args */
     cli_args_t parsed_cli_args;
     parse_cli_args(argc, argv, &parsed_cli_args);
 #ifdef DEV_DEBUG_ENABLE_LOGS
@@ -66,13 +66,13 @@ int main(int argc, char** argv) {
 #endif
     const int uxd_reg_sock_fd = parsed_cli_args.uxd_reg_sock_fd;
 
-/* (0.3) Check whether fildes is valid  (TODO: check whether socket) */
+/* 0.3. Check whether fildes is valid  (TODO: check whether socket) */
     if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
         LOG_ERROR_AND_EXIT("Invalid socket fildes");
     }
 
 
-/* (0.4) Daemonize tracer, i.e., fork grandchild (which will be the actual tracer) */
+/* 0.4. Daemonize tracer, i.e., fork grandchild (which will be the actual tracer) */
     if (DIE_WHEN_ERRNO( fork() )) {     /* Child -> not used */
 #ifdef USE_LOGFILE
         fclose(stdout_logfile);
@@ -84,13 +84,16 @@ int main(int argc, char** argv) {
     }
     kill(getppid(), SIGKILL);   /* Grandchild = Tracer */
 
+/* 0.5. Leave tracee's process group (otherwise we also get signals sent to that group (e.g., Console -> Ctrl-C -> SIGINT)) */
+    DIE_WHEN_ERRNO( setpgid(0, 0) );
 
-/* (2) Setup */
+
+/* 1. Init tracing functionality */
     unwind_init();
 
 
 /* --------------------- --------------------- --------------------- --------------------- --------------------- */
-/* (3) Start tracing .. */
+/* 2. Start tracing .. */
     const pid_t tracer_pid = getpid();
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
@@ -99,7 +102,7 @@ int main(int argc, char** argv) {
 //                                nanosleep((const struct timespec[]){{3, 250000000L}}, NULL);            // TESTING
 
 
-    /* (3.0) Check for new IPC requests */
+    /* 2.1. Check for new IPC requests */
 //        DEV_DEBUG_PRINT_MSG(">> IPC requests: Checking");
         for (;;) {
             int tracee_conn_fd;
@@ -134,7 +137,7 @@ int main(int argc, char** argv) {
         }
 
 
-    /* (3.1) Check whether we can exit */
+    /* 2.2. Check whether we can exit */
 //        DEV_DEBUG_PRINT_MSG(">> Exit condition: Checking tracee count");
         if (0 == tracee_count) {
             DEV_DEBUG_PRINT_MSG(">>> Exit condition: TIMEOUT -- No tracees, will terminate in %d ms", EXIT_TIMEOUT_IN_MS);
@@ -144,17 +147,17 @@ int main(int argc, char** argv) {
         }
 
 
-    /* (3.2) Trace */
+    /* 2.3. Trace */
 //        DEV_DEBUG_PRINT_MSG(">> Tracing: Setting bp for attached tracees + Checking for new trap");
         for (pid_t trapped_tracee_sttid = -1; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
 
-        /* 3.2.1. Check whether there's a trapped tracee */
+        /* 2.3.1. Check whether there's a trapped tracee */
             if (! (trapped_tracee_sttid = tracing_set_next_bp_and_check_trap(trapped_tracee_sttid)) ) {
 //                DEV_DEBUG_PRINT_MSG(">>> Tracing: No pending trapped tracees");
                 break;
             }
 
-        /* 3.2.2. Check status */
+        /* 2.3.2. Check status */
             /*   -> Tracee terminated */
             if (0 > trapped_tracee_sttid) {
                 DEV_DEBUG_PRINT_MSG(">>> Tracing: +++ [%d] terminated +++", -(trapped_tracee_sttid));
@@ -199,7 +202,7 @@ int main(int argc, char** argv) {
 /* --------------------- --------------------- --------------------- --------------------- --------------------- */
 
 
-/* (3) Cleanup */
+/* 3. Cleanup */
     uxd_ipc_tracer_sock_fin(uxd_reg_sock_fd, UXD_SOCKET_FILEPATH);
 #ifdef USE_LOGFILE
     fclose(stdout_logfile);

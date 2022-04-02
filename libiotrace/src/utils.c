@@ -156,7 +156,7 @@ char* get_libiotrace_so_file_path(void) {
  *             an internal static buffer (making it thus, not thread safe)
  *
  * @param[in]  path          Path from which the dirname shall be derived
- * @param[in,out] buffer     Buffer which will contain the dirname
+ * @param[out] buffer        Buffer which will contain the dirname
  * @param[in] bufflen        Size of provided buffer in bytes
  * @return                   Length of derived dirname, -1 on failure
  */
@@ -226,7 +226,7 @@ Exit:
  *             an internal static buffer (making it thus, not thread safe)
  *
  * @param[in]  path          Path from which the basename shall be derived
- * @param[in,out] buffer     Buffer which will contain the basename
+ * @param[out] buffer        Buffer which will contain the basename
  * @param[in] bufflen        Size of provided buffer in bytes
  * @return                   Length of derived basename, -1 on failure
  */

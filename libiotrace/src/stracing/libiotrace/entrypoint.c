@@ -26,7 +26,7 @@
 
 
 /* -- Globals / Consts -- */
-#define SYSCALLS_TO_BE_TRACED "open,openat"
+#define SYSCALLS_TO_BE_TRACED "open,openat,close"
 
 
 /* --- Functions --- */

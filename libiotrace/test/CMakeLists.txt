@@ -266,6 +266,15 @@ if (STRACING_ENABLED)
     add_executable(stracing_unwind_manual_syscall_shared stracing/unwind_manual_syscall.c)
     target_compile_options(stracing_unwind_manual_syscall_shared PRIVATE -D_GNU_SOURCE)
 
+    add_library(stracing_unwind_manual_syscall_object OBJECT stracing/unwind_manual_syscall.c)
+
+    # test with: IOTRACE_LOG_NAME=stracing_unwind_manual_syscall_static_test1 ./stracing_unwind_manual_syscall_static
+    add_executable(stracing_unwind_manual_syscall_static
+        $<TARGET_OBJECTS:stracing_unwind_manual_syscall_object>
+        $<TARGET_OBJECTS:iotrace_object>
+    )
+    target_link_libraries(stracing_unwind_manual_syscall_static ${LINK_OPTIONS_STATIC})
+    target_link_libraries(stracing_unwind_manual_syscall_static ${LINK_OPTIONS})
 endif()
 
 

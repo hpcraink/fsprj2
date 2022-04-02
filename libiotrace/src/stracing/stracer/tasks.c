@@ -26,7 +26,7 @@ void do_requested_tasks(cli_args_t *parsed_cli_args,
 
 /* -- TASK: WARN -- */
     if (parsed_cli_args->task_warn_not_traced_ioevents && !ioevent_was_traced) {
-        LOG_WARN("An ioevent wan't traced by lbiotrace, indicated by the following syscall:");
+        LOG_WARN("An ioevent wasn't traced by libiotrace, indicated by the following syscall:");
         print_syscall(stderr, trapped_tracee_tid, read_regs);
     }
 

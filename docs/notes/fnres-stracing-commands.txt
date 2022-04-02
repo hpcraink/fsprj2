@@ -45,12 +45,12 @@ EOF
 
 - Testing:
     - Dynamically linked:
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test && IOTRACE_LOG_NAME=stracing_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_manual_syscall_shared)
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test && IOTRACE_LOG_NAME=stracing_tasks_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared --fork --to-file)
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test && IOTRACE_LOG_NAME=stracing_tasks_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants_shared)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_unwind_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_unwind_manual_syscall_shared)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared)
 
     - Statically linked:
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test && IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_byte_static)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_unwind_manual_syscall_static_test1 ./stracing_unwind_manual_syscall_static)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_byte_static)
 
 
 

@@ -38,6 +38,7 @@ void stracing_init_stracer(void) {
         DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A stracer instance is already running", gettid());
         return;
     }
+
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Inited UXD registration socket \"%s\" w/ backlog=%d for to be launched stracer",
                         gettid(),
                         STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE);
@@ -50,13 +51,19 @@ void stracing_init_stracer(void) {
 
 
 /* (2) Child: `exec` stracer (which will `fork` again to create the grandchild, which will be the actual tracer) */
-    /* Prepare `exec` arg: executable filename */
-    char *exec_arg_exec_fname;
+    /* Prepare `exec` arg: stracer executable filename + TODO: libiotrace so filename */
+    char *exec_arg_stracer_exec_fname;
 {
     char* libiotrace_so_file_path = DIE_WHEN_ERRNO_VPTR( get_libiotrace_so_file_path() );
-    DIE_WHEN_ERRNO( dirname_n(libiotrace_so_file_path, strlen(libiotrace_so_file_path) + 1) );
+{   /* >>   Derive path to stracer's executable from libiotrace so filepath (!! MUST THEREFORE BE IN SAME DIR !!) */
+    char* libiotrace_so_dir_path = DIE_WHEN_ERRNO_VPTR( strdup(libiotrace_so_file_path) );
+    DIE_WHEN_ERRNO( dirname_r(libiotrace_so_file_path, libiotrace_so_dir_path, strlen(libiotrace_so_dir_path) + 1) );
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_stracer_exec_fname, "%s/%s", libiotrace_so_dir_path, STRACING_STRACER_EXEC_FILENAME) );
+    CALL_REAL_ALLOC_SYNC(free)(libiotrace_so_dir_path);
+}
 
-    DIE_WHEN_ERRNO( asprintf(&exec_arg_exec_fname, "%s/%s", libiotrace_so_file_path, STRACING_STRACER_EXEC_FILENAME) );
+    // TODO: libiotrace so filename
+
     CALL_REAL_ALLOC_SYNC(free)(libiotrace_so_file_path);
 }
 
@@ -72,10 +79,11 @@ void stracing_init_stracer(void) {
     const char* const exec_arg_tasks = "-w";
 
     /* Perform `exec` */
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s`", gettid(),
-                        exec_arg_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_tasks);
-    CALL_REAL(execle)(exec_arg_exec_fname,
-                      exec_arg_exec_fname,      /* CLI args */
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s %s`", gettid(),
+                        exec_arg_stracer_exec_fname,
+                        exec_arg_stracer_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_tasks);
+    CALL_REAL(execle)(exec_arg_stracer_exec_fname,
+                      exec_arg_stracer_exec_fname,      /* CLI args */
                       exec_arg_sock_fd,
                       exec_syscall_subset,
                       exec_arg_tasks,

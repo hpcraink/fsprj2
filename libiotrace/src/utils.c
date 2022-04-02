@@ -1,7 +1,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <execinfo.h>
+#include <limits.h>
 
 #include "utils.h"
 
@@ -122,43 +124,8 @@ int str_to_long(char* str, long* num) {
 
 
 /**
- * Rudimentary TODO: and NOT PROPERLY VALIDATED implementation of `dirname`(3),
- * which modifies the provided buffer
- *
- * BACKGROUND: The glibc implementation MAY modify the provided buffer OR use
- *             an internal static buffer (making it not thread safe)
- *
- * @param[in,out]  path      Path buffer containing the path from which the
- *                           dirname shall be derived
- * @param[out]     path_size Size of allocated path buffer (incl. `\0`)
- * @return                   0 on success, -1 on failure
- */
-int dirname_n(char* path, int path_size) {
-  if (!path || path_size < 2) {   // For cwd ('.') we need at least 2 bytes
-    return -1;
-  }
-
-  char* last_slash = NULL;
-  for (char* p = path; *p &&
-                            (p - path +1 <= path_size); // Make sure we're not reading more than we're supposed to (in case of an unterminated string)
-                            p++) {
-    if ('/' == *p) {
-      last_slash = p;
-    }
-  }
-
-  if (!last_slash || path == last_slash) {
-    path[0] = '.';
-    last_slash = path+ 1;
-  }
-
-  *last_slash = '\0';
-  return 0;
-}
-
-/**
- * Parses the path to the libiotrace so file from the stacktrace
- * Works ONLY on GNU/Linux (since the returned format on e.g., macOS is different)
+ * Parses the path to the libiotrace so file from the current stacktrace
+ * NOTE: Works ONLY on GNU/Linux (since the returned format on e.g., macOS is different)
  *
  * @return                   Pointer to `malloc`'ed path string or `NULL` on failure
  */
@@ -172,10 +139,143 @@ char* get_libiotrace_so_file_path(void) {
         ! (backtrace_fct_names = backtrace_symbols(backtrace_rtn_addr, 1)) ||
         ! strtok_r(backtrace_fct_names[0], "(", &strtok_r_saveptr) ||
         ! (so_filename = strdup(backtrace_fct_names[0])) ) {
+
         if (backtrace_fct_names) { free(backtrace_fct_names); }
         return NULL;
     }
-    free(backtrace_fct_names);
 
+    free(backtrace_fct_names);
     return so_filename;
+}
+
+/**
+ * Implementation of `dirname`(3), taken from the Android NDK, which ALWAYS uses
+ * the provided buffer
+ *
+ * BACKGROUND: The glibc implementation MAY modify the provided buffer OR use
+ *             an internal static buffer (making it thus, not thread safe)
+ *
+ * @param[in]  path          Path from which the dirname shall be derived
+ * @param[in,out] buffer     Buffer which will contain the dirname
+ * @param[in] bufflen        Size of provided buffer in bytes
+ * @return                   Length of derived dirname, -1 on failure
+ */
+int
+dirname_r(const char*  path, char*  buffer, size_t  bufflen)
+{
+    const char *endp, *startp;
+    int         result, len;
+
+    /* Empty or NULL string gets treated as "." */
+    if (path == NULL || *path == '\0') {
+        startp = ".";
+        len  = 1;
+        goto Exit;
+    }
+
+    /* Strip trailing slashes */
+    endp = path + strlen(path) - 1;
+    while (endp > path && *endp == '/')
+        endp--;
+
+    /* Find the start of the dir */
+    while (endp > path && *endp != '/')
+        endp--;
+
+    /* Either the dir is "/" or there are no slashes */
+    if (endp == path) {
+        startp = (*endp == '/') ? "/" : ".";
+        len  = 1;
+        goto Exit;
+    }
+
+    do {
+        endp--;
+    } while (endp > path && *endp == '/');
+
+    startp = path;
+    len = endp - startp +1;
+
+Exit:
+    result = len;
+    if (len+1 > PATH_MAX) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    if (buffer == NULL)
+        return result;
+
+    if (len > (int)bufflen-1) {
+        len    = (int)bufflen-1;
+        result = -1;
+        errno  = ERANGE;
+    }
+
+    if (len >= 0) {
+        memcpy( buffer, startp, len );
+        buffer[len] = 0;
+    }
+    return result;
+}
+
+/**
+ * Implementation of `basename`(3), taken from the Android NDK, which ALWAYS uses
+ * the provided buffer
+ *
+ * BACKGROUND: The glibc implementation MAY modify the provided buffer OR use
+ *             an internal static buffer (making it thus, not thread safe)
+ *
+ * @param[in]  path          Path from which the basename shall be derived
+ * @param[in,out] buffer     Buffer which will contain the basename
+ * @param[in] bufflen        Size of provided buffer in bytes
+ * @return                   Length of derived basename, -1 on failure
+ */
+int
+basename_r(const char* path, char*  buffer, size_t  bufflen)
+{
+    const char *endp, *startp;
+    int         len, result;
+
+    /* Empty or NULL string gets treated as "." */
+    if (path == NULL || *path == '\0') {
+        startp  = ".";
+        len     = 1;
+        goto Exit;
+    }
+
+    /* Strip trailing slashes */
+    endp = path + strlen(path) - 1;
+    while (endp > path && *endp == '/')
+        endp--;
+
+    /* All slashes becomes "/" */
+    if (endp == path && *endp == '/') {
+        startp = "/";
+        len    = 1;
+        goto Exit;
+    }
+
+    /* Find the start of the base */
+    startp = endp;
+    while (startp > path && *(startp - 1) != '/')
+        startp--;
+
+    len = endp - startp +1;
+
+Exit:
+    result = len;
+    if (buffer == NULL) {
+        return result;
+    }
+    if (len > (int)bufflen-1) {
+        len    = (int)bufflen-1;
+        result = -1;
+        errno  = ERANGE;
+    }
+
+    if (len >= 0) {
+        memcpy( buffer, startp, len );
+        buffer[len] = 0;
+    }
+    return result;
 }

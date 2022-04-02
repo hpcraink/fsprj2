@@ -16,8 +16,11 @@ void shorten_log_name(char *short_log_name, const int short_log_name_len,
 
 int str_to_long(char* str, long* num);
 
-int dirname_n(char* path, int path_size);
 char* get_libiotrace_so_file_path(void);
+
+int dirname_r(const char* path, char* buffer, size_t bufflen);
+int basename_r(const char* path, char* buffer, size_t bufflen);
+
 
 END_C_DECLS
 

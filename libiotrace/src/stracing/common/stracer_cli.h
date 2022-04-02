@@ -1,0 +1,16 @@
+#ifndef LIBIOTRACE_STRACER_CLI_H
+#define LIBIOTRACE_STRACER_CLI_H
+
+
+/* -- Consts -- */
+#define STRACER_CLI_OPTION_SOCKFD             's'
+#define STRACER_CLI_OPTION_SSUBSET            'e'
+
+#define STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE 'l'   // e.g., `-l=d:../src/libiotrace-shared.so`
+#define STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC 's'
+#define STRACER_CLI_LIBIOTRACE_LINKAGE_SHARED 'd'
+
+#define STRACER_CLI_OPTION_TASK_WARN    'w'
+
+
+#endif /* LIBIOTRACE_STRACER_CLI_H */

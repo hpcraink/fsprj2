@@ -16,7 +16,7 @@
 #include <sys/prctl.h>
 
 #include "entrypoint.h"
-#include "../common/stracer.h"
+#include "../common/stracer_cli.h"
 #include "ipc/uxd_socket.h"
 
 #include <assert.h>
@@ -51,18 +51,27 @@ void stracing_init_stracer(void) {
 
 
 /* (2) Child: `exec` stracer (which will `fork` again to create the grandchild, which will be the actual tracer) */
-    /* Prepare `exec` arg: stracer executable filename + TODO: current executable filename (for stack unwinding) */
-    char *exec_arg_stracer_exec_fname;
+    /* Prepare `exec` arg: stracer's executable filename + libiotrace linkage info (necessary for stack unwinding) */
+    char *exec_arg_stracer_exec_fname,
+         *exec_arg_libiotrace_linkage;
 {
     char* current_exec_file_path = DIE_WHEN_ERRNO_VPTR( get_path_to_file_containing_this_fct() );
 {   /* >>   Derive path to stracer's executable from libiotrace so filepath   (!! MUST THEREFORE BE IN SAME DIR !!) */
-    char* current_exec_dir_path = DIE_WHEN_ERRNO_VPTR(strdup(current_exec_file_path) );
+    char* current_exec_dir_path = DIE_WHEN_ERRNO_VPTR( strdup(current_exec_file_path) );
     DIE_WHEN_ERRNO( dirname_r(current_exec_file_path, current_exec_dir_path, strlen(current_exec_dir_path) + 1) );
     DIE_WHEN_ERRNO( asprintf(&exec_arg_stracer_exec_fname, "%s/%s", current_exec_dir_path, STRACING_STRACER_EXEC_FILENAME) );
     CALL_REAL_ALLOC_SYNC(free)(current_exec_dir_path);
 }
-
-    // TODO: current executable filename (for stack unwinding)
+    /* >>   Linkage info */
+    const char cli_libiotrace_linkage
+#ifdef IO_LIB_STATIC
+            = STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC;
+#else
+            = STRACER_CLI_LIBIOTRACE_LINKAGE_SHARED;
+#endif /* IO_LIB_STATIC */
+    DIE_WHEN_ERRNO( asprintf(&exec_arg_libiotrace_linkage, "-%c=%c:%s",
+                             STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, cli_libiotrace_linkage,
+                             current_exec_file_path) );
 
     CALL_REAL_ALLOC_SYNC(free)(current_exec_file_path);
 }
@@ -79,12 +88,13 @@ void stracing_init_stracer(void) {
     const char* const exec_arg_tasks = "-w";
 
     /* Perform `exec` */
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s`", gettid(),
-                        exec_arg_stracer_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_tasks);
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s %s`", gettid(),
+                        exec_arg_stracer_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_libiotrace_linkage, exec_arg_tasks);
     CALL_REAL(execle)(exec_arg_stracer_exec_fname,
                       exec_arg_stracer_exec_fname,      /* CLI args */
                       exec_arg_sock_fd,
                       exec_syscall_subset,
+                      exec_arg_libiotrace_linkage,
                       exec_arg_tasks,
                       NULL,
                       NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */

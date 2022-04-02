@@ -17,7 +17,10 @@ typedef struct {
     bool trace_only_syscall_subset;
     bool syscall_subset_to_be_traced[SYSCALLS_ARR_SIZE];
 
-    bool warn_not_traced_syscalls;
+    bool unwind_static_linkage;
+    char* unwind_exec_filename;
+
+    bool task_warn_not_traced_syscalls;
 } cli_args_t;
 
 

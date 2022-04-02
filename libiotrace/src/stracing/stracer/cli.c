@@ -3,27 +3,34 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #include "cli.h"
-#include "common/error.h"
 #include "common/utils.h"
 #include "trace/syscalls.h"
-#include "../common/stracer.h"
+#include "../common/stracer_cli.h"
+
+#include <errno.h>
+#include "common/error.h"
+#define DEV_DEBUG_ENABLE_LOGS
+#include "common/debug.h"
 
 
 /* -- Functions -- */
-static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
+static error_t parse_cli_opt(int key, char *always_use_arg_and_not_me, struct argp_state *state) {
     cli_args_t *arguments = state->input;
 
-    char* const arg_str_start = (arg && '=' == arg[0]) ? (arg +1) : (arg);    /* CLI args may be passed w/ equals sign, e.g., `-key=value`, which messes up parsing */
+    char* const arg = (always_use_arg_and_not_me && '=' == always_use_arg_and_not_me[0]) ?
+            (always_use_arg_and_not_me + 1) :
+            (always_use_arg_and_not_me);    /* CLI args may be passed w/ equals sign, e.g., `-key=value`, which messes up parsing */
     switch (key) {
     /* Fildes of socket 2 be used for tracing */
         case STRACER_CLI_OPTION_SOCKFD:
         {
             long tmp_parsed_sockfd;
-            if (-1 == str_to_long(arg_str_start, &tmp_parsed_sockfd) || tmp_parsed_sockfd < 0) {
-                LOG_ERROR_AND_EXIT("Couldn't parse supplied socket fildes");
+            if (-1 == str_to_long(arg, &tmp_parsed_sockfd) || tmp_parsed_sockfd < 0) {
+                DEV_DEBUG_PRINT_MSG("CLI -- option -%c: Couldn't parse socket fd: \"%s\"",
+                                    STRACER_CLI_OPTION_SOCKFD, arg);
+                argp_usage(state);
             }
             arguments->uxd_reg_sock_fd = (int)tmp_parsed_sockfd;
         }
@@ -36,13 +43,15 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
             memset(arguments->syscall_subset_to_be_traced, 0,
                    SYSCALLS_ARR_SIZE * sizeof(*(arguments->syscall_subset_to_be_traced)));
 
-            if (strchr(arg_str_start, ',')) {
-                char* arg_copy = DIE_WHEN_ERRNO_VPTR( strdup(arg_str_start) );
+            if (strchr(arg, ',')) {
+                char* arg_copy = DIE_WHEN_ERRNO_VPTR( strdup(arg) );
 
                 char* pch = NULL;
                 while ((pch = strtok((!pch) ? (arg_copy) : (NULL), ","))) {
                     const long scall_nr = syscalls_get_nr(pch);
                     if (-1 == scall_nr) {
+                        DEV_DEBUG_PRINT_MSG("CLI -- option -%c: Invalid syscall name \"%s\"",
+                                            STRACER_CLI_OPTION_SSUBSET, arg);
                         argp_usage(state);
                     }
                     arguments->syscall_subset_to_be_traced[scall_nr] = true;
@@ -50,8 +59,10 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
 
                 free(arg_copy);
             } else {
-                const long scall_nr = syscalls_get_nr(arg_str_start);
+                const long scall_nr = syscalls_get_nr(arg);
                 if (-1 == scall_nr) {
+                    DEV_DEBUG_PRINT_MSG("CLI -- option -%c: Invalid syscall name \"%s\"",
+                                        STRACER_CLI_OPTION_SSUBSET, arg);
                     argp_usage(state);
                 }
                 arguments->syscall_subset_to_be_traced[scall_nr] = true;
@@ -59,9 +70,24 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
         }
             break;
 
+    /* Linkage information  (expected format: "s:path/to/exec") */
+        case STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE:
+            if (
+                    strlen(arg) < 3 ||
+                    (STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC != arg[0] && STRACER_CLI_LIBIOTRACE_LINKAGE_SHARED != arg[0]) ||
+                    ':' != arg[1]
+                ) {
+                DEV_DEBUG_PRINT_MSG("CLI -- option -%c: Invalid arg format for linkage information: \"%s\"",
+                                    STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, arg);
+                argp_usage(state);
+            }
+            arguments->unwind_static_linkage = STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC == arg[0];
+            arguments->unwind_exec_filename = arg +2;
+            break;
+
     /* TASK: Warn when function call wasn't traced by libiotrace */
-        case STRACER_CLI_OPTION_WARN:
-            arguments->warn_not_traced_syscalls = true;
+        case STRACER_CLI_OPTION_TASK_WARN:
+            arguments->task_warn_not_traced_syscalls = true;
             break;
 
 
@@ -70,13 +96,18 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
           break;
 
         case ARGP_KEY_END:
-          /* Validate args */
-          if (
-                  -1 == arguments->uxd_reg_sock_fd ||                       /* Required args (sockfd) */
-                  (!arguments->warn_not_traced_syscalls /* && !... */)      /* At least 1 "TASK" may be selected */
-             ) {
-              argp_usage(state);
-          }
+          /* Validate ALWAYS required args (sockfd  +  at least 1 selected task must be selected) */
+            if ( -1 == arguments->uxd_reg_sock_fd ||
+                 (!arguments->task_warn_not_traced_syscalls /* && !... */) ) {
+                DEV_DEBUG_PRINT_MSG("CLI validation: UXD fd + at least 1 task may be selected");
+                argp_usage(state);
+            }
+
+        /* Validate arg(s) which are required depending on selected task(s) */
+            if (arguments->task_warn_not_traced_syscalls && !arguments->unwind_exec_filename) {
+                DEV_DEBUG_PRINT_MSG("CLI validation: The warning task requires linkage information (for unwinding)");
+                argp_usage(state);
+            }
           break;
 
         default:
@@ -90,16 +121,19 @@ static error_t parse_cli_opt(int key, char *arg, struct argp_state *state) {
 void parse_cli_args(int argc, char** argv,
                     cli_args_t* parsed_cli_args_ptr) {
     static const struct argp_option cli_options[] = {
-        {"sockfd", STRACER_CLI_OPTION_SOCKFD,  "fildes",      0, "File descriptor of opened socket which shall be used for tracing",       1},
-        {"trace",  STRACER_CLI_OPTION_SSUBSET, "syscall_set", 0, "Trace only the specified (as comma-list seperated) set of system calls", 2},
-        {"warn",   STRACER_CLI_OPTION_WARN,    NULL,          0, "Warn when function call wasn't traced by libiotrace",                    3},
+        { NULL, STRACER_CLI_OPTION_SOCKFD,  "fildes",      0, "File descriptor of opened socket which shall be used for tracing",       1},
+        { NULL,  STRACER_CLI_OPTION_SSUBSET, "syscall_set", 0, "Trace only the specified (as comma-list separated) set of system calls", 2},
+        { NULL,  STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, "linkage_info", 0, "Defines (a) linkage type and (b) path to executable (required when unwinding)", 3},
+        { NULL,   STRACER_CLI_OPTION_TASK_WARN, NULL,        0, "Warn when function call wasn't traced by libiotrace",                    4},
         {0}
     };
 
   /* Defaults */
     parsed_cli_args_ptr->uxd_reg_sock_fd = -1;
     parsed_cli_args_ptr->trace_only_syscall_subset = false;
-    parsed_cli_args_ptr->warn_not_traced_syscalls = false;
+    parsed_cli_args_ptr->task_warn_not_traced_syscalls = false;
+    parsed_cli_args_ptr->unwind_static_linkage = false;
+    parsed_cli_args_ptr->unwind_exec_filename = NULL;
 
     static const struct argp argp = {
         cli_options, parse_cli_opt,
@@ -112,12 +146,14 @@ void parse_cli_args(int argc, char** argv,
 }
 
 void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
+    static const char* const NOT_APPLICABLE_STR = "N/A";
     static const char* const TRUE_STR = "true";
     static const char* const FALSE_STR = "false";
 
     puts("Parsed CLI args:");
 
     printf("\t`uxd_reg_sock_fd`=%d\n", parsed_cli_args_ptr->uxd_reg_sock_fd);
+
     printf("\t`trace_only_syscall_subset`=%s", parsed_cli_args_ptr->trace_only_syscall_subset ? (TRUE_STR) : (FALSE_STR));
     if (parsed_cli_args_ptr->trace_only_syscall_subset) {
         printf(" { ");
@@ -130,5 +166,9 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
         }
         printf("}");
     }
-    printf("\n\t`warn_not_traced_syscalls`=%s\n", parsed_cli_args_ptr->warn_not_traced_syscalls ? (TRUE_STR) : (FALSE_STR));
+
+    printf("\n\t`warn_not_traced_syscalls`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_syscalls ? (TRUE_STR) : (FALSE_STR));
+
+    printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? (TRUE_STR) : (FALSE_STR));
+    printf("\t`unwind_exec_filename`=%s\n", __extension__( parsed_cli_args_ptr->unwind_exec_filename ?: (NOT_APPLICABLE_STR) ));
 }

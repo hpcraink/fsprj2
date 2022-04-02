@@ -262,12 +262,10 @@ if (STRACING_ENABLED)
     add_executable(stracing_trace_pthread_fork_shared stracing/trace_pthread_fork.c)
     target_link_libraries(stracing_trace_pthread_fork_shared pthread)
 
-    # test with: IOTRACE_LOG_NAME=stracing_descendants_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_descendants_shared
-    add_executable(stracing_trace_descendants_shared stracing/trace_descendants.c)
+    # test with: IOTRACE_LOG_NAME=stracing_unwind_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_unwind_manual_syscall_shared
+    add_executable(stracing_unwind_manual_syscall_shared stracing/unwind_manual_syscall.c)
+    target_compile_options(stracing_unwind_manual_syscall_shared PRIVATE -D_GNU_SOURCE)
 
-    # test with: IOTRACE_LOG_NAME=stracing_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_manual_syscall_shared
-    add_executable(stracing_manual_syscall_shared stracing/unwind_manual_syscall.c)
-    target_compile_options(stracing_manual_syscall_shared PRIVATE -D_GNU_SOURCE)
 endif()
 
 

@@ -84,12 +84,12 @@ void syscalls_print_args(__attribute__((unused)) pid_t tid, struct user_regs_str
 
 static long from_regs_struct_get_syscall_arg(struct user_regs_struct_full *regs, int which) {
     switch (which) {
-        case 0: return USER_REGS_STRUCT_SC_ARG0((*regs));
-        case 1: return USER_REGS_STRUCT_SC_ARG1((*regs));
-        case 2: return USER_REGS_STRUCT_SC_ARG2((*regs));
-        case 3: return USER_REGS_STRUCT_SC_ARG3((*regs));
-        case 4: return USER_REGS_STRUCT_SC_ARG4((*regs));
-        case 5: return USER_REGS_STRUCT_SC_ARG5((*regs));
+        case 0: return USER_REGS_STRUCT_SC_ARG0( (*regs) );
+        case 1: return USER_REGS_STRUCT_SC_ARG1( (*regs) );
+        case 2: return USER_REGS_STRUCT_SC_ARG2( (*regs) );
+        case 3: return USER_REGS_STRUCT_SC_ARG3( (*regs) );
+        case 4: return USER_REGS_STRUCT_SC_ARG4( (*regs) );
+        case 5: return USER_REGS_STRUCT_SC_ARG5( (*regs) );
 
         default: return -1L;        /* Invalid */
     }

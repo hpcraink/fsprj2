@@ -7,8 +7,8 @@
 #include <sys/user.h>
 
 
-/* ----------------------- ----------------------- amd64 ----------------------- ----------------------- */
-#if defined(__x86_64__)
+/* ----------------------- ----------------------- amd64 / i386 ----------------------- ----------------------- */
+#if defined(__x86_64__) || defined(__i386__)
 
 /* -- Macros -- */
 #  define user_regs_struct_full user_regs_struct
@@ -16,28 +16,31 @@
 #  define NO_SYSCALL (-1)
 
 /* - Macros for accessing registers (and other information) in `user_regs_struct` - */
-#    define USER_REGS_STRUCT_IP(regss)               (regss.rip)
-#    define USER_REGS_STRUCT_PTR_IP(regss)           (regss->rip)
-#    define USER_REGS_STRUCT_SP(regss)               (regss.rsp)
-#    define USER_REGS_STRUCT_PTR_SP(regss)           (regss->rsp)
-#    define USER_REGS_STRUCT_SC_NO(regss)            ((const int)(regss.orig_rax))
-#    define USER_REGS_STRUCT_PTR_SC_NO(regss)        ((const int)(regss->orig_rax))
-#    define USER_REGS_STRUCT_SC_RTNVAL(regss)        (regss.rax)
-#    define USER_REGS_STRUCT_PTR_SC_RTNVAL(regss)    (regss->rax)
-#    define USER_REGS_STRUCT_SC_ARG0(regss)          (regss.rdi)
-#    define USER_REGS_STRUCT_PTR_SC_ARG0(regss)      (regss->rdi)
-#    define USER_REGS_STRUCT_SC_ARG1(regss)          (regss.rsi)
-#    define USER_REGS_STRUCT_PTR_SC_ARG1(regss)      (regss->rsi)
-#    define USER_REGS_STRUCT_SC_ARG2(regss)          (regss.rdx)
-#    define USER_REGS_STRUCT_PTR_SC_ARG2(regss)      (regss->rdx)
-#    define USER_REGS_STRUCT_SC_ARG3(regss)          (regss.r10)
-#    define USER_REGS_STRUCT_PTR_SC_ARG3(regss)      (regss->r10)
-#    define USER_REGS_STRUCT_SC_ARG4(regss)          (regss.r8)
-#    define USER_REGS_STRUCT_PTR_SC_ARG4(regss)      (regss.r8)
-#    define USER_REGS_STRUCT_SC_ARG5(regss)          (regss.r9)
-#    define USER_REGS_STRUCT_PTR_SC_ARG5(regss)      (regss->r9)
-#    define USER_REGS_STRUCT_SC_HAS_RTNED(regss)     (regss.rax != ((unsigned long long)-38))     /* -38 (ENOSYS) is put into RAX as a default return value by the kernel's syscall entry code */
-#    define USER_REGS_STRUCT_PTR_SC_HAS_RTNED(regss) (regss->rax != ((unsigned long long)-38))
+#  ifdef __x86_64__
+#    define USER_REGS_STRUCT_IP(regss)           (regss.rip)
+#    define USER_REGS_STRUCT_SP(regss)           (regss.rsp)
+#    define USER_REGS_STRUCT_SC_NO(regss)        ((const int)(regss.orig_rax))
+#    define USER_REGS_STRUCT_SC_RTNVAL(regss)    (regss.rax)
+#    define USER_REGS_STRUCT_SC_ARG0(regss)      (regss.rdi)
+#    define USER_REGS_STRUCT_SC_ARG1(regss)      (regss.rsi)
+#    define USER_REGS_STRUCT_SC_ARG2(regss)      (regss.rdx)
+#    define USER_REGS_STRUCT_SC_ARG3(regss)      (regss.r10)
+#    define USER_REGS_STRUCT_SC_ARG4(regss)      (regss.r8)
+#    define USER_REGS_STRUCT_SC_ARG5(regss)      (regss.r9)
+#    define USER_REGS_STRUCT_SC_HAS_RTNED(regss) (regss.rax != ((unsigned long long)-38))     /* -38 (ENOSYS) is put into RAX as a default return value by the kernel's syscall entry code */
+#  else /* __i386__ */
+#    define USER_REGS_STRUCT_IP(regss)           (regss.eip)
+#    define USER_REGS_STRUCT_SP(regss)           (regss.esp)
+#    define USER_REGS_STRUCT_SC_NO(regss)        ((const int)(regss.orig_eax))
+#    define USER_REGS_STRUCT_SC_RTNVAL(regss)    (regss.eax)
+#    define USER_REGS_STRUCT_SC_ARG0(regss)      (regss.ebx)
+#    define USER_REGS_STRUCT_SC_ARG1(regss)      (regss.ecx)
+#    define USER_REGS_STRUCT_SC_ARG2(regss)      (regss.edx)
+#    define USER_REGS_STRUCT_SC_ARG3(regss)      (regss.esi)
+#    define USER_REGS_STRUCT_SC_ARG4(regss)      (regss.edi)
+#    define USER_REGS_STRUCT_SC_ARG5(regss)      (regss.ebp)
+#    define USER_REGS_STRUCT_SC_HAS_RTNED(regss) (regss.eax != ((unsigned long)-38))    // $$ TODO: CHECK WHETHER CORRECT $$
+# endif
 
 
 // /* ----------------------- -----------------------   arm64    ----------------------- ----------------------- */

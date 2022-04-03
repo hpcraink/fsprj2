@@ -39,12 +39,12 @@ void do_requested_tasks(cli_args_t *parsed_cli_args,
 /* - Helpers - */
 void print_syscall(FILE *output,
                    pid_t tid, struct user_regs_struct *read_regs) {
-    const char* scall_name = syscalls_get_name(USER_REGS_STRUCT_PTR_SC_NO(read_regs));
+    const char* scall_name = syscalls_get_name(USER_REGS_STRUCT_SC_NO( (*read_regs) ));
     fprintf(output, "[%d] ", tid);
     fprintf(output, "%s(", (scall_name) ? (scall_name) : ("UNKNOWN"));
     syscalls_print_args(tid, read_regs);
     fprintf(output, ")");
 
-    const long syscall_rtn_val = USER_REGS_STRUCT_PTR_SC_RTNVAL(read_regs);
+    const long syscall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs) );
     fprintf(output, " = %ld\n", syscall_rtn_val);
 }

@@ -19,8 +19,4 @@ typedef struct {
     const arg_type_t args[SYSCALL_MAX_ARGS];
 } syscall_entry_t;
 
-
-/* -- Function prototypes -- */
-const char* arg_type_enum_to_str(arg_type_t arg);
-
 #endif /* SYSCALL_TYPES_H */

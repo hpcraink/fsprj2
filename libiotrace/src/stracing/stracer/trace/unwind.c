@@ -173,7 +173,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
         const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
         DEV_DEBUG_PRINT_MSG("--> %s", module_name);
         if (! strstr(module_name, stacktrace_module_name) ) { continue; }  /* 'Module name' doesn't match -> proceed ... */
-        else {                                                           /* Matches ... */
+        else {                                                             /* Matches ... */
             if (!stacktrace_fct_name) {
                 result_found = true;
                 break;

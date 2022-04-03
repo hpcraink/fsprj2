@@ -1,6 +1,7 @@
 /**
- * Performs manual syscall (i.e., doesn't use glibc wrappers), bypassing the libiotrace wrappers
- * May be used to test filename resolution or syscall tracing
+ * Performs some syscalls manually (i.e., doesn't utilize glibc wrappers), thereby,
+ * bypassing the libiotrace wrappers
+ * May be used to test libiotrace's filename resolution or syscall tracing capabilities
  */
 #include <unistd.h>
 #include <sys/syscall.h>

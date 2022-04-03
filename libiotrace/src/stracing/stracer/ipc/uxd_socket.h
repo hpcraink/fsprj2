@@ -10,7 +10,7 @@
  *
  * @param[in] uxd_reg_sock_fd             fd of the IPC Unix Domain Socket
  * @param[out] tracee_conn_fd_ptr         The fd opened for accepting & checking the sent message;
- *                                        may be used to sending responses to tracee (i.e., bidirectional communication);
+ *                                        may be used for sending a response to tracee (i.e., bidirectional communication);
  *                                        MUST BE CLOSED BY CALLER AT SOME POINT
  * @param[out] ipc_req_ptr                The received IPC message
  * @param[out] cr_pid_ptr                 Optional; Will contain the pid of the ipc message's sender (i.e., the tracee)

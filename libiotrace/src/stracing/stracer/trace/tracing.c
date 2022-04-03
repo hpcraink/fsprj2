@@ -50,7 +50,7 @@ pid_t tracing_attach_tracee(pid_t tid) {
 int tracing_set_next_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = breakpoint; Reports only 'trap events' which are due to termination or stops caused by syscall's */
 
     for (int pending_signal = 0; ; ) {
-    /* (0) Restart stopped tracee but set next breakpoint (on next syscall)   (AND "forward" received signal to tracee) */
+    /* 0. Restart stopped tracee but set next breakpoint (on next syscall)   (AND "forward" received signal to tracee) */
         if (-1 != next_bp_tid) {        /* Check only (i.e., don't set breakpoint) */
             DIE_WHEN_ERRNO( ptrace(PTRACE_SYSCALL, next_bp_tid, 0, pending_signal) );
         }
@@ -59,7 +59,7 @@ int tracing_set_next_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = br
         pending_signal = 0;
 
 
-    /* (1) Check for ANY tracee to change state (stops or terminates) */
+    /* 1. Check for ANY tracee to change state (stops or terminates) */
         int trapped_tracee_status;
         const pid_t trapped_tracee_tid = DIE_WHEN_ERRNO( waitpid(-1, &trapped_tracee_status, WNOHANG) );
         if (0 == trapped_tracee_tid) {
@@ -67,36 +67,36 @@ int tracing_set_next_bp_and_check_trap(pid_t next_bp_tid) {  /* NOTEs: 'bp' = br
         }
 
 
-    /* (2) Check tracee's process status */
-        /* (2.1) Possibility 1: Tracee was stopped */
+    /* 2. Check tracee's process status */
+        /* 2.1. Possibility 1: Tracee was stopped */
         if (WIFSTOPPED(trapped_tracee_status)) {
             siginfo_t si;
 
             next_bp_tid = trapped_tracee_tid;
             const int stopsig = WSTOPSIG(trapped_tracee_status);
 
-            /* (I) SYSCALL-ENTER-/-EXIT-stop */
+            /* I. SYSCALL-ENTER-/-EXIT-stop */
             if ((SIGTRAP | PTRACE_TRAP_INDICATOR_BIT) == stopsig) {
-                return trapped_tracee_tid;      /* >>>   Tracee was stopped (indicated by positive returned tid; only possible stop reason here: due to syscall breakpoint) */
+                return trapped_tracee_tid;      /* >>>   Tracee was stopped (will be indicated by positive returned tid; only possible stop reason here: due to syscall breakpoint) */
 
-            /* (II) `PTRACE_EVENT_xxx` stops */
+            /* II. `PTRACE_EVENT_xxx` stops */
             } else if (SIGTRAP == stopsig) {
                 // ... Check for ptrace-events here ...
 
-            /* (III) Group-stops */
+            /* III. Group-stops */
             } else if (ptrace(PTRACE_GETSIGINFO, trapped_tracee_tid, 0, &si) < 0) {
                 // ...
 
-            /* (IV) Signal-delivery stops */
+            /* IV. Signal-delivery stops */
             } else {
                 DEV_DEBUG_PRINT_MSG(">>> Tracing: +++ [%d] received (not delivered yet) signal \"%s\" +++", next_bp_tid, strsignal(stopsig));
                 pending_signal = stopsig;
             }
 
 
-        /* (2.2) Possibility 2: Tracee terminated */
+        /* 2.2. Possibility 2: Tracee terminated */
         } else {
-            return -(trapped_tracee_tid);       /* >>>   Tracee has terminated (indicated by negative returned tid; possible stop reasons: see above) */
+            return -(trapped_tracee_tid);       /* >>>   Tracee has terminated (will be indicated by negative returned tid) */
         }
     }
 }

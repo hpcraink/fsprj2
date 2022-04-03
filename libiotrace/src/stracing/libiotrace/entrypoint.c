@@ -1,10 +1,10 @@
 /**
  * Known ISSUEs:
  *   - Traced programs which have STATICALLY LINKED functions, which in turn are normally
- *     (a) wrapped by libiotrace, and (b) used by libiotrace to perform an THREAD init
+ *     (a) wrapped by libiotrace, and (b) used by libiotrace to trigger an THREAD init
  *     (e.g., `pthread_create`(3)), may not be traced properly (won't send a tracing request)
- *     NOTE: A possible solution would be to set `PTRACE_O_TRACECLONE`, etc. for tracing options
- *           in stracer (since the process init via '.ctors' is guaranteed)
+ *     NOTE: A possible remedy would be to also set the ptrace flags `PTRACE_O_TRACECLONE`, etc.,
+ *           (since the process init via '.ctors' is guaranteed)
  *
  * TODOs:
  *   - ...
@@ -106,15 +106,15 @@ void stracing_init_stracer(void) {
 
 
 void stracing_register_with_stracer(void) {
-/* 0. Set tracing permissions (only necessary when Yama ptrace_scope = 1; check: `cat /proc/sys/kernel/yama/ptrace_scope`) */
+/* 0. Set tracing permissions (only necessary when Yama ptrace_scope = 1; check current settings: `cat /proc/sys/kernel/yama/ptrace_scope`) */
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 
-/* 1. Send tracing request */
+/* 1. Send tracing request to stracer */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
     int server_conn_fd;
     uxd_ipc_tracee_send_tracing_req(STRACING_UXD_SOCKET_FILEPATH, &server_conn_fd);
 
-/* 2. Block until it's tracer sends acknowledgement (i.e., we're now being actively traced) */
+/* 2. Block execution until stracer acknowledges request (i.e., until we're attached) */
     uxd_ipc_tracee_block_until_tracing_ack(server_conn_fd);
     CALL_REAL_POSIX_SYNC(close)(server_conn_fd);
 

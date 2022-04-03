@@ -17,8 +17,8 @@
  *     - ...
  *
  *   - TODOs:
- *     - IMPLEMENT WARN / FNRES TASK
- *       - Check those tasks w/ an executable which is statically linked w/ libiotrace
+ *     - IMPLEMENT FNRES TASK
+ *     - arm64 support (returns currently wrong syscall-nr, hence disabled)
  */
 #include <errno.h>
 #include <fcntl.h>
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 #endif
     const int uxd_reg_sock_fd = parsed_cli_args.uxd_reg_sock_fd;
 
-/* 0.3. Check whether fildes is valid  (TODO: check whether socket) */
+/* 0.3. Check whether fildes is valid */
     if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
         LOG_ERROR_AND_EXIT("Invalid uxd socket fd");
     }

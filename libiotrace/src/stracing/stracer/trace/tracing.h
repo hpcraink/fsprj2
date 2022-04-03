@@ -14,7 +14,7 @@ pid_t tracing_attach_tracee(pid_t tid);
  * @brief                                 Checks for processes which have been trapped, giving
  *                                        the caller the chance to
  *                                        a) check the trap and
- *                                        b) set the next breakpoint (aka. bp) for the process
+ *                                        b) set the next breakpoint (in short 'bp') for the process
  *
  * @param[in] next_bp_tid                 Process for which the next bp shall be set
  * @return int                            `0` = no pending traps;

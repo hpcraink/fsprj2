@@ -121,10 +121,10 @@ static error_t parse_cli_opt(int key, char *always_use_arg_and_not_me, struct ar
 void parse_cli_args(int argc, char** argv,
                     cli_args_t* parsed_cli_args_ptr) {
     static const struct argp_option cli_options[] = {
-        { NULL, STRACER_CLI_OPTION_SOCKFD,  "fildes",      0, "File descriptor of opened socket which shall be used for tracing",       1},
-        { NULL,  STRACER_CLI_OPTION_SSUBSET, "syscall_set", 0, "Trace only the specified (as comma-list separated) set of system calls", 2},
-        { NULL,  STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, "linkage_info", 0, "Defines (a) linkage type and (b) path to executable (required when unwinding)", 3},
-        { NULL,   STRACER_CLI_OPTION_TASK_WARN, NULL,        0, "Warn when function call wasn't traced by libiotrace",                    4},
+        { NULL, STRACER_CLI_OPTION_SOCKFD,             "fd",           0, "fd of IPC UXD socket",                                            1 },
+        { NULL, STRACER_CLI_OPTION_SSUBSET,            "syscall_set",  0, "To be traced, comma-list separated, syscall subset",              2 },
+        { NULL, STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, "linkage_info", 0, "Linkage information (required for unwinding)",                    3 },
+        { NULL, STRACER_CLI_OPTION_TASK_WARN,          NULL,           0, "Warning task -- alerts when ioevent wasn't traced by libiotrace", 4 },
         {0}
     };
 
@@ -166,5 +166,5 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
     }
     printf("\n\t`task_warn_not_traced_ioevent`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_ioevents ? (TRUE_STR) : (FALSE_STR));
     printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? (TRUE_STR) : (FALSE_STR));
-    printf("\t`unwind_module_name`=%s\n", __extension__(parsed_cli_args_ptr->unwind_module_name ?: (NOT_APPLICABLE_STR) ));
+    printf("\t`unwind_module_name`=%s\n", __extension__(parsed_cli_args_ptr->unwind_module_name ? : (NOT_APPLICABLE_STR) ));
 }

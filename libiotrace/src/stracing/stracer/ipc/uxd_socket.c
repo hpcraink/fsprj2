@@ -31,7 +31,7 @@ static void uxd_sock_write(int uxd_reg_sock_fd,
                            uxd_sock_ipc_msg_t* ipc_request) {
     const size_t msg_to_send_len_bytes = sizeof(*ipc_request);
     size_t total_bytes_sent = 0,
-            cur_bytes_sent;
+           cur_bytes_sent;
     do {
         cur_bytes_sent = DIE_WHEN_ERRNO( write(uxd_reg_sock_fd, ipc_request + total_bytes_sent, msg_to_send_len_bytes - total_bytes_sent) );
         total_bytes_sent += cur_bytes_sent;

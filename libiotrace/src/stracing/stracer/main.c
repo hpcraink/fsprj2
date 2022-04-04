@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
             int tracee_conn_fd;
             uxd_sock_ipc_msg_t ipc_request;
             const int status = uxd_ipc_tracer_recv_new_request(uxd_reg_sock_fd, &tracee_conn_fd,
-                                                               &ipc_request, NULL);
+                                                               &ipc_request);
             if (-1 == status)      { break; }
             else if (-2 == status) { goto cleanup; }
 

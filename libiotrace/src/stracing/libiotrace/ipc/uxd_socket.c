@@ -44,8 +44,7 @@ static void uxd_sock_write(int uxd_reg_sock_fd,
 }
 
 static int uxd_sock_read(int conn_fd,
-                         uxd_sock_ipc_msg_t *ipc_request,
-                         pid_t *cr_pid) {
+                         uxd_sock_ipc_msg_t *ipc_request) {
     assert( ipc_request && 0 <= conn_fd && "`ipc_request` and `conn_fd` may be valid" );
 
     memset(ipc_request, 0, sizeof(*ipc_request));
@@ -61,12 +60,6 @@ static int uxd_sock_read(int conn_fd,
         LIBIOTRACE_WARN("Received incomplete ipc-request "
                  "(%zu of %zu expected bytes) -- %s", total_bytes_read, sizeof(*ipc_request), strerror(errno));
         return -1;
-    }
-
-    if (cr_pid) {
-        struct ucred cr; socklen_t cr_len = sizeof (cr);
-        DIE_WHEN_ERRNO( getsockopt(conn_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) );
-        *cr_pid = (pid_t)cr.pid;
     }
 
     return 0;
@@ -125,7 +118,7 @@ void uxd_ipc_tracee_send_tracing_req(char* socket_filepath, int* server_fd_ptr) 
 
 void uxd_ipc_tracee_block_until_tracing_ack(int server_conn_fd) {
     uxd_sock_ipc_msg_t ipc_request;
-    const int rv = uxd_sock_read(server_conn_fd, &ipc_request, NULL);
+    const int rv = uxd_sock_read(server_conn_fd, &ipc_request);
 
     if (!rv && TRACER_REQUEST_ACCEPTED == ipc_request.msg_type) { return; }
     LIBIOTRACE_ERROR("Got invalid tracing request acknowledgement");

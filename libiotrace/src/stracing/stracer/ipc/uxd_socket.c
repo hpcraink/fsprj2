@@ -41,8 +41,7 @@ static void uxd_sock_write(int uxd_reg_sock_fd,
 }
 
 static int uxd_sock_read(int conn_fd,
-                         uxd_sock_ipc_msg_t *ipc_request,
-                         pid_t *cr_pid) {
+                         uxd_sock_ipc_msg_t *ipc_request) {
     assert( ipc_request && 0 <= conn_fd && "`ipc_request` and `conn_fd` may be valid" );
 
     memset(ipc_request, 0, sizeof(*ipc_request));
@@ -60,26 +59,20 @@ static int uxd_sock_read(int conn_fd,
         return -1;
     }
 
-    if (cr_pid) {
-        struct ucred cr; socklen_t cr_len = sizeof (cr);
-        DIE_WHEN_ERRNO( getsockopt(conn_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) );
-        *cr_pid = (pid_t)cr.pid;
-    }
-
     return 0;
 }
 
 
 /* - Public - */
 int uxd_ipc_tracer_recv_new_request(int uxd_reg_sock_fd, int* tracee_conn_fd_ptr,
-                                    uxd_sock_ipc_msg_t *ipc_req_ptr, pid_t *cr_pid_ptr) {
+                                    uxd_sock_ipc_msg_t *ipc_req_ptr) {
 /* Accept request from backlog */
     if (-1 == (*tracee_conn_fd_ptr = uxd_sock_accept(uxd_reg_sock_fd))) {
         return -1;                      /* `-1` = No new request(s) */
     }
 
 /* Read request */
-    const int rv = uxd_sock_read(*tracee_conn_fd_ptr, ipc_req_ptr, cr_pid_ptr);
+    const int rv = uxd_sock_read(*tracee_conn_fd_ptr, ipc_req_ptr);
 
     return (rv == -1) ? (-2) : (0);     /* `-2` = incomplete (thus, invalid) request, `0` = valid request */
 }

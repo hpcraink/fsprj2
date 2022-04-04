@@ -16,9 +16,6 @@ list(APPEND STRACER_SOURCE
         stracer/cli.c
         stracer/main.c)
 
-set(STRACER_COMPILE_OPTIONS
-        -D_GNU_SOURCE)
-
 
 # -- CMake options --
 set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source used to parse syscalls")

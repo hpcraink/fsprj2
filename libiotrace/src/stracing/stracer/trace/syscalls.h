@@ -9,7 +9,7 @@
 
 
 /* -- Type declarations -- */
-struct user_regs_struct_full ;
+struct user_regs_struct_full;
 
 
 /* -- Function prototypes -- */

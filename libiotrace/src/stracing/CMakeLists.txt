@@ -67,7 +67,7 @@ target_include_directories(libiotrace_stracer PRIVATE
 target_compile_options(libiotrace_stracer PRIVATE
         ${STRACER_COMPILE_OPTIONS})
 
-target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw iberty)        # TODO: RMV C++ demangling
+target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
 
 
 

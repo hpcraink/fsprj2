@@ -100,7 +100,7 @@ void stracing_init_stracer(void) {
                       exec_arg_libiotrace_linkage,
                       exec_arg_tasks,
                       NULL,
-                      NULL);                    /* Envs (make sure NO `LD_PRELOAD` is passed) */
+                      NULL);                            /* Envs (make sure NO `LD_PRELOAD` is passed, otherwise we can't "break out" of libiotrace's tracing) */
     LIBIOTRACE_ERROR("stracer `exec` failed -- %s", strerror(errno));
 }
 

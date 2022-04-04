@@ -26,7 +26,7 @@ void tasks_on_stracer_fin(void);
  * @brief                        Hook which gets called by stracer when a tracee has hit a breakpoint
  *
  * @param[in] trapped_tracee_tid Tid of trapped tracee
- * @param[in] user_regs_struct   Register contents read by stracer
+ * @param[in] read_regs          Register contents read by stracer
  */
 void tasks_on_event_syscall(pid_t trapped_tracee_tid,
                             struct user_regs_struct *read_regs);

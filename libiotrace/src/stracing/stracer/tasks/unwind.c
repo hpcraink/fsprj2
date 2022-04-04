@@ -8,7 +8,6 @@
 #include <elfutils/libdwfl.h>
 #define UNW_REMOTE_ONLY
 #include <libunwind-ptrace.h>
-#include <libiberty/demangle.h>                /* or g++ header `cxxabi.h` using `abi::__cxa_demangle` */
 
 #include <stdio.h>
 #include <stdlib.h>

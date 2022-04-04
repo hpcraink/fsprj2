@@ -168,7 +168,7 @@ Steps to build _libiotrace_:
 
         * _STRACING_ENABLED_:
 
-          Prerequisites: Linux kernel sources (for Debian based systems: `sudo apt source linux`; NOTE: `deb-src` lines in apt-sources may need to be uncommented first), dependencies: *libunwind*, *libiberty* and *libdwfl* (on Debian based systems: `sudo apt install -y libunwind-dev libiberty-dev libdw-dev`)
+          Prerequisites: Linux kernel sources (for Debian based systems: `sudo apt source linux`; NOTE: `deb-src` lines in apt-sources may need to be uncommented first), dependencies: *libunwind* and *libdwfl* (on Debian based systems: `sudo apt install -y libunwind-dev libdw-dev`)
 
           If set to _ON_, libiotrace will launch an additional process, "the stracer", which uses ptrace(2) to trace the program traced by libiotrace, "the tracee".
           This enables libiotrace to indirectly trace library calls, which cannot be traced by libiotrace itself, e.g., due to static linkage.

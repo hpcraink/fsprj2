@@ -20,7 +20,7 @@
 #include "ipc/uxd_socket.h"
 
 #include "../../error.h"  /* NOTE: Already incl. via `event.h` */
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "../../debug.h"
 
 

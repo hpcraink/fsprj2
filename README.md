@@ -1,4 +1,4 @@
-# Research project: libiotrace and IOTrace_Analyze – Tools for analyzing program File-I/O
+# *libiotrace* and *IOTrace_Analyze* – Tools for analyzing program File-I/O
 
 Tools to monitor, analyze and visualize File-I/O.
 

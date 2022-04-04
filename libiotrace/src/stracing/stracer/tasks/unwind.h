@@ -11,7 +11,6 @@
 /* -- Function prototypes -- */
 void unwind_init(void);
 void unwind_fin(void);
-void unwind_print_backtrace_of_proc(pid_t tid);
 
 bool unwind_ioevent_was_traced(pid_t tid,
                                char* stacktrace_module_name, char* stacktrace_fct_name);

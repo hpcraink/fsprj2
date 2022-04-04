@@ -16,9 +16,9 @@
 #include "unwind.h"
 
 #include <assert.h>
-#include "common/error.h"
+#include "../common/error.h"
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "common/debug.h"
+#include "../common/debug.h"
 
 
 /* -- Macros / Globals  -- */
@@ -48,103 +48,23 @@ void unwind_init(void) {
      *     WARNING: Caching requires appropriate calls to unw_flush_cache() to ensure cache validity
      */
     // unw_set_caching_policy(_unw_as, UNW_CACHE_GLOBAL);
+
+    DEV_DEBUG_PRINT_MSG(">>> Unwind: Got init");
 }
 
 void unwind_fin(void) {
     unw_destroy_addr_space(unw_as);        // ?? TODO: Necessary ??
-}
 
-
-void unwind_print_backtrace_of_proc(pid_t tid) {
-    assert( unw_as && "Unwind context may be inited prior usage." );
-
-
-/* 0. Init  */
-    /* 0.1. libunwind */
-    unw_context_t *unw_ctx = _UPT_create(tid);
-    /* ELUCIDATION:
-     *   `unw_init_remote`(3): Initialize unwind cursor
-     *     - pointed to by `cursor` for unwinding the created
-     *     - address space identified by `unw_as`;
-     *     - `context` void-pointer tells the address space exactly what entity should be unwound
-     */
-    unw_cursor_t cursor;
-    if (0 > unw_init_remote(&cursor, unw_as, unw_ctx)) {
-        LOG_ERROR_AND_EXIT("libunwind -- failed to init context");
-    }
-
-    /* 0.2. libdw */
-    Dwfl* dwfl = init_ldw_for_proc(tid);
-
-
-/* 1. Print frames in execution stack of process */
-#ifdef MAX_STACKTRACE_DEPTH
-    int cur_stack_depth = 0;
-    do {
-        if (cur_stack_depth++ >= MAX_STACKTRACE_DEPTH) { break; }
-#else
-    do {
-#endif /* MAX_STACKTRACE_DEPTH */
-
-    /* 1.1. Get IP-address */
-        /* ELUCIDATION:
-         *   `unw_get_reg`(3): Read the value of register `reg` in stackframe identified by `cursor` and store its value in the word pointed to by `ip`
-         */
-        unw_word_t ip = 0;
-        if (0 > unw_get_reg(&cursor, UNW_REG_IP, &ip)) {
-            LOG_ERROR_AND_EXIT("libunwind -- failed to walk the stack of process %d", tid);
-        }
-
-    /* 1.2. Get + Print so filename */
-        Dwfl_Module* module = dwfl_addrmodule(dwfl, (uintptr_t)ip);
-        const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        fprintf(stderr, " > %s", /*strrchr(module_name,'/') +1*/ module_name);
-
-    /* 1.3. Print function (i.e., symbol) + offset in function */
-        /* ELUCIDATION:
-         *   `unw_get_proc_name`(3): Get name of function which created stackframe identified by `cursor`
-         *     - `sym` = pointer to a char buffer which will hold the procedure name and
-         *     - that is at least `len` bytes long
-         *     - `offset` = pointer to word used to return **byte-offset of IP saved in the stackframe (identified by `cursor`), relative to start of procedure**
-         */
-        unw_word_t offset = 0;
-        char symbol_buf[4096];
-        if (! unw_get_proc_name(&cursor, symbol_buf, sizeof(symbol_buf), &offset) ) {
-            // OPTIONALLY: Demangle C++ fct names
-            char *symbol = symbol_buf;
-            if (! (symbol = cplus_demangle(symbol_buf, 0)) ) {
-                symbol = symbol_buf;
-            }
-
-            fprintf(stderr, "(%s+0x%lx)", symbol, offset);
-            // Deallocate demangled C++ symbol name (if returned by `cplus_demangle`)
-            if (symbol_buf != symbol) {
-                free(symbol);
-                symbol = NULL;
-            }
-        } else {
-            fprintf(stderr, "(-- found no symbol)");
-        }
-
-    /* 1.4. Print IP-address */
-        fprintf(stderr, " [0x%lx]\n", ip);
-
-
-    /* ELUCIDATION:
-     *   `unw_step`(3): Advances unwind `cursor` to the next older, less deeply nested stackframe
-     */
-    } while (unw_step(&cursor) > 0);
-
-
-/* 2. Cleanup (destroy unwinding context of process) */
-    dwfl_end(dwfl);
-    _UPT_destroy(unw_ctx);
+    DEV_DEBUG_PRINT_MSG(">>> Unwind: Got fin");
 }
 
 
 bool unwind_ioevent_was_traced(pid_t tid,
                                char* stacktrace_module_name, char* stacktrace_fct_name) {
     assert( unw_as && "Unwind context may be inited prior usage." );
+
+    DEV_DEBUG_PRINT_MSG("Unwinding stack for %d, searching for %s:%s",
+                        tid, stacktrace_module_name, __extension__( stacktrace_fct_name ? : "<any-fct>" ));
 
 
 /* 0. Init  */
@@ -171,10 +91,13 @@ bool unwind_ioevent_was_traced(pid_t tid,
         /* 1.2. Check module name in stacktrace */
         Dwfl_Module* module = dwfl_addrmodule(dwfl, (uintptr_t)ip);
         const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        DEV_DEBUG_PRINT_MSG("--> %s", module_name);
-        if (! strstr(module_name, stacktrace_module_name) ) { continue; }  /* 'Module name' doesn't match -> proceed ... */
+        if (! strstr(module_name, stacktrace_module_name) ) {
+            DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s)", module_name);
+            continue;
+        }                                                                  /* 'Module name' doesn't match -> proceed ... */
         else {                                                             /* Matches ... */
             if (!stacktrace_fct_name) {
+                DEV_DEBUG_PRINT_MSG(">>> Unwind: Match (%s)", module_name);
                 result_found = true;
                 break;
             }
@@ -184,11 +107,12 @@ bool unwind_ioevent_was_traced(pid_t tid,
         unw_word_t offset = 0;
         char symbol_buf[4096];
         if (! unw_get_proc_name(&cursor, symbol_buf, sizeof(symbol_buf), &offset) ) {
-            DEV_DEBUG_PRINT_MSG("--> : %s", symbol_buf);
-            if (strstr(symbol_buf, stacktrace_module_name) ) {            /* 'Function name' matches */
+            if (strstr(symbol_buf, stacktrace_fct_name) ) {            /* 'Function name' matches */
+                DEV_DEBUG_PRINT_MSG(">>> Unwind: Match (%s:%s)", module_name, symbol_buf);
                 result_found = true;
                 break;
             }
+            DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s:%s)", module_name, symbol_buf);
         }
     } while (unw_step(&cursor) > 0);
 

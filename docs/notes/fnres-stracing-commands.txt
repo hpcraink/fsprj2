@@ -45,11 +45,12 @@ EOF
 
 - Testing:
     - Dynamically linked:
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_syscall_test_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_syscall_test_shared  --use-glibc-wrapper)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared)
+
         :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   mpirun -np 1 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read)
                 (cd test &&   strace -f -i -k -ttt  mpirun -np 1 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read)
 
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_syscall_test_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_syscall_test_shared  --use-glibc-wrapper)
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared)
 
     - Statically linked:
         :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_syscall_test_static_test1 ./stracing_syscall_test_static  --use-glibc-wrapper)

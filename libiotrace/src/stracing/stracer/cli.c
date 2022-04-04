@@ -166,5 +166,5 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
     }
     printf("\n\t`task_warn_not_traced_ioevent`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_ioevents ? (TRUE_STR) : (FALSE_STR));
     printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? (TRUE_STR) : (FALSE_STR));
-    printf("\t`unwind_module_name`=%s\n", __extension__(parsed_cli_args_ptr->unwind_module_name ? : (NOT_APPLICABLE_STR) ));
+    printf("\t`unwind_module_name`=%s\n", __extension__( parsed_cli_args_ptr->unwind_module_name ? : (NOT_APPLICABLE_STR) ));
 }

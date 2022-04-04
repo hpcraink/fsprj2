@@ -7,6 +7,9 @@
 
 #include "../common/error.h"
 
+//#define DEV_DEBUG_ENABLE_LOGS
+#include "../common/debug.h"
+
 
 /* -- Globals -- */
 static cli_args_t* g_cli_args_ptr;
@@ -25,6 +28,7 @@ void tasks_on_stracer_init(cli_args_t* cli_args_ptr) {
     assert( !g_cli_args_ptr && "Got already init" );
 
     g_cli_args_ptr = cli_args_ptr;
+    DEV_DEBUG_PRINT_MSG(">>> Tasks: Init (selected tasks -- warn=%d)", g_cli_args_ptr->task_warn_not_traced_ioevents);
 
 /* Unwinding functionality */
     if (g_cli_args_ptr->task_warn_not_traced_ioevents) {    // All tasks which require stack unwinding
@@ -38,6 +42,8 @@ void tasks_on_stracer_init(cli_args_t* cli_args_ptr) {
 
 void tasks_on_stracer_fin(void) {
     assert( g_cli_args_ptr && "Not inited yet" );
+
+    DEV_DEBUG_PRINT_MSG(">>> Tasks: Fin");
 
 /* Unwinding functionality */
     if (g_unwind_inited) {

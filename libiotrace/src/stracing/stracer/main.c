@@ -29,8 +29,7 @@
 #include "ipc/uxd_socket.h"
 #include "trace/tracing.h"
 #include "trace/ptrace_utils.h"
-#include "trace/unwind.h"
-#include "tasks.h"
+#include "tasks/task_hooks.h"
 #include "cli.h"
 
 #include "common/error.h"
@@ -90,11 +89,8 @@ int main(int argc, char** argv) {
     DIE_WHEN_ERRNO( setpgid(0, 0) );
 
 
-/* 1. Init tracing functionality */
-    const bool unwind_inited = parsed_cli_args.task_warn_not_traced_ioevents;   // All tasks which require stack unwinding
-    if (unwind_inited) {
-        unwind_init();
-    }
+/* 1. Init tracing tasks */
+    tasks_on_stracer_init(&parsed_cli_args);
 
 
 /* --------------------- --------------------- --------------------- --------------------- --------------------- */
@@ -153,15 +149,14 @@ int main(int argc, char** argv) {
         for (pid_t trapped_tracee_sttid = -1; ; ) {     /* `sttid`, aka., "status tid" = tid which contains status information in sign bit (has stopped = positive, has terminated = negative) */
 
         /* 2.3.1. Check whether there's a trapped tracee */
-            if (! (trapped_tracee_sttid = tracing_set_next_bp_and_check_trap(trapped_tracee_sttid)) ) {
-                break;
-            }
+            if (! (trapped_tracee_sttid = tracing_set_next_bp_and_check_trap(trapped_tracee_sttid)) ) { break; }
 
         /* 2.3.2. Check status */
             /*   -> Tracee terminated */
             if (0 > trapped_tracee_sttid) {
                 DEV_DEBUG_PRINT_MSG(">>> Tracing: +++ [%d] terminated +++", -(trapped_tracee_sttid));
                 tracee_count--;
+                tasks_on_event_tracee_exit( -(trapped_tracee_sttid) );
                 break;
 
             /*   -> Tracee stopped (i.e., hit breakpoint) */
@@ -181,7 +176,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (USER_REGS_STRUCT_SC_HAS_RTNED(regs)) {   /* SYSCALL-EXIT */
-                    do_requested_tasks(&parsed_cli_args, unwind_inited, trapped_tracee_sttid, &regs);
+                    tasks_on_event_syscall(trapped_tracee_sttid, &regs);
                 }
             }
         }
@@ -197,9 +192,7 @@ int main(int argc, char** argv) {
     fclose(stderr_logfile);
 #endif /* USE_LOGFILE */
 
-    if (unwind_inited) {
-        unwind_fin();
-    }
+    tasks_on_stracer_fin();
 
     return 0;
 }

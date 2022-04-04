@@ -11,10 +11,10 @@ list(APPEND STRACER_SOURCE
         stracer/trace/ptrace_utils.c
         stracer/trace/syscalls.c
         stracer/trace/tracing.c
-        stracer/trace/unwind.c
+        stracer/tasks/task_hooks.c
+        stracer/tasks/unwind.c
         stracer/cli.c
-        stracer/main.c
-        stracer/tasks.c)
+        stracer/main.c)
 
 set(STRACER_COMPILE_OPTIONS
         -D_GNU_SOURCE)

@@ -56,6 +56,13 @@ void tasks_on_stracer_fin(void) {
 }
 
 
+void tasks_on_event_attached_tracee(__attribute__((unused))pid_t new_tracee_tid) {
+//    assert( g_cli_args_ptr && "Not inited yet" );
+
+/* ... */
+}
+
+
 void tasks_on_event_syscall(pid_t trapped_tracee_tid,
                             struct user_regs_struct *read_regs) {
     assert( g_cli_args_ptr && "Not inited yet" );

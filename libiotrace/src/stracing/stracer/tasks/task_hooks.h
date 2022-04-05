@@ -23,6 +23,13 @@ void tasks_on_stracer_init(cli_args_t* cli_args_ptr);
 void tasks_on_stracer_fin(void);
 
 /**
+ * @brief                        Hook which gets called by stracer when a new tracee is attached
+ *
+ * @param[in] new_tracee_tid     Tid of new attached tracee
+ */
+void tasks_on_event_attached_tracee(pid_t new_tracee_tid);
+
+/**
  * @brief                        Hook which gets called by stracer when a tracee has hit a breakpoint
  *
  * @param[in] trapped_tracee_tid Tid of trapped tracee

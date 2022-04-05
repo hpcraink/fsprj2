@@ -122,6 +122,7 @@ int main(int argc, char** argv) {
                     if (-1 != new_tracee_tid) {
                         tracee_count++;
                         DEV_DEBUG_PRINT_MSG(">>> IPC requests/Tracing: +++ Attached tracee + set 1st bp for %d +++", new_tracee_tid);
+                        tasks_on_event_attached_tracee(new_tracee_tid);
                         uxd_ipc_tracer_send_tracing_ack(tracee_conn_fd);
                     }
                     break; /* APPLIES TO SWITCH-CASE !! */

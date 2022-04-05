@@ -143,6 +143,10 @@ endif()
 
 #compile using cmake -DSTRACING_ENABLED for syscall tracing
 if (STRACING_ENABLED)
+    if(NOT WITH_POSIX_IO)
+        message(FATAL_ERROR "`STRACING_ENABLED` requires `WITH_POSIX_IO`")
+    endif()
+
     list(APPEND COMPILE_OPTIONS -DSTRACING_ENABLED)
 else()
     # Remove CMake options from cache

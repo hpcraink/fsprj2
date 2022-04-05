@@ -80,6 +80,10 @@ set(COMPILE_OPTIONS
     -D_GNU_SOURCE
 )
 
+if(NOT WITH_ALLOC AND NOT WITH_DL_IO AND NOT WITH_MPI_IO AND NOT WITH_POSIX_AIO AND NOT WITH_POSIX_IO)
+    message(FATAL_ERROR "at least one group of wrappers must be included")
+endif()
+
 #compile using cmake -DLOGGING for write log (can be changed during execution with functions from libiotrace.h)
 if(LOGGING)
     list(APPEND COMPILE_OPTIONS -DLOGGING)

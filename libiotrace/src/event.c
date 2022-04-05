@@ -63,6 +63,10 @@
 
 #include "wrapper_name.h"
 
+#if !defined(WITH_ALLOC) && !defined(WITH_DL_IO) && !defined(WITH_MPI_IO) && !defined(WITH_POSIX_AIO) && !defined(WITH_POSIX_IO)
+#  error "at least one group of wrappers must be included"
+#endif
+
 /* defines for exec-functions */
 #ifndef MAX_EXEC_ARRAY_LENGTH
 #define MAX_EXEC_ARRAY_LENGTH 1000

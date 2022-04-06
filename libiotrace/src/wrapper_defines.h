@@ -11,11 +11,11 @@
 #include "libiotrace_include_struct.h"
 
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 #  include "fnres/fctevent.h"
-#  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent);
+#  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent)
 #else
-#  define FNRES_TRACE_FCTEVENT(fctevent)
+#  define FNRES_TRACE_FCTEVENT(fctevent) do {  } while(0)
 #endif
 
 
@@ -238,7 +238,7 @@
                              && stdin != ((struct file_stream *)data.__file_type)->stream \
                              && stdout != ((struct file_stream *)data.__file_type)->stream \
                              && stderr != ((struct file_stream *)data.__file_type)->stream)) { \
-                            FNRES_TRACE_FCTEVENT(&data) \
+                            FNRES_TRACE_FCTEVENT(&data); \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \
                               CALL_WRITE_INTO_BUFFER(data); \
@@ -248,7 +248,7 @@
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
-                         FNRES_TRACE_FCTEVENT(&data) \
+                         FNRES_TRACE_FCTEVENT(&data); \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
@@ -257,7 +257,7 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
-                           FNRES_TRACE_FCTEVENT(&data) \
+                           FNRES_TRACE_FCTEVENT(&data); \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
                            WRAP_FREE(&data) \

@@ -39,12 +39,13 @@ option (STACKTRACE_PTR "write stacktrace pointer to log (can be changed during e
 option (STACKTRACE_SYMBOL "write stacktrace symbols to log (can be changed during execution with functions from libiotrace.h)" OFF)
 option (LOG_WRAPPER_TIME "log start and end time of function wrappers" ON)
 option (WITH_STD_IO "log stdin, stdout and stderr IO" ON)
+option (STRACING_ENABLED "trace syscalls" OFF)     # Install required libs: `sudo apt install -y libunwind-dev libdw-dev`
 option (WITH_POSIX_IO "build wrappers for Posix-IO" ON)
 option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (WITH_ALLOC "build wrappers for memory allocations" OFF)
-option (WITH_FILENAME_RESOLUTION "create mapping b/w file handles and filenames during runtime" OFF)
+option (FILENAME_RESOLUTION_ENABLED "create mapping b/w file handles and filenames during runtime" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
 option (ENABLE_REMOTE_CONTROL "Remotely control wrappers (toggle on/off) via REST-API" ON)
@@ -144,6 +145,22 @@ if(STACKTRACE_SYMBOL)
     list(APPEND COMPILE_OPTIONS -DSTACKTRACE_SYMBOL)
 endif()
 
+#compile using cmake -DSTRACING_ENABLED for syscall tracing
+if (STRACING_ENABLED)
+    if(NOT WITH_POSIX_IO)
+        message(FATAL_ERROR "`STRACING_ENABLED` requires `WITH_POSIX_IO`")
+    endif()
+
+    list(APPEND COMPILE_OPTIONS -DSTRACING_ENABLED)
+else()
+    # Remove CMake options from cache
+    unset(STRACING_LINUX_SRC_DIR CACHE)
+    unset(STRACING_UXD_SOCKET_FILEPATH CACHE)
+    unset(STRACING_UXD_REG_SOCKET_BACKLOG_SIZE CACHE)
+    unset(STRACING_STRACER_LOG_OUTPUT CACHE)
+    unset(STRACING_STRACER_TIMEOUT_IN_MSEC CACHE)
+endif()
+
 #compile using cmake -DWITH_STD_IO for stdin, stdout and stderr
 if(WITH_STD_IO)
     list(APPEND COMPILE_OPTIONS -DWITH_STD_IO)
@@ -178,9 +195,9 @@ if(WITH_ALLOC)
     list(APPEND COMPILE_OPTIONS -DWITH_ALLOC)
 endif()
 
-# Compile using cmake -DWITH_FILENAME_RESOLUTION for creating mappings b/w file handles and filenames during runtime
-if (WITH_FILENAME_RESOLUTION)
-    list(APPEND COMPILE_OPTIONS -DWITH_FILENAME_RESOLUTION)
+# Compile using cmake -DFILENAME_RESOLUTION_ENABLED for creating mappings b/w file handles and filenames during runtime
+if (FILENAME_RESOLUTION_ENABLED)
+    list(APPEND COMPILE_OPTIONS -DFILENAME_RESOLUTION_ENABLED)
 endif()
 
 if(WITH_MPI_IO)

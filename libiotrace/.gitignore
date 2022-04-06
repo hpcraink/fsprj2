@@ -1,3 +1,19 @@
+# -- Untrack out-of-source build folders --
+build/
+# CLion CMake convention
+**/cmake-build-*
+
+
+# -- Python scripts --
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+
+
+
+
+
+# TODO: Out of source build --> really necessary ??
 # Prerequisites
 *.d
 
@@ -50,9 +66,3 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.confe
-
-
-# Untrack out-of-source build folders
-build/
-# CLion CMake convention
-**/cmake-build-*

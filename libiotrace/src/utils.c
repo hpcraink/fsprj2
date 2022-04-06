@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <execinfo.h>
+#include <limits.h>
+
 #include "utils.h"
 
 /**
@@ -117,4 +120,163 @@ int str_to_long(char* str, long* num) {
         }
     }
     return -1;
+}
+
+
+/**
+ * Parses the path to the file, which contains THIS function in its .TEXT section
+ * (statically linked: the program, dynamic: libiotrace, i.e., 'path/to/libiotrace-shared.so')
+ * NOTE: NOT PORTABLE, i.e., works ONLY on GNU/Linux (since output on e.g., macOS differs)
+ *
+ * @return                   Pointer to `malloc`'ed path string or `NULL` on failure
+ */
+char* get_path_to_file_containing_this_fct(void) {
+    char* current_exec_file_path;
+
+    void* backtrace_rtn_addr[1];
+    char** backtrace_fct_names = NULL;
+    char* strtok_r_saveptr = NULL;
+    if (1 != backtrace(backtrace_rtn_addr, sizeof backtrace_rtn_addr / sizeof backtrace_rtn_addr[0]) ||
+        ! (backtrace_fct_names = backtrace_symbols(backtrace_rtn_addr, 1)) ||
+        ! strtok_r(backtrace_fct_names[0], "(", &strtok_r_saveptr) ||
+        ! (current_exec_file_path = strdup(backtrace_fct_names[0])) ) {
+
+        if (backtrace_fct_names) { free(backtrace_fct_names); }
+        return NULL;
+    }
+
+    free(backtrace_fct_names);
+    return current_exec_file_path;
+}
+
+/**
+ * Implementation of `dirname`(3), taken from the Android NDK, which ALWAYS uses
+ * the provided buffer
+ *
+ * BACKGROUND: The glibc implementation MAY modify the provided buffer OR use
+ *             an internal static buffer (making it thus, not thread safe)
+ *
+ * @param[in]  path          Path from which the dirname shall be derived
+ * @param[out] buffer        Buffer which will contain the dirname
+ * @param[in] bufflen        Size of provided buffer in bytes
+ * @return                   Length of derived dirname, -1 on failure
+ */
+int
+dirname_r(const char*  path, char*  buffer, size_t  bufflen)
+{
+    const char *endp, *startp;
+    int         result, len;
+
+    /* Empty or NULL string gets treated as "." */
+    if (path == NULL || *path == '\0') {
+        startp = ".";
+        len  = 1;
+        goto Exit;
+    }
+
+    /* Strip trailing slashes */
+    endp = path + strlen(path) - 1;
+    while (endp > path && *endp == '/')
+        endp--;
+
+    /* Find the start of the dir */
+    while (endp > path && *endp != '/')
+        endp--;
+
+    /* Either the dir is "/" or there are no slashes */
+    if (endp == path) {
+        startp = (*endp == '/') ? "/" : ".";
+        len  = 1;
+        goto Exit;
+    }
+
+    do {
+        endp--;
+    } while (endp > path && *endp == '/');
+
+    startp = path;
+    len = endp - startp +1;
+
+Exit:
+    result = len;
+    if (len+1 > PATH_MAX) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    if (buffer == NULL)
+        return result;
+
+    if (len > (int)bufflen-1) {
+        len    = (int)bufflen-1;
+        result = -1;
+        errno  = ERANGE;
+    }
+
+    if (len >= 0) {
+        memcpy( buffer, startp, len );
+        buffer[len] = 0;
+    }
+    return result;
+}
+
+/**
+ * Implementation of `basename`(3), taken from the Android NDK, which ALWAYS uses
+ * the provided buffer
+ *
+ * BACKGROUND: The glibc implementation MAY modify the provided buffer OR use
+ *             an internal static buffer (making it thus, not thread safe)
+ *
+ * @param[in]  path          Path from which the basename shall be derived
+ * @param[out] buffer        Buffer which will contain the basename
+ * @param[in] bufflen        Size of provided buffer in bytes
+ * @return                   Length of derived basename, -1 on failure
+ */
+int
+basename_r(const char* path, char*  buffer, size_t  bufflen)
+{
+    const char *endp, *startp;
+    int         len, result;
+
+    /* Empty or NULL string gets treated as "." */
+    if (path == NULL || *path == '\0') {
+        startp  = ".";
+        len     = 1;
+        goto Exit;
+    }
+
+    /* Strip trailing slashes */
+    endp = path + strlen(path) - 1;
+    while (endp > path && *endp == '/')
+        endp--;
+
+    /* All slashes becomes "/" */
+    if (endp == path && *endp == '/') {
+        startp = "/";
+        len    = 1;
+        goto Exit;
+    }
+
+    /* Find the start of the base */
+    startp = endp;
+    while (startp > path && *(startp - 1) != '/')
+        startp--;
+
+    len = endp - startp +1;
+
+Exit:
+    result = len;
+    if (buffer == NULL) {
+        return result;
+    }
+    if (len > (int)bufflen-1) {
+        len    = (int)bufflen-1;
+        result = -1;
+        errno  = ERANGE;
+    }
+
+    if (len >= 0) {
+        memcpy( buffer, startp, len );
+        buffer[len] = 0;
+    }
+    return result;
 }

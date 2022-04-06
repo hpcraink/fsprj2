@@ -8,19 +8,16 @@
 #include "libiotrace_config.h"
 
 
-/* - Constants - */
+/* -- Globals / Constants -- */
+static hash_t *global_map = NULL;
 #define TTL_DISABLE 0
 
 
-/* - Globals - */
-static hash_t *global_map = NULL;
-
-
-
+/* -- Functions -- */
 /* - Internal functions - */
 /* ... hooks for hashmap */
 /* Hook is necessary for destroying map (and removing values) */
-int __del_hook(void *hash_data, void *caller_data ATTRIBUTE_UNUSED) {
+static int del_hook(void *hash_data, void *caller_data ATTRIBUTE_UNUSED) {
     if (hash_data) {
         // LIBIOTRACE_DEBUG("Freeing string/filename '%s'", (char*)hash_data);
         free(hash_data);
@@ -31,7 +28,7 @@ int __del_hook(void *hash_data, void *caller_data ATTRIBUTE_UNUSED) {
 
 /* ... debugging functions ... */
 #ifndef NDEBUG
-static int __sprint_fnmap_key(const fnmap_key *key, char *str_buf, size_t str_buf_size) {
+static int sprint_fnmap_key(const fnmap_key_t *key, char *str_buf, size_t str_buf_size) {
     #define SNPRINTF(id_type_str, id_format_specifier, value) \
         snprintf(str_buf, str_buf_size, "type=%s,id=" #id_format_specifier ",mmap_length=%zu", \
             id_type_str, value, key->mmap_length)
@@ -49,11 +46,11 @@ static int __sprint_fnmap_key(const fnmap_key *key, char *str_buf, size_t str_bu
     }
 }
 
-static void __log_fnmap_key(const fnmap_key *key) {
+static void log_fnmap_key(const fnmap_key_t *key) {
     char* key_str_buf = NULL;
-    int key_str_buf_size = __sprint_fnmap_key(key, NULL, 0) + ((int)sizeof((char)'\0'));
+    int key_str_buf_size = sprint_fnmap_key(key, NULL, 0) + 1;
     if (NULL != (key_str_buf = malloc(key_str_buf_size))) {
-        __sprint_fnmap_key(key, key_str_buf, key_str_buf_size);
+        sprint_fnmap_key(key, key_str_buf, key_str_buf_size);
         LIBIOTRACE_DEBUG("fnmap-key: %s", key_str_buf);
 
         free(key_str_buf);
@@ -62,9 +59,9 @@ static void __log_fnmap_key(const fnmap_key *key) {
     }
 }
 
-#  define LOG_DEBUG_FNMAP_KEY(key) __log_fnmap_key(key)
+#  define LOG_DEBUG_FNMAP_KEY(key) log_fnmap_key(key)
 #else
-#  define LOG_DEBUG_FNMAP_KEY(key) do {} while(0)
+#  define LOG_DEBUG_FNMAP_KEY(key) do { } while(0)
 #endif
 
 
@@ -82,12 +79,12 @@ void fnmap_create(long max_size) {
         LIBIOTRACE_ERROR("Couldn't init fnmap");
     } else {
         atomic_hash_register_hooks(global_map,
-                                   NULL, NULL, NULL, NULL, __del_hook);
+                                   NULL, NULL, NULL, NULL, del_hook);
     }
 }
 
 void fnmap_destroy(void) {
-    if (NULL == global_map) {   /* Used to be assert */
+    if (!global_map) {   /* Used to be assert */
         LIBIOTRACE_ERROR("fnmap hasn't been init'ed yet");
     }
 
@@ -98,8 +95,8 @@ void fnmap_destroy(void) {
     }
 }
 
-int fnmap_get(const fnmap_key *key, char **found_fname) {
-    if (NULL == global_map || NULL == key) {   /* Used to be assert */
+int fnmap_get(const fnmap_key_t *key, char **found_fname) {
+    if (!global_map || !key) {   /* Used to be assert */
         LIBIOTRACE_ERROR("Invalid key or uninit fnmap");
     }
 
@@ -111,8 +108,8 @@ int fnmap_get(const fnmap_key *key, char **found_fname) {
     return map_operation_result;
 }
 
-void fnmap_add_or_update(const fnmap_key *key, const char *fname) {
-    if (NULL == global_map || NULL == key || NULL == fname) {   /* Used to be assert */
+void fnmap_add_or_update(const fnmap_key_t *key, const char *fname) {
+    if (!global_map || !key || !fname) {   /* Used to be assert */
         LIBIOTRACE_ERROR("Invalid key / fname or uninit fnmap");
     }
 
@@ -144,8 +141,8 @@ void fnmap_add_or_update(const fnmap_key *key, const char *fname) {
     }
 }
 
-void fnmap_remove(const fnmap_key *key) {
-    if (NULL == global_map || NULL == key) {   /* Used to be assert */
+void fnmap_remove(const fnmap_key_t *key) {
+    if (!global_map || !key) {   /* Used to be assert */
         LIBIOTRACE_ERROR("Invalid key or uninit fnmap");
     }
 

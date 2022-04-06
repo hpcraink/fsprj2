@@ -63,7 +63,7 @@ void free_memory(struct basic *data ATTRIBUTE_UNUSED) {
 //	libiotrace_struct_free_basic(data);
 }
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 static char filestr[] = "a file";
 void fnres_trace_fctevent(struct basic *fctevent) {
 	strcpy(fctevent->traced_filename, filestr);
@@ -83,7 +83,7 @@ void check_basic(const struct basic *data, const char *function_name, u_int64_t 
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	CU_ASSERT_FATAL(data->time_diff >= data->time_end - data->time_start);
 #endif
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 	CU_ASSERT_FATAL(0 == strcmp(filestr, data->traced_filename));
 #endif
 }

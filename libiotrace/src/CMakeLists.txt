@@ -233,7 +233,7 @@ if(WITH_ALLOC)
     list(APPEND SOURCE alloc.c)
 endif()
 
-if(WITH_FILENAME_RESOLUTION)
+if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND SOURCE
             fnres/fctevent.c
             fnres/internal/fnmap.c)
@@ -246,6 +246,10 @@ else()
     # Remove atomic_hash's CMake options from cache
     unset(HASH_FUNCTION CACHE)
     unset(HASH_FUNCTION_VALUES CACHE)
+endif()
+
+if (STRACING_ENABLED)
+    add_subdirectory(stracing)
 endif()
 
 

@@ -1,14 +1,24 @@
+--------------------  General  --------------------
+-----  Compile  -----
+- Setup - Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
 
-- Add CUnit: git rm --cached ext/cunit; rm -rf ext; git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
+- flags: - IOTRACE_FNRES_MAX_FILENAMES=100
+         - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
+         - IOTRACE_WHITELIST=./whitelist
 
-- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DWITH_FILENAME_RESOLUTION=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
-                                                                                                                             ^
-                                                                                                           LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB
 
-- Validate logs / influx:
-    - Cleanup LOGFILE's: find build/test/ -type f -name "*.log" -delete
+-----  Testing  -----
+- Run test:
+    All: make -C build test ARGS="-R '^test_'"
+    Specific: ./build/test/cunit/test_fctevent
 
-    - Launch Influx: (cd ../Grafana && docker-compose up -d)
+- Cleanup LOGFILE's: find build/test/ -type f -name "*.log" -delete
+
+
+-----  Influx stuff  -----
+- Launch Influx: (cd ../Live-Tracing && docker-compose up -d)
+
+- Influx CLI:
     - Setup Influx-CLI:
         influx config create --config-name local_influx-fspj \
             --host-url http://localhost:8086 \
@@ -16,17 +26,6 @@
             --token OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CKf5Eh1bN0Ng==
     - Query InfluxDB using CLI:
         influx query --active-config local_influx-fspj 'from(bucket: "hsebucket")|> range(start: -1d)|> filter(fn: (r) => r._measurement == "libiotrace")|> drop(columns: ["_start", "_stop", "_measurement", "thread", "_time"])'' | grep traced_filename
-
-
-- Run test:
-    All: make -C build test ARGS="-R '^test_'"
-
-    Specific: ./build/test/cunit/test_fctevent
-
-    ---------------------------------------
-        flags: - IOTRACE_FNRES_MAX_FILENAMES=100
-               - IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
-               - IOTRACE_WHITELIST=./whitelist
 
 - Create whitelist (for MPI-tests):
 cd build/test && cat<<EOF>./whitelist
@@ -39,6 +38,32 @@ EOF
 
 
 
+
+--------------------  stracing  --------------------
+- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.4.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=LOGFILE ..  &&  cmake --build .)
+
+
+- Testing:
+    - Dynamically linked:
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_syscall_test_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_syscall_test_shared  --use-glibc-wrapper)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared)
+
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   mpirun -np 1 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read)
+                (cd test &&   strace -f -i -k -ttt  mpirun -np 1 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read)
+
+
+    - Statically linked:
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_syscall_test_static_test1 ./stracing_syscall_test_static  --use-glibc-wrapper)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_byte_static)
+
+
+
+--------------------  fnres  --------------------
+- Compile: rm -rf build && mkdir build && (cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DFILENAME_RESOLUTION_ENABLED=ON -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF .. && cmake --build .)
+                                                                                                                             ^
+                                                                                                           LOGFILE, INFLUXDB, LOGFILE_AND_INFLUXDB
+
+- Testing results:
     --- Working ---
     - POSIX -
         (cd build/test && IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args; code ../../test/open_var_args.c open_var_args_shared_test1_iotrace.log)

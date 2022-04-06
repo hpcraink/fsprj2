@@ -607,7 +607,7 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 
 	size_t i = 0;
 	CU_ASSERT_FATAL(tokens[i++].type == JSMN_OBJECT);
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
     check_json_string(print_buf, &tokens[i++], "traced_filename");
     check_json_string(print_buf, &tokens[i++], data->traced_filename);
 #endif
@@ -837,7 +837,7 @@ static void check_basic_push(const struct basic *data, const char *line_buf) {
 	CU_ASSERT_FATAL(0 == strcmp("hostname", next_field->key));
 	check_push_string(data->hostname, next_field);
 	next_field = next_field->next_item;
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 	CU_ASSERT_FATAL(0 == strcmp("traced_filename", next_field->key));
 	check_push_string(data->traced_filename, next_field);
 	next_field = next_field->next_item;
@@ -1256,7 +1256,7 @@ static void test_struct_basic(void) {
 	fill_number(&pid_t_value, sizeof(pid_t_value));
 	fill_number(&u_int64_t_value, sizeof(u_int64_t_value));
 
-#ifdef WITH_FILENAME_RESOLUTION
+#ifdef FILENAME_RESOLUTION_ENABLED
 	fill_string(data.traced_filename, sizeof(data.traced_filename), 't');
 #endif
 

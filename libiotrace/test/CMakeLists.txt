@@ -249,11 +249,33 @@ list(APPEND LINK_OPTIONS
     "-lpthread"
 )
 
-if(WITH_FILENAME_RESOLUTION)
-# TODO: Disable for tests not related to fnres  -->  Requires additional object-library which is compiled w/o fnres
+if (FILENAME_RESOLUTION_ENABLED)
+# TODO: Disable for tests not related to fnres  --> Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
         "atomic_hash_object"
     )
+endif()
+
+if (STRACING_ENABLED)
+# - Programs for testing tracing  -
+    # test with: IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared [--loop] [--fork | --pthread]
+    add_executable(stracing_trace_pthread_fork_shared stracing/trace_pthread_fork.c)
+    target_link_libraries(stracing_trace_pthread_fork_shared pthread)
+
+
+    # test with: IOTRACE_LOG_NAME=stracing_syscall_test_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_syscall_test_shared [--use-glibc-wrapper]
+    add_executable(stracing_syscall_test_shared stracing/syscall_test.c)
+    target_compile_options(stracing_syscall_test_shared PRIVATE -D_GNU_SOURCE)
+
+    add_library(stracing_syscall_test_object OBJECT stracing/syscall_test.c)
+
+    # test with: IOTRACE_LOG_NAME=stracing_syscall_test_static_test1 ./stracing_syscall_test_static [--use-glibc-wrapper]
+    add_executable(stracing_syscall_test_static
+        $<TARGET_OBJECTS:stracing_syscall_test_object>
+        $<TARGET_OBJECTS:iotrace_object>
+    )
+    target_link_libraries(stracing_syscall_test_static ${LINK_OPTIONS_STATIC})
+    target_link_libraries(stracing_syscall_test_static ${LINK_OPTIONS})
 endif()
 
 

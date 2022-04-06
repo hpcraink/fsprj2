@@ -5,8 +5,9 @@
 #include "../trace/syscalls.h"
 #include "unwind.h"
 
-#include "../common/error.h"
+#include "../common/utils.h"
 
+#include "../common/error.h"
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../common/debug.h"
 
@@ -75,7 +76,7 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
 
 /* -- TASK: WARN -- */
     if (g_cli_args_ptr->task_warn_not_traced_ioevents && !ioevent_was_traced) {
-        LOG_WARN("An ioevent wasn't traced by libiotrace, indicated by the following syscall:");
+        LOG_WARN("An ioevent wasn't traced by libiotrace, indicated by the following syscall (time=%lu):", gettime());
         print_syscall(stderr, trapped_tracee_tid, read_regs);
     }
 

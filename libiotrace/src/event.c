@@ -67,6 +67,10 @@
 #  error "at least one group of wrappers must be included"
 #endif
 
+#if defined(STRACING_ENABLED) && !defined(WITH_POSIX_IO)
+#  error "`STRACING_ENABLED` requires `WITH_POSIX_IO`"
+#endif
+
 /* defines for exec-functions */
 #ifndef MAX_EXEC_ARRAY_LENGTH
 #define MAX_EXEC_ARRAY_LENGTH 1000

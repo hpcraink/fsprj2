@@ -349,6 +349,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_CLEANUP:          /* Internal libiotrace functions (which are written to trace) */
         case CASE_INIT_ON_LOAD:
 
+        case CASE_PTHREAD_CREATE:
         case CASE_FORK:             /* Handled by hook `reset_on_fork` in event.c, which is automatically called on `fork` */
         case CASE_VFORK:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);

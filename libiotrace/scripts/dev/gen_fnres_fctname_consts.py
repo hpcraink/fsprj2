@@ -129,6 +129,7 @@ FUNCTION_NAMES = [
     # - Irrelevant -
     "fork", "vfork",                # Handeled by libiotrace
     "execl", "execlp", "execle", "execv", "execvp", "execvpe",
+    "pthread_create",
 
 
 

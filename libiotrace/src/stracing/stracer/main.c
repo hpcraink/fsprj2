@@ -127,6 +127,9 @@ int main(int argc, char** argv) {
                     }
                     break; /* APPLIES TO SWITCH-CASE !! */
 
+
+                /* NOTE: We do NOT implement a detach IPC request (e.g., during libiotrace's cleanup) since
+                 * it's more efficient for the tracee to 'just terminate' */
                 case TRACER_REQUEST_ACCEPTED:
                 default:
                     LOG_WARN("Invalid ipc-request");

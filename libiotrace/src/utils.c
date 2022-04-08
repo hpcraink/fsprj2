@@ -131,6 +131,9 @@ int str_to_long(char* str, long* num) {
  * @return                   Pointer to `malloc`'ed path string or `NULL` on failure
  */
 char* get_path_to_file_containing_this_fct(void) {
+#ifndef __linux__
+#  error "`backtrace`(3) provides ONLY on GNU/Linux suitable output for parsing"
+#endif
     char* current_exec_file_path;
 
     void* backtrace_rtn_addr[1];

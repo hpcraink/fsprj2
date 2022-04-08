@@ -25,7 +25,7 @@
 
 
 /* -- Globals / Consts -- */
-#define SYSCALLS_TO_BE_TRACED "open,openat,close"
+#define SYSCALLS_TO_BE_TRACED "open,openat,close"           // TODO: Allow user based selection during runtime
 
 
 /* --- Functions --- */
@@ -87,7 +87,7 @@ void stracing_init_stracer(void) {
     char *exec_syscall_subset;
     DIE_WHEN_ERRNO( asprintf(&exec_syscall_subset, "-%c=%s", STRACER_CLI_OPTION_SSUBSET, SYSCALLS_TO_BE_TRACED) );
 
-    /* Prepare `exec` arg: Tasks  (TODO: allow user to choose during runtime) */
+    /* Prepare `exec` arg: Tasks  (TODO: Allow user based selection during runtime) */
     const char* const exec_arg_tasks = "-w";
 
     /* Perform `exec` */
@@ -101,7 +101,8 @@ void stracing_init_stracer(void) {
                       exec_arg_tasks,
                       NULL,
                       NULL);                            /* Envs (make sure NO `LD_PRELOAD` is passed, otherwise we can't "break out" of libiotrace's tracing) */
-    LIBIOTRACE_ERROR("stracer `exec` failed -- %s", strerror(errno));
+    LIBIOTRACE_ERROR("stracer `exec` failed -- %s%s", strerror(errno),
+                     ENOENT == errno ? ("\nKEEP IN MIND: The stracer's executable may be in the same directory in which libiotrace (dynamically or statically linked) is located") : (""));
 }
 
 

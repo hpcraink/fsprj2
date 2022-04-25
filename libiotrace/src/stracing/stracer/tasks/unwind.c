@@ -90,28 +90,25 @@ bool unwind_ioevent_was_traced(pid_t tid,
         /* 1.2. Check module name in stacktrace */
         Dwfl_Module* module = dwfl_addrmodule(dwfl, (uintptr_t)ip);
         const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        if (! strstr(module_name, stacktrace_module_name) ) {
-            DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s)", module_name);
+        if (! strstr(module_name, stacktrace_module_name) ) {                            /* 'Module name' doesn't match -> proceed ... */
+            DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s:xxx)", module_name);
             continue;
-        }                                                                  /* 'Module name' doesn't match -> proceed ... */
-        else {                                                             /* Matches ... */
-            if (!stacktrace_fct_name) {
-                DEV_DEBUG_PRINT_MSG(">>> Unwind: Match (%s)", module_name);
-                result_found = true;
-                break;
-            }
         }
+        /* NOTE: Even if the module name matches and we don't search for fct-names, we still have to check for the `pthread_create`(3)-wrapper (--> false positive) */
 
         /* 1.3. Check function- (i.e., symbol) name */
         unw_word_t offset = 0;
         char symbol_buf[4096];
         if (! unw_get_proc_name(&cursor, symbol_buf, sizeof(symbol_buf), &offset) ) {
-            if (strstr(symbol_buf, stacktrace_fct_name) ) {            /* 'Function name' matches */
+            if ( (!stacktrace_fct_name && 0 != strcmp(symbol_buf, "pthread_create_start_routine")) ||  /* --> `pthread_create` wrapper */
+                 (stacktrace_fct_name && strstr(symbol_buf, stacktrace_fct_name)) ) {                  /* 'Function name' matches */
                 DEV_DEBUG_PRINT_MSG(">>> Unwind: Match (%s:%s)", module_name, symbol_buf);
                 result_found = true;
                 break;
             }
             DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s:%s)", module_name, symbol_buf);
+        } else {
+            DEV_DEBUG_PRINT_MSG(">>> Unwind: Found no symbol (%s:?)", module_name);
         }
     } while (unw_step(&cursor) > 0);
 

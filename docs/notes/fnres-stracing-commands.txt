@@ -53,7 +53,7 @@ EOF
 
 
     - Statically linked:
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_manual_syscall_static_test1 ./stracing_trace_manual_syscall_static  --use-glibc-wrapper)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_manual_syscall_static_test1 ./stracing_trace_manual_syscall_static  --use-glibc-wrapper --perform-open-in-pthread)
         :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_byte_static)
 
 

@@ -3,6 +3,7 @@
 
 #include "../cli.h"
 #include "../trace/ptrace_utils.h"
+#include "../../common/uxd_socket_types.h"
 #include <sys/types.h>
 
 
@@ -26,8 +27,9 @@ void tasks_on_stracer_fin(void);
  * @brief                        Hook which gets called by stracer when a new tracee is attached
  *
  * @param[in] new_tracee_tid     Tid of new attached tracee
+ * @param[in] new_tracee_ipc_request IPC request sent by new attached tracee
  */
-void tasks_on_event_attached_tracee(pid_t new_tracee_tid);
+void tasks_on_event_attached_tracee(pid_t new_tracee_tid, uxd_sock_ipc_msg_t *new_tracee_ipc_request);
 
 /**
  * @brief                        Hook which gets called by stracer when a tracee has hit a breakpoint

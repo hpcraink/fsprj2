@@ -57,7 +57,7 @@ void tasks_on_stracer_fin(void) {
 }
 
 
-void tasks_on_event_attached_tracee(__attribute__((unused))pid_t new_tracee_tid) {
+void tasks_on_event_attached_tracee(__attribute__((unused))pid_t new_tracee_tid, __attribute__((unused))uxd_sock_ipc_msg_t *new_tracee_ipc_request) {
 //    assert( g_cli_args_ptr && "Not inited yet" );
 
 /* ... */

@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     DIE_WHEN_ERRNO( close(STDIN_FILENO) );
 
 #ifdef USE_LOGFILE
-/* 0.1. Setup a logfile (since we can't log to console; must happen asap to ensure ALL logs get 'routed' to correct location) */
+/* 0.1. Set up a logfile (since we can't log to console; must happen asap to ensure ALL logs get 'routed' to correct location) */
     FILE* stdout_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stdout) );
     FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stderr) );
     if (0 != setvbuf(stdout_logfile, NULL, _IONBF, 0) ||
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
                     if (-1 != new_tracee_tid) {
                         tracee_count++;
                         DEV_DEBUG_PRINT_MSG(">>> IPC requests/Tracing: +++ Attached tracee + set 1st bp for %d +++", new_tracee_tid);
-                        tasks_on_event_attached_tracee(new_tracee_tid);
+                        tasks_on_event_attached_tracee(new_tracee_tid, &ipc_request);
                         uxd_ipc_tracer_send_tracing_ack(tracee_conn_fd);
                     }
                     break; /* APPLIES TO SWITCH-CASE !! */

@@ -9,7 +9,7 @@
 
 
 /* -- Globals / Constants -- */
-static hash_t *global_map = NULL;
+static hmap_t *global_map = NULL;
 #define TTL_DISABLE 0
 
 
@@ -23,7 +23,7 @@ static int del_hook(void *hash_data, void *caller_data ATTRIBUTE_UNUSED) {
         free(hash_data);
     }
 
-    return PLEASE_REMOVE_HASH_NODE;
+    return HOOK_NODE_REMOVE;
 }
 
 /* ... debugging functions ... */

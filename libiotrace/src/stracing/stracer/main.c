@@ -180,6 +180,7 @@ int main(int argc, char** argv) {
                 }
 
                 if (USER_REGS_STRUCT_SC_HAS_RTNED(regs)) {   /* SYSCALL-EXIT */
+                    DEV_DEBUG_PRINT_MSG(">>> Tracing: [%d] performed syscall=%ld", trapped_tracee_sttid, syscall_nr);
                     tasks_on_event_syscall(trapped_tracee_sttid, &regs);
                 }
             }

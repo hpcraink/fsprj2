@@ -263,11 +263,13 @@ if (STRACING_ENABLED)
     target_link_libraries(stracing_trace_pthread_fork_shared pthread)
 
 
-    # test with: IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared [--use-glibc-wrapper]
+    # test with: IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared [--use-glibc-wrapper] [--perform-open-in-pthread]
     add_executable(stracing_trace_manual_syscall_shared stracing/trace_manual_syscall.c)
     target_compile_options(stracing_trace_manual_syscall_shared PRIVATE -D_GNU_SOURCE)
+    target_link_libraries(stracing_trace_manual_syscall_shared pthread)
 
     add_library(stracing_trace_manual_syscall_object OBJECT stracing/trace_manual_syscall.c)
+    target_link_libraries(stracing_trace_manual_syscall_object pthread)
 
     # test with: IOTRACE_LOG_NAME=stracing_trace_manual_syscall_static_test1 ./stracing_trace_manual_syscall_static [--use-glibc-wrapper]
     add_executable(stracing_trace_manual_syscall_static
@@ -275,7 +277,7 @@ if (STRACING_ENABLED)
         $<TARGET_OBJECTS:iotrace_object>
     )
     target_link_libraries(stracing_trace_manual_syscall_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(stracing_trace_manual_syscall_static ${LINK_OPTIONS})
+    target_link_libraries(stracing_trace_manual_syscall_static ${LINK_OPTIONS} pthread)
 endif()
 
 

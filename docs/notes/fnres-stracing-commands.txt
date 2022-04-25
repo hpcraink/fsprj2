@@ -45,7 +45,7 @@ EOF
 
 - Testing:
     - Dynamically linked:
-        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared  --use-glibc-wrapper)
+        :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared  --use-glibc-wrapper --perform-open-in-pthread)
         :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared)
 
         :> test/libiotrace_stracer.log  && codium ./test/libiotrace_stracer.log    && (cd test &&   mpirun -np 1 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read)

@@ -21,7 +21,7 @@
 
 
 /* -- Macros / Globals  -- */
-//#define MAX_STACKTRACE_DEPTH 64
+#define LIBIOTRACE_PRECLUDED_PTHREAD_FCT "pthread_create_start_routine"
 
 static unw_addr_space_t unw_as;
 
@@ -62,55 +62,70 @@ bool unwind_ioevent_was_traced(pid_t tid,
                                char* stacktrace_module_name, char* stacktrace_fct_name) {
     assert( unw_as && "Unwind context may be inited prior usage." );
 
-    DEV_DEBUG_PRINT_MSG("Unwinding stack for %d, searching for %s:%s",
-                        tid, stacktrace_module_name, __extension__( stacktrace_fct_name ? : "<any-fct>" ));
+    DEV_DEBUG_PRINT_MSG(">>> Unwind: Unwinding stack for %d, searching for \"%s:%s*\"",
+                        tid, stacktrace_module_name, __extension__( stacktrace_fct_name ? : "*" ));
 
 
 /* 0. Init  */
-    /* 0.1. libunwind */
+  /* 0.1. libunwind */
     unw_context_t *unw_ctx = _UPT_create(tid);
-    unw_cursor_t cursor;
-    if (0 > unw_init_remote(&cursor, unw_as, unw_ctx)) {
+    unw_cursor_t unw_cursor;
+    if (0 > unw_init_remote(&unw_cursor, unw_as, unw_ctx)) {
         LOG_ERROR_AND_EXIT("libunwind -- failed to init context");
     }
 
-    /* 0.2. libdw */
+  /* 0.2. libdw */
     Dwfl* dwfl = init_ldw_for_proc(tid);
 
 
 /* 1. Search ... */
-    bool result_found = false;
+    bool found_stack_entry = false;
     do {
-        /* 1.1. Get IP-address */
+    /* 1.1. Get IP-address */
         unw_word_t ip = 0;
-        if (0 > unw_get_reg(&cursor, UNW_REG_IP, &ip)) {
+        if (0 > unw_get_reg(&unw_cursor, UNW_REG_IP, &ip)) {
             LOG_ERROR_AND_EXIT("libunwind -- failed to walk the stack of process %d", tid);
         }
 
-        /* 1.2. Check module name in stacktrace */
+    /* 1.2. Check module name in stacktrace */
         Dwfl_Module* module = dwfl_addrmodule(dwfl, (uintptr_t)ip);
         const char *module_name = dwfl_module_info(module, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
         if (! strstr(module_name, stacktrace_module_name) ) {                            /* 'Module name' doesn't match -> proceed ... */
             DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s:xxx)", module_name);
             continue;
         }
-        /* NOTE: Even if the module name matches and we don't search for fct-names, we still have to check for the `pthread_create`(3)-wrapper (--> false positive) */
+        /* NOTE: Even if the module name matches, and we don't search for fct-names, we still have to ALWAYS check for `LIBIOTRACE_PRECLUDED_PTHREAD_FCT` */
 
-        /* 1.3. Check function- (i.e., symbol) name */
+
+    /* 1.3. Retrieve & check function- (i.e., symbol) name */
         unw_word_t offset = 0;
         char symbol_buf[4096];
-        if (! unw_get_proc_name(&cursor, symbol_buf, sizeof(symbol_buf), &offset) ) {
-            if ( (!stacktrace_fct_name && 0 != strcmp(symbol_buf, "pthread_create_start_routine")) ||  /* --> `pthread_create` wrapper */
-                 (stacktrace_fct_name && strstr(symbol_buf, stacktrace_fct_name)) ) {                  /* 'Function name' matches */
-                DEV_DEBUG_PRINT_MSG(">>> Unwind: Match (%s:%s)", module_name, symbol_buf);
-                result_found = true;
-                break;
+        const int status_get_fct_name = unw_get_proc_name(&unw_cursor, symbol_buf, sizeof(symbol_buf), &offset);
+      /* Retrieved fct name successfully */
+        if (! status_get_fct_name) {
+            if (!strcmp(symbol_buf, LIBIOTRACE_PRECLUDED_PTHREAD_FCT)) {                /* !!!  ALWAYS ignore libiotrace's `pthread_create` routine wrapper (even when not searching for fct-names)  !!! */
+                DEV_DEBUG_PRINT_MSG(">>> Unwind: IGNORED FCT (%s:%s)", module_name, symbol_buf);
+                continue;
             }
-            DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s:%s)", module_name, symbol_buf);
-        } else {
-            DEV_DEBUG_PRINT_MSG(">>> Unwind: Found no symbol (%s:?)", module_name);
+
+            if (stacktrace_fct_name && strstr(symbol_buf, stacktrace_fct_name)) {       /* We're searching for fct-names AND fct-name matches */
+                goto found_entry;
+            }
         }
-    } while (unw_step(&cursor) > 0);
+
+        if (!stacktrace_fct_name) {                                                     /* We're not searching for fct-names  (and fct-name != `LIBIOTRACE_PRECLUDED_PTHREAD_FCT`) */
+            goto found_entry;
+        }
+
+        DEV_DEBUG_PRINT_MSG(">>> Unwind: No match (%s:%s)", module_name, (!status_get_fct_name) ? symbol_buf : "?");
+        continue;
+
+
+    found_entry:
+        DEV_DEBUG_PRINT_MSG(">>> Unwind: Found match (%s:%s)", module_name, (!status_get_fct_name) ? symbol_buf : "?");
+        found_stack_entry = true;
+        break;
+    } while (unw_step(&unw_cursor) > 0);
 
 
 /* 2. Cleanup (destroy unwinding context of process) */
@@ -118,7 +133,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
     _UPT_destroy(unw_ctx);
 
 
-    return result_found;
+    return found_stack_entry;
 }
 
 

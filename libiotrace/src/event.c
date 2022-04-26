@@ -2921,7 +2921,7 @@ struct pthread_create_data {
 };
 
 void* pthread_create_start_routine(void *arg) {
-/* !!!  WARNING: Changing the name of this function requires also a change in stracer (tasks/unwind.c)  !!! */
+/* !!!  WARNING: Changing the name of this function requires also a change in stracer's code (tasks/unwind.c: `LIBIOTRACE_PRECLUDED_PTHREAD_FCT`)  !!! */
 	struct pthread_create_data *data = (struct pthread_create_data*) arg;
 	void *ret;
 

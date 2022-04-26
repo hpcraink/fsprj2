@@ -27,7 +27,7 @@ The collected data is written to log files.
 ### Prerequisites
 
 _libiotrace_ is currently only available for Linux-Systems.
-It's tested with _Red Hat Enterprise Linux Server release 7.7_, _KDE neon User Edition 5.18 release 18.04_ and _Ubuntu 18.04.3 LTS_.
+It's tested with _Red Hat Enterprise Linux Server release 7.7_, _KDE neon User Edition 5.18 release 18.04_ and _Ubuntu 22.04 LTS_.
 
 To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ and optional _ccmake_.
 

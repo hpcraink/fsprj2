@@ -4,6 +4,7 @@
  */
 #include <errno.h>      /* NOTE: Already incl'd via `error.h` */
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <time.h>
@@ -16,7 +17,7 @@
 #endif
 
 #include "iface/scerb.h"
-#include "../../../../common/include/error.h"
+#include "../../../../test/common/error.h"
 
 
 /* -- Globals / Consts -- */

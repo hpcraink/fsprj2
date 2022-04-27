@@ -15,7 +15,7 @@
 #include "scerb.h"
 #include "lwrb/lwrb.h"
 
-#include "../../../../../common/include/error.h"
+#include "../../../stracer/common/error.h"
 
 
 /* -- Globals -- */

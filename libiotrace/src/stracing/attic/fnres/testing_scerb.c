@@ -28,7 +28,7 @@
 
 
 
-// --------------- --------------- --------------- ---------------  Producer  --------------- --------------- --------------- ---------------
+/* --------------- --------------- --------------- ---------------  Producer  --------------- --------------- --------------- --------------- */
 int run_producer_aka_stracer(
         sem_t *sem_consumer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_consumer_finished,
         pid_t consumer_pid) {
@@ -56,9 +56,8 @@ int run_producer_aka_stracer(
             goto cleanup;
         }
 
-        fprintf(stdout, "(%d) Inserted following `fnres_scevent` struct: \n", i +1);
+        fprintf(stdout, "(i=%d) Inserted following `fnres_scevent` struct: \n", i +1);
         fnres_scerb_debug_print_scevent(test_scevent, NULL); printf("\n\t-> ");
-        //fnres_scerb_debug_print_status(NULL);
     }
 cleanup:
     free(test_scevent);
@@ -77,7 +76,7 @@ cleanup:
 }
 
 
-// --------------- --------------- --------------- ---------------  Consumer  --------------- --------------- --------------- ---------------
+/* --------------- --------------- --------------- ---------------  Consumer  --------------- --------------- --------------- --------------- */
 int run_consumer_aka_libiotrace(
         sem_t *sem_consumer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_consumer_finished) {
     sm_scerb_t *sm_scerb;
@@ -103,15 +102,14 @@ int run_consumer_aka_libiotrace(
                 _exit(1);       // Otherwise, semaphore will prevent exit
             }
         }
-        fprintf(stderr, "(%d) Retrieved `fnres_scevent` struct: \n\t", i +1);
+        fprintf(stderr, "(i=%d) Retrieved `fnres_scevent` struct: \n\t", i +1);
         fnres_scerb_debug_print_scevent(test_scevent, stderr); fprintf(stderr, "\n\t-> ");
-        //fnres_scerb_debug_print_status(stderr);
     }
 }
 
 /* --  4. Unmap  -- */
     DIE_WHEN_ERR( fnres_scerb_detach(&sm_scerb, SMO_NAME) );
-    puts("[PRODUCER] (4.) Detached rb");
+    puts("[CONSUMER] (4.) Detached rb");
     DIE_WHEN_ERRNO( sem_post(sem_consumer_finished) );
 
     fprintf(stderr, "[CONSUMER] Exiting ...\n");

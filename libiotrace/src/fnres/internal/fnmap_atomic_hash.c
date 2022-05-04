@@ -117,6 +117,31 @@ int fnmap_get(const fnmap_key_t *key, char **found_fname) {
     } else {
         DEV_DEBUG_PRINT_MSG("Couldn't find filename using key below (err_code=%d) ...", hmap_rtnval);
         DEV_DEBUG_PRINT_FNMAP_KEY(key);
+
+#ifdef STRACING_ENABLED
+        /* Retrieve underlying fildes (since syscalls use only fildes) for stream & perform lookup                       TODO: REVISE (REALIAS ENTRY ??)  +  VALIDATE FUNCTIONALITY W/ TEST (BUT HOW ???)
+         *   NEVER realias fildes w/ stream  -> otherwise underlying fildes will never be cleaned up (i.e., mem-leak)
+         */
+        if (F_STREAM == key->type) {
+            DEV_DEBUG_PRINT_MSG("stracing > Trying to perform lookup for STREAM based on derived fildes");
+            const int derived_fd = CALL_REAL_POSIX_SYNC( fileno( key->id.stream ) );
+            if (-1 == derived_fd) {
+                LIBIOTRACE_WARN("stracing > Couldn't derive fildes for lookup from stream (errno=%d)", errno);
+                return hmap_rtnval;
+            }
+
+            fnmap_key_t search_key = {
+                    .type = F_DESCRIPTOR,
+                    .id = { .fildes = derived_fd },
+                    .mmap_length = 0
+            };
+            if (!atomic_hash_get(g_hmap, &search_key, FNMAP_KEY_SIZE, NULL, &found_entry)) {
+                DEV_DEBUG_PRINT_MSG("stracing > Found associated STREAM");
+                *found_fname = found_entry->fname_ptr;
+                return 0;
+            }
+        }
+#endif /* STRACING_ENABLED */
     }
 
     return hmap_rtnval;

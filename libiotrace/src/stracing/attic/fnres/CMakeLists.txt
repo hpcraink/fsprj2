@@ -9,15 +9,17 @@ set(CMAKE_C_STANDARD 11)
 
 # --- Actual executable ---
 set(SOURCES
-            iface/scerb.c
+        iface/common/scerb.c
             testing_scerb.c)
 set(COMPILE_OPTIONS -O0)
 
 
 # -- Actual ringbuffer --
 list(APPEND SOURCES
-        iface/scerb.c
-        iface/scerb_rmind_ringbuf.c)
+        iface/common/scerb.c
+        iface/common/sm_ipc_utils.c
+        iface/libiotrace/scerb_consumer_rmind.c
+        iface/stracer/scerb_producer_rmind.c)
 add_subdirectory(rmind-ringbuf)
 list(APPEND LINK_OPTIONS libringbuf_hash_object)
 

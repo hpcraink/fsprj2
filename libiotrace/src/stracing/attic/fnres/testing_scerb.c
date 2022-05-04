@@ -16,13 +16,14 @@
 #  include <sys/wait.h>
 #endif
 
-#include "iface/scerb.h"
+#include "iface/libiotrace/scerb_consumer.h"
+#include "iface/stracer/scerb_producer.h"
+
 #include "../../../../test/common/error.h"
 
 
 /* -- Globals / Consts -- */
 #define SMO_NAME                            "/SHM_TEST"
-#define BUFF_DATA_MIN_SIZE_BYTES            3300            // Will be round up to (multiple of) pagesize
 #define TEST_STRUCTS_TO_INSERT              33
 
 
@@ -54,7 +55,7 @@ int run_producer(
         test_scevent->filename_len = strlen(test_scevent->filename) + 1;
 
         if (-2 == DIE_WHEN_ERR( fnres_scerb_offer(sm_scerb, test_scevent ))) {
-            printf("[PRODUCER] Insertion failed  --  Reached (`i`=%d) `BUFF_DATA_MIN_SIZE_BYTES` (=%d), stopping insertion !\n", i, BUFF_DATA_MIN_SIZE_BYTES);
+            printf("[PRODUCER] Insertion failed  --  Reached (`i`=%d), stopping insertion !\n", i);
             goto cleanup;
         }
 
@@ -96,7 +97,7 @@ int run_consumer(
         memset(test_scevent, 0, FNRES_SCEVENT_MAX_SIZE);        // MAKE SURE WE NEVER PRINT OLD DATA
         while (-2 == fnres_scerb_poll(sm_scerb, test_scevent)) {
             fprintf(stderr, "Nothing 2 retrieve -> spinning ...\n");
-            // nanosleep((const struct timespec[]){{0, 10000000L}}, NULL);     // Reduce spinning
+//            nanosleep((const struct timespec[]){{0, 10000000L}}, NULL);                                   // TESTING --------------------- Reduce spinning
             if (1 == getppid()) {
                 LOG_WARN("[CONSUMER] Producer exited, hence nothing 2 consume will be produced");
                 _exit(1);       // Otherwise, semaphore will prevent exit

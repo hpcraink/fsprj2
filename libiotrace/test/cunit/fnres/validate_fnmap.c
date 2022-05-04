@@ -52,7 +52,7 @@ void test_same_value(void) {
 
     for (int i = 0; i <= 30; i++) {             // Failure cause: `i <=` --> Too many entries for fnmap
         // printf("Added nr. %d\n", i);
-        fnmap_add_or_update(&key, "_TEST_", i);
+        fnmap_add_or_update(&key, "_TEST_", 0);       // Testable stuff: overfill map (by uncommenting fildes++), same key // same -- older key
         // key.id.fildes++;
     }
 

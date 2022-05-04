@@ -236,7 +236,7 @@ endif()
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND SOURCE
             fnres/fctevent.c
-            fnres/internal/fnmap.c)
+            fnres/internal/fnmap_atomic_hash.c)
 
     add_subdirectory(libs/atomic_hash)
 

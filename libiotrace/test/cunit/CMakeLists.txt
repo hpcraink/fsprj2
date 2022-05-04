@@ -67,7 +67,7 @@ if (FILENAME_RESOLUTION_ENABLED)
 
 # - fctevent -
 	add_executable(fnres_test_fctevent fnres/test_fctevent.c
-			../../src/fnres/internal/fnmap.c
+			../../src/fnres/internal/fnmap_atomic_hash.c
 			../../src/fnres/fctevent.c)
 	set_target_properties(fnres_test_fctevent PROPERTIES LINK_FLAGS -W)
 	target_link_libraries(fnres_test_fctevent PRIVATE cunit atomic_hash_object)
@@ -76,7 +76,7 @@ if (FILENAME_RESOLUTION_ENABLED)
 
 # - fnmap -
 	add_executable(fnres_validate_fnmap fnres/validate_fnmap.c
-			../../src/fnres/internal/fnmap.c)
+			../../src/fnres/internal/fnmap_atomic_hash.c)
 	set_target_properties(fnres_validate_fnmap PROPERTIES LINK_FLAGS -W)
 	target_link_libraries(fnres_validate_fnmap PRIVATE cunit atomic_hash_object)
 	add_test(NAME fnres_validate_fnmap COMMAND fnres_validate_fnmap)

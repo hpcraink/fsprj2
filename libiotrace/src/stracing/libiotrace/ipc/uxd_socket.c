@@ -10,9 +10,9 @@
 
 /* -- Macros -- */
 #define INIT_UXD_SOCKADDR_STRUCT(SA_STRUCT, UXD_SOCKET_FILEPATH) do { \
-  memset(&SA_STRUCT, 0, sizeof(SA_STRUCT));                           \
-  SA_STRUCT.sun_family = AF_UNIX;                                     \
-  strcpy(SA_STRUCT.sun_path, UXD_SOCKET_FILEPATH);                    \
+    memset(&SA_STRUCT, 0, sizeof(SA_STRUCT));                         \
+    SA_STRUCT.sun_family = AF_UNIX;                                   \
+    strcpy(SA_STRUCT.sun_path, UXD_SOCKET_FILEPATH);                  \
 } while(0)
 
 

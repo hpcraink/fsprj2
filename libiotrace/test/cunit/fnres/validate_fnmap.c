@@ -17,7 +17,7 @@
 #define DEFAULT_FNMAP_MAX_SIZE 100
 
 /* -- Globals -- */
-// int64_t next_dummy_id = 3;     /* Avoid colliding ids */
+// int64_t g_next_dummy_id = 3;     /* Avoid colliding ids */
 
 
 /* -- Hooks -- */

@@ -13,7 +13,7 @@
 #define STRINGS_ARE_EQUAL 0
 
 /* -- Globals -- */
-int64_t next_dummy_id = 3;     /* Avoid colliding ids */
+int64_t g_next_dummy_id = 3;     /* Avoid colliding ids */
 
 
 /* -- Hooks -- */
@@ -46,7 +46,7 @@ CU_TEST_TEARDOWN() {}
  */
 void test_posix_fildes_open_read_close(void) {
     /* -- Create test data -- */
-    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)next_dummy_id++ };
+    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)g_next_dummy_id++ };
     struct open_function tmp_af1_function_data = { .file_name = "/etc/resolv.conf" };
     struct basic af1_open = {
             .function_name = "open",
@@ -90,7 +90,7 @@ void test_posix_fildes_open_read_close(void) {
  */
 void test_posix_pipe2_lseek(void) {
     /* -- Create test data -- */
-    const int tmp_af1_function_data_fildes1 = (int)next_dummy_id++; const int tmp_af1_function_data_fildes2 = (int)next_dummy_id++;
+    const int tmp_af1_function_data_fildes1 = (int)g_next_dummy_id++; const int tmp_af1_function_data_fildes2 = (int)g_next_dummy_id++;
     struct file_pair tmp_af1_function_data = { .descriptor1 = tmp_af1_function_data_fildes1, .descriptor2 = tmp_af1_function_data_fildes2 };
     struct basic af1_pipe2 = {
             .function_name = "pipe2",
@@ -131,7 +131,7 @@ void test_posix_pipe2_lseek(void) {
  */
 void test_posix_stream_fildes_fileno_fwrite(void) {
     /* -- Create test data -- */
-    struct file_stream tmp_af1_file_type = { .stream = (FILE*)next_dummy_id++ };
+    struct file_stream tmp_af1_file_type = { .stream = (FILE*)g_next_dummy_id++ };
     struct open_function tmp_af1_function_data = { .file_name = "/etc/fstab" };
     struct basic af1_fopen = {
             .function_name = "fopen",
@@ -140,7 +140,7 @@ void test_posix_stream_fildes_fileno_fwrite(void) {
             .__file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_stream
     };
 
-    struct fileno_function tmp_af2_function_data = { .file_descriptor = (int)next_dummy_id++ };
+    struct fileno_function tmp_af2_function_data = { .file_descriptor = (int)g_next_dummy_id++ };
     struct basic af2_fileno = {
             .function_name = "fileno",
             .return_state = ok,
@@ -181,7 +181,7 @@ void test_posix_stream_fildes_fileno_fwrite(void) {
  */
 void test_posix_creat_mmap_msync_mremap_munmap(void) {
     /* -- Create test data -- */
-    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)next_dummy_id++ };
+    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)g_next_dummy_id++ };
     struct open_function tmp_af1_function_data = { .file_name = "/var/tmp/ramdisk.tmp" };
     struct basic af1_creat = {
             .function_name = "creat",
@@ -192,7 +192,7 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
 
 
 
-    struct memory_map_function tmp_af2_function_data = { .address = (void*)next_dummy_id++, .length = 32, .map_flags = { .anonymous = 0 } };
+    struct memory_map_function tmp_af2_function_data = { .address = (void*)g_next_dummy_id++, .length = 32, .map_flags = { .anonymous = 0 } };
     struct basic af2_mmap = {
             .function_name = "mmap",
             .return_state = ok,
@@ -207,7 +207,7 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
             .__file_type = &tmp_bf1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_memory
     };
 
-    struct memory_remap_function tmp_bf2_function_data = { .new_address = (void*)next_dummy_id++, .new_length = tmp_af2_function_data.length };
+    struct memory_remap_function tmp_bf2_function_data = { .new_address = (void*)g_next_dummy_id++, .new_length = tmp_af2_function_data.length };
     struct basic bf2_mremap = {
             .function_name = "mremap",
             .return_state = ok,
@@ -265,7 +265,7 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
  */
 void test_mpi_open_immediate_close(void) {
     /* -- Create test data -- */
-    struct file_mpi tmp_af1_file_type = { .mpi_file = (int)next_dummy_id++ };
+    struct file_mpi tmp_af1_file_type = { .mpi_file = (int)g_next_dummy_id++ };
     struct mpi_open_function tmp_af1_function_data = { .file_name = "/tmp/com.google.Keystone" };
     struct basic af1_MPI_File_open = {
             .function_name = "MPI_File_open",
@@ -280,7 +280,7 @@ void test_mpi_open_immediate_close(void) {
             .__file_type = &tmp_af1_file_type, .__void_p_enum_file_type = __void_p_enum_file_type_file_mpi
     };
 
-    struct mpi_immediate tmp_bf2_function_data = { .request_id = (int)next_dummy_id++ };
+    struct mpi_immediate tmp_bf2_function_data = { .request_id = (int)g_next_dummy_id++ };
     struct basic bf2_MPI_File_iwrite = {
             .function_name = "MPI_File_iwrite",
             .return_state = ok,
@@ -336,7 +336,7 @@ void test_mpi_open_immediate_close(void) {
  */
 void test_posix_freopen_same_file(void) {
     /* -- Create test data -- */
-    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)next_dummy_id++ };
+    struct file_descriptor tmp_af1_file_type = { .descriptor = (int)g_next_dummy_id++ };
     struct open_function tmp_af1_function_data = { .file_name = "/var/tmp/ramdisk.tmp" };
     struct basic af1_creat = {
             .function_name = "creat",

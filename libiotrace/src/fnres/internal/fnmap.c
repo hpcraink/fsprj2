@@ -81,9 +81,6 @@ bool fnmap_is_inited(void) {
     return !! g_hmap;
 }
 
-/**
- * Shall be called by `init_process` in event.c
- */
 void fnmap_create(long max_size) {
     assert( !g_hmap && "fnmap has been already init'ed" );
 

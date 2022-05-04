@@ -225,10 +225,10 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MMAP64:
         {
             if (((struct memory_map_function*)(fctevent->__function_data))->map_flags.anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MEMMAP);
+                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MMAP);
 
                 RETURN_IF_FCTEVENT_FAILED(fctevent);
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_MEMMAP);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_MMAP);
             } else {
                 goto case_dup;
             }

@@ -42,13 +42,62 @@ typedef struct {
 
 
 /* -- Function prototypes -- */
-void fnmap_create(long max_size);
-void fnmap_destroy(void);
+/**
+ * @brief                                 Returns whether fnmap has been already initialized
+ *
+ * @return bool                          `true` = already inited, otherwise `false`
+ */
 bool fnmap_is_inited(void);
 
+/**
+ * @brief                                 Create the filename-map w/ the specified capacity
+ *                                        (Shall be called by `init_process` in event.c)
+ *                                        NOTE: Will terminate entire process on failure
+ *
+ * @param[in] max_size                    Max # of file-handles which may be stored
+ * @return void
+ */
+void fnmap_create(long max_size);
+
+/**
+ * @brief                                 Destroys filename-map
+ *
+ * @return void
+ */
+void fnmap_destroy(void);
+
+/**
+ * @brief                                 Searches, given a key, for a filename
+ *
+ * @param[in] key                         Key, indicating file-handle type (which was initially used to store the associated filename)
+ * @param[out] found_fname                Will contain (if found) the pointer to the found filename
+ *
+ * @return int                            `0` when a filename was found under the specified key
+ */
 int fnmap_get(const fnmap_key_t *key, char **found_fname);
+
+/**
+ * @brief                                 Adds a new filename under the given key or updates an existing filename
+ *                                        NOTE: Will terminate entire process on failure
+ *
+ * @param[in] key                         Key, indicating file-handle type
+ * @param[in] fname                       Filename which shall be stored under specified key
+ * @param[in] ts_in_ns                    Timestamp of associated io-event (i.e., wrapper_start)
+ *
+ * @return void
+ */
 void fnmap_add_or_update(const fnmap_key_t *key, const char *fname, uint64_t ts_in_ns);
+
+/**
+ * @brief                                 Removes filename under specified handle
+ *                                        NOTE: Will terminate entire process on failure
+ *
+ * @param[in] key                         Key, indicating file-handle type
+ *
+ * @return void
+ */
 void fnmap_remove(const fnmap_key_t *key);
+
 // void fnmap_clear(void);
 
 #endif /* LIBIOTRACE_FNMAP_H */

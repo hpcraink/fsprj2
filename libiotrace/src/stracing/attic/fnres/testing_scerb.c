@@ -37,7 +37,8 @@ int run_producer(
         sem_t *sem_producer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_producer_finished,
         pid_t consumer_pid) {
 /* --  1. Init rb  -- */
-    DIE_WHEN_ERR( fnres_scerb_create_and_attach(SMO_NAME, BUFF_DATA_MIN_SIZE_BYTES) );
+    sm_scerb_t *sm_scerb;
+    DIE_WHEN_ERR( fnres_scerb_create(&sm_scerb, SMO_NAME) );
     puts("[PRODUCER] (1.) Inited rb");
     DIE_WHEN_ERRNO( sem_post(sem_producer_buf_created) );
 
@@ -45,7 +46,7 @@ int run_producer(
     DIE_WHEN_ERRNO( sem_wait(sem_consumer_buf_attached) );
     puts("[PRODUCER] (2.) Inserting `fnres_scevent` structs ...");
 {
-    fnres_scevent *test_scevent = (fnres_scevent*)DIE_WHEN_ERRNO_VPTR( malloc(FNRES_SCEVENT_MAX_SIZE) );
+    scevent_t *test_scevent = (scevent_t*)DIE_WHEN_ERRNO_VPTR(malloc(FNRES_SCEVENT_MAX_SIZE) );
     for (int i = 0; i < TEST_STRUCTS_TO_INSERT; i++) {
         test_scevent->fd = i;
         test_scevent->type = i % 2 ? OPEN : CLOSE;
@@ -81,14 +82,14 @@ cleanup:
 int run_consumer(
         sem_t *sem_producer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_producer_finished) {
     DIE_WHEN_ERRNO( sem_wait(sem_producer_buf_created) );
-    DIE_WHEN_ERR( fnres_scerb_attach(SMO_NAME) );
+    DIE_WHEN_ERR(fnres_scerb_attach_register_producer(SMO_NAME) );
     fprintf(stderr, "[CONSUMER] (1.) Attached to buffer\n");
     DIE_WHEN_ERRNO( sem_post(sem_consumer_buf_attached) );
 
     /* --  3. Retrieve data  -- */
     fprintf(stderr, "[CONSUMER] (2.) Retrieving `fnres_scevent` structs ...\n");
 {
-    fnres_scevent *test_scevent = (fnres_scevent*)alloca(FNRES_SCEVENT_MAX_SIZE);
+    scevent_t *test_scevent = (scevent_t*)alloca(FNRES_SCEVENT_MAX_SIZE);
     for (int i = 0; i < TEST_STRUCTS_TO_INSERT; i++) {
         while(-2 == fnres_scerb_poll(test_scevent)) {
             fprintf(stderr, "Nothing 2 retrieve -> spinning ...\n");

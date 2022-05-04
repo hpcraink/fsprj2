@@ -1,7 +1,7 @@
 /**
- * Implements the interface using the library 'lwrb'
- *   Source:        https://github.com/MaJerle/lwrb
- *   API reference: https://docs.majerle.eu/projects/lwrb/en/latest/api-reference/lwrb.html
+ * Implements the interface using the library 'rmind-ringbuf'
+ *   Source:        https://github.com/rmind/ringbuf
+ *   API reference: " "
  */
 #include <assert.h>
 #include <stdio.h>
@@ -13,23 +13,24 @@
 #include <unistd.h>
 
 #include "scerb.h"
-#include "lwrb/lwrb.h"
+#include "../rmind-ringbuf/ringbuf.h"
 
 #include "../../../stracer/common/error.h"
 
 
-/* -- Globals -- */
-static lwrb_t *lwrb;
-static fnres_scevent *lwrb_buffer;
+/* -- Consts -- */
+#define BUFFER_SIZE (10000)
 
-
-/* -- Macros -- */
-#define LWRB_STRUCT_SIZE ( sizeof(*lwrb) )
+/* -- Data types -- */
+struct sm_scerb {
+    ringbuf_t ringbuf;
+    uint8_t buf[BUFFER_SIZE];
+};
 
 
 
 /* -- Functions -- */
-/* - Internal helpers - */
+/* - Internal - */
 static void attach_create_map_smo(
                 char* smo_name, off_t smo_min_len,
                 void** shared_mem_addr_ptr, unsigned long long* shared_mem_len_ptr,
@@ -52,185 +53,132 @@ static void attach_create_map_smo(
     close(smo_fd);
 }
 
-static void detach_smo(char* smo_name) {
+static void detach_smo(void** shared_mem_addr_ptr, char* smo_name) {
     int smo_fd = DIE_WHEN_ERRNO( shm_open(smo_name, O_RDONLY, 0) );     // NOTE: `mode` flags are required (not a variadic fct on Linux)
     struct stat stat_info;
     DIE_WHEN_ERRNO( fstat(smo_fd, &stat_info) );
 
-    DIE_WHEN_ERRNO( munmap(lwrb, stat_info.st_size) );
+    DIE_WHEN_ERRNO( munmap(*shared_mem_addr_ptr, stat_info.st_size) );
+    *shared_mem_addr_ptr = NULL;
+
     close(smo_fd);
 }
 
 
+
 /* - Init - */
-int fnres_scerb_create_and_attach(char* smo_name, unsigned int min_buf_capacity_bytes) {
-    assert( smo_name && "`smo_name` may not be `NULL`"  );
-    assert( !lwrb_is_ready(lwrb) && "Ring buffer is already inited." );
+int fnres_scerb_create(sm_scerb_t** sm_scerb, char* smo_name) {
+    assert( sm_scerb && smo_name && "params may not be `NULL`" );
+    // TODO: CHECK INIT'ed
+
+    const unsigned long sm_min_size = sizeof(sm_scerb_t);    /* NOTE: Buffer-size is currently fixed; may be in reality larger (multiple of page size) */
 
 /* Cleanup old stuff    (NOTE: Don't check for errors since smo may not exist) */
     shm_unlink(smo_name);
 
 /* Create new shared mem block + map it into caller's address space */
-    const size_t min_lwrb_buf_size = min_buf_capacity_bytes + 1;         /* buffer    (+1 due to the lib) ? */
-    void* shared_mem_addr; unsigned long long shared_mem_len;
+    unsigned long long shared_mem_len;
     attach_create_map_smo(
-            smo_name, LWRB_STRUCT_SIZE + min_lwrb_buf_size,
-            &shared_mem_addr, &shared_mem_len,
+            smo_name, sm_min_size,
+            (void**)sm_scerb, &shared_mem_len,
             1);
 
     LOG_DEBUG("Created smo \"%s\" w/ requested `min_buf_capacity_bytes`=%lu (got from OS=%llu)", smo_name,
-              LWRB_STRUCT_SIZE + min_lwrb_buf_size, shared_mem_len);
+              sm_min_size, shared_mem_len);
 
 /* Init ringbuffer */
-    lwrb = shared_mem_addr;
-    lwrb_buffer = shared_mem_addr + LWRB_STRUCT_SIZE;
-
-    return lwrb_init(lwrb, lwrb_buffer, shared_mem_len - LWRB_STRUCT_SIZE) ? 0 : -1;
+    return ringbuf_setup(&(*sm_scerb)->ringbuf, 1, BUFFER_SIZE);
 }
 
-int fnres_scerb_attach(char* smo_name) {
-    assert( smo_name && "`smo_name` may not be `NULL`"  );
-    assert( !lwrb_is_ready(lwrb) && "Ring buffer is already init'ed." );
+
+int fnres_scerb_attach_register_producer(sm_scerb_t** sm_scerb, char* smo_name) {
+    assert( sm_scerb && smo_name && "params may not be `NULL`"  );
+    // TODO: CHECK INIT'ed
 
 /* Get shared memory block + map it into caller's address space */
-    void* shared_mem_addr; unsigned long long shared_mem_len;
+    unsigned long long shared_mem_len;
     attach_create_map_smo(
             smo_name, 0,
-            &shared_mem_addr, &shared_mem_len,
+            (void**)sm_scerb, &shared_mem_len,
             0);
 
-/* 'Init' ringbuffer */
-    lwrb = shared_mem_addr;
-    lwrb_buffer = shared_mem_addr + LWRB_STRUCT_SIZE;
-
-    LOG_DEBUG("Mapping info: `lwrb`@%p, `lwrb_buffer`@%p < -- > `lwrb.buff`=%p", lwrb, lwrb_buffer, lwrb->buff);
-    assert( (void*)lwrb_buffer == (void*)lwrb->buff && "Addresses don't match -> lwrb fcts will cause SEGFAULT" );
-
-    return lwrb_is_ready(lwrb) ? 0 : -1;
-}
-
-
-int fnres_scerb_destory_and_detach(char* smo_name) {
-    assert( smo_name && "`smo_name` may not be `NULL`"  );
-    assert( lwrb_is_ready(lwrb) && "Ring buffer may be inited prior detaching." );
-
-    lwrb_free(lwrb);
-
-    detach_smo(smo_name);
-    lwrb = NULL;
-    lwrb_buffer = NULL;
-
-    DIE_WHEN_ERRNO( shm_unlink(smo_name) );
-
-    return !lwrb_is_ready(lwrb) ? 0 : -1;
-}
-
-int fnres_scerb_detach(char* smo_name) {
-    assert( smo_name && "`smo_name` may not be `NULL`"  );
-    assert( lwrb_is_ready(lwrb) && "Ring buffer may be inited prior detaching." );
-
-    detach_smo(smo_name);
-    lwrb = NULL;
-    lwrb_buffer = NULL;
-
-    return !lwrb_is_ready(lwrb) ? 0 : -1;
-}
-
-
-/* - Operations - */
-int fnres_scerb_offer(fnres_scevent* event_ptr) {
-    assert( event_ptr && "`event_ptr` may not be `NULL`"  );
-    assert(event_ptr->filename_len == strlen(event_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
-    assert( lwrb_is_ready(lwrb) && "Ring buffer may be inited prior usage." );
-
-/* Check if there's sufficient space in buffer */
-    const size_t buf_free_bytes = lwrb_get_free(lwrb),
-                 event_size = FNRES_SCEVENT_SIZE_OF_INST(event_ptr);
-    if (event_size > buf_free_bytes) {
-        LOG_DEBUG("Insert failed  --  Buffer had at t-1 not free enough space (%zu bytes) "
-                  "to accommodate event (w/ %ld bytes)", buf_free_bytes, event_size);
-        return -2;
-    }
-
-/* Write data in buffer + check for error */
-    const size_t bytes_written = lwrb_write(lwrb, event_ptr, event_size);
-    if (event_size != bytes_written) {
-        // TODO: Try to "reverse" write pointer
-        LOG_WARN("Wrote incomplete data (%zu of %zu bytes) .. "
-                 "buffer may be in inconsistent state", bytes_written, event_size);
-        return -1;
-    }
+/* Register producer (!!!  THERE CAN ONLY BE 1  !!!) */
+    (void)ringbuf_register(&(*sm_scerb)->ringbuf, 0);
 
     return 0;
 }
 
-int fnres_scerb_poll(fnres_scevent* event_ptr) {
-    assert( event_ptr && "`event_ptr` may not be `NULL`"  );
-    assert( lwrb_is_ready(lwrb) && "Ring buffer may be inited prior usage." );
 
-/* 'Peek' until struct member field `filename_len`, so we now how many bytes we must read */
-#define POLL_LEN_OFFSET_STRUCT offsetof(fnres_scevent, filename)
-    fnres_scevent tmp_scevent;
-    const size_t bytes_peeked = lwrb_peek(lwrb, 0, &tmp_scevent, POLL_LEN_OFFSET_STRUCT);
-    if (bytes_peeked < POLL_LEN_OFFSET_STRUCT) {
-        LOG_DEBUG("Read failed  --  Buffer was at t-1 empty (or is in a corrupted state)"
-                  "(CURRENT allocation=%zu bytes)", lwrb_get_full(lwrb));
+int fnres_scerb_destory_and_detach(sm_scerb_t** sm_scerb, char* smo_name) {
+    return fnres_scerb_detach(sm_scerb, smo_name);
+}
+
+
+int fnres_scerb_detach(sm_scerb_t** sm_scerb, char* smo_name) {
+    assert( sm_scerb && smo_name && "params may not be `NULL`"  );
+    // TODO: CHECK INIT'ed
+
+    detach_smo((void**)sm_scerb, smo_name);
+
+    return NULL == *sm_scerb;
+}
+
+
+int fnres_scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_ptr) {
+    assert( sm_scerb && event_ptr && "params may not be `NULL`"  );
+    assert(event_ptr->filename_len == strlen(event_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
+    // TODO: CHECK INIT'ed
+
+
+    ringbuf_t* const sm_rb_ptr = &sm_scerb->ringbuf;
+    uint8_t* const sm_buf_ptr = sm_scerb->buf;
+    ringbuf_worker_t* const worker_ptr = &sm_scerb->ringbuf.workers[0];
+
+/* Acquire space in buffer */
+    const size_t event_size = FNRES_SCEVENT_SIZE_OF_INST(event_ptr);
+    ssize_t rb_cur_off = ringbuf_acquire(sm_rb_ptr, worker_ptr, event_size);
+    if (-1 == rb_cur_off) {
+        LOG_WARN("Insert failed  --  Buffer had at t-1 not free enough space "
+                  "to accommodate event (w/ %ld bytes)", event_size);
         return -2;
     }
 
-/* Read the next scevent + check for error */
-    const size_t peeked_event_size = FNRES_SCEVENT_SIZE_OF_INST(&tmp_scevent),
-                 read_bytes        = lwrb_read(lwrb, event_ptr, peeked_event_size);
-    if (read_bytes != peeked_event_size) {
-        // TODO: Try to "reverse" read pointer
-        LOG_WARN("Read incomplete data (%zu of expected ('peeked') %zu bytes) .. "
-                 "buffer may be in inconsistent state", read_bytes, peeked_event_size);
-        return -1;
+/* Write data in buffer + check for error */
+    memcpy(event_ptr, &sm_buf_ptr[rb_cur_off], event_size);
+    ringbuf_produce(sm_rb_ptr, worker_ptr);
+
+    return 0;
+}
+
+int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* event_ptr) {
+    assert( sm_scerb && event_ptr && "params may not be `NULL`"  );
+    // TODO: CHECK INIT'ed
+
+
+    ringbuf_t* const sm_rb_ptr = &sm_scerb->ringbuf;
+    uint8_t* const sm_buf_ptr = sm_scerb->buf;
+
+
+    size_t rb_cur_off;
+    if (0 == ringbuf_consume(sm_rb_ptr, &rb_cur_off)) {
+        LOG_DEBUG("Read failed  --  Buffer was at t-1 empty");
+        return -2;
     }
+
+/* Read  -> 1st part (until struct member field `filename_len`, so we know # bytes we must read)  -> then 2nd part */
+#define POLL_LEN_OFFSET_STRUCT offsetof(scevent_t, filename)
+    memcpy(event_ptr, &sm_buf_ptr[rb_cur_off], POLL_LEN_OFFSET_STRUCT);
+    memcpy(event_ptr +POLL_LEN_OFFSET_STRUCT, &sm_buf_ptr[rb_cur_off +POLL_LEN_OFFSET_STRUCT], event_ptr->filename_len);
+
+    ringbuf_release(sm_rb_ptr, FNRES_SCEVENT_SIZE_OF_INST(event_ptr));
 
     return 0;
 }
 
 
 /* - Misc. - */
-int fnres_scerb_is_inited(void) {
-    return lwrb_is_ready(lwrb);
+bool fnres_scerb_is_inited(sm_scerb_t* sm_scerb) {
+    assert( sm_scerb && "params may not be `NULL`" );
+    return NULL != sm_scerb;
 }
 
-int fnres_scerb_get_buf_stats(unsigned int *buf_used_bytes_ptr,
-                              unsigned int *buf_free_bytes_ptr,
-                              unsigned int *buf_capacity_bytes_ptr) {
-    assert( lwrb_is_ready(lwrb) && "Ring buffer may be inited prior usage." );
-    if (!lwrb_is_ready(lwrb)) {
-        return -1;
-    }
-
-    if (buf_used_bytes_ptr) {
-        *buf_used_bytes_ptr = lwrb_get_full(lwrb);
-    }
-    if (buf_free_bytes_ptr) {
-        *buf_free_bytes_ptr = lwrb_get_free(lwrb);
-    }
-    if (buf_capacity_bytes_ptr) {
-        *buf_capacity_bytes_ptr = (lwrb->size - 1);
-    }
-
-    return 0;
-}
-
-
-/* - Debugging - */
-void fnres_scerb_debug_print_status(FILE* output_stream) {
-    unsigned int buf_used_bytes,
-                 buf_free_bytes,
-                 buf_capacity_bytes;
-    fnres_scerb_get_buf_stats(&buf_used_bytes,
-                              &buf_free_bytes,
-                              &buf_capacity_bytes);
-
-    fprintf((output_stream) ? (output_stream) : (stdout),
-            "RB status: init=%s, total size=%u, usage (in bytes): used=%u, free=%u\n",
-            lwrb_is_ready(lwrb) ? ("yes") : ("no"),
-            buf_capacity_bytes,
-            buf_used_bytes, buf_free_bytes);
-}

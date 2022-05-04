@@ -16,9 +16,9 @@ set(COMPILE_OPTIONS -O0)
 
 # -- Actual ringbuffer --
 list(APPEND SOURCES
-        ringbufs/rmind-ringbuf/ringbuf.c
+        iface/scerb.c
         iface/scerb_rmind_ringbuf.c)
-add_subdirectory(ringbufs/rmind-ringbuf)
+add_subdirectory(rmind-ringbuf)
 list(APPEND LINK_OPTIONS libringbuf_hash_object)
 
 

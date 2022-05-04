@@ -57,16 +57,16 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <inttypes.h>
 #include <string.h>
-#include <limits.h>
 #include <errno.h>
 
 #include "ringbuf.h"
 #include "utils.h"
+
+
 
 #define	RBUF_OFF_MASK	(0x00000000ffffffffUL)
 #define	WRAP_LOCK_BIT	(0x8000000000000000UL)
@@ -75,37 +75,15 @@
 #define	WRAP_COUNTER	(0x7fffffff00000000UL)
 #define	WRAP_INCR(x)	(((x) + 0x100000000UL) & WRAP_COUNTER)
 
-typedef uint64_t	ringbuf_off_t;
 
-struct ringbuf_worker {
-	volatile ringbuf_off_t	seen_off;
-	int			registered;
-};
 
-struct ringbuf {
-	/* Ring buffer space. */
-	size_t			space;
 
-	/*
-	 * The NEXT hand is atomically updated by the producer.
-	 * WRAP_LOCK_BIT is set in case of wrap-around; in such case,
-	 * the producer can update the 'end' offset.
-	 */
-	volatile ringbuf_off_t	next;
-	ringbuf_off_t		end;
 
-	/* The following are updated by the consumer. */
-	ringbuf_off_t		written;
-	unsigned		nworkers;
-	ringbuf_worker_t	workers[];
-};
 
 /*
  * ringbuf_setup: initialise a new ring buffer of a given length.
  */
-int
-ringbuf_setup(ringbuf_t *rbuf, unsigned nworkers, size_t length)
-{
+int ringbuf_setup(ringbuf_t *rbuf, unsigned nworkers, size_t length) {
 	if (length >= RBUF_OFF_MASK) {
 		errno = EINVAL;
 		return -1;
@@ -120,23 +98,21 @@ ringbuf_setup(ringbuf_t *rbuf, unsigned nworkers, size_t length)
 /*
  * ringbuf_get_sizes: return the sizes of the ringbuf_t and ringbuf_worker_t.
  */
-void
-ringbuf_get_sizes(unsigned nworkers,
-    size_t *ringbuf_size, size_t *ringbuf_worker_size)
-{
+/*
+void ringbuf_get_sizes(unsigned nworkers,
+    size_t *ringbuf_size, size_t *ringbuf_worker_size) {
 	if (ringbuf_size)
 		*ringbuf_size = offsetof(ringbuf_t, workers[nworkers]);
-	if (ringbuf_worker_size)
+
+	if (ringbuf_worker_size)        // since opaque data type
 		*ringbuf_worker_size = sizeof(ringbuf_worker_t);
-}
+}*/
 
 /*
  * ringbuf_register: register the worker (thread/process) as a producer
  * and pass the pointer to its local store.
  */
-ringbuf_worker_t *
-ringbuf_register(ringbuf_t *rbuf, unsigned i)
-{
+ringbuf_worker_t *ringbuf_register(ringbuf_t *rbuf, unsigned i) {
 	ringbuf_worker_t *w = &rbuf->workers[i];
 
 	w->seen_off = RBUF_OFF_MAX;
@@ -144,9 +120,7 @@ ringbuf_register(ringbuf_t *rbuf, unsigned i)
 	return w;
 }
 
-void
-ringbuf_unregister(ringbuf_t *rbuf, ringbuf_worker_t *w)
-{
+void ringbuf_unregister(ringbuf_t *rbuf, ringbuf_worker_t *w) {
 	w->registered = false;
 	(void)rbuf;
 }
@@ -154,9 +128,7 @@ ringbuf_unregister(ringbuf_t *rbuf, ringbuf_worker_t *w)
 /*
  * stable_nextoff: capture and return a stable value of the 'next' offset.
  */
-static inline ringbuf_off_t
-stable_nextoff(ringbuf_t *rbuf)
-{
+static inline ringbuf_off_t stable_nextoff(ringbuf_t *rbuf) {
 	unsigned count = SPINLOCK_BACKOFF_MIN;
 	ringbuf_off_t next;
 retry:
@@ -172,9 +144,7 @@ retry:
 /*
  * stable_seenoff: capture and return a stable value of the 'seen' offset.
  */
-static inline ringbuf_off_t
-stable_seenoff(ringbuf_worker_t *w)
-{
+static inline ringbuf_off_t stable_seenoff(ringbuf_worker_t *w) {
 	unsigned count = SPINLOCK_BACKOFF_MIN;
 	ringbuf_off_t seen_off;
 retry:
@@ -192,9 +162,7 @@ retry:
  * => On success: returns the offset at which the space is available.
  * => On failure: returns -1.
  */
-ssize_t
-ringbuf_acquire(ringbuf_t *rbuf, ringbuf_worker_t *w, size_t len)
-{
+ssize_t ringbuf_acquire(ringbuf_t *rbuf, ringbuf_worker_t *w, size_t len) {
 	ringbuf_off_t seen, next, target;
 
 	ASSERT(len > 0 && len <= rbuf->space);
@@ -294,9 +262,7 @@ ringbuf_acquire(ringbuf_t *rbuf, ringbuf_worker_t *w, size_t len)
  * ringbuf_produce: indicate the acquired range in the buffer is produced
  * and is ready to be consumed.
  */
-void
-ringbuf_produce(ringbuf_t *rbuf, ringbuf_worker_t *w)
-{
+void ringbuf_produce(ringbuf_t *rbuf, ringbuf_worker_t *w) {
 	(void)rbuf;
 	ASSERT(w->registered);
 	ASSERT(w->seen_off != RBUF_OFF_MAX);
@@ -306,9 +272,7 @@ ringbuf_produce(ringbuf_t *rbuf, ringbuf_worker_t *w)
 /*
  * ringbuf_consume: get a contiguous range which is ready to be consumed.
  */
-size_t
-ringbuf_consume(ringbuf_t *rbuf, size_t *offset)
-{
+size_t ringbuf_consume(ringbuf_t *rbuf, size_t *offset) {
 	ringbuf_off_t written = rbuf->written, next, ready;
 	size_t towrite;
 retry:
@@ -417,9 +381,7 @@ retry:
 /*
  * ringbuf_release: indicate that the consumed range can now be released.
  */
-void
-ringbuf_release(ringbuf_t *rbuf, size_t nbytes)
-{
+void ringbuf_release(ringbuf_t *rbuf, size_t nbytes) {
 	const size_t nwritten = rbuf->written + nbytes;
 
 	ASSERT(rbuf->written <= rbuf->space);

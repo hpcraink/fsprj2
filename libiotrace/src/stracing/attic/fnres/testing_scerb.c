@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <time.h>
-
 #include <semaphore.h>
 #include <fcntl.h>
 
@@ -29,23 +27,22 @@
 
 
 
-// TODO: offset pointer calculation for `lwrb`
-
-
 
 // --------------- --------------- --------------- ---------------  Producer  --------------- --------------- --------------- ---------------
-int run_producer(
-        sem_t *sem_producer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_producer_finished,
+int run_producer_aka_stracer(
+        sem_t *sem_consumer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_consumer_finished,
         pid_t consumer_pid) {
-/* --  1. Init rb  -- */
     sm_scerb_t *sm_scerb;
-    DIE_WHEN_ERR( fnres_scerb_create(&sm_scerb, SMO_NAME) );
-    puts("[PRODUCER] (1.) Inited rb");
-    DIE_WHEN_ERRNO( sem_post(sem_producer_buf_created) );
 
-/* --  2. Write data  -- */
-    DIE_WHEN_ERRNO( sem_wait(sem_consumer_buf_attached) );
-    puts("[PRODUCER] (2.) Inserting `fnres_scevent` structs ...");
+/* --  2. Attach  -- */
+    DIE_WHEN_ERRNO( sem_wait(sem_consumer_buf_created) );
+    DIE_WHEN_ERR( fnres_scerb_attach_register_producer(&sm_scerb, SMO_NAME) );
+    fprintf(stdout, "[PRODUCER] (2.) Attached to buffer\n");
+    DIE_WHEN_ERRNO( sem_post(sem_consumer_buf_attached) );
+
+
+/* --  3. Write data  -- */
+    fprintf(stdout, "[PRODUCER] (3.) Inserting `fnres_scevent` structs ...\n");
 {
     scevent_t *test_scevent = (scevent_t*)DIE_WHEN_ERRNO_VPTR( malloc(FNRES_SCEVENT_MAX_SIZE) );
     for (int i = 0; i < TEST_STRUCTS_TO_INSERT; i++) {
@@ -59,7 +56,7 @@ int run_producer(
             goto cleanup;
         }
 
-        printf("(%d) Inserted following `fnres_scevent` struct: \n\t", i +1);
+        fprintf(stdout, "(%d) Inserted following `fnres_scevent` struct: \n", i +1);
         fnres_scerb_debug_print_scevent(test_scevent, NULL); printf("\n\t-> ");
         //fnres_scerb_debug_print_status(NULL);
     }
@@ -67,30 +64,33 @@ cleanup:
     free(test_scevent);
 }
 
-/* --  4. Unmap  -- */
-    DIE_WHEN_ERR( fnres_scerb_detach(&sm_scerb, SMO_NAME) );
-    puts("[PRODUCER] (3.) Detached rb");
-    DIE_WHEN_ERRNO( sem_post(sem_producer_finished) );
+
+    /* --  5. Destroy rb  -- */
+    DIE_WHEN_ERRNO( sem_wait(sem_consumer_finished) );
+    DIE_WHEN_ERR( fnres_scerb_destory_and_detach(&sm_scerb, SMO_NAME) );
+    fprintf(stdout, "[PRODUCER] (5.) Destroyed rb\n");
 
 
 /* NOTE: We don't wait 4 consumer -> use death of producer as signal to child that buffer was full ... */
-    puts("[PRODUCER] Exiting ...");
+    fprintf(stdout, "[PRODUCER] Exiting ...\n");
     return 0;
 }
 
 
 // --------------- --------------- --------------- ---------------  Consumer  --------------- --------------- --------------- ---------------
-int run_consumer(
-        sem_t *sem_producer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_producer_finished) {
+int run_consumer_aka_libiotrace(
+        sem_t *sem_consumer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_consumer_finished) {
     sm_scerb_t *sm_scerb;
 
-    DIE_WHEN_ERRNO( sem_wait(sem_producer_buf_created) );
-    DIE_WHEN_ERR( fnres_scerb_attach_register_producer(&sm_scerb, SMO_NAME) );
-    fprintf(stderr, "[CONSUMER] (1.) Attached to buffer\n");
-    DIE_WHEN_ERRNO( sem_post(sem_consumer_buf_attached) );
+/* --  1. Init rb  -- */
+    DIE_WHEN_ERR( fnres_scerb_create(&sm_scerb, SMO_NAME) );
+    fprintf(stderr, "[CONSUMER] (1.) Inited rb\n");
+    DIE_WHEN_ERRNO( sem_post(sem_consumer_buf_created) );
 
-    /* --  3. Retrieve data  -- */
-    fprintf(stderr, "[CONSUMER] (2.) Retrieving `fnres_scevent` structs ...\n");
+
+/* --  3. Read data  -- */
+    DIE_WHEN_ERRNO( sem_wait(sem_consumer_buf_attached) );
+    fprintf(stderr, "[CONSUMER] (3.) Retrieving `fnres_scevent` structs ...\n");
 {
     scevent_t *test_scevent = (scevent_t*)alloca(FNRES_SCEVENT_MAX_SIZE);
     for (int i = 0; i < TEST_STRUCTS_TO_INSERT; i++) {
@@ -109,10 +109,10 @@ int run_consumer(
     }
 }
 
-    /* --  4. Destroy rb  -- */
-    DIE_WHEN_ERRNO( sem_wait(sem_producer_finished) );
-    DIE_WHEN_ERR( fnres_scerb_destory_and_detach(&sm_scerb, SMO_NAME) );
-    fprintf(stderr, "[CONSUMER] (3.) Destroyed rb\n");
+/* --  4. Unmap  -- */
+    DIE_WHEN_ERR( fnres_scerb_detach(&sm_scerb, SMO_NAME) );
+    puts("[PRODUCER] (4.) Detached rb");
+    DIE_WHEN_ERRNO( sem_post(sem_consumer_finished) );
 
     fprintf(stderr, "[CONSUMER] Exiting ...\n");
     return 0;
@@ -121,28 +121,32 @@ int run_consumer(
 
 
 int main(void) {
-/* SETUP: Semaphores */
-#define SEM_PARENT_BUF_CREATED "/sem_producer_buf_created"
-#define SEM_CHILD_BUF_ATTACHED "/sem_consumer_buf_attached"
-#define SEM_PARENT_FINISHED    "/sem_producer_finished"
-// Cleanup old semaphores w/ same name (from programs which, e.g. have crashed prior)  ==> Don't check 4 error (since named semaphore might not exist)
-    sem_unlink(SEM_PARENT_BUF_CREATED);
-    sem_unlink(SEM_CHILD_BUF_ATTACHED);
-    sem_unlink(SEM_PARENT_FINISHED);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 
-    sem_t *sem_producer_buf_created,        // Make sure consumer doesn't start buffer which isn't inited yet
-          *sem_consumer_buf_attached,       // Make sure consumer is attached to buffer before producer writes  (to make sure ringbuffer is used concurrently)
-          *sem_producer_finished;           // Make sure consumer doesn't destroy buffer before producer has finished
-    if (SEM_FAILED == (sem_producer_buf_created = sem_open(SEM_PARENT_BUF_CREATED, O_CREAT, 0660, 0)) ||
-        SEM_FAILED == (sem_consumer_buf_attached = sem_open(SEM_CHILD_BUF_ATTACHED, O_CREAT, 0660, 0)) ||
-        SEM_FAILED == (sem_producer_finished = sem_open(SEM_PARENT_FINISHED, O_CREAT, 0660, 0))) {
+/* SETUP: Semaphores */
+#define SEM_CONSUMER_BUF_CREATED  "/test_sem0"
+#define SEM_PRODUCER_BUF_ATTACHED "/test_sem1"
+#define SEM_CONSUMER_FINISHED     "/test_sem2"
+// Cleanup old semaphores w/ same name (from programs which, e.g. have crashed prior)  ==> Don't check 4 error (since named semaphore might not exist)
+    sem_unlink(SEM_CONSUMER_BUF_CREATED);
+    sem_unlink(SEM_PRODUCER_BUF_ATTACHED);
+    sem_unlink(SEM_CONSUMER_FINISHED);
+
+    sem_t *sem_consumer_buf_created,        // Make sure producer doesn't start buffer which isn't inited yet
+          *sem_producer_buf_attached,       // Make sure consumer is attached to buffer before producer writes  (to make sure ringbuffer is used concurrently)
+          *sem_consumer_finished;           // Make sure consumer doesn't destroy buffer before producer has finished
+    if (SEM_FAILED == (sem_consumer_buf_created = sem_open(SEM_CONSUMER_BUF_CREATED, O_CREAT, 0660, 0)) ||
+        SEM_FAILED == (sem_producer_buf_attached = sem_open(SEM_PRODUCER_BUF_ATTACHED, O_CREAT, 0660, 0)) ||
+        SEM_FAILED == (sem_consumer_finished = sem_open(SEM_CONSUMER_FINISHED, O_CREAT, 0660, 0))) {
         LOG_ERROR_AND_EXIT("`sem_open` failed: %s", strerror(errno));
     }
 
 
 /* Run producer & consumer */
     pid_t consumer_pid;
-    return !((consumer_pid = DIE_WHEN_ERRNO( fork() ))) ?
-        run_producer(sem_producer_buf_created, sem_consumer_buf_attached, sem_producer_finished, consumer_pid) :        // Parent
-        run_consumer(sem_producer_buf_created, sem_consumer_buf_attached, sem_producer_finished);                       // Child
+    return ((consumer_pid = DIE_WHEN_ERRNO( fork() ))) ?
+           run_producer_aka_stracer(sem_consumer_buf_created, sem_producer_buf_attached, sem_consumer_finished,
+                                    consumer_pid) :        // Parent
+           run_consumer_aka_libiotrace(sem_consumer_buf_created, sem_producer_buf_attached, sem_consumer_finished);                       // Child
 }

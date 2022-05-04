@@ -130,12 +130,13 @@ int fnres_scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_ptr) {
     // TODO: CHECK INIT'ed
 
 
+    const size_t event_size = FNRES_SCEVENT_SIZE_OF_INST(event_ptr);
+
     ringbuf_t* const sm_rb_ptr = &sm_scerb->ringbuf;
     uint8_t* const sm_buf_ptr = sm_scerb->buf;
     ringbuf_worker_t* const worker_ptr = &sm_scerb->ringbuf.workers[0];
 
 /* Acquire space in buffer */
-    const size_t event_size = FNRES_SCEVENT_SIZE_OF_INST(event_ptr);
     ssize_t rb_cur_off = ringbuf_acquire(sm_rb_ptr, worker_ptr, event_size);
     if (-1 == rb_cur_off) {
         LOG_WARN("Insert failed  --  Buffer had at t-1 not free enough space "
@@ -144,7 +145,7 @@ int fnres_scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_ptr) {
     }
 
 /* Write data in buffer + check for error */
-    memcpy(event_ptr, &sm_buf_ptr[rb_cur_off], event_size);
+    memcpy(&sm_buf_ptr[rb_cur_off], event_ptr, event_size);
     ringbuf_produce(sm_rb_ptr, worker_ptr);
 
     return 0;
@@ -159,8 +160,9 @@ int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* event_ptr) {
     uint8_t* const sm_buf_ptr = sm_scerb->buf;
 
 
-    size_t rb_cur_off;
-    if (0 == ringbuf_consume(sm_rb_ptr, &rb_cur_off)) {
+    size_t rb_cur_len,
+           rb_cur_off;
+    if (0 == (rb_cur_len = ringbuf_consume(sm_rb_ptr, &rb_cur_off))) {
         LOG_DEBUG("Read failed  --  Buffer was at t-1 empty");
         return -2;
     }
@@ -168,7 +170,8 @@ int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* event_ptr) {
 /* Read  -> 1st part (until struct member field `filename_len`, so we know # bytes we must read)  -> then 2nd part */
 #define POLL_LEN_OFFSET_STRUCT offsetof(scevent_t, filename)
     memcpy(event_ptr, &sm_buf_ptr[rb_cur_off], POLL_LEN_OFFSET_STRUCT);
-    memcpy(event_ptr +POLL_LEN_OFFSET_STRUCT, &sm_buf_ptr[rb_cur_off +POLL_LEN_OFFSET_STRUCT], event_ptr->filename_len);
+    assert( rb_cur_len >= (event_ptr->filename_len + POLL_LEN_OFFSET_STRUCT) );
+    memcpy(event_ptr->filename, &sm_buf_ptr[rb_cur_off +POLL_LEN_OFFSET_STRUCT], event_ptr->filename_len);
 
     ringbuf_release(sm_rb_ptr, FNRES_SCEVENT_SIZE_OF_INST(event_ptr));
 

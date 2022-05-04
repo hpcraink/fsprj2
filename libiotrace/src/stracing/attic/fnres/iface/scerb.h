@@ -23,7 +23,7 @@ typedef struct {
 
 /* -- Macros -- */
 #define FNRES_SCEVENT_SIZE_OF_INST(STRUCT_PTR) ( sizeof(*(STRUCT_PTR)) + (STRUCT_PTR)->filename_len )
-#define FNRES_SCEVENT_MAX_SIZE                 ( sizeof(fnres_scevent) + FILENAME_MAX )
+#define FNRES_SCEVENT_MAX_SIZE                 ( sizeof(scevent_t) + FILENAME_MAX )
 
 
 /* -- Function prototypes -- */
@@ -71,7 +71,7 @@ int fnres_scerb_detach(sm_scerb_t** sm_scerb, char* smo_name);
 /**
  * @brief                                 Inserts item into ring buffer at next available slot
  *
- * @param[out] sm_scerb                   Handle (i.e., pointer) to shared memory segment containing scerb + buffer
+ * @param[in] sm_scerb                    Handle (i.e., pointer) to shared memory segment containing scerb + buffer
  * @param[in] event_ptr                   Event to be added in next slot
  * @return int                            Returns `-2` if buffer full, `-1` on all other failures and `0` on success
  */
@@ -80,7 +80,7 @@ int fnres_scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_ptr);
 /**
  * @brief                                 Retrieves & removes the next unread element
  *
- * @param[out] sm_scerb                   Handle (i.e., pointer) to shared memory segment containing scerb + buffer
+ * @param[in] sm_scerb                    Handle (i.e., pointer) to shared memory segment containing scerb + buffer
  * @param[out] event_ptr                  Pointer to output memory to copy buffer data to
  * @return int                            Returns `-2` if buffer empty, `-1` on all other failures and `0` on success
  */
@@ -90,7 +90,7 @@ int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* event_ptr);
 /**
  * @brief                                 Allows checking whether init has been performed
  *
- * @param[out] sm_scerb                   Handle (i.e., pointer) to shared memory segment containing scerb + buffer
+ * @param[in] sm_scerb                    Handle (i.e., pointer) to shared memory segment containing scerb + buffer
  * @return                                Returns `1` if inited, `0` otherwise
  */
 bool fnres_scerb_is_inited(sm_scerb_t* sm_scerb);

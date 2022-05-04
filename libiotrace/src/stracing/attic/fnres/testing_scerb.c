@@ -46,28 +46,28 @@ int run_producer(
     DIE_WHEN_ERRNO( sem_wait(sem_consumer_buf_attached) );
     puts("[PRODUCER] (2.) Inserting `fnres_scevent` structs ...");
 {
-    scevent_t *test_scevent = (scevent_t*)DIE_WHEN_ERRNO_VPTR(malloc(FNRES_SCEVENT_MAX_SIZE) );
+    scevent_t *test_scevent = (scevent_t*)DIE_WHEN_ERRNO_VPTR( malloc(FNRES_SCEVENT_MAX_SIZE) );
     for (int i = 0; i < TEST_STRUCTS_TO_INSERT; i++) {
         test_scevent->fd = i;
         test_scevent->type = i % 2 ? OPEN : CLOSE;
         snprintf(test_scevent->filename, FILENAME_MAX, i % 2 ? "/dev/test__%d": "/var/tmp/this_is_just_a_test_file__%d", i);
         test_scevent->filename_len = strlen(test_scevent->filename) + 1;
 
-        if (-2 == DIE_WHEN_ERR( fnres_scerb_offer(test_scevent ))) {
+        if (-2 == DIE_WHEN_ERR( fnres_scerb_offer(sm_scerb, test_scevent ))) {
             printf("[PRODUCER] Insertion failed  --  Reached (`i`=%d) `BUFF_DATA_MIN_SIZE_BYTES` (=%d), stopping insertion !\n", i, BUFF_DATA_MIN_SIZE_BYTES);
             goto cleanup;
         }
 
         printf("(%d) Inserted following `fnres_scevent` struct: \n\t", i +1);
         fnres_scerb_debug_print_scevent(test_scevent, NULL); printf("\n\t-> ");
-        fnres_scerb_debug_print_status(NULL);
+        //fnres_scerb_debug_print_status(NULL);
     }
 cleanup:
     free(test_scevent);
 }
 
 /* --  4. Unmap  -- */
-    DIE_WHEN_ERR( fnres_scerb_detach(SMO_NAME) );
+    DIE_WHEN_ERR( fnres_scerb_detach(&sm_scerb, SMO_NAME) );
     puts("[PRODUCER] (3.) Detached rb");
     DIE_WHEN_ERRNO( sem_post(sem_producer_finished) );
 
@@ -81,8 +81,10 @@ cleanup:
 // --------------- --------------- --------------- ---------------  Consumer  --------------- --------------- --------------- ---------------
 int run_consumer(
         sem_t *sem_producer_buf_created, sem_t *sem_consumer_buf_attached, sem_t *sem_producer_finished) {
+    sm_scerb_t *sm_scerb;
+
     DIE_WHEN_ERRNO( sem_wait(sem_producer_buf_created) );
-    DIE_WHEN_ERR(fnres_scerb_attach_register_producer(SMO_NAME) );
+    DIE_WHEN_ERR( fnres_scerb_attach_register_producer(&sm_scerb, SMO_NAME) );
     fprintf(stderr, "[CONSUMER] (1.) Attached to buffer\n");
     DIE_WHEN_ERRNO( sem_post(sem_consumer_buf_attached) );
 
@@ -91,7 +93,8 @@ int run_consumer(
 {
     scevent_t *test_scevent = (scevent_t*)alloca(FNRES_SCEVENT_MAX_SIZE);
     for (int i = 0; i < TEST_STRUCTS_TO_INSERT; i++) {
-        while(-2 == fnres_scerb_poll(test_scevent)) {
+        memset(test_scevent, 0, FNRES_SCEVENT_MAX_SIZE);        // MAKE SURE WE NEVER PRINT OLD DATA
+        while (-2 == fnres_scerb_poll(sm_scerb, test_scevent)) {
             fprintf(stderr, "Nothing 2 retrieve -> spinning ...\n");
             // nanosleep((const struct timespec[]){{0, 10000000L}}, NULL);     // Reduce spinning
             if (1 == getppid()) {
@@ -101,13 +104,13 @@ int run_consumer(
         }
         fprintf(stderr, "(%d) Retrieved `fnres_scevent` struct: \n\t", i +1);
         fnres_scerb_debug_print_scevent(test_scevent, stderr); fprintf(stderr, "\n\t-> ");
-        fnres_scerb_debug_print_status(stderr);
+        //fnres_scerb_debug_print_status(stderr);
     }
 }
 
     /* --  4. Destroy rb  -- */
     DIE_WHEN_ERRNO( sem_wait(sem_producer_finished) );
-    DIE_WHEN_ERR( fnres_scerb_destory_and_detach(SMO_NAME) );
+    DIE_WHEN_ERR( fnres_scerb_destory_and_detach(&sm_scerb, SMO_NAME) );
     fprintf(stderr, "[CONSUMER] (3.) Destroyed rb\n");
 
     fprintf(stderr, "[CONSUMER] Exiting ...\n");
@@ -138,7 +141,7 @@ int main(void) {
 
 /* Run producer & consumer */
     pid_t consumer_pid;
-    return ((consumer_pid = DIE_WHEN_ERRNO( fork() ))) ?
+    return !((consumer_pid = DIE_WHEN_ERRNO( fork() ))) ?
         run_producer(sem_producer_buf_created, sem_consumer_buf_attached, sem_producer_finished, consumer_pid) :        // Parent
         run_consumer(sem_producer_buf_created, sem_consumer_buf_attached, sem_producer_finished);                       // Child
 }

@@ -127,7 +127,7 @@ void test_posix_pipe2_lseek(void) {
 
 
 /**
- * Tests duplicate fctevents (i.e., finding already existing filename in trace + adding it again; e.g. 'fileno')
+ * Tests duplicate fctevents (i.e., finding already existing filename in trace + adding it again (i.e., updating); e.g. 'fileno')
  */
 void test_posix_stream_fildes_fileno_fwrite(void) {
     /* -- Create test data -- */

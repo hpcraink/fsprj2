@@ -48,7 +48,7 @@ static const char* get_file_name_from_fctevent_function_data(struct basic *fctev
 
 #define RETURN_IF_FCTEVENT_FAILED(fctevent) do {                                        \
     if (error == (fctevent)->return_state) {                                            \
-        DEV_DEBUG_PRINT_MSG("Failed fectevent, not adding to trace ...");               \
+        DEV_DEBUG_PRINT_MSG("Failed fctevent, not adding to trace ...");                \
         return;                                                                         \
     }                                                                                   \
 } while(0)

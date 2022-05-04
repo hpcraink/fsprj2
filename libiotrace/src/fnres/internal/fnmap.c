@@ -47,12 +47,12 @@ static int sprint_fnmap_key(const fnmap_key_t *key, char *str_buf, size_t str_bu
 
 static void log_fnmap_key(const fnmap_key_t *key) {
     const int key_str_buf_size = sprint_fnmap_key(key, NULL, 0) + 1;
-    char* key_str_buf = DIE_WHEN_ERRNO_VPTR( malloc(key_str_buf_size) );
+    char* key_str_buf = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC( malloc(key_str_buf_size) ) );
 
     sprint_fnmap_key(key, key_str_buf, key_str_buf_size);
     DEV_DEBUG_PRINT_MSG("fnmap-key: %s", key_str_buf);
 
-    free(key_str_buf);
+    CALL_REAL_ALLOC_SYNC( free(key_str_buf) );
 }
 
 #  define DEV_DEBUG_PRINT_FNMAP_KEY(key) log_fnmap_key(key)
@@ -67,8 +67,8 @@ static int hmap_del_hook(void *hash_data, void *caller_data ATTRIBUTE_UNUSED) {
     if (hash_data) {
         fnmap_entry_t* entry = (fnmap_entry_t*)hash_data;
         DEV_DEBUG_PRINT_MSG("Freeing entry (`ts_in_ns`=%lu,`fname_ptr`=\"%s\")", entry->ts_in_ns, entry->fname_ptr);
-        free(entry->fname_ptr);
-        free(entry);
+        CALL_REAL_ALLOC_SYNC( free(entry->fname_ptr) );
+        CALL_REAL_ALLOC_SYNC( free(entry) );
     }
 
     return HOOK_NODE_REMOVE;
@@ -122,18 +122,21 @@ void fnmap_add_or_update(const fnmap_key_t *key, const char *fname, const uint64
     assert( g_hmap && "fnmap hasn't been init'ed yet" );
     assert( key && fname && "params may not be `NULL`" );
 
-    fnmap_entry_t *new_entry_ptr = DIE_WHEN_ERRNO_VPTR( malloc(sizeof *new_entry_ptr) );
-    new_entry_ptr->fname_ptr = DIE_WHEN_ERRNO_VPTR( strdup(fname) );
+    fnmap_entry_t *new_entry_ptr = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC( malloc(sizeof *new_entry_ptr) ) );
+    new_entry_ptr->fname_ptr = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC( strdup(fname) ) );
     new_entry_ptr->ts_in_ns = ts_in_ns;
 
-    int map_operation_result; bool value_already_removed_for_update = false;
-update_value_after_removal:
+    int map_operation_result; bool removed_old_value_for_update = false;
+add_new_value_after_removal:
     if ((map_operation_result = atomic_hash_add(g_hmap, key, FNMAP_KEY_SIZE, new_entry_ptr, HMAP_TTL_DISABLE, NULL, NULL)) ) {
-        if (1 == map_operation_result && !value_already_removed_for_update) {      /* UPDATE value under already used key */
-            DEV_DEBUG_PRINT_MSG("Updating value under already existing key ...");
+        if (1 == map_operation_result && !removed_old_value_for_update) {      /* UPDATE value under already used key */
+            DEV_DEBUG_PRINT_MSG("Trying to update value under an already existing key ...");
+
+            // TODO: CHECK TIMESTAMP
+
             fnmap_remove(key);
-            value_already_removed_for_update = true;
-            goto update_value_after_removal;
+            removed_old_value_for_update = true;
+            goto add_new_value_after_removal;
         }
 
         DEV_DEBUG_PRINT_FNMAP_KEY(key);

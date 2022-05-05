@@ -58,7 +58,7 @@ u_int64_t iotrace_get_boot_time() {
 
 	file = CALL_REAL_POSIX_SYNC(open)(utmp, O_RDONLY);
 	if (0 > file) {
-		LIBIOTRACE_ERROR("open of %s failed, errno=%d", utmp, errno);
+		LOG_ERROR_AND_EXIT("open of %s failed, errno=%d", utmp, errno);
 	}
 
 	// read until EOF
@@ -69,7 +69,7 @@ u_int64_t iotrace_get_boot_time() {
 				// read interrupted by signal: try again
 				continue;
 			} else {
-				LIBIOTRACE_ERROR("read of %s failed, errno=%d", utmp, errno);
+				LOG_ERROR_AND_EXIT("read of %s failed, errno=%d", utmp, errno);
 			}
 		}
 
@@ -98,7 +98,7 @@ u_int64_t iotrace_get_boot_time() {
 	CALL_REAL_POSIX_SYNC(close)(file);
 
 	if (0 == boot_time) {
-		LIBIOTRACE_ERROR("boot entry in %s not found", utmp);
+		LOG_ERROR_AND_EXIT("boot entry in %s not found", utmp);
 	}
 #elif defined(__APPLE__) || defined(__OSX__)
 	struct utmpx * utxent;

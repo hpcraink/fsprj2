@@ -55,7 +55,7 @@
                                  }); \
                                  char * dlsym_dlerror_##function = dlerror(); \
                                  if (NULL != dlsym_dlerror_##function) { \
-                                     LIBIOTRACE_ERROR("dlsym error (%s)", dlsym_dlerror_##function); \
+                                     LOG_ERROR_AND_EXIT("dlsym error (%s)", dlsym_dlerror_##function); \
                                  } \
                                } while (0)
 #else

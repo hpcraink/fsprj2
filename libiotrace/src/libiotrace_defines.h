@@ -39,9 +39,9 @@
 #  define LIBIOTRACE_STRUCT_PUSH              8 /* generate function to generate POST request */
 
 /* #defines for error handling */
-#  define LIBIOTRACE_STRUCT_ENUM_ERROR(value) LIBIOTRACE_ERROR("unknown value \"%u\" of enum", value);
+#  define LIBIOTRACE_STRUCT_ENUM_ERROR(value) LOG_ERROR_AND_EXIT("unknown value \"%u\" of enum", value);
 #  define LIBIOTRACE_STRUCT_SIZE_ERROR(ret, size) if (ret >= size) { \
-                                                LIBIOTRACE_ERROR("output buffer not big enough"); \
+                                                LOG_ERROR_AND_EXIT("output buffer not big enough"); \
                                             }
 
 /* macros for setting VOID_P elements */
@@ -89,7 +89,7 @@
 
 #define LIBIOTRACE_STRUCT_SNPRINTF(...) libiotrace_struct_ret_int = snprintf(libiotrace_struct_buf, libiotrace_struct_size, __VA_ARGS__); \
                                     if (0 > libiotrace_struct_ret_int) { \
-                                        LIBIOTRACE_ERROR("snprintf returned value < 0"); \
+                                        LOG_ERROR_AND_EXIT("snprintf returned value < 0"); \
                                     } \
                                     LIBIOTRACE_STRUCT_SIZE_ERROR((size_t)libiotrace_struct_ret_int, libiotrace_struct_size) /* don't write more characters then size of buffer */ \
                                     libiotrace_struct_buf += libiotrace_struct_ret_int;  /* set pointer to end of written characters */ \

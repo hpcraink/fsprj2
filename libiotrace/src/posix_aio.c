@@ -327,7 +327,7 @@ int WRAP(lio_listio)(int mode, struct aiocb *const list[], int nent,
 				WRAP_END(data, lio_listio)
 				break;
 			case unknown_listio_opcode:
-				LIBIOTRACE_WARN("unknown listio_opcode");
+				LOG_WARN("unknown listio_opcode");
 				break;
 			default:
 				/* ignore LIO_NOP */
@@ -397,7 +397,7 @@ int WRAP(lio_listio64)(int mode, struct aiocb64 *const list[], int nent,
 				WRAP_END(data, lio_listio64)
 				break;
 			case unknown_listio_opcode:
-				LIBIOTRACE_WARN("unknown listio_opcode");
+				LOG_WARN("unknown listio_opcode");
 				break;
 			default:
 				/* ignore LIO_NOP */

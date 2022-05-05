@@ -89,7 +89,7 @@ void fnmap_create(long max_size) {
     assert( !g_hmap && "fnmap has been already init'ed" );
 
     if (!(g_hmap = atomic_hash_create(max_size, HMAP_TTL_DISABLE))) {
-        LIBIOTRACE_ERROR("Couldn't init fnmap");
+        LOG_ERROR_AND_EXIT("Couldn't init fnmap");
     } else {
         atomic_hash_register_hooks(g_hmap,
                                    NULL, NULL, NULL, NULL, hmap_del_hook);
@@ -100,7 +100,7 @@ void fnmap_destroy(void) {
     assert( g_hmap && "fnmap hasn't been init'ed yet" );
 
     if ((atomic_hash_destroy(g_hmap))) {
-        LIBIOTRACE_WARN("Couldn't uninit fnmap");
+        LOG_WARN("Couldn't uninit fnmap");
     } else {
         g_hmap = NULL;
     }
@@ -142,9 +142,9 @@ add_after_removal:
             fnmap_entry_t *existing_entry;
             if (!atomic_hash_get(g_hmap, key, FNMAP_KEY_SIZE, NULL, &existing_entry)) {
                 if (existing_entry->ts_in_ns >= ts_in_ns) {
-                    LIBIOTRACE_DEBUG("Already existing entry seems "
-                                     "to be more recent (existing=%lu vs. to-be-added=%lu), "
-                                     "aborting update ...", existing_entry->ts_in_ns, ts_in_ns);
+                    LOG_DEBUG("Already existing entry seems "
+                              "to be more recent (existing=%lu vs. to-be-added=%lu), "
+                              "aborting update ...", existing_entry->ts_in_ns, ts_in_ns);
                     CALL_REAL_ALLOC_SYNC( free(new_entry_ptr->fname_ptr) );
                     CALL_REAL_ALLOC_SYNC( free(new_entry_ptr) );
                     return;
@@ -158,7 +158,7 @@ add_after_removal:
 
     /* (1a) Failure: Exceeded fnmap capacity */
         DEV_DEBUG_PRINT_FNMAP_KEY(key);
-        LIBIOTRACE_ERROR("Couldn't add value '%s' (err_code=%d [%s])", fname, hmap_rtnval, (
+        LOG_ERROR_AND_EXIT("Couldn't add value '%s' (err_code=%d [%s])", fname, hmap_rtnval, (
                 (-1 == hmap_rtnval) ? "max filenames in fnmap exceeded" : "unknown"));
 
 
@@ -176,7 +176,7 @@ void fnmap_remove(const fnmap_key_t *key) {
     const int hmap_rtnval = atomic_hash_del(g_hmap, key, FNMAP_KEY_SIZE, NULL, NULL);
     if (hmap_rtnval) {
         DEV_DEBUG_PRINT_FNMAP_KEY(key);
-        LIBIOTRACE_ERROR("Couldn't delete value (filename) (err_code=%d)", hmap_rtnval);
+        LOG_ERROR_AND_EXIT("Couldn't delete value (filename) (err_code=%d)", hmap_rtnval);
     } else {
         DEV_DEBUG_PRINT_MSG("Removed filename using following key ...");
         DEV_DEBUG_PRINT_FNMAP_KEY(key);

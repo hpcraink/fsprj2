@@ -57,7 +57,7 @@ static int uxd_sock_read(int conn_fd,
     } while (cur_bytes_read > 0 && total_bytes_read < sizeof(*ipc_request));
 
     if (sizeof(*ipc_request) != total_bytes_read) {
-        LIBIOTRACE_WARN("Received incomplete ipc-request "
+        LOG_WARN("Received incomplete ipc-request "
                  "(%zu of %zu expected bytes) -- %s", total_bytes_read, sizeof(*ipc_request), strerror(errno));
         return -1;
     }
@@ -121,5 +121,5 @@ void uxd_ipc_tracee_block_until_tracing_ack(int server_conn_fd) {
     const int rv = uxd_sock_read(server_conn_fd, &ipc_request);
 
     if (!rv && TRACER_REQUEST_ACCEPTED == ipc_request.msg_type) { return; }
-    LIBIOTRACE_ERROR("Got invalid tracing request acknowledgement");
+    LOG_ERROR_AND_EXIT("Got invalid tracing request acknowledgement");
 }

@@ -10,7 +10,7 @@
             DEV_DEBUG_PRINT_MSG("stracing > Trying to perform lookup for STREAM based on derived fildes");
             const int derived_fd = CALL_REAL_POSIX_SYNC( fileno( key->id.stream ) );
             if (-1 == derived_fd) {
-                LIBIOTRACE_WARN("stracing > Couldn't derive fildes for lookup from stream (errno=%d)", errno);
+                LOG_WARN("stracing > Couldn't derive fildes for lookup from stream (errno=%d)", errno);
                 return hmap_rtnval;
             }
 

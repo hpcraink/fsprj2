@@ -108,8 +108,8 @@ void io_log_file_buffer_flush(void) {
 	fd = CALL_REAL_POSIX_SYNC(open)(log_name, O_WRONLY | O_CREAT | O_APPEND,
 	S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 	if (-1 == fd) {
-		LIBIOTRACE_ERROR("open() of file %s returned %d with errno=%d",
-				log_name, fd, errno);
+		LOG_ERROR_AND_EXIT("open() of file %s returned %d with errno=%d",
+                           log_name, fd, errno);
 	}
 
 	for (int i = 0; i < count_basic; i++) {
@@ -120,10 +120,10 @@ void io_log_file_buffer_flush(void) {
 		count = ret + sizeof(LINE_BREAK) - 1;
 		ret = CALL_REAL_POSIX_SYNC(write)(fd, buf, count); // TODO: buffer serialized structs and call write less often
 		if (0 > ret) {
-			LIBIOTRACE_ERROR("write() returned %d", ret);
+			LOG_ERROR_AND_EXIT("write() returned %d", ret);
 		}
 		if (ret < count) {
-			LIBIOTRACE_ERROR("incomplete write() occurred");
+			LOG_ERROR_AND_EXIT("incomplete write() occurred");
 		}
 		ret = libiotrace_struct_sizeof_basic(data);
 
@@ -163,7 +163,7 @@ void io_log_file_buffer_write(struct basic *data) {
 	}
 	if (pos + length > endpos) {
 		// ToDo: solve circular dependency of fprintf
-		LIBIOTRACE_ERROR(
+		LOG_ERROR_AND_EXIT(
 				"buffer (%lu bytes) not big enough for even one struct basic (%d bytes)",
 				sizeof(data_buffer), length);
 	}

@@ -354,7 +354,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_EXECV:
         case CASE_EXECVP:
         case CASE_EXECVPE:
-            LIBIOTRACE_WARN("exec detected: Internal mappings pertinent for filename tracing will be overwritten (which may affect filename tracing)");
+            LOG_WARN("exec detected: Internal mappings pertinent for filename tracing will be overwritten (which may affect filename tracing)");
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
             return;
 
@@ -540,12 +540,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     /* ---------------------------------------------------------------------------------- */
         default:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT);
-            LIBIOTRACE_DEBUG("Unhandled case for function `%s`", extracted_fctname);
+            LOG_DEBUG("Unhandled case for function `%s`", extracted_fctname);
             return;
 
         not_implemented_yet:
             SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT);
-            LIBIOTRACE_DEBUG("Not implemented yet function `%s`", extracted_fctname);
+            LOG_DEBUG("Not implemented yet function `%s`", extracted_fctname);
             return;
     }
 }
@@ -585,7 +585,7 @@ static void create_fnmap_key_using_vals(file_handle_type_t type, void* id, size_
             return;
 
         default:
-            LIBIOTRACE_WARN("Unhandled `id_type` w/ enum-value %u", type);
+            LOG_WARN("Unhandled `id_type` w/ enum-value %u", type);
     }
 }
 
@@ -625,10 +625,10 @@ static void create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fn
         case __void_p_enum_file_type_file_async:
         case __void_p_enum_file_type_shared_library:
         case __void_p_enum_file_type_file_alloc:
-        	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
+        	LOG_DEBUG("Unhandled case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
         	return;
         default:
-            LIBIOTRACE_WARN("Unknown case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
+            LOG_WARN("Unknown case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
             return;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
@@ -765,10 +765,10 @@ static void create_fnmap_key_using_fctevent_function_data(struct basic* fctevent
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
 #endif
-        	LIBIOTRACE_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+        	LOG_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
         	return;
         default:
-            LIBIOTRACE_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+            LOG_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
             return;
     }
 }
@@ -847,10 +847,10 @@ static const char* get_file_name_from_fctevent_function_data(struct basic* fctev
 		case __void_p_enum_function_data_mpi_immediate_at:
 		case __void_p_enum_function_data_mpi_waitall:
 		case __void_p_enum_function_data_alloc_function:
-			LIBIOTRACE_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+			LOG_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
 			return NULL;
         default:
-            LIBIOTRACE_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+            LOG_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
             return NULL;                      /* Note: Currently NOT checked by all callers (ISSUE: Has sometimes special meaning, e.g., for `dlopen`; Note: Proceeding w/o checking return value might lead to SIGSEGV)  */
     }
 }

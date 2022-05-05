@@ -1113,7 +1113,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_8;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -1779,7 +1779,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -1805,7 +1805,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -1831,7 +1831,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2138,7 +2138,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_te_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2321,7 +2321,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2348,7 +2348,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2395,7 +2395,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2422,7 +2422,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2449,7 +2449,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2476,7 +2476,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2647,7 +2647,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_30;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2854,7 +2854,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_36;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2880,7 +2880,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_36;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -2906,7 +2906,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_36;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3610,7 +3610,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3658,7 +3658,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3685,7 +3685,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3712,7 +3712,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3799,7 +3799,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3826,7 +3826,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3891,7 +3891,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3918,7 +3918,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3962,7 +3962,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -3989,7 +3989,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4016,7 +4016,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4043,7 +4043,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4091,7 +4091,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4118,7 +4118,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4145,7 +4145,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4172,7 +4172,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4259,7 +4259,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4315,7 +4315,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4342,7 +4342,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4369,7 +4369,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4396,7 +4396,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4444,7 +4444,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4471,7 +4471,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4498,7 +4498,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4525,7 +4525,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4612,7 +4612,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4694,7 +4694,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4721,7 +4721,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4748,7 +4748,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4775,7 +4775,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4848,7 +4848,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4893,7 +4893,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4962,7 +4962,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -4989,7 +4989,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5041,7 +5041,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5068,7 +5068,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5116,7 +5116,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5143,7 +5143,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5170,7 +5170,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5218,7 +5218,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_56;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5687,7 +5687,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_57;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5714,7 +5714,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_55;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -5740,7 +5740,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_55;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9421,7 +9421,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
         default:
-        	LIBIOTRACE_ERROR("unknown match_seq.status");
+        	LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9447,7 +9447,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9473,7 +9473,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_connection_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9779,7 +9779,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_te_token;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9963,7 +9963,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -9990,7 +9990,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10037,7 +10037,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10064,7 +10064,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10091,7 +10091,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10118,7 +10118,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_invoke_update_header_state_10;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10216,7 +10216,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_20;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10242,7 +10242,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_24;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10449,7 +10449,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_30;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10475,7 +10475,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_30;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -10501,7 +10501,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_30;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11113,7 +11113,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11161,7 +11161,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11188,7 +11188,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11215,7 +11215,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11302,7 +11302,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11329,7 +11329,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11394,7 +11394,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11421,7 +11421,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11465,7 +11465,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11492,7 +11492,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11519,7 +11519,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11546,7 +11546,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11594,7 +11594,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11621,7 +11621,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11648,7 +11648,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11675,7 +11675,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11762,7 +11762,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11818,7 +11818,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11845,7 +11845,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11872,7 +11872,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11899,7 +11899,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11947,7 +11947,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -11974,7 +11974,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12001,7 +12001,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12028,7 +12028,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12115,7 +12115,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12197,7 +12197,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12224,7 +12224,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12251,7 +12251,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12278,7 +12278,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12351,7 +12351,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12396,7 +12396,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12465,7 +12465,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12492,7 +12492,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12544,7 +12544,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12571,7 +12571,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12619,7 +12619,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12646,7 +12646,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12673,7 +12673,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -12721,7 +12721,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_49;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -13185,7 +13185,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_50;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -13212,7 +13212,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_48;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();
@@ -13238,7 +13238,7 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_error_48;
         }
         default:
-            LIBIOTRACE_ERROR("unknown match_seq.status");
+            LOG_ERROR_AND_EXIT("unknown match_seq.status");
       }
       /* UNREACHABLE */;
       abort();

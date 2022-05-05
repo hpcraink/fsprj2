@@ -191,7 +191,7 @@ check_symbol_exists(HOST_NAME_MAX "limits.h" HAVE_HOST_NAME_MAX)
 check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 
 # Please keep in alphabetical order
-set(SOURCE
+set(LIBIOTRACE_SOURCE
     event.c
     gettime.c
     io_log_file.c
@@ -206,13 +206,13 @@ set(SOURCE
 
 #compile using cmake -DWITH_POSIX_IO for Posix-IO
 if(WITH_POSIX_IO)
-    list(APPEND SOURCE posix_io.c)
+    list(APPEND LIBIOTRACE_SOURCE posix_io.c)
 endif()
 
 #compile using cmake -DWITH_POSIX_AIO for asynchronous Posix-IO
 if(WITH_POSIX_AIO)
     if(HAVE_AIO_H)
-        list(APPEND SOURCE posix_aio.c)
+        list(APPEND LIBIOTRACE_SOURCE posix_aio.c)
     else()
         message(SEND_ERROR "Missing aio.h for asynchronous Posix-IO.")
     endif()
@@ -220,28 +220,28 @@ endif()
 
 #compile using cmake -DWITH_MPI_IO for MPI-IO
 if(WITH_MPI_IO)
-    list(APPEND SOURCE mpi_io.c)
+    list(APPEND LIBIOTRACE_SOURCE mpi_io.c)
 endif()
 
 #compile using cmake -DWITH_DL_IO for dlopen()
 if(WITH_DL_IO)
-    list(APPEND SOURCE dl_io.c)
+    list(APPEND LIBIOTRACE_SOURCE dl_io.c)
 endif()
 
 #compile using cmake -DWITH_ALLOC for memory allocations
 if(WITH_ALLOC)
-    list(APPEND SOURCE alloc.c)
+    list(APPEND LIBIOTRACE_SOURCE alloc.c)
 endif()
 
 if (FILENAME_RESOLUTION_ENABLED)
-    list(APPEND SOURCE
+    list(APPEND LIBIOTRACE_SOURCE
             fnres/fctevent.c
             fnres/internal/fnmap_atomic_hash.c)
 
     add_subdirectory(libs/atomic_hash)
 
-    list(APPEND SHARED_LIB_LINK_OPTIONS atomic_hash_object)
-    list(APPEND STATIC_LIB_LINK_OPTIONS atomic_hash_object)
+    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS atomic_hash_object)
+    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS atomic_hash_object)
 else()
     # Remove atomic_hash's CMake options from cache
     unset(HASH_FUNCTION CACHE)
@@ -254,11 +254,11 @@ endif()
 
 
 
-add_library(iotrace_shared SHARED ${SOURCE})
+add_library(iotrace_shared SHARED ${LIBIOTRACE_SOURCE})
 
-add_library(iotrace_static STATIC ${SOURCE})
+add_library(iotrace_static STATIC ${LIBIOTRACE_SOURCE})
 
-add_library(iotrace_object OBJECT ${SOURCE})
+add_library(iotrace_object OBJECT ${LIBIOTRACE_SOURCE})
 
 add_library(iotrace_control SHARED libiotrace.c)
 
@@ -273,9 +273,9 @@ set(WANT_GETTIME 1 CACHE BOOL "If gettimeof is selected")
 set(WANT_RDTSC 1 CACHE BOOL "If rdtsc is selected")
 
 
-target_compile_options(iotrace_shared PRIVATE ${COMPILE_OPTIONS})
-target_compile_options(iotrace_static PRIVATE ${COMPILE_OPTIONS})
-target_compile_options(iotrace_object PRIVATE ${COMPILE_OPTIONS})
+target_compile_options(iotrace_shared PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
+target_compile_options(iotrace_static PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
+target_compile_options(iotrace_object PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
 
 # object for static linking needs
 target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
@@ -284,11 +284,11 @@ target_compile_options(iotrace_object PRIVATE -DIO_LIB_STATIC)
 # Linking:
 #   - ${CMAKE_DL_LIBS} needed for dlsym-function
 #   - "-lpthread" needed for pthread_atfork() and pthread_create()
-list(APPEND SHARED_LIB_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
-list(APPEND STATIC_LIB_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
+list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
+list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 
-target_link_libraries(iotrace_shared PRIVATE ${SHARED_LIB_LINK_OPTIONS})
-target_link_libraries(iotrace_static PRIVATE ${STATIC_LIB_LINK_OPTIONS})  # TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ??
+target_link_libraries(iotrace_shared PRIVATE ${LIBIOTRACE_SHARED_LINK_OPTIONS})
+target_link_libraries(iotrace_static PRIVATE ${LIBIOTRACE_STATIC_LINK_OPTIONS})  # TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ??
 
 
 #install(TARGETS iotrace_static

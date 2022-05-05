@@ -31,9 +31,9 @@ add_executable(
 		../../src/libs/line_protocol_parser.c
 )
 set_target_properties(test_libiotrace_structs PROPERTIES LINK_FLAGS -W)
-#list(APPEND COMPILE_OPTIONS -fsanitize=undefined)
-target_compile_options(test_libiotrace_structs PRIVATE ${COMPILE_OPTIONS})
-#list(REMOVE_ITEM COMPILE_OPTIONS -fsanitize=undefined)
+#list(APPEND LIBIOTRACE_COMPILE_OPTIONS -fsanitize=undefined)
+target_compile_options(test_libiotrace_structs PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
+#list(REMOVE_ITEM LIBIOTRACE_COMPILE_OPTIONS -fsanitize=undefined)
 #target_link_libraries(test_libiotrace_structs PRIVATE cunit ubsan)
 target_link_libraries(test_libiotrace_structs PRIVATE cunit)
 
@@ -41,20 +41,20 @@ add_test(NAME test_libiotrace_structs COMMAND test_libiotrace_structs)
 
 if(WITH_ALLOC)
 	# don't include POSIX wrapper during compile of ../../src/alloc.c
-	list(REMOVE_ITEM COMPILE_OPTIONS -DWITH_POSIX_IO)
+	list(REMOVE_ITEM LIBIOTRACE_COMPILE_OPTIONS -DWITH_POSIX_IO)
 
 	# we need exact one output function
-	list(REMOVE_ITEM COMPILE_OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
-	list(APPEND COMPILE_OPTIONS -DENABLE_OUTPUT=LOGFILE)
+	list(REMOVE_ITEM LIBIOTRACE_COMPILE_OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
+	list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DENABLE_OUTPUT=LOGFILE)
 
 	# generate functions with prefix "__test_" instead of alloc wrappers
 	# (to prevent wrapping of alloc functions in cunit framework and
 	# enable testing of wrappers with dedicated function calls)
-	list(APPEND COMPILE_OPTIONS -DIO_LIB_TEST)
+	list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DIO_LIB_TEST)
 
 	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/utils.c ../../src/libiotrace_defines_utils.c  ../../src/gettime.c)
 	set_target_properties(test_alloc PROPERTIES LINK_FLAGS -W)
-	target_compile_options(test_alloc PRIVATE ${COMPILE_OPTIONS})
+	target_compile_options(test_alloc PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
 	target_link_libraries(test_alloc PRIVATE cunit -ldl)
 
 	add_test(NAME test_alloc COMMAND test_alloc)

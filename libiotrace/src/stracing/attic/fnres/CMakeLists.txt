@@ -8,29 +8,29 @@ set(CMAKE_C_STANDARD 11)
 
 
 # --- Actual executable ---
-set(SOURCES
+set(SCERB_TEST_SOURCES
         iface/common/scerb.c
-            testing_scerb.c)
-set(COMPILE_OPTIONS -O0)
+        testing_scerb.c)
+set(SCERB_TEST_COMPILE_OPTIONS -O0)
 
 
 # -- Actual ringbuffer --
-list(APPEND SOURCES
+list(APPEND SCERB_TEST_SOURCES
         iface/common/scerb.c
         iface/common/sm_ipc_utils.c
         iface/libiotrace/scerb_consumer_rmind.c
         iface/stracer/scerb_producer_rmind.c)
 add_subdirectory(rmind-ringbuf)
-list(APPEND LINK_OPTIONS libringbuf_hash_object)
+list(APPEND SCERB_TEST_LINK_OPTIONS libringbuf_hash_object)
 
 
 # -- Test program --
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    list(APPEND LINK_OPTIONS
+    list(APPEND SCERB_TEST_LINK_OPTIONS
             rt pthread)   # Note: POSIX Realtime Extensions + pthread library are required for semaphores
 endif()
 
 
-add_executable(testing_scerb ${SOURCES})
-target_compile_options(testing_scerb PRIVATE ${COMPILE_OPTIONS})
-target_link_libraries(testing_scerb ${LINK_OPTIONS})
+add_executable(testing_scerb ${SCERB_TEST_SOURCES})
+target_compile_options(testing_scerb PRIVATE ${SCERB_TEST_COMPILE_OPTIONS})
+target_link_libraries(testing_scerb ${SCERB_TEST_LINK_OPTIONS})

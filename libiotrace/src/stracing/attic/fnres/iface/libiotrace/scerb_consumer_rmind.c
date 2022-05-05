@@ -28,14 +28,14 @@ int fnres_scerb_create(sm_scerb_t** sm_scerb, char* smo_name) {
     shm_unlink(smo_name);
 
 /* Create new shared mem block + map it into caller's address space */
-    unsigned long long shared_mem_len;
-    DIE_WHEN_ERRNO( sm_ipc_attach_create_map_smo( smo_name, sm_min_size, (void**)sm_scerb, &shared_mem_len, 1) );
+    unsigned long long sm_len;
+    DIE_WHEN_ERRNO( sm_ipc_attach_create_map_smo(smo_name, sm_min_size, (void**)sm_scerb, &sm_len, 1) );
 
     LOG_DEBUG("Created smo \"%s\" w/ requested `min_buf_capacity_bytes`=%lu (got from OS=%llu)", smo_name,
-              sm_min_size, shared_mem_len);
+              sm_min_size, sm_len);
 
 /* Init ringbuffer */
-    return ringbuf_setup(&(*sm_scerb)->ringbuf, 1, BUFFER_SIZE_IN_BYTES);
+    return ringbuf_setup(&(*sm_scerb)->ringbuf, 1, STRACE_FNRES_RB_SIZE);
 }
 
 

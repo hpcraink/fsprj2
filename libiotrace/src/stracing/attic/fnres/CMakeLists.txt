@@ -7,14 +7,14 @@ enable_language(C)
 set(CMAKE_C_STANDARD 11)
 
 
-# --- Actual executable ---
+
 set(SCERB_TEST_SOURCES
         iface/common/scerb.c
         testing_scerb.c)
 set(SCERB_TEST_COMPILE_OPTIONS -O0)
 
 
-# -- Actual ringbuffer --
+# - ringbuffer -
 list(APPEND SCERB_TEST_SOURCES
         iface/common/scerb.c
         iface/common/sm_ipc_utils.c
@@ -25,6 +25,10 @@ list(APPEND SCERB_TEST_LINK_OPTIONS libringbuf_hash_object)
 
 
 # -- Test program --
+# - CMake options -
+set(STRACE_FNRES_RB_SIZE "16384" CACHE STRING "RingBuffer size for each thread")
+list(APPEND SCERB_TEST_COMPILE_OPTIONS -DSTRACE_FNRES_RB_SIZE=${STRACE_FNRES_RB_SIZE})
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     list(APPEND SCERB_TEST_LINK_OPTIONS
             rt pthread)   # Note: POSIX Realtime Extensions + pthread library are required for semaphores

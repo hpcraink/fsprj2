@@ -52,7 +52,7 @@ int run_producer_aka_stracer(
         test_scevent->filename_len = strlen(test_scevent->filename) + 1;
 
         if (-2 == DIE_WHEN_ERR( fnres_scerb_offer(sm_scerb, test_scevent ))) {
-            printf("[PRODUCER] Insertion failed  --  Reached (`i`=%d), stopping insertion !\n", i);
+            fprintf(stdout, "[PRODUCER] Insertion failed  --  Reached (`i`=%d), stopping insertion !\n", i);
             goto cleanup;
         }
 
@@ -109,7 +109,7 @@ int run_consumer_aka_libiotrace(
 
 /* --  4. Unmap  -- */
     DIE_WHEN_ERR( fnres_scerb_detach(&sm_scerb, SMO_NAME) );
-    puts("[CONSUMER] (4.) Detached rb");
+    fprintf(stderr, "[CONSUMER] (4.) Detached rb\n");
     DIE_WHEN_ERRNO( sem_post(sem_consumer_finished) );
 
     fprintf(stderr, "[CONSUMER] Exiting ...\n");

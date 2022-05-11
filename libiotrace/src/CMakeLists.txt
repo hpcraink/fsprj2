@@ -192,8 +192,9 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 
 # Please keep in alphabetical order
 set(LIBIOTRACE_SOURCE
+    common/utils.c
+    common/gettime.c
     event.c
-    gettime.c
     io_log_file.c
     libiotrace_defines_utils.c
     libiotrace_functions.c
@@ -201,7 +202,6 @@ set(LIBIOTRACE_SOURCE
     libs/llhttp/http.c
     libs/llhttp/llhttp.c
     os.c
-    utils.c
 )
 
 #compile using cmake -DWITH_POSIX_IO for Posix-IO
@@ -266,7 +266,7 @@ add_library(iotrace_control SHARED libiotrace.c)
 
 # Let the user chose the gettime functionality
 # XXX Instead of hard-coding these settings, they should be chosen dependant on availability...
-set_property(SOURCE gettime.c CACHE LIBIOTRACE_GETTIME PROPERTY STRINGS "LIBIOTRACE_GETTIME" "WANT_GETTIMEOFDAY;WANT_GETTIME;WANT_RDTSC")
+set_property(SOURCE common/gettime.c CACHE LIBIOTRACE_GETTIME PROPERTY STRINGS "LIBIOTRACE_GETTIME" "WANT_GETTIMEOFDAY;WANT_GETTIME;WANT_RDTSC")
 set(LIBIOTRACE_GETTIME "NOTHING" CACHE STRING "Build with the timing option")
 set(WANT_GETTIMEOFDAY 1 CACHE BOOL "If gettimeofday is selected")
 set(WANT_GETTIME 1 CACHE BOOL "If gettimeof is selected")

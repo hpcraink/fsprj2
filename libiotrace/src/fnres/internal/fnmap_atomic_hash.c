@@ -11,9 +11,9 @@
 #include "libiotrace_config.h"
 
 #include <assert.h>
-#include "../../error.h"
+#include "../../common/error.h"
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "../../debug.h"
+#include "../../common/debug.h"
 
 
 /* -- Globals / Constants -- */

@@ -7,6 +7,9 @@
 
 #include "utils.h"
 
+
+
+/* -- libiotrace specific -- */
 /**
  * Generates environment variable from "key" and "value".
  *
@@ -101,6 +104,8 @@ void shorten_log_name(char *short_log_name, const int short_log_name_len,
 }
 
 
+
+/* -- General purpose stuff -- */
 /**
  * Parse C string (w/ number in base 10) as signed long
  *

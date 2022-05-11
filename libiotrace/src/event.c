@@ -49,14 +49,14 @@
 
 #include <execinfo.h>
 
-#include "error.h"
+#include "common/error.h"
 
 #include "libs/llhttp/llhttp.h"
 
 #include "os.h"
 #include "event.h"
-#include "gettime.h"
-#include "utils.h"
+#include "common/gettime.h"
+#include "common/utils.h"
 
 #include "libiotrace.h"
 #include "libiotrace_functions.h"

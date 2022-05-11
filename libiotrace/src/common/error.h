@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "wrapper_defines.h"
+#include "../wrapper_defines.h"
 
 #ifdef WITH_POSIX_IO
-#  include "posix_io.h"
+#  include "../posix_io.h"
 #endif
 
 //#ifdef HAVE_ERRNO_H

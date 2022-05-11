@@ -15,7 +15,7 @@
 
 #include "io_log_file.h"
 
-#include "error.h"
+#include "common/error.h"
 
 //#include "libiotrace_include_function.h"
 #include "wrapper_defines.h"

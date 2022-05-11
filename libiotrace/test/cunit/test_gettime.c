@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "CUnit/CUnitCI.h"
-#include "../../src/gettime.h"
+#include "../../src/common/gettime.h"
 
 /* run at the start of the suite */
 CU_SUITE_SETUP() {

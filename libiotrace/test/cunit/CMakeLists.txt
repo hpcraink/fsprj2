@@ -13,11 +13,11 @@ enable_testing()
 # - CTest config
 
 
-add_executable(test_utils test_utils.c ../../src/utils.c)
+add_executable(test_utils test_utils.c ../../src/common/utils.c)
 set_target_properties(test_utils PROPERTIES LINK_FLAGS -W)
 target_link_libraries(test_utils PRIVATE cunit)
 
-add_executable(test_gettime test_gettime.c ../../src/gettime.c)
+add_executable(test_gettime test_gettime.c ../../src/common/gettime.c)
 set_target_properties(test_gettime PROPERTIES LINK_FLAGS -W)
 target_link_libraries(test_gettime PRIVATE cunit)
 
@@ -52,7 +52,7 @@ if(WITH_ALLOC)
 	# enable testing of wrappers with dedicated function calls)
 	list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DIO_LIB_TEST)
 
-	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/utils.c ../../src/libiotrace_defines_utils.c  ../../src/gettime.c)
+	add_executable(test_alloc test_alloc.c ../../src/alloc.c ../../src/common/utils.c ../../src/libiotrace_defines_utils.c ../../src/common/gettime.c)
 	set_target_properties(test_alloc PROPERTIES LINK_FLAGS -W)
 	target_compile_options(test_alloc PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
 	target_link_libraries(test_alloc PRIVATE cunit -ldl)

@@ -5,9 +5,9 @@
 #include <dlfcn.h>
 
 #include "libiotrace_config.h"
-#include "gettime.h"
-#include "utils.h"
-#include "error.h"
+#include "common/gettime.h"
+#include "common/utils.h"
+#include "common/error.h"
 #include "libiotrace_include_struct.h"
 
 

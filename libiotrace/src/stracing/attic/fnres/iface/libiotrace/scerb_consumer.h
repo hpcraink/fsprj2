@@ -1,5 +1,8 @@
-#ifndef LIBIOTRACE_FNRES_SCERB_H
-#define LIBIOTRACE_FNRES_SCERB_H
+/**
+ * Consumer API for Syscall Event RingBuffer (aka., `scerb`), which stores syscall events (aka., `scevent`) for the filename resolution (aka., `fnres`)
+ */
+#ifndef LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_
+#define LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_
 
 #include "../common/scerb.h"
 
@@ -31,9 +34,9 @@ int fnres_scerb_detach(sm_scerb_t** sm_scerb, char* smo_name);
  * @brief                                 Retrieves & removes the next unread element
  *
  * @param[in] sm_scerb                    Handle (i.e., pointer) to shared memory segment containing scerb + buffer
- * @param[out] event_ptr                  Pointer to output memory to copy buffer data to
- * @return int                            Returns `-2` if buffer empty, `-1` on all other failures and `0` on success
+ * @param[out] scevent_buf_ptr            Pointer to output memory to copy buffer data to
+ * @return int                            Returns `-2` if buffer is empty, `-1` on all other failures and `0` on success
  */
-int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* event_ptr);
+int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr);
 
-#endif /* LIBIOTRACE_FNRES_SCERB_H */
+#endif /* LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_ */

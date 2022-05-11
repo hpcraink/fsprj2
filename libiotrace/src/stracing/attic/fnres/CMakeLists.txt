@@ -1,3 +1,7 @@
+# ensure debug info and assert functions are build during compile of tests    --> TODO: LATER ONLY FOR test
+set(CMAKE_BUILD_TYPE Debug)
+
+
 # --- Project config ---
 project(ringbuffer-testing)
 cmake_minimum_required(VERSION 3.3.2)

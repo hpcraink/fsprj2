@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include "sm_ipc_utils.h"
 
@@ -14,7 +15,7 @@
 
 
 /* -- Functions -- */
-int sm_ipc_attach_create_map_smo(
+int sm_ipc_attach_create_smo(
         char* smo_name, off_t smo_min_len,
         void** shared_mem_addr_ptr, unsigned long long* shared_mem_len_ptr,
         bool o_creat) {

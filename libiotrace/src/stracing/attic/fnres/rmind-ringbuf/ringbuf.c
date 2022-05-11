@@ -83,11 +83,13 @@
 /*
  * ringbuf_setup: initialise a new ring buffer of a given length.
  */
-int ringbuf_setup(ringbuf_t *rbuf, unsigned nworkers, size_t length) {
+int ringbuf_setup(ringbuf_t *rbuf, size_t length) {
 	if (length >= RBUF_OFF_MASK) {
 		errno = EINVAL;
 		return -1;
 	}
+    const unsigned nworkers = 1;        // $$  WILL ALWAYS BE 1  $$
+
 	memset(rbuf, 0, offsetof(ringbuf_t, workers[nworkers]));
 	rbuf->space = length;
 	rbuf->end = RBUF_OFF_MAX;

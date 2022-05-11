@@ -16,7 +16,7 @@ typedef struct ringbuf_worker ringbuf_worker_t;
 
 
 
-/* $$ TAKEN FROM C FILE (we want to know impl. details of the ringbuffer so we've size information @ compile time) $$ */
+/* $$ TAKEN FROM C FILE   (we want to know impl. details of the ringbuffer so we've size information @ compile time) $$ */
 typedef uint64_t	ringbuf_off_t;
 
 struct ringbuf_worker {
@@ -47,7 +47,7 @@ typedef struct ringbuf {
 
 
 
-int		ringbuf_setup(ringbuf_t *, unsigned, size_t);
+int		ringbuf_setup(ringbuf_t *, size_t);
 //void		ringbuf_get_sizes(unsigned, size_t *, size_t *);
 
 ringbuf_worker_t *ringbuf_register(ringbuf_t *, unsigned);

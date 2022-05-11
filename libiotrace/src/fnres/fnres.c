@@ -18,9 +18,9 @@
  *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in fnmap (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
  *  - On an `exec*` call, the global file-map (of the process) will be overwritten, removing fildes which WILL BE inherited (since they weren't opened w/ `O_CLOEXEC` flag) by the new (replaced) executable
  */
-#include "fctevent.h"
-#include "internal/fctnconsts.h"
-#include "internal/fnmap.h"
+#include "ioevent.h"
+#include "fctnconsts.h"
+#include "fnmap/fnmap.h"
 
 #include <assert.h>
 #include "../common/error.h"
@@ -32,60 +32,61 @@
 
 
 /* -- Function prototypes for helper functions -- */
-static void create_fnmap_key_using_vals(file_handle_type_t type, void *id, size_t mmap_length, fnmap_key_t *new_key);
-static void create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key_t *new_key);
-static void create_fnmap_key_using_fctevent_function_data(struct basic *fctevent, fnmap_key_t *new_key1, fnmap_key_t *new_key2);
+static void create_fnmap_key_using_vals(file_handle_type_t type, void *id_ptr, size_t mmap_length, fnmap_key_t *new_key_ptr);
+static void create_fnmap_key_using_ioevent_file_type(struct basic *ioevent_ptr, fnmap_key_t *new_key_ptr);
+static void create_fnmap_key_using_ioevent_function_data(struct basic *ioevent_ptr, fnmap_key_t *new_key1_ptr, fnmap_key_t *new_key2_ptr);
 
-static const char* get_file_name_from_fctevent_function_data(struct basic *fctevent);
+static const char* get_file_name_from_ioevent_function_data(struct basic *ioevent_ptr);
 
 
 /* -- Macros -- */
-#define SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, traced_fname) do {                                                                            \
-    (fctevent)->traced_filename[sizeof((fctevent)->traced_filename) - 1] = '\0'; /* ensure there is a terminating '\0' after strncpy */       \
-    strncpy((fctevent)->traced_filename, traced_fname, sizeof((fctevent)->traced_filename) - 1 /* save space for terminating '\0' */);        \
-    DEV_DEBUG_PRINT_MSG("Set for fctevent >>%s<< traced_filename \"%s\"", (fctevent)->function_name, (fctevent)->traced_filename);                 \
+#define SET_TRACED_FNAME_FOR_IOEVENT(IOEVENT_PTR, TRACED_FNAME) do {                                                                            \
+    (IOEVENT_PTR)->traced_filename[sizeof((IOEVENT_PTR)->traced_filename) - 1] = '\0'; /* ensure there's a terminating '\0' after strncpy */       \
+    strncpy((IOEVENT_PTR)->traced_filename, (TRACED_FNAME), sizeof((IOEVENT_PTR)->traced_filename) - 1 /* save space for terminating '\0' */);        \
+    DEV_DEBUG_PRINT_MSG("Set for ioevent >>%s<< traced_filename \"%s\"", (IOEVENT_PTR)->function_name, (IOEVENT_PTR)->traced_filename);                 \
 } while(0)
 
-#define RETURN_IF_FCTEVENT_FAILED(fctevent) do {                                        \
-    if (error == (fctevent)->return_state) {                                            \
-        DEV_DEBUG_PRINT_MSG("Failed fctevent, not adding to trace ...");                \
-        return;                                                                         \
+#define RETURN_IF_IOEVENT_FAILED(IOEVENT_PTR, RTN_STATUS) do {                                        \
+    if (error == (IOEVENT_PTR)->return_state) {                                            \
+        DEV_DEBUG_PRINT_MSG("Failed ioevent, not adding to fnmap ...");                \
+        return (RTN_STATUS);                                                                         \
     }                                                                                   \
 } while(0)
 
-#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, filename) do {\
+#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(IOEVENT_PTR, FILENAME) do {\
     fnmap_key_t insert_key;                                                           \
-    create_fnmap_key_using_fctevent_file_type(fctevent, &insert_key);                 \
-    fnmap_add_or_update(&insert_key, filename, (fctevent)->time_start);               \
+    create_fnmap_key_using_ioevent_file_type((IOEVENT_PTR), &insert_key);                 \
+    fnmap_add_or_update(&insert_key, (FILENAME), (IOEVENT_PTR)->time_start);               \
 } while(0)
 
-#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, filename) do {             \
+#define ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(IOEVENT_PTR, FILENAME) do {             \
     fnmap_key_t insert_key1, insert_key2;                                                              \
-    create_fnmap_key_using_fctevent_function_data(fctevent, &insert_key1, &insert_key2);               \
-    fnmap_add_or_update(&insert_key1, filename, (fctevent)->time_start);                               \
+    create_fnmap_key_using_ioevent_function_data((IOEVENT_PTR), &insert_key1, &insert_key2);               \
+    fnmap_add_or_update(&insert_key1, (FILENAME), (IOEVENT_PTR)->time_start);                               \
                                                                                                        \
-    if (__void_p_enum_function_data_file_pair == (fctevent)->__void_p_enum_function_data ||            \
-          __void_p_enum_function_data_socketpair_function == (fctevent)->__void_p_enum_function_data) {\
-      fnmap_add_or_update(&insert_key2, filename, (fctevent)->time_start);                             \
+    if (__void_p_enum_function_data_file_pair == (IOEVENT_PTR)->__void_p_enum_function_data ||            \
+          __void_p_enum_function_data_socketpair_function == (IOEVENT_PTR)->__void_p_enum_function_data) {\
+      fnmap_add_or_update(&insert_key2, (FILENAME), (IOEVENT_PTR)->time_start);                             \
     }                                                                                                  \
 } while(0)
 
-#define RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent) do {  \
+#define RMV_FNAME_FROM_TRACE_USING_IOEVENT_FILE_TYPE(IOEVENT_PTR) do {  \
     fnmap_key_t delete_key;                                           \
-    create_fnmap_key_using_fctevent_file_type(fctevent, &delete_key); \
+    create_fnmap_key_using_ioevent_file_type((IOEVENT_PTR), &delete_key); \
     fnmap_remove(&delete_key);                                        \
 } while(0)
 
-#define IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_key, search_found_fname)\
-    create_fnmap_key_using_fctevent_file_type((fctevent), &(search_key));                         \
-    if (!fnmap_get(&(search_key), &(search_found_fname)))
+#define IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(IOEVENT_PTR, SEARCH_KEY, SEARCH_FOUND_FNAME)\
+    create_fnmap_key_using_ioevent_file_type((IOEVENT_PTR), &(SEARCH_KEY));                         \
+    if (!fnmap_get(&(SEARCH_KEY), &(SEARCH_FOUND_FNAME)))
 
-#define IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_key, search_found_fname)\
-    create_fnmap_key_using_fctevent_function_data((fctevent), &(search_key), NULL);                   \
-    if (!fnmap_get(&(search_key), &(search_found_fname)))
+#define IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(IOEVENT_PTR, SEARCH_KEY, SEARCH_FOUND_FNAME)\
+    create_fnmap_key_using_ioevent_function_data((IOEVENT_PTR), &(SEARCH_KEY), NULL);                   \
+    if (!fnmap_get(&(SEARCH_KEY), &(SEARCH_FOUND_FNAME)))
 
-#define ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent) else {          \
-    SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NOTFOUND);\
+#define ELSE_SET_FNAME_NOT_FOUND(IOEVENT_PTR, RTN_STATUS) else {\
+    SET_TRACED_FNAME_FOR_IOEVENT((IOEVENT_PTR), FNAME_SPECIFIER_NOTFOUND);\
+    (RTN_STATUS) = -1;\
 }
 
 
@@ -114,19 +115,20 @@ void fnres_fin(void) {
 
 
 
-void fnres_trace_fctevent(struct basic *fctevent) {
+int fnres_trace_ioevent(struct basic *ioevent_ptr) {
     assert( fnmap_is_inited() && "Got no init prior usage" );
 
-    char* const extracted_fctname = fctevent->function_name;
+    int rtn_status = 0;
+    char* const extracted_fctname = ioevent_ptr->function_name;
     SWITCH_FCTNAME(extracted_fctname) {
 
     /* --- Functions relevant for tracing + traceable --- */
         case CASE_OPEN_STD_FD:
         case CASE_OPEN_STD_FILE:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_STD);
-            RETURN_IF_FCTEVENT_FAILED(fctevent);
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_STD);
-            return;
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_STD);
+            RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr, FNAME_SPECIFIER_STD);
+            return rtn_status;
 
         case CASE___OPEN:
         case CASE___OPEN64:
@@ -150,13 +152,13 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
         case CASE_MPI_FILE_OPEN:
         {
-            const char* const extracted_fname = get_file_name_from_fctevent_function_data(fctevent);
+            const char* const extracted_fname = get_file_name_from_ioevent_function_data(ioevent_ptr);
 
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname);
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, extracted_fname);
 
-            RETURN_IF_FCTEVENT_FAILED(fctevent);
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname);
-            return;
+            RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr, extracted_fname);
+            return rtn_status;
         }
 
 
@@ -167,72 +169,74 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_INOTIFY_INIT1:
         case CASE_MEMFD_CREATE:
         case CASE_SOCKET:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_PSEUDO);
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_PSEUDO);
 
-            RETURN_IF_FCTEVENT_FAILED(fctevent);
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, FNAME_SPECIFIER_PSEUDO);
-            return;
+            RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr, FNAME_SPECIFIER_PSEUDO);
+            return rtn_status;
 
         case CASE_ACCEPT:
         case CASE_ACCEPT4:
         case CASE_PIPE:
         case CASE_PIPE2:
         case CASE_SOCKETPAIR:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_PSEUDO);
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_PSEUDO);
 
-            RETURN_IF_FCTEVENT_FAILED(fctevent);
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_PSEUDO);
-            return;
+            RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(ioevent_ptr, FNAME_SPECIFIER_PSEUDO);
+            return rtn_status;
 
 
         case CASE_FREOPEN:
         case CASE_FREOPEN64:
         {
-            const char* const extracted_fname = get_file_name_from_fctevent_function_data(fctevent);
+            const char* const extracted_fname = get_file_name_from_ioevent_function_data(ioevent_ptr);
 
             if (NULL == extracted_fname) {     /* Note: filename == NULL means >> reopen SAME file again << */
                 fnmap_key_t search_key; char* search_found_fname;
-                IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
-                                                                 search_key, search_found_fname) {
-                    SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
-                } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
-                return;
+                IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr,
+                                                                search_key, search_found_fname) {
+                    SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, search_found_fname);
+
+                } ELSE_SET_FNAME_NOT_FOUND(ioevent_ptr, rtn_status)
+                return rtn_status;
             }
 
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, extracted_fname);
-            RETURN_IF_FCTEVENT_FAILED(fctevent);
-            RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent);
-            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, extracted_fname);  /* Add under same key but w/ different filename */
-            return;
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, extracted_fname);
+            RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+            RMV_FNAME_FROM_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr);
+            ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr, extracted_fname);  /* Add under same key but w/ different filename */
+            return rtn_status;
         }
 
         case CASE_MREMAP:
         {
             fnmap_key_t search_key; char* search_found_fname;
-            IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
-                                                             search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
+            IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr,
+                                                            search_key, search_found_fname) {
+                SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent);
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname);
-                RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent);                       /* Remove old mapping */
-            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
-            return;
+                RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(ioevent_ptr, search_found_fname);
+                RMV_FNAME_FROM_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr);                       /* Remove old mapping */
+
+            } ELSE_SET_FNAME_NOT_FOUND(ioevent_ptr, rtn_status)
+            return rtn_status;
         }
 
 
         case CASE_MMAP:
         case CASE_MMAP64:
         {
-            if (((struct memory_map_function*)(fctevent->__function_data))->map_flags.anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_MMAP);
+            if (((struct memory_map_function*)(ioevent_ptr->__function_data))->map_flags.anonymous) {      /* Not file backed (`mmap` will ignore its arg `fd`) */
+                SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_MMAP);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent);
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, FNAME_SPECIFIER_MMAP);
+                RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(ioevent_ptr, FNAME_SPECIFIER_MMAP);
             } else {
                 goto case_dup;
             }
-            return;
+            return rtn_status;
         }
 
         case CASE_DUP:
@@ -252,32 +256,34 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MPI_FILE_IWRITE_AT_ALL:
         {
             fnmap_key_t search_key; char *search_found_fname;
-            IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
-                                                             search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
+            IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr,
+                                                            search_key, search_found_fname) {
+                SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent);
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent, search_found_fname);
-            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
-            return;
+                RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(ioevent_ptr, search_found_fname);
+
+            } ELSE_SET_FNAME_NOT_FOUND(ioevent_ptr, rtn_status)
+            return rtn_status;
         }
 
         case CASE_FCNTL:
             if (__void_p_enum_cmd_data_dup_function ==
-                ((struct fcntl_function*)fctevent->__function_data)->__void_p_enum_cmd_data) { goto case_dup; }
+                ((struct fcntl_function*)ioevent_ptr->__function_data)->__void_p_enum_cmd_data) { goto case_dup; }
             goto case_fcntl_no_dup;
 
         case CASE_FDOPEN:       /* Fildes -> Stream */
         {
             fnmap_key_t search_key; char *search_found_fname;
-            IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FUNCTION_DATA(fctevent,
-                                                                 search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
+            IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FUNCTION_DATA(ioevent_ptr,
+                                                                search_key, search_found_fname) {
+                SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent);
-                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent, search_found_fname);
-            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
-            return;
+                RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+                ADD_OR_UPDATE_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr, search_found_fname);
+
+            } ELSE_SET_FNAME_NOT_FOUND(ioevent_ptr, rtn_status)
+            return rtn_status;
         }
 
 
@@ -297,23 +303,24 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MPI_FILE_CLOSE:
         {
             fnmap_key_t search_key; char *search_found_fname;
-            IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
-                                                             search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
+            IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr,
+                                                            search_key, search_found_fname) {
+                SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, search_found_fname);
 
-                RETURN_IF_FCTEVENT_FAILED(fctevent);
-                RMV_FNAME_FROM_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent);
-            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
-            return;
+                RETURN_IF_IOEVENT_FAILED(ioevent_ptr, rtn_status);
+                RMV_FNAME_FROM_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr);
+
+            } ELSE_SET_FNAME_NOT_FOUND(ioevent_ptr, rtn_status)
+            return rtn_status;
         }
 
         case CASE_MPI_WAITALL:              /* ... TODO: Removes only requests from fnmap (to prevent leak), but doesn't set traced_filename(s) ...  */
         {
-            const struct mpi_waitall* fctevent_function_data = (struct mpi_waitall*)fctevent->__function_data;
+            const struct mpi_waitall* ioevent_function_data = (struct mpi_waitall*)ioevent_ptr->__function_data;
 
-            if (NULL == fctevent_function_data->__requests) { return; }
-            for (size_t i = 0; i < fctevent_function_data->__size_requests; i++) {
-                int* req_id = &((*((fctevent_function_data->__requests) + i))->request_id);
+            if (NULL == ioevent_function_data->__requests) { return rtn_status; }
+            for (size_t i = 0; i < ioevent_function_data->__size_requests; i++) {
+                int* req_id = &((*((ioevent_function_data->__requests) + i))->request_id);
 
                 fnmap_key_t delete_key;
                 create_fnmap_key_using_vals(R_MPI, req_id, 0, &delete_key);
@@ -345,8 +352,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_PTHREAD_CREATE:
         case CASE_FORK:             /* Handled by hook `reset_on_fork` in event.c, which is automatically called on `fork` */
         case CASE_VFORK:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
-            return;
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_NAF);
+            return rtn_status;
 
         case CASE_EXECL:            /* TODO: ASK -> Old (but still inherited) fildes will be gone */
         case CASE_EXECLP:
@@ -355,13 +362,13 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_EXECVP:
         case CASE_EXECVPE:
             LOG_WARN("exec detected: Internal mappings pertinent for filename tracing will be overwritten (which may affect filename tracing)");
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_NAF);
-            return;
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_NAF);
+            return rtn_status;
 
 
         case CASE_MPI_FILE_DELETE:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, get_file_name_from_fctevent_function_data(fctevent));
-            return;
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, get_file_name_from_ioevent_function_data(ioevent_ptr));
+            return rtn_status;
 
 
         case_fcntl_no_dup:
@@ -471,11 +478,12 @@ void fnres_trace_fctevent(struct basic *fctevent) {
         case CASE_MPI_FILE_SET_VIEW:
         {
             fnmap_key_t search_key; char* search_found_fname;
-            IF_FOUND_FNAME_IN_TRACE_USING_FCTEVENT_FILE_TYPE(fctevent,
-                                                             search_key, search_found_fname) {
-                SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, search_found_fname);
-            } ELSE_SET_FOR_TRACED_FNAME_NOT_FOUND(fctevent)
-            return;
+            IF_FOUND_FNAME_IN_TRACE_USING_IOEVENT_FILE_TYPE(ioevent_ptr,
+                                                            search_key, search_found_fname) {
+                SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, search_found_fname);
+
+            } ELSE_SET_FNAME_NOT_FOUND(ioevent_ptr, rtn_status)
+            return rtn_status;
         }
 
 
@@ -502,9 +510,9 @@ void fnres_trace_fctevent(struct basic *fctevent) {
     /* - Dynamic linking loader - */
         case CASE_DLOPEN:
         case CASE_DLMOPEN: {
-            const char* const extracted_fname = get_file_name_from_fctevent_function_data(fctevent);                  /* Note: `file_name` may be NULL (causes `dlopen` to return pointer to running program (i.e., itself)) */
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, (extracted_fname) ? (extracted_fname) : ("MAIN PROGRAM"));
-            return;
+            const char* const extracted_fname = get_file_name_from_ioevent_function_data(ioevent_ptr);                  /* Note: `file_name` may be NULL (causes `dlopen` to return pointer to running program (i.e., itself)) */
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, (extracted_fname) ? (extracted_fname) : ("MAIN PROGRAM"));
+            return rtn_status;
         }
 
     /* - Dynamically allocated mem. - */
@@ -539,49 +547,49 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
     /* ---------------------------------------------------------------------------------- */
         default:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNHANDELED_FCT);
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_UNHANDELED_FCT);
             LOG_DEBUG("Unhandled case for function `%s`", extracted_fctname);
-            return;
+            return rtn_status;
 
         not_implemented_yet:
-            SET_TRACED_FNAME_FOR_FCTEVENT(fctevent, FNAME_SPECIFIER_UNSUPPORTED_FCT);
+            SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_UNSUPPORTED_FCT);
             LOG_DEBUG("Not implemented yet function `%s`", extracted_fctname);
-            return;
+            return rtn_status;
     }
 }
 
 
 
 /* - Helper functions - */
-static void create_fnmap_key_using_vals(file_handle_type_t type, void* id, size_t mmap_length, fnmap_key_t *new_key) {
-    memset(new_key, 0, FNMAP_KEY_SIZE);      /* Avoid garbage in key's id union */
+static void create_fnmap_key_using_vals(file_handle_type_t type, void* id_ptr, size_t mmap_length, fnmap_key_t *new_key_ptr) {
+    memset(new_key_ptr, 0, FNMAP_KEY_SIZE);      /* Avoid garbage in key's id union */
 
-    new_key->type = type;
-    new_key->mmap_length = 0;
+    new_key_ptr->type = type;
+    new_key_ptr->mmap_length = 0;
     switch(type) {
         case F_DESCRIPTOR:
-            new_key->id.fildes = *((int*) id);
+            new_key_ptr->id.fildes = *((int*) id_ptr);
             return;
 
         case F_STREAM:
-            new_key->id.stream = (FILE*) id;
+            new_key_ptr->id.stream = (FILE*) id_ptr;
             return;
 
         case F_DIR:
-            new_key->id.dir = id;
+            new_key_ptr->id.dir = id_ptr;
             return;
 
         case F_MEMORY:
-            new_key->id.mmap_start = id;
-            new_key->mmap_length = mmap_length;
+            new_key_ptr->id.mmap_start = id_ptr;
+            new_key_ptr->mmap_length = mmap_length;
             return;
 
         case F_MPI:
-            new_key->id.mpi_id = *((int*) id);
+            new_key_ptr->id.mpi_id = *((int*) id_ptr);
             return;
 
         case R_MPI:
-            new_key->id.mpi_req_id = *((int*) id);
+            new_key_ptr->id.mpi_req_id = *((int*) id_ptr);
             return;
 
         default:
@@ -589,134 +597,134 @@ static void create_fnmap_key_using_vals(file_handle_type_t type, void* id, size_
     }
 }
 
-static void create_fnmap_key_using_fctevent_file_type(struct basic *fctevent, fnmap_key_t *new_key) {
-    switch(fctevent->__void_p_enum_file_type) {
+static void create_fnmap_key_using_ioevent_file_type(struct basic *ioevent_ptr, fnmap_key_t *new_key_ptr) {
+    switch(ioevent_ptr->__void_p_enum_file_type) {
         case __void_p_enum_file_type_file_descriptor:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct file_descriptor *) fctevent->__file_type)->descriptor, 0, new_key);
+                                        &((struct file_descriptor *) ioevent_ptr->__file_type)->descriptor, 0, new_key_ptr);
             return;
 
         case __void_p_enum_file_type_file_stream:
             create_fnmap_key_using_vals(F_STREAM,
-                                        ((struct file_stream *) fctevent->__file_type)->stream, 0, new_key);
+                                        ((struct file_stream *) ioevent_ptr->__file_type)->stream, 0, new_key_ptr);
             return;
 
         case __void_p_enum_file_type_file_dir:
             create_fnmap_key_using_vals(F_DIR,
-                                        ((struct file_dir *) fctevent->__file_type)->directory_stream, 0, new_key);
+                                        ((struct file_dir *) ioevent_ptr->__file_type)->directory_stream, 0, new_key_ptr);
             return;
 
         case __void_p_enum_file_type_file_memory:
             create_fnmap_key_using_vals(F_MEMORY,
-                                        ((struct file_memory *) fctevent->__file_type)->address,
-                                        ((struct file_memory *) fctevent->__file_type)->length, new_key);
+                                        ((struct file_memory *) ioevent_ptr->__file_type)->address,
+                                        ((struct file_memory *) ioevent_ptr->__file_type)->length, new_key_ptr);
             return;
 
         case __void_p_enum_file_type_file_mpi:
             create_fnmap_key_using_vals(F_MPI,
-                                        &((struct file_mpi *) fctevent->__file_type)->mpi_file, 0, new_key);
+                                        &((struct file_mpi *) ioevent_ptr->__file_type)->mpi_file, 0, new_key_ptr);
             return;
 
         case __void_p_enum_file_type_request_mpi:
             create_fnmap_key_using_vals(R_MPI,
-                                        &((struct request_mpi *) fctevent->__file_type)->request_id, 0, new_key);
+                                        &((struct request_mpi *) ioevent_ptr->__file_type)->request_id, 0, new_key_ptr);
             return;
 
         case __void_p_enum_file_type_file_async:
         case __void_p_enum_file_type_shared_library:
         case __void_p_enum_file_type_file_alloc:
-        	LOG_DEBUG("Unhandled case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
+        	LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
         	return;
         default:
-            LOG_WARN("Unknown case for `fctevent->__void_p_enum_file_type` w/ value %u", fctevent->__void_p_enum_file_type);
+            LOG_WARN("Unknown case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
             return;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
     }
 }
 
-static void create_fnmap_key_using_fctevent_function_data(struct basic* fctevent, fnmap_key_t* new_key1, fnmap_key_t* new_key2) {
-    switch (fctevent->__void_p_enum_function_data) {
+static void create_fnmap_key_using_ioevent_function_data(struct basic* ioevent_ptr, fnmap_key_t* new_key1_ptr, fnmap_key_t* new_key2_ptr) {
+    switch (ioevent_ptr->__void_p_enum_function_data) {
         case __void_p_enum_function_data_dup_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct dup_function *) fctevent->__function_data)->new_descriptor, 0,
-                                        new_key1);
+                                        &((struct dup_function *) ioevent_ptr->__function_data)->new_descriptor, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_dup3_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct dup3_function *) fctevent->__function_data)->new_descriptor, 0,
-                                        new_key1);
+                                        &((struct dup3_function *) ioevent_ptr->__function_data)->new_descriptor, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_fileno_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct fileno_function *) fctevent->__function_data)->file_descriptor, 0,
-                                        new_key1);
+                                        &((struct fileno_function *) ioevent_ptr->__function_data)->file_descriptor, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_fdopen_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct fdopen_function *) fctevent->__function_data)->descriptor, 0,
-                                        new_key1);
+                                        &((struct fdopen_function *) ioevent_ptr->__function_data)->descriptor, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_accept_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct accept_function *) fctevent->__function_data)->new_descriptor, 0,
-                                        new_key1);
+                                        &((struct accept_function *) ioevent_ptr->__function_data)->new_descriptor, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_file_pair:               /* Note: Creates 2 keys (2 fildes) */
-            create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair *) fctevent->__function_data)->descriptor1, 0,
-                                        new_key1);
-            create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair *) fctevent->__function_data)->descriptor2, 0,
-                                        new_key2);
+            create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair *) ioevent_ptr->__function_data)->descriptor1, 0,
+                                        new_key1_ptr);
+            create_fnmap_key_using_vals(F_DESCRIPTOR, &((struct file_pair *) ioevent_ptr->__function_data)->descriptor2, 0,
+                                        new_key2_ptr);
             return;
 
         case __void_p_enum_function_data_socketpair_function:     /* Note: Creates 2 keys (2 fildes) */
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct socketpair_function *) fctevent->__function_data)->descriptor1, 0,
-                                        new_key1);
+                                        &((struct socketpair_function *) ioevent_ptr->__function_data)->descriptor1, 0,
+                                        new_key1_ptr);
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct socketpair_function *) fctevent->__function_data)->descriptor2, 0,
-                                        new_key2);
+                                        &((struct socketpair_function *) ioevent_ptr->__function_data)->descriptor2, 0,
+                                        new_key2_ptr);
             return;
 
         case __void_p_enum_function_data_memory_map_function:
-            create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function *) fctevent->__function_data)->address,
-                                        ((struct memory_map_function *) fctevent->__function_data)->length, new_key1);
+            create_fnmap_key_using_vals(F_MEMORY, ((struct memory_map_function *) ioevent_ptr->__function_data)->address,
+                                        ((struct memory_map_function *) ioevent_ptr->__function_data)->length, new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_memory_remap_function:
             create_fnmap_key_using_vals(F_MEMORY,
-                                        ((struct memory_remap_function *) fctevent->__function_data)->new_address,
-                                        ((struct memory_remap_function *) fctevent->__function_data)->new_length,
-                                        new_key1);
+                                        ((struct memory_remap_function *) ioevent_ptr->__function_data)->new_address,
+                                        ((struct memory_remap_function *) ioevent_ptr->__function_data)->new_length,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_mpi_immediate:
-            create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate *) fctevent->__function_data)->request_id, 0,
-                                        new_key1);
+            create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate *) ioevent_ptr->__function_data)->request_id, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_mpi_immediate_at:
-            create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at *) fctevent->__function_data)->request_id, 0,
-                                        new_key1);
+            create_fnmap_key_using_vals(R_MPI, &((struct mpi_immediate_at *) ioevent_ptr->__function_data)->request_id, 0,
+                                        new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_mpi_open_function:
-            create_fnmap_key_using_vals(F_MPI, &((struct file_mpi *) fctevent->__function_data)->mpi_file, 0, new_key1);
+            create_fnmap_key_using_vals(F_MPI, &((struct file_mpi *) ioevent_ptr->__function_data)->mpi_file, 0, new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_copy_write_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct copy_write_function *) fctevent->__function_data)->from_file_descriptor,
-                                        0, new_key1);
+                                        &((struct copy_write_function *) ioevent_ptr->__function_data)->from_file_descriptor,
+                                        0, new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_copy_read_function:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
-                                        &((struct copy_read_function *) fctevent->__function_data)->to_file_descriptor,
-                                        0, new_key1);
+                                        &((struct copy_read_function *) ioevent_ptr->__function_data)->to_file_descriptor,
+                                        0, new_key1_ptr);
             return;
 
         case __void_p_enum_function_data_fork_function:
@@ -765,34 +773,34 @@ static void create_fnmap_key_using_fctevent_function_data(struct basic* fctevent
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
 #endif
-        	LOG_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+        	LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
         	return;
         default:
-            LOG_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+            LOG_WARN("Unknown case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
             return;
     }
 }
 
-static const char* get_file_name_from_fctevent_function_data(struct basic* fctevent) {
-    switch(fctevent->__void_p_enum_function_data) {
+static const char* get_file_name_from_ioevent_function_data(struct basic* ioevent_ptr) {
+    switch(ioevent_ptr->__void_p_enum_function_data) {
         case __void_p_enum_function_data_open_function:
-            return ((struct open_function*)fctevent->__function_data)->file_name;
+            return ((struct open_function*)ioevent_ptr->__function_data)->file_name;
 
         case __void_p_enum_function_data_openat_function:
-            return ((struct openat_function*)fctevent->__function_data)->file_name;
+            return ((struct openat_function*)ioevent_ptr->__function_data)->file_name;
 
         case __void_p_enum_function_data_mpi_open_function:
-            return ((struct mpi_open_function*)fctevent->__function_data)->file_name;
+            return ((struct mpi_open_function*)ioevent_ptr->__function_data)->file_name;
 
         case __void_p_enum_function_data_mpi_delete_function:
-            return ((struct mpi_delete_function*)fctevent->__function_data)->file_name;
+            return ((struct mpi_delete_function*)ioevent_ptr->__function_data)->file_name;
 
         case __void_p_enum_function_data_dlopen_function:
-            return ((struct dlopen_function*)fctevent->__function_data)->file_name;
+            return ((struct dlopen_function*)ioevent_ptr->__function_data)->file_name;
 
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
-            return ((struct dlmopen_function*)fctevent->__function_data)->file_name;
+            return ((struct dlmopen_function*)ioevent->__function_data)->file_name;
 #endif
 
         case __void_p_enum_function_data_fork_function:
@@ -847,10 +855,10 @@ static const char* get_file_name_from_fctevent_function_data(struct basic* fctev
 		case __void_p_enum_function_data_mpi_immediate_at:
 		case __void_p_enum_function_data_mpi_waitall:
 		case __void_p_enum_function_data_alloc_function:
-			LOG_DEBUG("Unhandled case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+			LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
 			return NULL;
         default:
-            LOG_WARN("Unknown case for `fctevent->__void_p_enum_function_data` w/ value %u", fctevent->__void_p_enum_function_data);
+            LOG_WARN("Unknown case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
             return NULL;                      /* Note: Currently NOT checked by all callers (ISSUE: Has sometimes special meaning, e.g., for `dlopen`; Note: Proceeding w/o checking return value might lead to SIGSEGV)  */
     }
 }

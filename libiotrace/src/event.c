@@ -332,7 +332,7 @@ void *restrict arg) REAL_DEFINITION_INIT;
 #endif
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-#  include "fnres/fctevent.h"
+#  include "fnres/fnres.h"
 
 static const char* const FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
 static const long FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
@@ -1179,7 +1179,7 @@ void open_std_fd(int fd)
 
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -1232,7 +1232,7 @@ void open_std_file(FILE *file)
 
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #endif
 
 
@@ -1280,7 +1280,7 @@ void init_on_load(void) {
 
 #ifdef LOG_WRAPPER_TIME
 #  ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #  endif
 
 #  ifdef IOTRACE_ENABLE_LOGFILE
@@ -2486,7 +2486,7 @@ void cleanup(void) {
 
 #ifdef LOG_WRAPPER_TIME
 #  ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #  endif
 
 	if (active_wrapper_status.cleanup && !no_logging) {

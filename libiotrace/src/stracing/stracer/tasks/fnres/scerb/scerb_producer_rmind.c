@@ -7,13 +7,13 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#include "../../common/tasks/fnres_scerb_ipc_utils.h"
-#include "../../common/tasks/fnres_scerb_types.h"
-#include "../../common/tasks/fnres_scerb_types_rmind.h"
+#include "../../../../common/tasks/fnres/scerb/scerb_ipc_utils.h"
+#include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "../../../../common/tasks/fnres/scerb/scerb_types_rmind.h"
 
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "../../common/debug.h"
-#include "../common/error.h"
+#include "../../../../../common/debug.h"
+#include "common/error.h"
 
 
 /* -- Functions -- */

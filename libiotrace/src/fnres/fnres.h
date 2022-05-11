@@ -3,8 +3,8 @@
  *   Takes in data from wrapper calls (posix/mpi; are called "function events") for the purpose
  *   of creating a mapping from all types of file handles (fildes, streams, etc.) to filenames
  */
-#ifndef LIBIOTRACE_FCTEVENT_H
-#define LIBIOTRACE_FCTEVENT_H
+#ifndef LIBIOTRACE_FNRES_H
+#define LIBIOTRACE_FNRES_H
 
 #include <stddef.h>     /* size_t */
 
@@ -49,9 +49,9 @@ void fnres_fin(void);
  *                                          stores filename for new file-handles (e.g., for `open`) and
  *                                          sets associated filename on event (by looking up filename via handle)
  *
- * @param[in,out] fctevent                Will be updated to contain the traced filename
- * @return void
+ * @param[in,out] ioevent_ptr             Will be updated to contain the traced filename
+ * @return int                            `0` = successfully resolved filename, `-1` = couldn't resolve filename
  */
-void fnres_trace_fctevent(struct basic *fctevent);
+int fnres_trace_ioevent(struct basic *ioevent_ptr);
 
-#endif /* LIBIOTRACE_FCTEVENT_H */
+#endif /* LIBIOTRACE_FNRES_H */

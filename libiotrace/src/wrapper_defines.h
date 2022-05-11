@@ -12,10 +12,17 @@
 
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-#  include "fnres/fctevent.h"
-#  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent)
+#  include "fnres/fnres.h"
+#  define FNRES_TRACE_FCTEVENT(FCTEVENT) fnres_trace_fctevent(FCTEVENT)
 #else
-#  define FNRES_TRACE_FCTEVENT(fctevent) do {  } while(0)
+#  define FNRES_TRACE_FCTEVENT(FCTEVENT) do {  } while(0)
+#endif
+
+#if defined(STRACING_ENABLED) && defined(FILENAME_RESOLUTION_ENABLED)
+#  include "stracing/libiotrace/tasks/fnres/stracing_fnres.h"
+#  define STRACING_FNRES_CHECK_AND_ADD_SCEVENTS() stracing_fnres_check_and_add_scevents()
+#else
+#  define STRACING_FNRES_CHECK_AND_ADD_SCEVENTS() do {  } while(0)
 #endif
 
 
@@ -237,7 +244,8 @@
                             (data.__void_p_enum_file_type == __void_p_enum_file_type_file_stream \
                              && stdin != ((struct file_stream *)data.__file_type)->stream \
                              && stdout != ((struct file_stream *)data.__file_type)->stream \
-                             && stderr != ((struct file_stream *)data.__file_type)->stream)) { \
+                             && stderr != ((struct file_stream *)data.__file_type)->stream)) {     \
+                            STRACING_FNRES_CHECK_AND_ADD_SCEVENTS();                             \
                             FNRES_TRACE_FCTEVENT(&data); \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \
@@ -248,6 +256,7 @@
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
+                         STRACING_FNRES_CHECK_AND_ADD_SCEVENTS(); \
                          FNRES_TRACE_FCTEVENT(&data); \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
@@ -257,6 +266,7 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
+                           STRACING_FNRES_CHECK_AND_ADD_SCEVENTS(); \
                            FNRES_TRACE_FCTEVENT(&data); \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \

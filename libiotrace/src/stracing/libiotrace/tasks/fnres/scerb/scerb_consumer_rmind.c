@@ -9,18 +9,18 @@
 
 #include <sys/mman.h>
 
-#include "../../common/tasks/fnres_scerb_ipc_utils.h"
-#include "fnres_scerb_consumer.h"
-#include "../../common/tasks/fnres_scerb_types_rmind.h"
+#include "../../../../common/tasks/fnres/scerb/scerb_ipc_utils.h"
+#include "scerb_consumer.h"
+#include "../../../../common/tasks/fnres/scerb/scerb_types_rmind.h"
 
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "../../common/debug.h"
-#include "../../common/error.h"
+#include "../../../../../common/debug.h"
+#include "../../../../../common/error.h"
 
 
 /* -- Functions -- */
 /* - Init - */
-int fnres_scerb_create(sm_scerb_t** sm_scerb, char* smo_name) {
+int scerb_create_attach(sm_scerb_t** sm_scerb, char* smo_name) {
     assert( sm_scerb && smo_name && "params may not be `NULL`" );
     // TODO: CHECK INIT'ed
 
@@ -41,7 +41,7 @@ int fnres_scerb_create(sm_scerb_t** sm_scerb, char* smo_name) {
 }
 
 
-int fnres_scerb_detach(sm_scerb_t** sm_scerb, char* smo_name) {
+int scerb_detach(sm_scerb_t** sm_scerb, char* smo_name) {
     assert( sm_scerb && smo_name && "params may not be `NULL`" );
     // TODO: CHECK INIT'ed
 
@@ -51,7 +51,7 @@ int fnres_scerb_detach(sm_scerb_t** sm_scerb, char* smo_name) {
 }
 
 
-int fnres_scerb_poll(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
+int scerb_poll(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
     assert( sm_scerb && scevent_buf_ptr && "params may not be `NULL`" );
     // TODO: CHECK INIT'ed
 

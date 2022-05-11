@@ -3,7 +3,7 @@
 
 #include "CUnit/CUnitCI.h"
 
-#include "../../../src/fnres/fctevent.h"
+#include "../../../src/fnres/fnres.h"
 #include "../../../src/libiotrace_include_struct.h"
 
 
@@ -26,7 +26,7 @@ CU_SUITE_SETUP() {
 
 /* run at the end of the suite */
 CU_SUITE_TEARDOWN() {
-    fnres_fin();            /* Note: As mentioned in 'fctevent.c', 'fnres_fin' doesn't clean up dyn. allocated filenames (i.e., leaks memory) */
+    fnres_fin();            /* Note: As mentioned in 'ioevent.c', 'fnres_fin' doesn't clean up dyn. allocated filenames (i.e., leaks memory) */
 
 	return CUE_SUCCESS;
 }
@@ -41,7 +41,7 @@ CU_TEST_TEARDOWN() {}
 /* -- Tests -- */
 /**
  * Tests whether ...
- *   - basic (open / close) fctevent's are added to / removed from trace
+ *   - basic (open / close) ioevent's are added to / removed from trace
  *   - traceable(s) get the correct 'traced_filename' set
  */
 void test_posix_fildes_open_read_close(void) {
@@ -70,23 +70,23 @@ void test_posix_fildes_open_read_close(void) {
 
 
     /* -- (1) Add (to trace) + set filename for traceable: 'open' -> 'read' -- */
-    fnres_trace_fctevent(&af1_open);
+    fnres_trace_ioevent(&af1_open);
 
-    fnres_trace_fctevent(&bf1_read);     /* 'traced_filename' should be now set to previous 'open' */
+    fnres_trace_ioevent(&bf1_read);     /* 'traced_filename' should be now set to previous 'open' */
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_read.traced_filename, ((struct open_function*)af1_open.__function_data)->file_name));
 
 
     /* -- (2) Remove (from trace): 'close' -> 'read' -- */
-    fnres_trace_fctevent(&cf1_close);
+    fnres_trace_ioevent(&cf1_close);
 
-    fnres_trace_fctevent(&bf1_read);
+    fnres_trace_ioevent(&bf1_read);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_read.traced_filename, FNAME_SPECIFIER_NOTFOUND));
 }
 
 
 
 /**
- * Tests fctevent w/ 2 ids (e.g., 'pipe2')
+ * Tests ioevent w/ 2 ids (e.g., 'pipe2')
  */
 void test_posix_pipe2_lseek(void) {
     /* -- Create test data -- */
@@ -115,11 +115,11 @@ void test_posix_pipe2_lseek(void) {
 
 
     /* -- (0) Add to trace: 'pipe2' -- */
-    fnres_trace_fctevent(&af1_pipe2);
+    fnres_trace_ioevent(&af1_pipe2);
 
     /* -- (1) Set filename for traceable: 'lseek' + 'pread' -- */
-    fnres_trace_fctevent(&bf1_lseek);
-    fnres_trace_fctevent(&bf2_pread);
+    fnres_trace_ioevent(&bf1_lseek);
+    fnres_trace_ioevent(&bf2_pread);
 
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_lseek.traced_filename, FNAME_SPECIFIER_PSEUDO));
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_lseek.traced_filename, bf2_pread.traced_filename));
@@ -127,7 +127,7 @@ void test_posix_pipe2_lseek(void) {
 
 
 /**
- * Tests duplicate fctevents (i.e., finding already existing filename in trace + adding it again (i.e., updating); e.g. 'fileno')
+ * Tests duplicate ioevents (i.e., finding already existing filename in trace + adding it again (i.e., updating); e.g. 'fileno')
  */
 void test_posix_stream_fildes_fileno_fwrite(void) {
     /* -- Create test data -- */
@@ -164,12 +164,12 @@ void test_posix_stream_fildes_fileno_fwrite(void) {
 
 
     /* -- (0) Add to trace: 'fopen' -> 'fileno' -- */
-    fnres_trace_fctevent(&af1_fopen);
-    fnres_trace_fctevent(&af2_fileno);
+    fnres_trace_ioevent(&af1_fopen);
+    fnres_trace_ioevent(&af2_fileno);
 
     /* -- (1) Set filename for traceable: 'write' + 'fgetpos' -- */
-    fnres_trace_fctevent(&bf2_fgetpos);
-    fnres_trace_fctevent(&bf1_write);
+    fnres_trace_ioevent(&bf2_fgetpos);
+    fnres_trace_ioevent(&bf1_write);
 
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_write.traced_filename, bf2_fgetpos.traced_filename));         /* 'write' / fgetpos': Pertains to previous 'fileno' / 'fopen' */
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_write.traced_filename, tmp_af1_function_data.file_name));
@@ -233,26 +233,26 @@ void test_posix_creat_mmap_msync_mremap_munmap(void) {
 
 
     /* -- (0) Add to trace: 'creat' -> 'mmap' -- */
-    fnres_trace_fctevent(&af1_creat);
-    fnres_trace_fctevent(&af2_mmap);
+    fnres_trace_ioevent(&af1_creat);
+    fnres_trace_ioevent(&af2_mmap);
 
     /* -- (1) Set filename for traceable: 'msync' -- */
-    fnres_trace_fctevent(&bf1_msync);
+    fnres_trace_ioevent(&bf1_msync);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_msync.traced_filename, tmp_af1_function_data.file_name));
 
     /* -- (2) (Re)Add to trace: mremap -> 'msync' w/ old address (verify whether removed) + updated 'msync' (w/ new address) -- */
-    fnres_trace_fctevent(&bf2_mremap);
+    fnres_trace_ioevent(&bf2_mremap);
 
-    fnres_trace_fctevent(&bf3_msync_old);
+    fnres_trace_ioevent(&bf3_msync_old);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf3_msync_old.traced_filename, FNAME_SPECIFIER_NOTFOUND));
 
-    fnres_trace_fctevent(&bf4_msync_new);
+    fnres_trace_ioevent(&bf4_msync_new);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf4_msync_new.traced_filename, tmp_af1_function_data.file_name));
 
     /* -- (3) Remove mem-mapping: 'munmap' -> 'msync' -- */
-    fnres_trace_fctevent(&cf1_munmap);
+    fnres_trace_ioevent(&cf1_munmap);
 
-    fnres_trace_fctevent(&bf4_msync_new);
+    fnres_trace_ioevent(&bf4_msync_new);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf4_msync_new.traced_filename, FNAME_SPECIFIER_NOTFOUND));
 }
 
@@ -310,23 +310,23 @@ void test_mpi_open_immediate_close(void) {
 
 
     /* -- (1) Add (to trace) + set filename for traceable: 'MPI_File_open' -> 'MPI_File_set_view' -- */
-    fnres_trace_fctevent(&af1_MPI_File_open);
-    fnres_trace_fctevent(&bf1_MPI_File_set_view);
+    fnres_trace_ioevent(&af1_MPI_File_open);
+    fnres_trace_ioevent(&bf1_MPI_File_set_view);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf1_MPI_File_set_view.traced_filename,
                                                 ((struct mpi_open_function*)af1_MPI_File_open.__function_data)->file_name));
 
     /* -- (2) Add immediate request (to trace) + set filename for traceable: 'MPI_File_iwrite' -> 'MPI_Wait' -- */
-    fnres_trace_fctevent(&bf2_MPI_File_iwrite);
-    fnres_trace_fctevent(&bf3_MPI_Wait);
+    fnres_trace_ioevent(&bf2_MPI_File_iwrite);
+    fnres_trace_ioevent(&bf3_MPI_Wait);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf3_MPI_Wait.traced_filename,
                                                 ((struct mpi_open_function*)af1_MPI_File_open.__function_data)->file_name));
 
     /* -- (3) Remove (from trace): 'MPI_Request_free' -> 'MPI_File_close' -- */
-    fnres_trace_fctevent(&cf1_MPI_Request_free);
-    fnres_trace_fctevent(&cf2_MPI_File_close);
+    fnres_trace_ioevent(&cf1_MPI_Request_free);
+    fnres_trace_ioevent(&cf2_MPI_File_close);
 
-    fnres_trace_fctevent(&bf2_MPI_File_iwrite);
-    fnres_trace_fctevent(&bf3_MPI_Wait);
+    fnres_trace_ioevent(&bf2_MPI_File_iwrite);
+    fnres_trace_ioevent(&bf3_MPI_Wait);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf2_MPI_File_iwrite.traced_filename, FNAME_SPECIFIER_NOTFOUND));
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(bf3_MPI_Wait.traced_filename, FNAME_SPECIFIER_NOTFOUND));
 }
@@ -358,8 +358,8 @@ void test_posix_freopen_same_file(void) {
 
 
     /* -- (0) Add to trace: 'creat' -> 'freopen' (reopen same file again) -- */
-    fnres_trace_fctevent(&af1_creat);
-    fnres_trace_fctevent(&af2_freopen);
+    fnres_trace_ioevent(&af1_creat);
+    fnres_trace_ioevent(&af2_freopen);
     CU_ASSERT_FATAL(STRINGS_ARE_EQUAL == strcmp(af2_freopen.traced_filename, tmp_af1_function_data.file_name));
 }
 

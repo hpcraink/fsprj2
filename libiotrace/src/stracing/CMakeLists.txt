@@ -45,9 +45,9 @@ set(STRACING_FNRES_RB_SIZE "16384" CACHE STRING "RingBuffer size for each thread
 list(APPEND STRACER_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
 
 list(APPEND STRACER_SOURCE
-        common/tasks/fnres_scerb_types.c
-        common/tasks/fnres_scerb_ipc_utils.c
-        stracer/tasks/fnres_scerb_producer_rmind.c)
+        common/tasks/fnres/scerb/scerb_types.c
+        common/tasks/fnres/scerb/scerb_ipc_utils.c
+        stracer/tasks/fnres/scerb/scerb_producer_rmind.c)
 list(APPEND STRACER_LINK_OPTIONS libringbuf_hash_object)
 
 
@@ -96,9 +96,10 @@ list(APPEND LIBIOTRACE_COMPILE_OPTIONS
 # - For task "fnres" -
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND LIBIOTRACE_SOURCE
-            common/tasks/fnres_scerb_types.c
-            common/tasks/fnres_scerb_ipc_utils.c
-            libiotrace/tasks/fnres_scerb_consumer_rmind.c)
+            stracing/common/tasks/fnres/scerb/scerb_types.c
+            stracing/common/tasks/fnres/scerb/scerb_ipc_utils.c
+            stracing/libiotrace/tasks/fnres/scerb/scerb_consumer_rmind.c
+            stracing/libiotrace/tasks/fnres/stracing_fnres.c)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
     list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS libringbuf_hash_object)
     list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS libringbuf_hash_object)

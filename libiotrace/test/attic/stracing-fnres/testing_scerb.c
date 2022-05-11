@@ -17,10 +17,10 @@
 #  include <sys/wait.h>
 #endif
 
-#include "../../libiotrace/tasks/fnres_scerb_consumer.h"
-#include "../../stracer/tasks/fnres_scerb_producer.h"
+#include "../../../src/stracing/libiotrace/tasks/fnres/scerb/scerb_consumer.h"
+#include "../../../src/stracing/stracer/tasks/fnres/scerb/scerb_producer.h"
 
-#include "../../../../test/common/error.h"
+#include "../../common/error.h"
 
 
 /* -- Globals / Consts -- */

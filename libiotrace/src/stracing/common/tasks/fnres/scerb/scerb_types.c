@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "fnres_scerb_types.h"
+#include "scerb_types.h"
 
 
 /* -- Functions -- */

@@ -235,8 +235,8 @@ endif()
 
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND LIBIOTRACE_SOURCE
-            fnres/fctevent.c
-            fnres/internal/fnmap_atomic_hash.c)
+            fnres/fnres.c
+            fnres/fnmap/fnmap_atomic_hash.c)
 
     add_subdirectory(libs/atomic_hash)
 

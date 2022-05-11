@@ -24,7 +24,7 @@
 #include "../../common/debug.h"
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-#  include "tasks/fnres_scerb_consumer.h"
+#  include "tasks/fnres/stracing_fnres.h"
 #endif
 
 
@@ -116,7 +116,8 @@ void stracing_register_with_stracer(void) {
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 #ifdef FILENAME_RESOLUTION_ENABLED
   /* Create buffer for receiving syscall events (traced by stracer) */
-    fnres_
+    stracing_fnres_init_scerb();
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Created scerb for fnres", gettid());
 #endif
 
 /* 1. Send tracing request to stracer */

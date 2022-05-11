@@ -50,7 +50,7 @@ typedef struct {
 bool fnmap_is_inited(void);
 
 /**
- * @brief                                 Create the filename-map w/ the specified capacity
+ * @brief                                 Creates the map w/ the specified capacity
  *                                        (Shall be called by `init_process` in event.c)
  *                                        NOTE: Will terminate entire process on failure
  *
@@ -60,7 +60,7 @@ bool fnmap_is_inited(void);
 void fnmap_create(long max_size);
 
 /**
- * @brief                                 Destroys filename-map
+ * @brief                                 Destroys map
  *
  * @return void
  */
@@ -72,7 +72,7 @@ void fnmap_destroy(void);
  * @param[in] key                         Key, indicating file-handle type (which was initially used to store the associated filename)
  * @param[out] found_fname                Will contain (if found) the pointer to the found filename
  *
- * @return int                            `0` when a filename was found under the specified key
+ * @return int                            `0` when found under specified key
  */
 int fnmap_get(const fnmap_key_t *key, char **found_fname);
 

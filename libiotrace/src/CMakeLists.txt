@@ -253,6 +253,7 @@ if (STRACING_ENABLED)
     add_subdirectory(stracing)
 else()
     unset(STRACING_FNRES_RB_SIZE CACHE)
+    unset(STRACING_FNRES_SCERBMAP_SIZE CACHE)
 endif()
 
 

@@ -10,7 +10,7 @@
 /* -- Function prototypes -- */
 /* - Init - */
 /**
- * @brief                                 Attach to a ringbuffer which has been already init'ed by a different process
+ * @brief                                 Attaches to a ringbuffer which has been already init'ed by a different process
  *
  * @param[out] sm_scerb                   Handle (i.e., pointer) to shared memory segment containing scerb + buffer
  * @param[in] smo_name                    Identifier of shared memory object containing buffer

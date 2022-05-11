@@ -42,13 +42,19 @@ endif()
 
 # - For task "fnres" -
 set(STRACING_FNRES_RB_SIZE "16384" CACHE STRING "RingBuffer size for each thread")    # NOTE: CMake option is ALWAYS required for stracing
-list(APPEND STRACER_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
+set(STRACING_FNRES_SCERBMAP_SIZE "1000" CACHE STRING "# of threads which shall be straced")
+list(APPEND STRACER_COMPILE_OPTIONS
+        -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE}
+        -DSTRACING_FNRES_SCERBMAP_SIZE=${STRACING_FNRES_SCERBMAP_SIZE})
 
 list(APPEND STRACER_SOURCE
         common/tasks/fnres/scerb/scerb_types.c
         common/tasks/fnres/scerb/scerb_ipc_utils.c
-        stracer/tasks/fnres/scerb/scerb_producer_rmind.c)
-list(APPEND STRACER_LINK_OPTIONS libringbuf_hash_object)
+        stracer/tasks/fnres/scerb/scerb_producer_rmind.c
+        stracer/tasks/fnres/scerbmap/scerbmap_atomic_hash.c)
+list(APPEND STRACER_LINK_OPTIONS
+        libringbuf_hash_object
+        atomic_hash_object)
 
 
 # -- Build targets/commands --

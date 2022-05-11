@@ -7,7 +7,7 @@
 #include "cli.h"
 #include "common/utils.h"
 #include "trace/syscalls.h"
-#include "../common/stracer_cli.h"
+#include "../common/stracer_consts.h"
 
 #include <errno.h>
 #include "common/error.h"

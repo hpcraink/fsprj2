@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include "../../../common/stracer_consts.h"
 #include "scerb/scerb_consumer.h"
 #include "../../../../fnres/fnmap/fnmap.h"
 
@@ -21,7 +22,7 @@ void stracing_fnres_init_scerb(void) {
     assert( !g_scerb && "scerb has been already init'ed" );
 
     char *smo_name;
-    DIE_WHEN_ERRNO( asprintf(&smo_name, "_STRACING__%ld", gettid()) );
+    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, gettid()) );
     if (-1 == scerb_create_attach(&g_scerb, smo_name)) {
         LOG_ERROR_AND_EXIT("Couldn't create scerb");
     }

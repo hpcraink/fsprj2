@@ -37,7 +37,7 @@ int scerb_create_attach(sm_scerb_t** sm_scerb, char* smo_name) {
               sm_min_size, sm_len);
 
 /* Init ringbuffer */
-    return (0 == ringbuf_setup(&(*sm_scerb)->ringbuf, STRACE_FNRES_RB_SIZE)) ? 0 : -1;
+    return (0 == ringbuf_setup(&(*sm_scerb)->ringbuf, STRACING_FNRES_RB_SIZE)) ? 0 : -1;
 }
 
 

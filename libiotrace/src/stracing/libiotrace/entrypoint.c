@@ -16,7 +16,7 @@
 #include <sys/prctl.h>
 
 #include "entrypoint.h"
-#include "../common/stracer_cli.h"
+#include "../common/stracer_consts.h"
 #include "ipc/uxd_socket.h"
 
 #include "../../common/error.h"  /* NOTE: Already incl. via `event.h` */

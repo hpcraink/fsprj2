@@ -11,19 +11,29 @@
 #include "libiotrace_include_struct.h"
 
 
-#ifdef FILENAME_RESOLUTION_ENABLED
-#  include "fnres/fnres.h"
-#  define FNRES_TRACE_FCTEVENT(FCTEVENT) fnres_trace_fctevent(FCTEVENT)
-#else
-#  define FNRES_TRACE_FCTEVENT(FCTEVENT) do {  } while(0)
-#endif
-
 #if defined(STRACING_ENABLED) && defined(FILENAME_RESOLUTION_ENABLED)
 #  include "stracing/libiotrace/tasks/fnres/stracing_fnres.h"
 #  define STRACING_FNRES_CHECK_AND_ADD_SCEVENTS() stracing_fnres_check_and_add_scevents()
 #else
 #  define STRACING_FNRES_CHECK_AND_ADD_SCEVENTS() do {  } while(0)
 #endif
+
+#ifdef FILENAME_RESOLUTION_ENABLED
+#  include "fnres/fnres.h"
+#  ifdef STRACING_ENABLED
+#    define FNRES_TRACE_IOEVENT(IOEVENT_PTR) do { \
+         if ((0 != fnres_trace_ioevent((IOEVENT_PTR)) && __void_p_enum_file_type_file_stream == (IOEVENT_PTR)->__void_p_enum_file_type) && \
+              0 == stracing_fnres_lookup_and_alias_stream(IOEVENT_PTR)) { \
+              fnres_trace_ioevent((IOEVENT_PTR)); \
+         } \
+     } while(0)
+#  else
+#    define FNRES_TRACE_IOEVENT(IOEVENT_PTR) (void)fnres_trace_ioevent(IOEVENT_PTR)
+#  endif /* STRACING_ENABLED */
+#else
+#  define FNRES_TRACE_IOEVENT(IOEVENT_PTR) do {  } while(0)
+#endif /* FILENAME_RESOLUTION_ENABLED */
+
 
 
 
@@ -246,7 +256,7 @@
                              && stdout != ((struct file_stream *)data.__file_type)->stream \
                              && stderr != ((struct file_stream *)data.__file_type)->stream)) {     \
                             STRACING_FNRES_CHECK_AND_ADD_SCEVENTS();                             \
-                            FNRES_TRACE_FCTEVENT(&data); \
+                            FNRES_TRACE_IOEVENT(&data); \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \
                               CALL_WRITE_INTO_BUFFER(data); \
@@ -257,7 +267,7 @@
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          STRACING_FNRES_CHECK_AND_ADD_SCEVENTS(); \
-                         FNRES_TRACE_FCTEVENT(&data); \
+                         FNRES_TRACE_IOEVENT(&data); \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
@@ -267,7 +277,7 @@
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
                            STRACING_FNRES_CHECK_AND_ADD_SCEVENTS(); \
-                           FNRES_TRACE_FCTEVENT(&data); \
+                           FNRES_TRACE_IOEVENT(&data); \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
                            WRAP_FREE(&data) \

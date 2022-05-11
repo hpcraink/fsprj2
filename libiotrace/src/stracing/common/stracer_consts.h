@@ -1,8 +1,9 @@
-#ifndef LIBIOTRACE_STRACER_CLI_H
-#define LIBIOTRACE_STRACER_CLI_H
+#ifndef LIBIOTRACE_STRACER_CONSTS_H
+#define LIBIOTRACE_STRACER_CONSTS_H
 
 
 /* -- Consts -- */
+/* - CLI - */
 #define STRACER_CLI_OPTION_SOCKFD             's'
 #define STRACER_CLI_OPTION_SSUBSET            'e'
 
@@ -14,4 +15,8 @@
 #define STRACER_CLI_OPTION_TASK_FNRES         'f'
 
 
-#endif /* LIBIOTRACE_STRACER_CLI_H */
+/* - Misc. - */
+#define STRACING_FNRES_SMO_NAME_FORMAT        "_STRACING__tid_%ld"
+
+
+#endif /* LIBIOTRACE_STRACER_CONSTS_H */

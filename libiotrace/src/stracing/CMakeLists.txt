@@ -16,6 +16,11 @@ list(APPEND STRACER_SOURCE
         stracer/cli.c
         stracer/main.c)
 
+list(APPEND STRACER_LINK_OPTIONS
+        unwind-ptrace
+        unwind-generic
+        dw)
+
 
 # -- CMake options --
 set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source used to parse syscalls")
@@ -33,6 +38,17 @@ list(APPEND STRACER_COMPILE_OPTIONS
 if (STRACING_STRACER_LOG_OUTPUT STREQUAL "LOGFILE")
     list(APPEND STRACER_COMPILE_OPTIONS "-DUSE_LOGFILE")
 endif()
+
+
+# - For task "fnres" -
+set(STRACING_FNRES_RB_SIZE "16384" CACHE STRING "RingBuffer size for each thread")    # NOTE: CMake option is ALWAYS required for stracing
+list(APPEND STRACER_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
+
+list(APPEND STRACER_SOURCE
+        common/tasks/fnres_scerb_types.c
+        common/tasks/fnres_scerb_ipc_utils.c
+        stracer/tasks/fnres_scerb_producer_rmind.c)
+list(APPEND STRACER_LINK_OPTIONS libringbuf_hash_object)
 
 
 # -- Build targets/commands --
@@ -64,7 +80,7 @@ target_include_directories(libiotrace_stracer PRIVATE
 target_compile_options(libiotrace_stracer PRIVATE
         ${STRACER_COMPILE_OPTIONS})
 
-target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw)
+target_link_libraries(libiotrace_stracer PRIVATE ${STRACER_LINK_OPTIONS})
 
 
 
@@ -72,10 +88,24 @@ target_link_libraries(libiotrace_stracer PRIVATE unwind-ptrace unwind-generic dw
 list(APPEND LIBIOTRACE_SOURCE
         stracing/libiotrace/ipc/uxd_socket.c
         stracing/libiotrace/entrypoint.c)
-set(LIBIOTRACE_SOURCE ${LIBIOTRACE_SOURCE} PARENT_SCOPE)
-
 list(APPEND LIBIOTRACE_COMPILE_OPTIONS
         -DSTRACING_STRACER_EXEC_FILENAME="${STRACER_EXEC_FILENAME}"
         -DSTRACING_UXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
         -DSTRACING_UXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE})
+
+# - For task "fnres" -
+if (FILENAME_RESOLUTION_ENABLED)
+    list(APPEND LIBIOTRACE_SOURCE
+            common/tasks/fnres_scerb_types.c
+            common/tasks/fnres_scerb_ipc_utils.c
+            libiotrace/tasks/fnres_scerb_consumer_rmind.c)
+    list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
+    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS libringbuf_hash_object)
+    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS libringbuf_hash_object)
+
+    set(LIBIOTRACE_SHARED_LINK_OPTIONS ${LIBIOTRACE_SHARED_LINK_OPTIONS} PARENT_SCOPE)
+    set(LIBIOTRACE_STATIC_LINK_OPTIONS ${LIBIOTRACE_STATIC_LINK_OPTIONS} PARENT_SCOPE)
+endif()
+
+set(LIBIOTRACE_SOURCE ${LIBIOTRACE_SOURCE} PARENT_SCOPE)
 set(LIBIOTRACE_COMPILE_OPTIONS ${LIBIOTRACE_COMPILE_OPTIONS} PARENT_SCOPE)

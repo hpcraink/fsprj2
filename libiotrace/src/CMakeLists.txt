@@ -249,7 +249,10 @@ else()
 endif()
 
 if (STRACING_ENABLED)
+    add_subdirectory(libs/rmind-ringbuf)
     add_subdirectory(stracing)
+else()
+    unset(STRACING_FNRES_RB_SIZE CACHE)
 endif()
 
 

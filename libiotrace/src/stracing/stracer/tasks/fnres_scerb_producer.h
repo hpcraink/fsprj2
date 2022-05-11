@@ -4,7 +4,7 @@
 #ifndef STRACER_FNRES_STRACING_SCERB_PRODUCER_H_
 #define STRACER_FNRES_STRACING_SCERB_PRODUCER_H_
 
-#include "../common/scerb.h"
+#include "../../common/tasks/fnres_scerb_types.h"
 
 
 /* -- Function prototypes -- */

@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <assert.h>
-#include "scerb.h"
+#include "fnres_scerb_types.h"
 
 
 /* -- Functions -- */

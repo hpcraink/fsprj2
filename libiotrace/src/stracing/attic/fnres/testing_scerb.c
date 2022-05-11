@@ -17,8 +17,8 @@
 #  include <sys/wait.h>
 #endif
 
-#include "iface/libiotrace/scerb_consumer.h"
-#include "iface/stracer/scerb_producer.h"
+#include "../../libiotrace/tasks/fnres_scerb_consumer.h"
+#include "../../stracer/tasks/fnres_scerb_producer.h"
 
 #include "../../../../test/common/error.h"
 

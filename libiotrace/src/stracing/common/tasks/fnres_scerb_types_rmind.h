@@ -2,7 +2,7 @@
 #define COMMON_FNRES_STRACING_SCERB_RMIND_H_
 
 #include <stdint.h>
-#include "../rmind-ringbuf/ringbuf.h"
+#include "../../../libs/rmind-ringbuf/ringbuf.h"
 
 
 /* -- Data types -- */

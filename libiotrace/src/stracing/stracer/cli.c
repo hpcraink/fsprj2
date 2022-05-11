@@ -90,6 +90,11 @@ static error_t parse_cli_opt(int key, char *always_use_arg_and_not_me, struct ar
             arguments->task_warn_not_traced_ioevents = true;
             break;
 
+    /* TASK: Write syscall event in shared buffer */
+        case STRACER_CLI_OPTION_TASK_FNRES:
+            arguments->task_fnres = true;
+            break;
+
 
         case ARGP_KEY_ARG:
           /* Too many arguments */
@@ -98,7 +103,7 @@ static error_t parse_cli_opt(int key, char *always_use_arg_and_not_me, struct ar
         case ARGP_KEY_END:
           /* Validate ALWAYS required args (sockfd  +  at least 1 selected task must be selected) */
             if ( -1 == arguments->uxd_reg_sock_fd ||
-                 (!arguments->task_warn_not_traced_ioevents /* && !... */) ) {
+                 (!arguments->task_warn_not_traced_ioevents && !arguments->task_fnres) ) {
                 DEV_DEBUG_PRINT_MSG("CLI validation: UXD fd + at least 1 task may be selected");
                 argp_usage(state);
             }
@@ -124,7 +129,8 @@ void parse_cli_args(int argc, char** argv,
         { NULL, STRACER_CLI_OPTION_SOCKFD,             "fd",           0, "fd of IPC UXD socket",                                            1 },
         { NULL, STRACER_CLI_OPTION_SSUBSET,            "syscall_set",  0, "To be traced, comma-list separated, syscall subset",              2 },
         { NULL, STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE, "linkage_info", 0, "Linkage information (required for unwinding)",                    3 },
-        { NULL, STRACER_CLI_OPTION_TASK_WARN,          NULL,           0, "Warning task -- alerts when ioevent wasn't traced by libiotrace", 4 },
+        { NULL, STRACER_CLI_OPTION_TASK_WARN,          NULL,           0, "TASK warn (alert when ioevent wasn't traced by libiotrace)",  4 },
+        { NULL, STRACER_CLI_OPTION_TASK_FNRES,         NULL,           0, "TASK fnres (write syscall-event into shared buffer, which can be read by libiotrace)", 4 },
         {0}
     };
 
@@ -132,6 +138,7 @@ void parse_cli_args(int argc, char** argv,
     parsed_cli_args_ptr->uxd_reg_sock_fd = -1;
     parsed_cli_args_ptr->trace_only_syscall_subset = false;
     parsed_cli_args_ptr->task_warn_not_traced_ioevents = false;
+    parsed_cli_args_ptr->task_fnres = false;
     parsed_cli_args_ptr->unwind_static_linkage = false;
     parsed_cli_args_ptr->unwind_module_name = NULL;
 
@@ -146,13 +153,9 @@ void parse_cli_args(int argc, char** argv,
 }
 
 void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
-    static const char* const NOT_APPLICABLE_STR = "N/A";
-    static const char* const TRUE_STR = "true";
-    static const char* const FALSE_STR = "false";
-
     puts("Parsed CLI args:");
     printf("\t`uxd_reg_sock_fd`=%d\n", parsed_cli_args_ptr->uxd_reg_sock_fd);
-    printf("\t`trace_only_syscall_subset`=%s", parsed_cli_args_ptr->trace_only_syscall_subset ? (TRUE_STR) : (FALSE_STR));
+    printf("\t`trace_only_syscall_subset`=%s", parsed_cli_args_ptr->trace_only_syscall_subset ? ("true") : ("false"));
     if (parsed_cli_args_ptr->trace_only_syscall_subset) {
         printf(" { ");
         for (int i = 0; i < SYSCALLS_ARR_SIZE; i++) {
@@ -164,7 +167,8 @@ void print_parsed_cli_args(cli_args_t* parsed_cli_args_ptr) {
         }
         printf("}");
     }
-    printf("\n\t`task_warn_not_traced_ioevent`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_ioevents ? (TRUE_STR) : (FALSE_STR));
-    printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? (TRUE_STR) : (FALSE_STR));
-    printf("\t`unwind_module_name`=%s\n", __extension__( parsed_cli_args_ptr->unwind_module_name ? : (NOT_APPLICABLE_STR) ));
+    printf("\n\t`task_warn_not_traced_ioevent`=%s\n", parsed_cli_args_ptr->task_warn_not_traced_ioevents ? ("true") : ("false"));
+    printf("\n\t`task_fnres`=%s\n", parsed_cli_args_ptr->task_fnres ? ("true") : ("false"));
+    printf("\t`unwind_static_linkage`=%s\n", parsed_cli_args_ptr->unwind_static_linkage ? ("true") : ("false"));
+    printf("\t`unwind_module_name`=%s\n", __extension__( parsed_cli_args_ptr->unwind_module_name ? : ("N/A") ));
 }

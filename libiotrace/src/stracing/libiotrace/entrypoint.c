@@ -23,6 +23,10 @@
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../../common/debug.h"
 
+#ifdef FILENAME_RESOLUTION_ENABLED
+#  include "tasks/fnres_scerb_consumer.h"
+#endif
+
 
 /* -- Globals / Consts -- */
 #define SYSCALLS_TO_BE_TRACED "open,openat,close"           // TODO: Allow user based selection during runtime
@@ -87,9 +91,6 @@ void stracing_init_stracer(void) {
     char *exec_syscall_subset;
     DIE_WHEN_ERRNO( asprintf(&exec_syscall_subset, "-%c=%s", STRACER_CLI_OPTION_SSUBSET, SYSCALLS_TO_BE_TRACED) );
 
-    /* Prepare `exec` arg: Tasks  (TODO: Allow user based selection during runtime) */
-    const char* const exec_arg_tasks = "-w";
-
     /* Perform `exec` */
     DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s %s`", gettid(),
                         exec_arg_stracer_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_libiotrace_linkage, exec_arg_tasks);
@@ -98,7 +99,10 @@ void stracing_init_stracer(void) {
                       exec_arg_sock_fd,
                       exec_syscall_subset,
                       exec_arg_libiotrace_linkage,
-                      exec_arg_tasks,
+                      "-w",                             //  WARN task    TODO: Runtime selection of to be performed tasks by user
+#ifdef FILENAME_RESOLUTION_ENABLED
+                      "-f",                             // FNRES task  (CAPTAIN OBVIOUS: requires filename resolution)
+#endif
                       NULL,
                       NULL);                            /* Envs (make sure NO `LD_PRELOAD` is passed, otherwise we can't "break out" of libiotrace's tracing) */
     LOG_ERROR_AND_EXIT("stracer `exec` failed -- %s%s", strerror(errno),
@@ -107,8 +111,13 @@ void stracing_init_stracer(void) {
 
 
 void stracing_register_with_stracer(void) {
-/* 0. Set tracing permissions (only necessary when Yama ptrace_scope = 1; check current settings: `cat /proc/sys/kernel/yama/ptrace_scope`) */
+/* 0. SETUP */
+  /* Set tracing permissions (only necessary when Yama ptrace_scope = 1; check current settings: `cat /proc/sys/kernel/yama/ptrace_scope`) */
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
+#ifdef FILENAME_RESOLUTION_ENABLED
+  /* Create buffer for receiving syscall events (traced by stracer) */
+    fnres_
+#endif
 
 /* 1. Send tracing request to stracer */
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());

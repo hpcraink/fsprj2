@@ -23,7 +23,6 @@ typedef struct {
 #define FNRES_SCEVENT_MAX_SIZE                 ( sizeof(scevent_t) + FILENAME_MAX )
 
 
-/* -- Function prototypes -- */
 /* - Debugging - */
 void fnres_scerb_debug_print_scevent(scevent_t*, FILE*);
 

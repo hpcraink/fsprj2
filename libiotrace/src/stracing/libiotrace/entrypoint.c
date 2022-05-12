@@ -110,7 +110,7 @@ void stracing_init_stracer(void) {
 }
 
 
-void stracing_register_with_stracer(void) {
+void stracing_tracee_register_with_stracer(void) {
 /* 0. SETUP */
   /* Set tracing permissions (only necessary when Yama ptrace_scope = 1; check current settings: `cat /proc/sys/kernel/yama/ptrace_scope`) */
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
@@ -133,7 +133,7 @@ void stracing_register_with_stracer(void) {
 }
 
 
-void stracing_fin(void) {
+void stracing_tracee_fin(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
     stracing_fnres_fin();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Detached scerb for fnres", gettid());

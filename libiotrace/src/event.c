@@ -63,6 +63,7 @@
 
 #include "wrapper_name.h"
 
+
 #if !defined(WITH_ALLOC) && !defined(WITH_DL_IO) && !defined(WITH_MPI_IO) && !defined(WITH_POSIX_AIO) && !defined(WITH_POSIX_IO)
 #  error "at least one group of wrappers must be included"
 #endif
@@ -70,6 +71,7 @@
 #if defined(STRACING_ENABLED) && !defined(WITH_POSIX_IO)
 #  error "`STRACING_ENABLED` requires `WITH_POSIX_IO`"
 #endif
+
 
 /* defines for exec-functions */
 #ifndef MAX_EXEC_ARRAY_LENGTH
@@ -2328,7 +2330,7 @@ void init_thread(void) {
 #endif
 
 #ifdef STRACING_ENABLED
-    stracing_register_with_stracer();
+    stracing_tracee_register_with_stracer();
 #endif
 }
 
@@ -2915,6 +2917,14 @@ void WRAP(exit_group)(int status)
 }
 #endif
 
+static void cleanup_thread(void) {
+// !!!   TODO: Check whether gets exec'ed when calling `pthread_cancel` (otherwise potential mem-leak) ???   !!!
+
+#ifdef STRACING_ENABLED
+    stracing_tracee_fin();
+#endif
+}
+
 struct pthread_create_data {
 	void* (*start_routine)(void*);
 	void *restrict arg;
@@ -2932,6 +2942,9 @@ void* pthread_create_start_routine(void *arg) {
 
 	ret = data->start_routine(data->arg);
 	CALL_REAL_ALLOC_SYNC(free)(data);
+
+    cleanup_thread();
+
 	return ret;
 }
 

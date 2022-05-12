@@ -17,15 +17,11 @@
 void stracing_init_stracer(void);
 
 
-
-
-
-
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   TODO:                   MUST BE CALLED FOR ECAH THREAD ON EXIT     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-void stracing_fin(void);
-
-
-
+/**
+ * @brief                        Cleans up scerb for tracee
+ *                               May be called by `cleanup_thread`
+ */
+void stracing_tracee_fin(void);
 
 
 /**
@@ -33,6 +29,6 @@ void stracing_fin(void);
  *                               Requires the stracer to be already running
  *                               May be called by `init_thread`
  */
-void stracing_register_with_stracer(void);
+void stracing_tracee_register_with_stracer(void);
 
 #endif /* LIBIOTRACE_ENTRYPOINT_H */

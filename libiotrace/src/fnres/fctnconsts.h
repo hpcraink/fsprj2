@@ -224,7 +224,7 @@ static uint64_t hash_string(const char *str) {
 #define CASE_REALLOC 0xd0b63de00ec7
 #define CASE_REALLOCARRAY 0xda1e07ca69672126
 #define CASE_FREE 0x17c96f087
-#define CASE_CLEANUP 0xd0b1cbccff0d
+#define CASE_CLEANUP_PROCESS 0x5570b3f122930e0b
 #define CASE_INIT_ON_LOAD 0xd4004ddf3f7cb074
 
 #endif /* LIBIOTRACE_FCTNCONSTS_H */

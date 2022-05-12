@@ -7,8 +7,8 @@
 
 #include <assert.h>
 #include "../../common/error.h"
-//#define DEV_DEBUG_ENABLE_LOGS
-//#include "../../common/debug.h"
+#define DEV_DEBUG_ENABLE_LOGS
+#include "../../common/debug.h"
 
 
 /* -- Functions -- */
@@ -24,13 +24,16 @@ void stracing_fnres_init(long scerbmap_max_size) {
     assert( !scerbmap_is_inited() && "Got already init" );
 
     scerbmap_create(scerbmap_max_size);
+    DEV_DEBUG_PRINT_MSG("Init'ed stracing-fnres module");
 }
 
-void stracing_fnres_fin(void) {
+void stracing_fnres_cleanup(void) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
     scerbmap_destroy();
+    DEV_DEBUG_PRINT_MSG("Fin'ed stracing-fnres module");
 }
+
 
 
 void stracing_fnres_tracee_attach(pid_t tid) {
@@ -41,6 +44,7 @@ void stracing_fnres_tracee_attach(pid_t tid) {
     if (-1 == scerb_attach(&sm_scerb, smo_name)) {
         LOG_ERROR_AND_EXIT("Couldn't attach to scerb w/ smo-identifier \"%s\"", smo_name);
     }
+    DEV_DEBUG_PRINT_MSG("Attached sm-scerb w/ id=\"%s\"", smo_name);
     free(smo_name);
 
     scerbmap_add(&tid, sm_scerb);
@@ -59,6 +63,7 @@ void stracing_fnres_tracee_detach(pid_t tid) {
     if (-1 == scerb_destory_detach(&sm_scerb, smo_name)) {
         LOG_ERROR_AND_EXIT("Couldn't destroy scerb");
     }
+    DEV_DEBUG_PRINT_MSG("Detached sm-scerb w/ id=\"%s\"", smo_name);
     free(smo_name);
 }
 

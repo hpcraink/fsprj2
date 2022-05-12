@@ -29,7 +29,7 @@ static char* derive_smo_name(void) {
 
 
 /* - Public functions - */
-void stracing_fnres_init(void) {
+void stracing_fnres_setup(void) {
     assert( !g_scerb && "scerb has been already init'ed" );
 
     char *smo_name = derive_smo_name();
@@ -37,10 +37,11 @@ void stracing_fnres_init(void) {
         LOG_ERROR_AND_EXIT("Couldn't create scerb");
     }
 
+    DEV_DEBUG_PRINT_MSG("Finished setup (i.e., created & attached smo w/ identifier=\"%s\")", smo_name);
     CALL_REAL_ALLOC_SYNC(free)(smo_name);
 }
 
-void stracing_fnres_fin(void) {
+void stracing_fnres_cleanup(void) {
     assert( g_scerb && "scerb hasn't been init'ed yet" );
 
     char *smo_name = derive_smo_name();
@@ -48,16 +49,25 @@ void stracing_fnres_fin(void) {
         LOG_WARN("Couldn't detach scerb");
     }
 
+    DEV_DEBUG_PRINT_MSG("Finished cleanup (i.e., detached smo w/ identifier=\"%s\")", smo_name);
     CALL_REAL_ALLOC_SYNC(free)(smo_name);
 }
 
 
 void stracing_fnres_check_and_add_scevents(void) {
-    assert( g_scerb && "scerb hasn't been init'ed yet" );
+//    assert( g_scerb && "scerb hasn't been init'ed yet" );
+    if (!g_scerb) {                                     // NOTE: May not be inited yet, but still already called by wrappers
+        DEV_DEBUG_PRINT_MSG("NOP  (not inited yet)");
+        return;
+    }
 
     scevent_t *scevent_buf_ptr = (scevent_t*)alloca(SCEVENT_MAX_SIZE);
     while (0 == scerb_poll(g_scerb, scevent_buf_ptr)) {
-        DEV_DEBUG_PRINT_MSG("Retrieved scevent");
+        DEV_DEBUG_PRINT_MSG("Retrieved scevent { .ts_in_ns=%lu, .succeeded=%s, "
+                            ".fd=%d, .type=%s, .filename_len=%zu, .filename=%s } ",
+                            scevent_buf_ptr->ts_in_ns, scevent_buf_ptr->succeeded ? "true" : "false",
+                            OPEN == scevent_buf_ptr->type ? "OPEN" : "CLOSE",
+                            scevent_buf_ptr->filename_len, scevent_buf_ptr->filename);
 
         if (!scevent_buf_ptr->succeeded) { continue; }
 
@@ -73,6 +83,7 @@ void stracing_fnres_check_and_add_scevents(void) {
         }
     }
 }
+
 
 
 int stracing_fnres_lookup_and_alias_stream(struct basic* ioevent_ptr) {

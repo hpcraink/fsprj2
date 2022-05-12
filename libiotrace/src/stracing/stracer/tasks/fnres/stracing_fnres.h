@@ -21,7 +21,7 @@ void stracing_fnres_init(long scerbmap_max_size);
  *
  * @return void
  */
-void stracing_fnres_fin(void);
+void stracing_fnres_cleanup(void);
 
 
 /**

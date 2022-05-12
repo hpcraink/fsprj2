@@ -116,7 +116,7 @@ void stracing_tracee_register_with_stracer(void) {
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 #ifdef FILENAME_RESOLUTION_ENABLED
   /* Create scerb for receiving syscall events (traced by stracer) */
-    stracing_fnres_init();
+    stracing_fnres_setup();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Created scerb for fnres", gettid());
 #endif
 
@@ -135,7 +135,7 @@ void stracing_tracee_register_with_stracer(void) {
 
 void stracing_tracee_fin(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
-    stracing_fnres_fin();
+    stracing_fnres_cleanup();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Detached scerb for fnres", gettid());
 #endif
 }

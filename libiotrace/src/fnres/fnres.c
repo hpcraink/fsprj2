@@ -346,7 +346,7 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
 
 
     /* --- Traceable --- */
-        case CASE_CLEANUP:          /* Internal libiotrace functions (which are written to trace) */
+        case CASE_CLEANUP_PROCESS:          /* Internal libiotrace functions (which are written to trace) */
         case CASE_INIT_ON_LOAD:
 
         case CASE_PTHREAD_CREATE:

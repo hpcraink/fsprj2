@@ -12,14 +12,14 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
  *
  * @return void
  */
-void stracing_fnres_init(void);
+void stracing_fnres_setup(void);
 
 /**
  * @brief                                 Detaches scerb for current thread
  *
  * @return void
  */
-void stracing_fnres_fin(void);
+void stracing_fnres_cleanup(void);
 
 /**
  * @brief                                 Checks scerb for new scevent's and adds them to the fnmap

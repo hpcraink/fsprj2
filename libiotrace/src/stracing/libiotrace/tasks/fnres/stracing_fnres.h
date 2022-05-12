@@ -2,6 +2,10 @@
 #define LIBIOTRACE_STRACING_FNRES_H
 
 
+/* -- Forward type declarations -- */
+struct basic;           /* Note: #include "../libiotrace_include_struct.h" causes "Declaration of 'struct basic' will not be visible outside of this function" when incl. in "wrapper_defines.h" */
+
+
 /* -- Function prototypes -- */
 /**
  * @brief                                 Creates scerb for current thread

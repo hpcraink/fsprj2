@@ -5,6 +5,7 @@
 #define LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_
 
 #include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "../../../../common/stracer_types.h"
 
 
 /* -- Function prototypes -- */

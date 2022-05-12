@@ -9,6 +9,7 @@
 #include "ptrace_utils.h"
 #include "syscall_types.h"
 #include "syscalls.h"
+#include "common/utils.h"
 
 
 /* -- Function prototypes -- */
@@ -35,6 +36,44 @@ long syscalls_get_nr(char* syscall_name) {
         }
     }
     return -1L;
+}
+
+
+int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, scevent_t* event_buf_ptr) {
+    event_buf_ptr->ts_in_ns = gettime();
+
+    const long syscall_no = USER_REGS_STRUCT_SC_NO( (*read_regs_ptr) );
+    switch(syscall_no) {
+        case __SNR_open:
+        case __SNR_openat:
+        {
+            char* filename_ptr;
+            size_t filename_len = ptrace_read_string(tid,
+                                                     (__SNR_open == syscall_no) ?
+                                                        USER_REGS_STRUCT_SC_ARG0(read_regs_ptr) :
+                                                        USER_REGS_STRUCT_SC_ARG1(read_regs_ptr),
+                                                     -1, &filename_ptr);
+
+            event_buf_ptr->success = -1 != USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
+            event_buf_ptr->type = OPEN;
+            event_buf_ptr->fd = USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
+            strncpy(event_buf_ptr->filename, filename_ptr, FNRES_SCEVENT_MAX_FILENAME);  // TODO: CHECK NUL BYTE BUFFER SIZE
+            free(filename_ptr);
+            event_buf_ptr->filename_len = filename_len;
+        }
+            return 0;
+
+
+        case __SNR_close:
+            event_buf_ptr->success = -1 != USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
+            event_buf_ptr->type = CLOSE;
+            event_buf_ptr->fd = USER_REGS_STRUCT_SC_ARG0(read_regs_ptr);
+            return 0;
+
+
+        default:
+            return -1;
+    }
 }
 
 

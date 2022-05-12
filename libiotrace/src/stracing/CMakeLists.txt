@@ -21,6 +21,9 @@ list(APPEND STRACER_LINK_OPTIONS
         unwind-generic
         dw)
 
+list(APPEND STRACER_COMPILE_OPTIONS
+        -D_GNU_SOURCE)
+
 
 # -- CMake options --
 set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source used to parse syscalls")
@@ -51,7 +54,8 @@ list(APPEND STRACER_SOURCE
         common/tasks/fnres/scerb/scerb_types.c
         common/tasks/fnres/scerb/scerb_ipc_utils.c
         stracer/tasks/fnres/scerb/scerb_producer_rmind.c
-        stracer/tasks/fnres/scerbmap/scerbmap_atomic_hash.c)
+        stracer/tasks/fnres/scerbmap/scerbmap_atomic_hash.c
+        stracer/tasks/fnres/stracing_fnres.c)
 list(APPEND STRACER_LINK_OPTIONS
         libringbuf_hash_object
         atomic_hash_object)

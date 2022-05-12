@@ -34,17 +34,17 @@ void stracing_fnres_init_scerb(void) {
 void stracing_fnres_check_and_add_scevents(void) {
     assert( g_scerb && "scerb hasn't been init'ed yet" );
 
-    scevent_t *read_scevent = (scevent_t*)alloca(FNRES_SCEVENT_MAX_SIZE);
-    while (0 == scerb_poll(g_scerb, read_scevent)) {
+    scevent_t *scevent_buf_ptr = (scevent_t*)alloca(FNRES_SCEVENT_MAX_SIZE);
+    while (0 == scerb_poll(g_scerb, scevent_buf_ptr)) {
         DEV_DEBUG_PRINT_MSG("Retrieved scevent");
         fnmap_key_t fn_key = {
-            .id = { .fildes = read_scevent->fd },
+            .id = { .fildes = scevent_buf_ptr->fd },
             .type = F_DESCRIPTOR,
             .mmap_length = 0
         };
 
-        if (OPEN == read_scevent->type) {
-            fnmap_add_or_update(fn_key, read_scevent->filename);
+        if (OPEN == scevent_buf_ptr->type) {
+            fnmap_add_or_update(fn_key, scevent_buf_ptr->filename);
         } else {
             fnmap_remove(fn_key);
         }

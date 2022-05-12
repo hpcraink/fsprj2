@@ -5,6 +5,7 @@
 #define STRACER_FNRES_STRACING_SCERB_PRODUCER_H_
 
 #include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "../../../../common/stracer_types.h"
 
 
 /* -- Function prototypes -- */
@@ -16,7 +17,7 @@
  * @param[in] smo_name                    Identifier of shared memory object containing buffer
  * @return int                            Returns `-1` on failure and `0` on success
  */
-int fnres_scerb_attach(sm_scerb_t** sm_scerb, char* smo_name);
+int scerb_attach(sm_scerb_t** sm_scerb, char* smo_name);
 
 /**
  * @brief                                 Destroys ring buffer, detaches & destroys smo
@@ -25,7 +26,7 @@ int fnres_scerb_attach(sm_scerb_t** sm_scerb, char* smo_name);
  * @param[in] smo_name                    Identifier of shared memory object containing buffer
  * @return int                            Returns `-1` on failure and `0` on success
  */
-int fnres_scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name);
+int scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name);
 
 
 /* - Operations - */
@@ -36,6 +37,6 @@ int fnres_scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name);
  * @param[in] event_buf_ptr               Event to be added in next slot
  * @return int                            Returns `-2` if buffer is full, `-1` on all other failures and `0` on success
  */
-int fnres_scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr);
+int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr);
 
 #endif /* STRACER_FNRES_STRACING_SCERB_PRODUCER_H_ */

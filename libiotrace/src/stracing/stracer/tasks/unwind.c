@@ -23,7 +23,7 @@
 /* -- Macros / Globals  -- */
 #define LIBIOTRACE_PRECLUDED_PTHREAD_FCT "pthread_create_start_routine"
 
-static unw_addr_space_t unw_as;
+static unw_addr_space_t g_unw_as;
 
 
 /* -- Function prototypes -- */
@@ -31,13 +31,17 @@ static Dwfl* init_ldw_for_proc(pid_t tid);
 
 
 /* -- Functions -- */
+bool unwind_is_inited(void) {
+    return !! g_unw_as;
+}
+
 void unwind_init(void) {
     /* ELUCIDATION:
      *   `unw_create_addr_space`(3): Create a new remote unwind address-space; args:
      *      - `ap` pointer (= set of callback routines to access information required to unwind a chain of stackframes) +
      *      - specified byteorder (`0` = default byte-order of unwind target)
      */
-    if (! (unw_as = unw_create_addr_space(&_UPT_accessors, 0)) ) {
+    if (! (g_unw_as = unw_create_addr_space(&_UPT_accessors, 0)) ) {
         LOG_ERROR_AND_EXIT("libunwind -- failed to create address space for stack unwinding");
     }
 
@@ -52,7 +56,8 @@ void unwind_init(void) {
 }
 
 void unwind_fin(void) {
-    unw_destroy_addr_space(unw_as);        // ?? TODO: Necessary ??
+    unw_destroy_addr_space(g_unw_as);        // ?? TODO: Necessary ??
+    g_unw_as = NULL;
 
     DEV_DEBUG_PRINT_MSG(">>> Unwind: Got fin");
 }
@@ -60,7 +65,7 @@ void unwind_fin(void) {
 
 bool unwind_ioevent_was_traced(pid_t tid,
                                char* stacktrace_module_name, char* stacktrace_fct_name) {
-    assert( unw_as && "Unwind context may be inited prior usage." );
+    assert(g_unw_as && "Unwind context may be inited prior usage." );
 
     DEV_DEBUG_PRINT_MSG(">>> Unwind: Unwinding stack for %d, searching for \"%s:%s*\"",
                         tid, stacktrace_module_name, __extension__( stacktrace_fct_name ? : "*" ));
@@ -70,7 +75,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
   /* 0.1. libunwind */
     unw_context_t *unw_ctx = _UPT_create(tid);
     unw_cursor_t unw_cursor;
-    if (0 > unw_init_remote(&unw_cursor, unw_as, unw_ctx)) {
+    if (0 > unw_init_remote(&unw_cursor, g_unw_as, unw_ctx)) {
         LOG_ERROR_AND_EXIT("libunwind -- failed to init context");
     }
 

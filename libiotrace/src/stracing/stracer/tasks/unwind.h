@@ -9,6 +9,7 @@
 
 
 /* -- Function prototypes -- */
+bool unwind_is_inited(void);
 void unwind_init(void);
 void unwind_fin(void);
 

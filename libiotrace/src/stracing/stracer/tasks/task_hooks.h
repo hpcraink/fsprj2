@@ -35,10 +35,10 @@ void tasks_on_event_attached_tracee(pid_t new_tracee_tid, uxd_sock_ipc_msg_t *ne
  * @brief                        Hook which gets called by stracer when a tracee has hit a breakpoint
  *
  * @param[in] trapped_tracee_tid Tid of trapped tracee
- * @param[in] read_regs          Register contents read by stracer
+ * @param[in] read_regs_ptr          Register contents read by stracer
  */
 void tasks_on_event_syscall(pid_t trapped_tracee_tid,
-                            struct user_regs_struct *read_regs);
+                            struct user_regs_struct *read_regs_ptr);
 
 /**
  * @brief                        Hook which gets called by stracer when a tracee has terminated

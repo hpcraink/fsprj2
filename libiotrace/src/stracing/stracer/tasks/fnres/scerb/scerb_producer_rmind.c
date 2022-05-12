@@ -18,7 +18,7 @@
 
 /* -- Functions -- */
 /* - Init - */
-int fnres_scerb_attach(sm_scerb_t** sm_scerb, char* smo_name) {
+int scerb_attach(sm_scerb_t** sm_scerb, char* smo_name) {
     assert( sm_scerb && smo_name && "params may not be `NULL`" );
     // TODO: CHECK INIT'ed
 
@@ -33,7 +33,7 @@ int fnres_scerb_attach(sm_scerb_t** sm_scerb, char* smo_name) {
 }
 
 
-int fnres_scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name) {
+int scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name) {
     assert( sm_scerb && smo_name && "params may not be `NULL`" );
     // TODO: CHECK INIT'ed
 
@@ -43,7 +43,7 @@ int fnres_scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name) {
 }
 
 
-int fnres_scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr) {
+int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr) {
     assert(sm_scerb && event_buf_ptr && "params may not be `NULL`"  );
     // TODO: CHECK INIT'ed
     assert( event_buf_ptr->filename_len == strlen(event_buf_ptr->filename) + 1 && "`filename_len` may be set correctly!" );

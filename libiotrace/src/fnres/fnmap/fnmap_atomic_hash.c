@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "fnmap.h"
-#include "atomic_hash.h"
+#include "../../libs/atomic_hash/atomic_hash.h"
 #include "libiotrace_config.h"
 
 #include <assert.h>

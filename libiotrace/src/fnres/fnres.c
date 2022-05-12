@@ -18,7 +18,7 @@
  *  - `fnmap_destroy` currently LEAKS MEMORY since `__del_hook` isn't executed for each item in fnmap (not a very serious issue though since the function will only be called once the observed program exits, i.e., the OS will cleanup)
  *  - On an `exec*` call, the global file-map (of the process) will be overwritten, removing fildes which WILL BE inherited (since they weren't opened w/ `O_CLOEXEC` flag) by the new (replaced) executable
  */
-#include "ioevent.h"
+#include "fnres.h"
 #include "fctnconsts.h"
 #include "fnmap/fnmap.h"
 

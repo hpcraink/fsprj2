@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include "../../common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "../../common/debug.h"
 
 
@@ -67,7 +67,7 @@ void stracing_fnres_tracee_detach(pid_t tid) {
     free(smo_name);
 }
 
-void stracing_fnres_tracee_write_scevent(pid_t tid, scevent_t* scevent_buf_ptr) {
+void stracing_fnres_tracee_add_scevent(pid_t tid, scevent_t* scevent_buf_ptr) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
     sm_scerb_t *sm_scerb;

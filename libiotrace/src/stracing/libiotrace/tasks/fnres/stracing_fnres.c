@@ -8,7 +8,7 @@
 
 #include <assert.h>
 #include "../../../../common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "../../../../common/debug.h"
 
 
@@ -63,9 +63,10 @@ void stracing_fnres_check_and_add_scevents(void) {
 
     scevent_t *scevent_buf_ptr = (scevent_t*)alloca(SCEVENT_MAX_SIZE);
     while (0 == scerb_poll(g_scerb, scevent_buf_ptr)) {
-        DEV_DEBUG_PRINT_MSG("Retrieved scevent { .ts_in_ns=%lu, .succeeded=%s, "
+        DEV_DEBUG_PRINT_MSG("Received scevent { .ts_in_ns=%lu, .succeeded=%s, "
                             ".fd=%d, .type=%s, .filename_len=%zu, .filename=%s } ",
                             scevent_buf_ptr->ts_in_ns, scevent_buf_ptr->succeeded ? "true" : "false",
+                            scevent_buf_ptr->fd,
                             OPEN == scevent_buf_ptr->type ? "OPEN" : "CLOSE",
                             scevent_buf_ptr->filename_len, scevent_buf_ptr->filename);
 

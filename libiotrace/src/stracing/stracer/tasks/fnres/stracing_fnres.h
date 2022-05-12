@@ -50,6 +50,6 @@ void stracing_fnres_tracee_detach(pid_t tid);
  * @param[in] scevent_buf_ptr             scevent which shall be written into tracee's scerb
  * @return void
  */
-void stracing_fnres_tracee_write_scevent(pid_t tid, scevent_t* scevent_buf_ptr);
+void stracing_fnres_tracee_add_scevent(pid_t tid, scevent_t* scevent_buf_ptr);
 
 #endif /* STRACER_STRACING_FNRES_H_ */

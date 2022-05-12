@@ -95,7 +95,7 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
                 LOG_ERROR_AND_EXIT("Couldn't 'translate' syscall to `scevent`");
             }
 
-            stracing_fnres_tracee_write_scevent(trapped_tracee_tid, scevent_buf_ptr);
+            stracing_fnres_tracee_add_scevent(trapped_tracee_tid, scevent_buf_ptr);
         }
     }
 }

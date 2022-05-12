@@ -38,11 +38,11 @@ void stracing_init_stracer(void) {
     int uxd_reg_sock_fd;
     if (-1 == (uxd_reg_sock_fd = uxd_ipc_parent_sock_init(STRACING_UXD_SOCKET_FILEPATH,
                                                           STRACING_UXD_REG_SOCKET_BACKLOG_SIZE))) {
-        DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] A stracer instance is already running", gettid());
+        DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] A stracer instance is already running", gettid());
         return;
     }
 
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Inited UXD registration socket \"%s\" w/ backlog=%d for to be launched stracer",
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Inited UXD registration socket \"%s\" w/ backlog=%d for to be launched stracer",
                         gettid(),
                         STRACING_UXD_SOCKET_FILEPATH, STRACING_UXD_REG_SOCKET_BACKLOG_SIZE);
 
@@ -92,8 +92,7 @@ void stracing_init_stracer(void) {
     DIE_WHEN_ERRNO( asprintf(&exec_syscall_subset, "-%c=%s", STRACER_CLI_OPTION_SSUBSET, SYSCALLS_TO_BE_TRACED) );
 
     /* Perform `exec` */
-    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%ld] Launching stracer via `%s %s %s %s %s`", gettid(),
-                        exec_arg_stracer_exec_fname, exec_arg_sock_fd, exec_syscall_subset, exec_arg_libiotrace_linkage, exec_arg_tasks);
+    DEV_DEBUG_PRINT_MSG("[CHILD:tid=%d] Launching stracer", gettid());
     CALL_REAL(execle)(exec_arg_stracer_exec_fname,
                       exec_arg_stracer_exec_fname,      /* CLI args */
                       exec_arg_sock_fd,
@@ -117,11 +116,11 @@ void stracing_tracee_register_with_stracer(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
   /* Create scerb for receiving syscall events (traced by stracer) */
     stracing_fnres_setup();
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Created scerb for fnres", gettid());
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Created scerb for fnres", gettid());
 #endif
 
 /* 1. Send tracing request to stracer */
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Sending tracing request", gettid());
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Sending tracing request", gettid());
     int server_conn_fd;
     uxd_ipc_tracee_send_tracing_req(STRACING_UXD_SOCKET_FILEPATH, &server_conn_fd);
 
@@ -129,13 +128,13 @@ void stracing_tracee_register_with_stracer(void) {
     uxd_ipc_tracee_block_until_tracing_ack(server_conn_fd);
     CALL_REAL_POSIX_SYNC(close)(server_conn_fd);
 
-    DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%ld] Got attached by stracer, proceeding ...", gettid());
+    DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%d] Got attached by stracer, proceeding ...", gettid());
 }
 
 
 void stracing_tracee_fin(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
     stracing_fnres_cleanup();
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Detached scerb for fnres", gettid());
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Detached scerb for fnres", gettid());
 #endif
 }

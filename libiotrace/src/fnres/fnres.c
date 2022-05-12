@@ -105,7 +105,7 @@ void fnres_init(long fnmap_max_size) {
 }
 
 /**
- * Finalizes, i.e., "un"initializes module; should be called prior termination for cleaning up  (by `cleanup` in event.c)
+ * Finalizes, i.e., "un"initializes module; should be called prior termination for cleaning up  (by `cleanup_process` in event.c)
  */
 void fnres_fin(void) {
     fnmap_destroy();

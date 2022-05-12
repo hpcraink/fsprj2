@@ -154,9 +154,9 @@
 #endif
 
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
-#  define CALL_CLEANUP() cleanup()
+#  define CALL_CLEANUP_PROCESS() cleanup_process()
 #else
-#  define CALL_CLEANUP()
+#  define CALL_CLEANUP_PROCESS()
 #endif
 
 #define __CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
@@ -167,7 +167,7 @@
 #define __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) data.time_start = gettime(); \
                                                                               data.time_end = gettime(); \
                                                                               WRAP_END(data, function) \
-                                                                              CALL_CLEANUP(); \
+                                                                              CALL_CLEANUP_PROCESS(); \
                                                                               errno = errno_data.errno_value; \
                                                                               return_value = CALL_REAL(function)(__VA_ARGS__); \
                                                                               errno_data.errno_value = errno;
@@ -179,7 +179,7 @@
 #define __CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) data.time_start = gettime(); \
                                                             data.time_end = gettime(); \
                                                             WRAP_END(data, function) \
-                                                            CALL_CLEANUP(); \
+                                                            CALL_CLEANUP_PROCESS(); \
                                                             errno = errno_data.errno_value; \
                                                             CALL_REAL(function)(__VA_ARGS__); \
                                                             errno_data.errno_value = errno; \

@@ -3,7 +3,7 @@
 #ifdef LOG_WRAPPER_TIME
 WRAPPER_NAME(init_on_load)
 #  ifdef IOTRACE_ENABLE_LOGFILE
-WRAPPER_NAME(cleanup)
+WRAPPER_NAME(cleanup_process)
 #  endif
 #endif
 #ifdef WITH_STD_IO

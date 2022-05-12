@@ -296,7 +296,7 @@ static ATTRIBUTE_THREAD SOCKET socket_peer = -1;
 #endif
 
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
-void cleanup(void) ATTRIBUTE_DESTRUCTOR;
+void cleanup_process(void) ATTRIBUTE_DESTRUCTOR;
 #endif
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
@@ -1678,7 +1678,7 @@ SOCKET prepare_control_socket(void) {
  *
  * This thread runs and reads/listens the multiple sockets until
  * "event_cleanup_done" is set to "true". This is done during call
- * of "cleanup" if the program exits.
+ * of "cleanup_process" if the program exits.
  *
  * @param[in] arg Not used.
  * @return Not used (allways NULL)
@@ -2458,7 +2458,7 @@ void free_memory(struct basic *data) {
  * closes open connections (sockets) and destroys mutexes.
  */
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
-void cleanup(void) {
+void cleanup_process(void) {
 	event_cleanup_done = 1;
 
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -2489,7 +2489,7 @@ void cleanup(void) {
     fnres_trace_ioevent(&data);
 #  endif
 
-	if (active_wrapper_status.cleanup && !no_logging) {
+	if (active_wrapper_status.cleanup_process && !no_logging) {
 		io_log_file_buffer_write(&data);
 	}
 

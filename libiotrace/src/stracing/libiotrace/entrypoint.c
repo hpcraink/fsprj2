@@ -9,8 +9,8 @@
  * TODOs:
  *   - ...
  */
-#include <unistd.h>
 #include "../../event.h"
+#include <unistd.h>
 
 #include <sys/un.h>
 #include <sys/prctl.h>
@@ -134,7 +134,7 @@ void stracing_tracee_register_with_stracer(void) {
 
 void stracing_tracee_fin(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
-    stracing_fnres_cleanup();
+    stracing_fnres_fin();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Detached scerb for fnres", gettid());
 #endif
 }

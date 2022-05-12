@@ -55,7 +55,7 @@ void tasks_on_stracer_fin(void) {
     }
 
     if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_cleanup();
+        stracing_fnres_fin();
     }
 
     g_cli_args_ptr = NULL;

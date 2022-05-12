@@ -11,7 +11,7 @@
 
 #include "scerb_consumer.h"
 #include "../../../../common/tasks/fnres/scerb/scerb_types_rmind.h"
-#include "../../../../common/tasks/fnres/scerb/scerb_ipc_utils.h"
+#include "scerb_ipc_utils.h"
 
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../../../../../common/debug.h"

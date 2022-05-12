@@ -9,7 +9,7 @@
 
 #include "scerb_producer.h"
 #include "../../../../common/tasks/fnres/scerb/scerb_types_rmind.h"
-#include "../../../../common/tasks/fnres/scerb/scerb_ipc_utils.h"
+#include "scerb_ipc_utils.h"
 
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../../../../../common/debug.h"
@@ -46,7 +46,7 @@ int scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name) {
 int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
     assert(sm_scerb && scevent_buf_ptr && "params may not be `NULL`"  );
     // TODO: CHECK INIT'ed
-    assert( scevent_buf_ptr->filename_len == strlen(scevent_buf_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
+    assert( (0 == scevent_buf_ptr->filename_len || scevent_buf_ptr->filename_len == strlen(scevent_buf_ptr->filename) + 1) && "`filename_len` may be set correctly!" );
 
 
     ringbuf_t* const sm_rb_ptr = &sm_scerb->ringbuf;

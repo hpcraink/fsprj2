@@ -1,0 +1,1 @@
+- STREAMLINE: gettime (utils.c ?? --> gettime + str_to_long; -> COMPILE_OPTIONS -> include + source ergänzen)   + error.h ("PRoxy headers" erstellen)     + debug.h   +     scerb_ipc_utils

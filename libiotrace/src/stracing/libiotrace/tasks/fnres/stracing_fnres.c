@@ -1,3 +1,10 @@
+/**
+ * NOTE: This approach using a ringbuffer w/ per-tread view has a major drawback:
+ *       - Not traced io-relevant events will only be added to fnmap if a wrapper
+ *         for the affected thread gets triggered (which then in turn reads the scerb)
+ *       - BETTER would be: Put fnmap in shared memory w/ a process-wide view
+ *
+ */
 #include "libiotrace_config.h"
 
 #include "../../../common/stracer_consts.h"
@@ -8,7 +15,7 @@
 
 #include <assert.h>
 #include "../../../../common/error.h"
-//#define DEV_DEBUG_ENABLE_LOGS
+#define DEV_DEBUG_ENABLE_LOGS
 #include "../../../../common/debug.h"
 
 
@@ -41,7 +48,7 @@ void stracing_fnres_setup(void) {
     CALL_REAL_ALLOC_SYNC(free)(smo_name);
 }
 
-void stracing_fnres_cleanup(void) {
+void stracing_fnres_fin(void) {
     assert( g_scerb && "scerb hasn't been init'ed yet" );
 
     char *smo_name = derive_smo_name();
@@ -68,7 +75,7 @@ void stracing_fnres_check_and_add_scevents(void) {
                             scevent_buf_ptr->ts_in_ns, scevent_buf_ptr->succeeded ? "true" : "false",
                             scevent_buf_ptr->fd,
                             OPEN == scevent_buf_ptr->type ? "OPEN" : "CLOSE",
-                            scevent_buf_ptr->filename_len, scevent_buf_ptr->filename);
+                            scevent_buf_ptr->filename_len, scevent_buf_ptr->filename_len ? scevent_buf_ptr->filename : "N/A");
 
         if (!scevent_buf_ptr->succeeded) { continue; }
 

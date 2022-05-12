@@ -51,7 +51,7 @@ list(APPEND STRACER_COMPILE_OPTIONS
         -DSTRACING_FNRES_SCERBMAP_SIZE=${STRACING_FNRES_SCERBMAP_SIZE})
 
 list(APPEND STRACER_SOURCE
-        common/tasks/fnres/scerb/scerb_ipc_utils.c
+        stracer/tasks/fnres/scerb/scerb_ipc_utils.c
         stracer/tasks/fnres/scerb/scerb_producer_rmind.c
         stracer/tasks/fnres/scerbmap/scerbmap_atomic_hash.c
         stracer/tasks/fnres/stracing_fnres.c)
@@ -105,7 +105,7 @@ list(APPEND LIBIOTRACE_COMPILE_OPTIONS
 # - For task "fnres" -
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND LIBIOTRACE_SOURCE
-            stracing/common/tasks/fnres/scerb/scerb_ipc_utils.c
+            stracing/libiotrace/tasks/fnres/scerb/scerb_ipc_utils.c
             stracing/libiotrace/tasks/fnres/scerb/scerb_consumer_rmind.c
             stracing/libiotrace/tasks/fnres/stracing_fnres.c)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})

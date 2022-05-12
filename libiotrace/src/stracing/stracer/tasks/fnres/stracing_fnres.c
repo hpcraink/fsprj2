@@ -27,7 +27,7 @@ void stracing_fnres_init(long scerbmap_max_size) {
     DEV_DEBUG_PRINT_MSG("Init'ed stracing-fnres module");
 }
 
-void stracing_fnres_cleanup(void) {
+void stracing_fnres_fin(void) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
     scerbmap_destroy();

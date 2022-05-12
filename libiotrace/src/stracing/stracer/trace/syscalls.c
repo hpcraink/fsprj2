@@ -41,6 +41,7 @@ long syscalls_get_nr(char* syscall_name) {
 
 int syscall_to_scevent(pid_t tid, struct user_regs_struct_full *read_regs_ptr, scevent_t* event_buf_ptr) {
     event_buf_ptr->ts_in_ns = gettime();
+    event_buf_ptr->filename_len = 0;        /* By default NO filename */
 
     const long syscall_no = USER_REGS_STRUCT_SC_NO( (*read_regs_ptr) );
     switch(syscall_no) {

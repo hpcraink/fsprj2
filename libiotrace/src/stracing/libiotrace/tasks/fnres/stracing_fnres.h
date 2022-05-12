@@ -19,7 +19,7 @@ void stracing_fnres_setup(void);
  *
  * @return void
  */
-void stracing_fnres_cleanup(void);
+void stracing_fnres_fin(void);
 
 /**
  * @brief                                 Checks scerb for new scevent's and adds them to the fnmap

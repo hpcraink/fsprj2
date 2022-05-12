@@ -56,7 +56,7 @@ list(APPEND STRACER_SOURCE
         stracer/tasks/fnres/scerbmap/scerbmap_atomic_hash.c
         stracer/tasks/fnres/stracing_fnres.c)
 list(APPEND STRACER_LINK_OPTIONS
-        libringbuf_hash_object
+        libringbuf_object
         atomic_hash_object)
 
 
@@ -109,8 +109,8 @@ if (FILENAME_RESOLUTION_ENABLED)
             stracing/libiotrace/tasks/fnres/scerb/scerb_consumer_rmind.c
             stracing/libiotrace/tasks/fnres/stracing_fnres.c)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
-    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS libringbuf_hash_object)
-    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS libringbuf_hash_object)
+    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS libringbuf_object)
+    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS libringbuf_object)
 
     set(LIBIOTRACE_SHARED_LINK_OPTIONS ${LIBIOTRACE_SHARED_LINK_OPTIONS} PARENT_SCOPE)
     set(LIBIOTRACE_STATIC_LINK_OPTIONS ${LIBIOTRACE_STATIC_LINK_OPTIONS} PARENT_SCOPE)

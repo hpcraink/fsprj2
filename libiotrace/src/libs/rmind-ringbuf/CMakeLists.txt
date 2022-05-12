@@ -30,6 +30,6 @@ set(RINGBUF_COMPILE_OPTIONS
 
 
 # -- "Project" --
-add_library(libringbuf_hash_object OBJECT  ${RINGBUF_SOURCES})
-target_compile_options(libringbuf_hash_object PRIVATE ${RINGBUF_COMPILE_OPTIONS})
-target_include_directories(libringbuf_hash_object SYSTEM INTERFACE .)      # TODO: Revise (should be `include`able via <ringbuf/header.h>)
+add_library(libringbuf_object OBJECT  ${RINGBUF_SOURCES})
+target_compile_options(libringbuf_object PRIVATE ${RINGBUF_COMPILE_OPTIONS})
+target_include_directories(libringbuf_object SYSTEM INTERFACE .)      # TODO: Revise (should be `include`able via <ringbuf/header.h>)

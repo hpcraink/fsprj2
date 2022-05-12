@@ -19,7 +19,7 @@ long syscalls_get_nr(char* syscall_name);
 
 void syscalls_print_args(pid_t tid, struct user_regs_struct_full *regs);
 
-int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, scevent_t* event_buf_ptr);
+int syscall_to_scevent(pid_t tid, struct user_regs_struct_full *read_regs_ptr, scevent_t* event_buf_ptr);
 
 
 #endif /* TRACE_SYSCALLS_H */

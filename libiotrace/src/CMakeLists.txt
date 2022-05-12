@@ -233,19 +233,23 @@ if(WITH_ALLOC)
     list(APPEND LIBIOTRACE_SOURCE alloc.c)
 endif()
 
+
+
+if (FILENAME_RESOLUTION_ENABLED OR STRACING_ENABLED)
+    add_subdirectory(libs/atomic_hash)
+else()
+    # Remove atomic_hash's CMake options from cache
+    unset(HASH_FUNCTION CACHE)
+    unset(HASH_FUNCTION_VALUES CACHE)
+endif()
+
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND LIBIOTRACE_SOURCE
             fnres/fnres.c
             fnres/fnmap/fnmap_atomic_hash.c)
 
-    add_subdirectory(libs/atomic_hash)
-
     list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS atomic_hash_object)
     list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS atomic_hash_object)
-else()
-    # Remove atomic_hash's CMake options from cache
-    unset(HASH_FUNCTION CACHE)
-    unset(HASH_FUNCTION_VALUES CACHE)
 endif()
 
 if (STRACING_ENABLED)

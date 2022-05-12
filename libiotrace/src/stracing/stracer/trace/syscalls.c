@@ -39,7 +39,7 @@ long syscalls_get_nr(char* syscall_name) {
 }
 
 
-int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, scevent_t* event_buf_ptr) {
+int syscall_to_scevent(pid_t tid, struct user_regs_struct_full *read_regs_ptr, scevent_t* event_buf_ptr) {
     event_buf_ptr->ts_in_ns = gettime();
 
     const long syscall_no = USER_REGS_STRUCT_SC_NO( (*read_regs_ptr) );
@@ -48,7 +48,7 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, sceven
         case __SNR_openat:
         {
             const unsigned long scall_arg_fname_addr = (__SNR_open == syscall_no) ? USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) ) : USER_REGS_STRUCT_SC_ARG1( (*read_regs_ptr) );
-            const unsigned long scall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
+            const long scall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
 
             char* ptrace_read_fname_ptr;
             const size_t ptrace_read_fname_len = ptrace_read_string(tid, scall_arg_fname_addr, -1, &ptrace_read_fname_ptr);
@@ -65,7 +65,7 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, sceven
 
 
         case __SNR_close:
-            event_buf_ptr->succeeded = -1 != USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
+            event_buf_ptr->succeeded = -1 != (long)USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
             event_buf_ptr->type = CLOSE;
             event_buf_ptr->fd = USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) );
             return 0;

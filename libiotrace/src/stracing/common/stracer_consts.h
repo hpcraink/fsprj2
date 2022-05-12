@@ -16,7 +16,7 @@
 
 
 /* - Misc. - */
-#define STRACING_FNRES_SMO_NAME_FORMAT        "_STRACING__tid_%ld"
+#define STRACING_FNRES_SMO_NAME_FORMAT        "_STRACING__tid_%d"
 
 
 #endif /* COMMON_STRACER_CONSTS_H_ */

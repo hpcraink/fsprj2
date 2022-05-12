@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #include "scerbmap.h"
-#include "atomic_hash.h"
+#include <atomic_hash.h>
 
 #include <assert.h>
 #include "../../common/error.h"
@@ -63,11 +63,11 @@ void scerbmap_add(pid_t* tid_ptr, sm_scerb_t* sm_scerb) {
     assert( g_scerbmap && "scerbmap hasn't been init'ed yet" );
     assert( tid_ptr && sm_scerb && "params may not be `NULL`" );
 
-    const int hmap_rtnval = atomic_hash_add(g_scerbmap, tid_ptr, sizeof(*tid_ptr), sm_scerb, HMAP_TTL_DISABLE, NULL, NULL));
+    const int hmap_rtnval = atomic_hash_add(g_scerbmap, tid_ptr, sizeof(*tid_ptr), sm_scerb, HMAP_TTL_DISABLE, NULL, NULL);
     if (!hmap_rtnval) {
         DEV_DEBUG_PRINT_MSG("Added scerb-pointer of tid=%ld", *tid_ptr);
     } else {
-        LOG_WARN("Couldn't add scerb-pointer of tid=%ld", *tid_ptr);
+        LOG_WARN("Couldn't add scerb-pointer");
     }
 }
 

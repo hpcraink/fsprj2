@@ -52,12 +52,12 @@ void stracing_fnres_tracee_detach(pid_t tid) {
 
     sm_scerb_t *sm_scerb;
     if ((-1 == scerbmap_get(&tid, &sm_scerb)) || (-1 == scerbmap_remove(&tid))) {
-        LOG_ERROR_AND_EXIT("Couldn't delete scerb-pointer for tid=%ld", tid);
+        LOG_ERROR_AND_EXIT("Couldn't delete scerb-pointer");
     }
 
     char *smo_name = derive_smo_name(tid);
     if (-1 == scerb_destory_detach(&sm_scerb, smo_name)) {
-        LOG_ERROR_AND_EXIT("Couldn't destroy scerb for tid=%ld", tid);
+        LOG_ERROR_AND_EXIT("Couldn't destroy scerb");
     }
     free(smo_name);
 }
@@ -67,10 +67,10 @@ void stracing_fnres_tracee_write_scevent(pid_t tid, scevent_t* scevent_buf_ptr) 
 
     sm_scerb_t *sm_scerb;
     if (-1 == scerbmap_get(&tid, &sm_scerb)) {
-        LOG_ERROR_AND_EXIT("Couldn't find scerb-pointer for tid=%ld", tid);
+        LOG_ERROR_AND_EXIT("Couldn't find scerb-pointer");
     }
 
     if (0 != scerb_offer(sm_scerb, scevent_buf_ptr) ) {
-        LOG_WARN("Couldn't write syscall event in buffer for tid=%ld", tid);
+        LOG_WARN("Couldn't write syscall event in buffer");
     }
 }

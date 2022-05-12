@@ -7,13 +7,49 @@
 
 
 /* -- Function prototypes -- */
-bool stracing_fnres_is_inited(void);
-
+/**
+ * @brief                                 Initializes this module
+ *                                        NOTE: May terminate entire process if init fails
+ *
+ * @param[in] scerbmap_max_size           Max # of scerb-pointers which may be traced at any given point
+ * @return void
+ */
 void stracing_fnres_init(long scerbmap_max_size);
+
+/**
+ * @brief                                 Finalizes this module
+ *
+ * @return void
+ */
 void stracing_fnres_fin(void);
 
-void stracing_fnres_attach_sm(pid_t tid);
-void stracing_fnres_write_scevent(pid_t tid, scevent_t* event_buf_ptr);
-void stracing_fnres_destroy_sm(pid_t tid);
+
+/**
+ * @brief                                 Attaches scerb, provided by tracee, and stores pointer to it for later usage
+ *                                        NOTE: May terminate entire process if init fails
+ *
+ * @param[in] tid                         Tid of to be tracee
+ * @return void
+ */
+void stracing_fnres_tracee_attach(pid_t tid);
+
+/**
+ * @brief                                 Detaches scerb of tracee corresponding to provided tid
+ *                                        NOTE: May terminate entire process if init fails
+ *
+ * @param[in] tid                         Tid of to be tracee
+ * @return void
+ */
+void stracing_fnres_tracee_detach(pid_t tid);
+
+/**
+ * @brief                                 Writes scevent into corresponding tracee's scerb
+ *                                        NOTE: May terminate entire process if init fails
+ *
+ * @param[in] tid                         Tid of "affected" tracee
+ * @param[in] scevent_buf_ptr             scevent which shall be written into tracee's scerb
+ * @return void
+ */
+void stracing_fnres_tracee_write_scevent(pid_t tid, scevent_t* scevent_buf_ptr);
 
 #endif /* STRACER_STRACING_FNRES_H_ */

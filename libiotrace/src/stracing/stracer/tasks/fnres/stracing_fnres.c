@@ -7,15 +7,19 @@
 
 #include <assert.h>
 #include "../../common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
-#include "../../common/debug.h"
+//#define DEV_DEBUG_ENABLE_LOGS
+//#include "../../common/debug.h"
 
 
 /* -- Functions -- */
-bool stracing_fnres_is_inited(void) {
-    return scerbmap_is_inited();
+static char* derive_smo_name(pid_t tid) {
+    char *smo_name;
+    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, tid) );        // MUST BE `free`ED !!!
+    return smo_name;
 }
 
+
+/* - Public functions - */
 void stracing_fnres_init(long scerbmap_max_size) {
     assert( !scerbmap_is_inited() && "Got already init" );
 
@@ -29,11 +33,10 @@ void stracing_fnres_fin(void) {
 }
 
 
-void stracing_fnres_attach_sm(pid_t tid) {
+void stracing_fnres_tracee_attach(pid_t tid) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
-    char *smo_name;
-    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, tid) );
+    char *smo_name = derive_smo_name(tid);
     sm_scerb_t *sm_scerb;
     if (-1 == scerb_attach(&sm_scerb, smo_name)) {
         LOG_ERROR_AND_EXIT("Couldn't attach to scerb w/ smo-identifier \"%s\"", smo_name);
@@ -44,7 +47,7 @@ void stracing_fnres_attach_sm(pid_t tid) {
 }
 
 
-void stracing_fnres_destroy_sm(pid_t tid) {
+void stracing_fnres_tracee_detach(pid_t tid) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
     sm_scerb_t *sm_scerb;
@@ -52,15 +55,14 @@ void stracing_fnres_destroy_sm(pid_t tid) {
         LOG_ERROR_AND_EXIT("Couldn't delete scerb-pointer for tid=%ld", tid);
     }
 
-    char *smo_name;
-    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, tid) );
+    char *smo_name = derive_smo_name(tid);
     if (-1 == scerb_destory_detach(&sm_scerb, smo_name)) {
         LOG_ERROR_AND_EXIT("Couldn't destroy scerb for tid=%ld", tid);
     }
     free(smo_name);
 }
 
-void stracing_fnres_write_scevent(pid_t tid, scevent_t* event_buf_ptr) {
+void stracing_fnres_tracee_write_scevent(pid_t tid, scevent_t* scevent_buf_ptr) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
     sm_scerb_t *sm_scerb;
@@ -68,7 +70,7 @@ void stracing_fnres_write_scevent(pid_t tid, scevent_t* event_buf_ptr) {
         LOG_ERROR_AND_EXIT("Couldn't find scerb-pointer for tid=%ld", tid);
     }
 
-    if (0 != scerb_offer(sm_scerb, event_buf_ptr) ) {
+    if (0 != scerb_offer(sm_scerb, scevent_buf_ptr) ) {
         LOG_WARN("Couldn't write syscall event in buffer for tid=%ld", tid);
     }
 }

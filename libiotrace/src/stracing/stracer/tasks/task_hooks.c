@@ -37,11 +37,10 @@ void tasks_on_stracer_init(cli_args_t* cli_args_ptr) {
         unwind_init();
     }
 
+/* FNRES task */
     if (g_cli_args_ptr->task_fnres) {
         stracing_fnres_init(STRACING_FNRES_SCERBMAP_SIZE);
     }
-
-/* ... */
 }
 
 
@@ -55,7 +54,7 @@ void tasks_on_stracer_fin(void) {
         unwind_fin();
     }
 
-    if (stracing_fnres_is_inited()) {
+    if (g_cli_args_ptr->task_fnres) {
         stracing_fnres_fin();
     }
 
@@ -63,11 +62,11 @@ void tasks_on_stracer_fin(void) {
 }
 
 
-void tasks_on_event_attached_tracee(__attribute__((unused))pid_t new_tracee_tid, __attribute__((unused))uxd_sock_ipc_msg_t *new_tracee_ipc_request) {
+void tasks_on_event_attached_tracee(pid_t new_tracee_tid, __attribute__((unused))uxd_sock_ipc_msg_t *new_tracee_ipc_request) {
     assert( g_cli_args_ptr && "Not inited yet" );
 
     if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_attach_sm(new_tracee_tid);
+        stracing_fnres_tracee_attach(new_tracee_tid);
     }
 }
 
@@ -92,12 +91,11 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
 /* -- TASK: FNRES -- */
         if (g_cli_args_ptr->task_fnres) {
             scevent_t *scevent_buf_ptr = (scevent_t*)alloca(SCEVENT_MAX_SIZE);
-
             if (0 != syscall_to_scevent(trapped_tracee_tid, read_regs_ptr, scevent_buf_ptr)) {
-                LOG_ERROR_AND_EXIT("Couldn't 'map' syscall to scevent");
+                LOG_ERROR_AND_EXIT("Couldn't 'translate' syscall to `scevent`");
             }
 
-            stracing_fnres_write_scevent(trapped_tracee_tid, scevent_buf_ptr);
+            stracing_fnres_tracee_write_scevent(trapped_tracee_tid, scevent_buf_ptr);
         }
     }
 }
@@ -107,7 +105,7 @@ void tasks_on_event_tracee_exit(pid_t trapped_tracee_tid) {
     assert( g_cli_args_ptr && "Not inited yet" );
 
     if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_destroy_sm(trapped_tracee_tid);
+        stracing_fnres_tracee_detach(trapped_tracee_tid);
     }
 }
 

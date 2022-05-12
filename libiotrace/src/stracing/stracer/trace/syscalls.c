@@ -47,19 +47,19 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, sceven
         case __SNR_open:
         case __SNR_openat:
         {
-            char* filename_ptr;
-            size_t filename_len = ptrace_read_string(tid,
-                                                     (__SNR_open == syscall_no) ?
-                                                        USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) ) :
-                                                        USER_REGS_STRUCT_SC_ARG1( (*read_regs_ptr) ),
-                                                     -1, &filename_ptr);
+            const unsigned long scall_arg_fname_addr = (__SNR_open == syscall_no) ? USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) ) : USER_REGS_STRUCT_SC_ARG1( (*read_regs_ptr) );
+            const unsigned long scall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
 
-            event_buf_ptr->succeeded = -1 != USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
+            char* ptrace_read_fname_ptr;
+            const size_t ptrace_read_fname_len = ptrace_read_string(tid, scall_arg_fname_addr, -1, &ptrace_read_fname_ptr);
+
+            event_buf_ptr->succeeded = -1 != scall_rtn_val;
             event_buf_ptr->type = OPEN;
-            event_buf_ptr->fd = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
-            strncpy(event_buf_ptr->filename, filename_ptr, SCEVENT_FILENAME_MAX);  // TODO: CHECK NUL BYTE BUFFER SIZE
-            free(filename_ptr);
-            event_buf_ptr->filename_len = filename_len;
+            event_buf_ptr->fd = (int)scall_rtn_val;
+            strncpy(event_buf_ptr->filename, ptrace_read_fname_ptr, SCEVENT_FILENAME_MAX);  // !!!!!!!!!!!!!!!!!!   TODO: CHECK NUL BYTE BUFFER SIZE     !!!!!!!!!!!!!!!!!!
+            event_buf_ptr->filename[SCEVENT_FILENAME_MAX -1] = '\0';        // Make sure always NUL-terminated
+            free(ptrace_read_fname_ptr);
+            event_buf_ptr->filename_len = ptrace_read_fname_len;
         }
             return 0;
 
@@ -69,6 +69,9 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, sceven
             event_buf_ptr->type = CLOSE;
             event_buf_ptr->fd = USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) );
             return 0;
+
+
+    /* TODO: ADD 'CONVERSION'-SUPPORT MORE SYSCALLS */
 
 
         default:

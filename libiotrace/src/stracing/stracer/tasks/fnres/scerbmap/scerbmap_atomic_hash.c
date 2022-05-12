@@ -71,14 +71,16 @@ void scerbmap_add(pid_t* tid_ptr, sm_scerb_t* sm_scerb) {
     }
 }
 
-void scerbmap_remove(pid_t* tid_ptr) {
+int scerbmap_remove(pid_t* tid_ptr) {
     assert(g_scerbmap && "scerbmap hasn't been init'ed yet" );
     assert( tid_ptr && "param may not be `NULL`" );
 
     const int hmap_rtnval = atomic_hash_del(g_scerbmap, tid_ptr, sizeof(*tid_ptr), NULL, NULL);
     if (hmap_rtnval) {
-        LOG_ERROR_AND_EXIT("Couldn't delete scerb-pointer of tid=%d (err_code=%d)", *tid_ptr, hmap_rtnval);
+        LOG_WARN("Couldn't delete scerb-pointer of tid=%d (err_code=%d)", *tid_ptr, hmap_rtnval);
+        return -1;
     } else {
         DEV_DEBUG_PRINT_MSG("Removed scerb-pointer of tid=%ld", *tid_ptr);
+        return 0;
     }
 }

@@ -26,6 +26,7 @@ static char* derive_smo_name(void) {
 }
 
 
+/* - Public functions - */
 void stracing_fnres_init(void) {
     assert( !g_scerb && "scerb has been already init'ed" );
 

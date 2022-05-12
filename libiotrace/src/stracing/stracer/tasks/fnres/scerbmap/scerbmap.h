@@ -62,8 +62,8 @@ void scerbmap_add(pid_t* tid_ptr, sm_scerb_t* sm_scerb);
  *
  * @param[in] tid_ptr                     Pointer to tid of tracee
  *
- * @return void
+ * @return int                            `0` = removed entry, `-1` = couldn't remove entry
  */
-void scerbmap_remove(pid_t* tid_ptr);
+int scerbmap_remove(pid_t* tid_ptr);
 
 #endif /* STRACER_FNRES_SCERBMAP_H_ */

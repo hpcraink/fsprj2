@@ -250,10 +250,7 @@ list(APPEND TESTS_LINK_OPTIONS
 )
 
 if (FILENAME_RESOLUTION_ENABLED)
-    list(APPEND TESTS_LINK_OPTIONS
-        "atomic_hash_object"
-        "libringbuf_object"
-    )
+    list(APPEND TESTS_LINK_OPTIONS "atomic_hash_object")
 endif()
 
 if (STRACING_ENABLED)

@@ -1,7 +1,8 @@
-#include <unistd.h>
 #include "../../../common/stracer_consts.h"
 #include "scerb/scerb_consumer.h"
 #include "../../../../fnres/fnmap/fnmap.h"
+
+#include <unistd.h>
 
 #include <assert.h>
 #include "../../common/error.h"
@@ -18,13 +19,30 @@ static ATTRIBUTE_THREAD sm_scerb_t *g_scerb;
 
 
 /* -- Functions -- */
-void stracing_fnres_init_scerb(void) {
+static char* derive_smo_name(void) {
+    char *smo_name;
+    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, gettid()) );        // MUST BE `free`ED !!!
+    return smo_name;
+}
+
+
+void stracing_fnres_init(void) {
     assert( !g_scerb && "scerb has been already init'ed" );
 
-    char *smo_name;
-    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, gettid()) );
+    char *smo_name = derive_smo_name();
     if (-1 == scerb_create_attach(&g_scerb, smo_name)) {
         LOG_ERROR_AND_EXIT("Couldn't create scerb");
+    }
+
+    CALL_REAL_ALLOC_SYNC(free)(smo_name);
+}
+
+void stracing_fnres_fin(void) {
+    assert( g_scerb && "scerb hasn't been init'ed yet" );
+
+    char *smo_name = derive_smo_name();
+    if (-1 == scerb_detach(&g_scerb, smo_name)) {
+        LOG_WARN("Couldn't detach scerb");
     }
 
     CALL_REAL_ALLOC_SYNC(free)(smo_name);
@@ -34,19 +52,21 @@ void stracing_fnres_init_scerb(void) {
 void stracing_fnres_check_and_add_scevents(void) {
     assert( g_scerb && "scerb hasn't been init'ed yet" );
 
-    scevent_t *scevent_buf_ptr = (scevent_t*)alloca(FNRES_SCEVENT_MAX_SIZE);
+    scevent_t *scevent_buf_ptr = (scevent_t*)alloca(SCEVENT_MAX_SIZE);
     while (0 == scerb_poll(g_scerb, scevent_buf_ptr)) {
         DEV_DEBUG_PRINT_MSG("Retrieved scevent");
-        fnmap_key_t fn_key = {
+
+        if (!scevent_buf_ptr->succeeded) { continue; }
+
+        fnmap_key_t sce_key = {
             .id = { .fildes = scevent_buf_ptr->fd },
             .type = F_DESCRIPTOR,
             .mmap_length = 0
         };
-
         if (OPEN == scevent_buf_ptr->type) {
-            fnmap_add_or_update(fn_key, scevent_buf_ptr->filename);
+            fnmap_add_or_update(&sce_key, scevent_buf_ptr->filename, scevent_buf_ptr->ts_in_ns);
         } else {
-            fnmap_remove(fn_key);
+            fnmap_remove(&sce_key);
         }
     }
 }
@@ -59,7 +79,7 @@ int stracing_fnres_lookup_and_alias_stream(struct basic* ioevent_ptr) {
 
     DEV_DEBUG_PRINT_MSG("stracing > Trying to perform lookup for STREAM based on derived fildes");
 
-    const FILE* const ioevent_stream_ptr = ((struct file_stream *) ioevent_ptr->__file_type)->stream;
+    FILE* const ioevent_stream_ptr = ((struct file_stream *) ioevent_ptr->__file_type)->stream;
     const uint64_t ioevent_ts_in_ns = ioevent_ptr->time_start;
 
     const int derived_fd = CALL_REAL_POSIX_SYNC( fileno(ioevent_stream_ptr) );
@@ -73,9 +93,8 @@ int stracing_fnres_lookup_and_alias_stream(struct basic* ioevent_ptr) {
             .id = { .fildes = derived_fd },
             .mmap_length = 0
     };
-
     char *found_fname;
-    if (!fnmap_get(&found_fname, &search_key)) {
+    if (!fnmap_get(&search_key, &found_fname)) {
         DEV_DEBUG_PRINT_MSG("stracing > Found associated STREAM, adding it to fnmap");
 
         fnmap_key_t insert_key = {

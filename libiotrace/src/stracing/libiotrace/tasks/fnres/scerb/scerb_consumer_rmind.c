@@ -73,7 +73,7 @@ int scerb_poll(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
     assert(cur_consumable_bytes >= (scevent_buf_ptr->filename_len + POLL_LEN_OFFSET_STRUCT) );
     memcpy(scevent_buf_ptr->filename, &sm_buf_ptr[cur_read_offset + POLL_LEN_OFFSET_STRUCT], scevent_buf_ptr->filename_len);
 
-    ringbuf_release(sm_rb_ptr, FNRES_SCEVENT_SIZEOF(scevent_buf_ptr));
+    ringbuf_release(sm_rb_ptr, SCEVENT_SIZEOF(scevent_buf_ptr));
 
     return 0;
 }

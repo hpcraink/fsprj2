@@ -54,10 +54,10 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, sceven
                                                         USER_REGS_STRUCT_SC_ARG1(read_regs_ptr),
                                                      -1, &filename_ptr);
 
-            event_buf_ptr->success = -1 != USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
+            event_buf_ptr->succeeded = -1 != USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
             event_buf_ptr->type = OPEN;
             event_buf_ptr->fd = USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
-            strncpy(event_buf_ptr->filename, filename_ptr, FNRES_SCEVENT_MAX_FILENAME);  // TODO: CHECK NUL BYTE BUFFER SIZE
+            strncpy(event_buf_ptr->filename, filename_ptr, SCEVENT_FILENAME_MAX);  // TODO: CHECK NUL BYTE BUFFER SIZE
             free(filename_ptr);
             event_buf_ptr->filename_len = filename_len;
         }
@@ -65,7 +65,7 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct *read_regs_ptr, sceven
 
 
         case __SNR_close:
-            event_buf_ptr->success = -1 != USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
+            event_buf_ptr->succeeded = -1 != USER_REGS_STRUCT_SC_RTNVAL(read_regs_ptr);
             event_buf_ptr->type = CLOSE;
             event_buf_ptr->fd = USER_REGS_STRUCT_SC_ARG0(read_regs_ptr);
             return 0;

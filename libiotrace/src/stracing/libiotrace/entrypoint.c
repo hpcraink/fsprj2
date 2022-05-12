@@ -115,8 +115,8 @@ void stracing_register_with_stracer(void) {
   /* Set tracing permissions (only necessary when Yama ptrace_scope = 1; check current settings: `cat /proc/sys/kernel/yama/ptrace_scope`) */
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 #ifdef FILENAME_RESOLUTION_ENABLED
-  /* Create buffer for receiving syscall events (traced by stracer) */
-    stracing_fnres_init_scerb();
+  /* Create scerb for receiving syscall events (traced by stracer) */
+    stracing_fnres_init();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Created scerb for fnres", gettid());
 #endif
 
@@ -130,4 +130,11 @@ void stracing_register_with_stracer(void) {
     CALL_REAL_POSIX_SYNC(close)(server_conn_fd);
 
     DEV_DEBUG_PRINT_MSG("[TRACEE:tid=%ld] Got attached by stracer, proceeding ...", gettid());
+}
+
+void stracing_fin(void) {
+#ifdef FILENAME_RESOLUTION_ENABLED
+    stracing_fnres_fin();
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%ld] Detached scerb for fnres", gettid());
+#endif
 }

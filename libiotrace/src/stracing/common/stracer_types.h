@@ -1,3 +1,6 @@
+/**
+ * Data types used by stracer, which are also pertinent for libiotrace
+ */
 #ifndef COMMON_STRACING_TYPES_H_
 #define COMMON_STRACING_TYPES_H_
 
@@ -6,9 +9,12 @@
 
 
 /* -- Data types -- */
+/**
+ * Describes a syscall event, traced by stracer
+ */
 typedef struct {
     uint64_t ts_in_ns;
-    bool success;
+    bool succeeded;
     int fd;
     enum { OPEN, CLOSE } type;
 /* !!!  DON'T CHANGE THE FOLLOWING LAST 2 MEMBERS (otherwise reading in 2 steps via `offsetof` won't work anymore)  !!! */
@@ -18,12 +24,8 @@ typedef struct {
 
 
 /* -- Macros -- */
-#define FNRES_SCEVENT_MAX_FILENAME             FILENAME_MAX
-#define FNRES_SCEVENT_SIZEOF(STRUCT_PTR)       ( sizeof(*(STRUCT_PTR)) + (STRUCT_PTR)->filename_len )
-#define FNRES_SCEVENT_MAX_SIZE                 ( sizeof(scevent_t) + FNRES_SCEVENT_MAX_FILENAME )
-
-
-/* - Debugging - */
-void fnres_scerb_debug_print_scevent(scevent_t*, FILE*);
+#define SCEVENT_FILENAME_MAX             FILENAME_MAX
+#define SCEVENT_SIZEOF(STRUCT_PTR)       ( sizeof(*(STRUCT_PTR)) + (STRUCT_PTR)->filename_len )
+#define SCEVENT_MAX_SIZE                 ( sizeof(scevent_t) + SCEVENT_FILENAME_MAX )
 
 #endif /* COMMON_STRACING_TYPES_H_ */

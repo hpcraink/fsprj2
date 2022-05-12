@@ -1,5 +1,5 @@
-#ifndef COMMON_FNRES_STRACING_SCERB_RMIND_H_
-#define COMMON_FNRES_STRACING_SCERB_RMIND_H_
+#ifndef COMMON_STRACING_FNRES_SCERB_RMIND_H_
+#define COMMON_STRACING_FNRES_SCERB_RMIND_H_
 
 #include <stdint.h>
 #include "../../../../../libs/rmind-ringbuf/ringbuf.h"
@@ -11,4 +11,4 @@ struct sm_scerb {
     uint8_t buf[STRACING_FNRES_RB_SIZE];
 };
 
-#endif /* COMMON_FNRES_STRACING_SCERB_RMIND_H_ */
+#endif /* COMMON_STRACING_FNRES_SCERB_RMIND_H_ */

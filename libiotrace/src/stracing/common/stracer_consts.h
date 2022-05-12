@@ -1,5 +1,5 @@
-#ifndef COMMON_STRACER_CONSTS_H
-#define COMMON_STRACER_CONSTS_H
+#ifndef COMMON_STRACER_CONSTS_H_
+#define COMMON_STRACER_CONSTS_H_
 
 
 /* -- Consts -- */
@@ -19,4 +19,4 @@
 #define STRACING_FNRES_SMO_NAME_FORMAT        "_STRACING__tid_%ld"
 
 
-#endif /* COMMON_STRACER_CONSTS_H */
+#endif /* COMMON_STRACER_CONSTS_H_ */

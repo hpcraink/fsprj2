@@ -16,6 +16,18 @@
  */
 void stracing_init_stracer(void);
 
+
+
+
+
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   TODO:                   MUST BE CALLED FOR ECAH THREAD ON EXIT     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+void stracing_fin(void);
+
+
+
+
+
 /**
  * @brief                        Sends tracing request to stracer
  *                               Requires the stracer to be already running

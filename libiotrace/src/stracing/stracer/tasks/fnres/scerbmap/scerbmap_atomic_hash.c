@@ -30,7 +30,7 @@ void scerbmap_create(long max_size) {
     assert( !g_scerbmap && "scerbmap has been already init'ed" );
 
     if (!(g_scerbmap = atomic_hash_create(max_size, HMAP_TTL_DISABLE))) {
-        LOG_ERROR_AND_EXIT("Couldn't init scerbmap");
+        LOG_ERROR_AND_EXIT("Couldn't init scerbmap w/ `max_size`=%ld", max_size);
     }
 }
 
@@ -44,12 +44,12 @@ void scerbmap_destroy(void) {
     }
 }
 
-int scerbmap_get(const pid_t* tid_ptr, sm_scerb_t** found_sm_scerb) {
+int scerbmap_get(pid_t* tid_ptr, sm_scerb_t** found_sm_scerb) {
     assert( g_scerbmap && "scerbmap hasn't been init'ed yet" );
     assert( tid_ptr && found_sm_scerb && "params may not be `NULL`" );
 
     sm_scerb_t *found_entry;
-    const int hmap_rtnval = atomic_hash_get(g_scerbmap, *tid_ptr, sizeof(*tid_ptr), NULL, &found_entry);
+    const int hmap_rtnval = atomic_hash_get(g_scerbmap, tid_ptr, sizeof(*tid_ptr), NULL, &found_entry);
     if (!hmap_rtnval) {
         *found_sm_scerb = found_entry;
     } else {
@@ -59,28 +59,26 @@ int scerbmap_get(const pid_t* tid_ptr, sm_scerb_t** found_sm_scerb) {
     return hmap_rtnval;
 }
 
-void scerbmap_add(const pid_t* tid_ptr, sm_scerb_t* sm_scerb) {
+void scerbmap_add(pid_t* tid_ptr, sm_scerb_t* sm_scerb) {
     assert( g_scerbmap && "scerbmap hasn't been init'ed yet" );
     assert( tid_ptr && sm_scerb && "params may not be `NULL`" );
 
-    const int hmap_rtnval = atomic_hash_add(g_scerbmap, *tid_ptr, sizeof(*tid_ptr), sm_scerb, HMAP_TTL_DISABLE, NULL, NULL));
+    const int hmap_rtnval = atomic_hash_add(g_scerbmap, tid_ptr, sizeof(*tid_ptr), sm_scerb, HMAP_TTL_DISABLE, NULL, NULL));
     if (!hmap_rtnval) {
         DEV_DEBUG_PRINT_MSG("Added scerb-pointer of tid=%ld", *tid_ptr);
-        return 0;
     } else {
         LOG_WARN("Couldn't add scerb-pointer of tid=%ld", *tid_ptr);
-        return -1;
     }
 }
 
-void scerbmap_remove(const pid_t* tid_ptr) {
+void scerbmap_remove(pid_t* tid_ptr) {
     assert(g_scerbmap && "scerbmap hasn't been init'ed yet" );
     assert( tid_ptr && "param may not be `NULL`" );
 
-    const int hmap_rtnval = atomic_hash_del(g_scerbmap, *tid_ptr, sizeof(*tid_ptr), NULL, NULL);
+    const int hmap_rtnval = atomic_hash_del(g_scerbmap, tid_ptr, sizeof(*tid_ptr), NULL, NULL);
     if (hmap_rtnval) {
-        LOG_ERROR_AND_EXIT("Couldn't delete scerb-pointer  of tid=%d (err_code=%d)", *tid_ptr, hmap_rtnval);
+        LOG_ERROR_AND_EXIT("Couldn't delete scerb-pointer of tid=%d (err_code=%d)", *tid_ptr, hmap_rtnval);
     } else {
-        DEV_DEBUG_PRINT_MSG("Removed scerb-pointer  of tid=%lu", tid_ptr);
+        DEV_DEBUG_PRINT_MSG("Removed scerb-pointer of tid=%ld", *tid_ptr);
     }
 }

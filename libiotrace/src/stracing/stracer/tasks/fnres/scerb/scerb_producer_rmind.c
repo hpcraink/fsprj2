@@ -7,9 +7,9 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#include "../../../../common/tasks/fnres/scerb/scerb_ipc_utils.h"
-#include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "scerb_producer.h"
 #include "../../../../common/tasks/fnres/scerb/scerb_types_rmind.h"
+#include "../../../../common/tasks/fnres/scerb/scerb_ipc_utils.h"
 
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../../../../../common/debug.h"
@@ -43,10 +43,10 @@ int scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name) {
 }
 
 
-int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr) {
-    assert(sm_scerb && event_buf_ptr && "params may not be `NULL`"  );
+int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
+    assert(sm_scerb && scevent_buf_ptr && "params may not be `NULL`"  );
     // TODO: CHECK INIT'ed
-    assert( event_buf_ptr->filename_len == strlen(event_buf_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
+    assert(scevent_buf_ptr->filename_len == strlen(scevent_buf_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
 
 
     ringbuf_t* const sm_rb_ptr = &sm_scerb->ringbuf;
@@ -55,7 +55,7 @@ int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr) {
 
 
 /* Acquire space in buffer */
-    const size_t event_size = FNRES_SCEVENT_SIZEOF(event_buf_ptr);
+    const size_t event_size = SCEVENT_SIZEOF(scevent_buf_ptr);
     ssize_t cur_write_offset = ringbuf_acquire(sm_rb_ptr, rb_worker_ptr, event_size);
     if (-1 == cur_write_offset) {
         DEV_DEBUG_PRINT_MSG("Insert failed  --  Buffer had at t-1 not free enough space "
@@ -64,7 +64,7 @@ int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* event_buf_ptr) {
     }
 
 /* Write data in buffer + hope 4 the best */
-    memcpy(&sm_buf_ptr[cur_write_offset], event_buf_ptr, event_size);
+    memcpy(&sm_buf_ptr[cur_write_offset], scevent_buf_ptr, event_size);
     ringbuf_produce(sm_rb_ptr, rb_worker_ptr);
 
     return 0;

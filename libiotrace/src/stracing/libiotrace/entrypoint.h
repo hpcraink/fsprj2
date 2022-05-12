@@ -31,6 +31,7 @@ void stracing_fin(void);
 /**
  * @brief                        Sends tracing request to stracer
  *                               Requires the stracer to be already running
+ *                               May be called by `init_thread`
  */
 void stracing_register_with_stracer(void);
 

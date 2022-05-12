@@ -46,7 +46,7 @@ int scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name) {
 int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
     assert(sm_scerb && scevent_buf_ptr && "params may not be `NULL`"  );
     // TODO: CHECK INIT'ed
-    assert(scevent_buf_ptr->filename_len == strlen(scevent_buf_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
+    assert( scevent_buf_ptr->filename_len == strlen(scevent_buf_ptr->filename) + 1 && "`filename_len` may be set correctly!" );
 
 
     ringbuf_t* const sm_rb_ptr = &sm_scerb->ringbuf;

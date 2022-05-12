@@ -63,9 +63,10 @@ int scerb_poll(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr) {
     size_t cur_consumable_bytes,
            cur_read_offset;
     if (0 == (cur_consumable_bytes = ringbuf_consume(sm_rb_ptr, &cur_read_offset))) {
-        DEV_DEBUG_PRINT_MSG("Read failed  --  Buffer was at t-1 empty");
+        DEV_DEBUG_PRINT_MSG("Nothing to read in buffer");
         return -2;
     }
+
 
 /* Read = 2 step process  -> 1st step (until struct member field `filename_len`, so we know # bytes we must read)  -> then 2nd step */
 #define POLL_LEN_OFFSET_STRUCT offsetof(scevent_t, filename)

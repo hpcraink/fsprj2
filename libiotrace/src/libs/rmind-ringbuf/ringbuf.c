@@ -56,7 +56,7 @@
  *	'ready' is observed by the consumer.
  */
 
-#include <stdio.h>
+#include <sys/types.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <inttypes.h>

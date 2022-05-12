@@ -57,7 +57,7 @@ void stracing_fnres_cleanup(void) {
 void stracing_fnres_check_and_add_scevents(void) {
 //    assert( g_scerb && "scerb hasn't been init'ed yet" );
     if (!g_scerb) {                                     // NOTE: May not be inited yet, but still already called by wrappers
-        DEV_DEBUG_PRINT_MSG("NOP  (not inited yet)");
+        DEV_DEBUG_PRINT_MSG("NOP for tid=%d  (not inited yet)", gettid());
         return;
     }
 

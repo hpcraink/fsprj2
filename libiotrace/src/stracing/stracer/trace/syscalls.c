@@ -51,7 +51,7 @@ int syscall_to_scevent(pid_t tid, struct user_regs_struct_full *read_regs_ptr, s
             const long scall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
 
             char* ptrace_read_fname_ptr;
-            const size_t ptrace_read_fname_len = ptrace_read_string(tid, scall_arg_fname_addr, -1, &ptrace_read_fname_ptr);
+            const size_t ptrace_read_fname_len = ptrace_read_string(tid, scall_arg_fname_addr, -1, &ptrace_read_fname_ptr) +1;
 
             event_buf_ptr->succeeded = -1 != scall_rtn_val;
             event_buf_ptr->type = OPEN;

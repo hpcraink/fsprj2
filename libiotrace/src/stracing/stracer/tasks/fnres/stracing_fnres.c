@@ -78,4 +78,6 @@ void stracing_fnres_tracee_write_scevent(pid_t tid, scevent_t* scevent_buf_ptr) 
     if (0 != scerb_offer(sm_scerb, scevent_buf_ptr) ) {
         LOG_WARN("Couldn't write syscall event in buffer");
     }
+
+    DEV_DEBUG_PRINT_MSG("Wrote new scevent for tid=%d", tid);
 }

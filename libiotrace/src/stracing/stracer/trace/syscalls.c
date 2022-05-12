@@ -119,8 +119,9 @@ void syscalls_print_args(__attribute__((unused)) pid_t tid, struct user_regs_str
                 fprintf(stderr, "0x%lx", (unsigned long)arg);
                 break;
         }
-        if (arg_nr != nargs -1)
+        if (arg_nr != nargs -1) {
             fprintf(stderr, ", ");
+        }
     }
 }
 

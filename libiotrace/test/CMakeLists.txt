@@ -250,13 +250,15 @@ list(APPEND LINK_OPTIONS
 )
 
 if (FILENAME_RESOLUTION_ENABLED)
-# TODO: Disable for tests not related to fnres  --> Requires additional object-library which is compiled w/o fnres
     list(APPEND LINK_OPTIONS
         "atomic_hash_object"
+        "libringbuf_hash_object"
     )
 endif()
 
 if (STRACING_ENABLED)
+    list(APPEND LINK_OPTIONS "libringbuf_hash_object")
+
 # - Programs for testing tracing  -
     # test with: IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared [--loop] [--fork | --pthread]
     add_executable(stracing_trace_pthread_fork_shared stracing/trace_pthread_fork.c)

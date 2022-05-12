@@ -1,3 +1,5 @@
+#include "libiotrace_config.h"
+
 #include "../../../common/stracer_consts.h"
 #include "scerb/scerb_consumer.h"
 #include "../../../../fnres/fnmap/fnmap.h"
@@ -15,7 +17,7 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
 
 
 /* -- Globals -- */
-static ATTRIBUTE_THREAD sm_scerb_t *g_scerb;
+static ATTRIBUTE_THREAD sm_scerb_t *g_scerb;        // NOTE: Must be in TLS (since per thread)
 
 
 /* -- Functions -- */

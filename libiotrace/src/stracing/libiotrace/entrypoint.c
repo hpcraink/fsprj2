@@ -24,7 +24,7 @@
 #include "../../common/debug.h"
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-#  include "tasks/fnres/stracing_fnres.h"
+#  include "tasks/lsep/stracing_lsep.h"
 #endif
 
 
@@ -100,7 +100,7 @@ void stracing_init_stracer(void) {
                       exec_arg_libiotrace_linkage,
                       "-w",                             //  WARN task    TODO: Runtime selection of to be performed tasks by user
 #ifdef FILENAME_RESOLUTION_ENABLED
-                      "-f",                             // FNRES task  (CAPTAIN OBVIOUS: requires filename resolution)
+                      "-f",                             // LSEP task  (CAPTAIN OBVIOUS: requires filename resolution ATM (may be later used for other stuff))
 #endif
                       NULL,
                       NULL);                            /* Envs (make sure NO `LD_PRELOAD` is passed, otherwise we can't "break out" of libiotrace's tracing) */
@@ -115,7 +115,7 @@ void stracing_tracee_register_with_stracer(void) {
     DIE_WHEN_ERRNO( prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY) );
 #ifdef FILENAME_RESOLUTION_ENABLED
   /* Create scerb for receiving syscall events (traced by stracer) */
-    stracing_fnres_setup();
+    stracing_lsep_setup();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Created scerb for fnres", gettid());
 #endif
 
@@ -134,7 +134,7 @@ void stracing_tracee_register_with_stracer(void) {
 
 void stracing_tracee_fin(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
-    stracing_fnres_fin();
+    stracing_lsep_cleanup();
     DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Detached scerb for fnres", gettid());
 #endif
 }

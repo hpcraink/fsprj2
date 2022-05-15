@@ -1,9 +1,10 @@
 /**
- * NOTE: This approach using a ringbuffer w/ per-tread view has a major drawback:
- *       - Not traced io-relevant events will only be added to fnmap if a wrapper
- *         for the affected thread gets triggered (which then in turn reads the scerb)
- *       - BETTER would be: Put fnmap in shared memory w/ a process-wide view
- *
+ * NOTE: This current implementation w/ per THREAD view has a major drawback,
+ *       especially for events which shall be processed by the fnres-module:
+ *       - Not traced io-relevant events will only be added to the fnmap if a wrapper
+ *         for the affected thread gets triggered (which then in turn reads the scevents in the scerb)
+ *       - BETTER solution would be: Implement PROCESS-WIDE view
+ *         HOWEVER: This would require a "single producer-MULTI CONSUMER, MESSAGE PASSING capable" ringbuffer impl.
  */
 #include "libiotrace_config.h"
 
@@ -15,7 +16,7 @@
 
 #include <assert.h>
 #include "../../../../common/error.h"
-#define DEV_DEBUG_ENABLE_LOGS
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "../../../../common/debug.h"
 
 
@@ -30,13 +31,13 @@ static ATTRIBUTE_THREAD sm_scerb_t *g_scerb;        // NOTE: Must be in TLS (sin
 /* -- Functions -- */
 static char* derive_smo_name(void) {
     char *smo_name;
-    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_FNRES_SMO_NAME_FORMAT, gettid()) );        // MUST BE `free`ED !!!
+    DIE_WHEN_ERRNO( asprintf(&smo_name, STRACING_LSEP_SMO_NAME_FORMAT, gettid()) );        // MUST BE `free`ED !!!
     return smo_name;
 }
 
 
 /* - Public functions - */
-void stracing_fnres_setup(void) {
+void stracing_lsep_setup(void) {
     assert( !g_scerb && "scerb has been already init'ed" );
 
     char *smo_name = derive_smo_name();
@@ -48,7 +49,7 @@ void stracing_fnres_setup(void) {
     CALL_REAL_ALLOC_SYNC(free)(smo_name);
 }
 
-void stracing_fnres_fin(void) {
+void stracing_lsep_cleanup(void) {
     assert( g_scerb && "scerb hasn't been init'ed yet" );
 
     char *smo_name = derive_smo_name();
@@ -60,8 +61,7 @@ void stracing_fnres_fin(void) {
     CALL_REAL_ALLOC_SYNC(free)(smo_name);
 }
 
-
-void stracing_fnres_check_and_add_scevents(void) {
+void stracing_lsep_process_new_scevents(void) {
 //    assert( g_scerb && "scerb hasn't been init'ed yet" );
     if (!g_scerb) {                                     // NOTE: May not be inited yet, but still already called by wrappers
         DEV_DEBUG_PRINT_MSG("NOP for tid=%d  (not inited yet)", gettid());
@@ -79,21 +79,26 @@ void stracing_fnres_check_and_add_scevents(void) {
 
         if (!scevent_buf_ptr->succeeded) { continue; }
 
+        /* -- fnres -- */
         fnmap_key_t sce_key = {
-            .id = { .fildes = scevent_buf_ptr->fd },
-            .type = F_DESCRIPTOR,
-            .mmap_length = 0
+                .id = { .fildes = scevent_buf_ptr->fd },
+                .type = F_DESCRIPTOR,
+                .mmap_length = 0
         };
         if (OPEN == scevent_buf_ptr->type) {
             fnmap_add_or_update(&sce_key, scevent_buf_ptr->filename, scevent_buf_ptr->ts_in_ns);
         } else {
             fnmap_remove(&sce_key);
         }
+
+        /* -- ... -- */
     }
 }
 
 
 
+
+/* - Not directly related to this module (TODO: MV to fnres module or own file) - */
 int stracing_fnres_lookup_and_alias_stream(struct basic* ioevent_ptr) {
     assert( g_scerb && "scerb hasn't been init'ed yet" );
     assert( __void_p_enum_file_type_file_stream == ioevent_ptr->__void_p_enum_file_type && "ioevent may be only of type STREAM" );

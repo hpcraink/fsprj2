@@ -12,10 +12,10 @@
 
 
 #if defined(STRACING_ENABLED) && defined(FILENAME_RESOLUTION_ENABLED)
-#  include "stracing/libiotrace/tasks/fnres/stracing_fnres.h"
-#  define STRACING_FNRES_CHECK_AND_ADD_SCEVENTS() stracing_fnres_check_and_add_scevents()
+#  include "stracing/libiotrace/tasks/lsep/stracing_lsep.h"
+#  define STRACING_LSEP_PROCESS_NEW_SCEVENTS() stracing_lsep_process_new_scevents()
 #else
-#  define STRACING_FNRES_CHECK_AND_ADD_SCEVENTS() do {  } while(0)
+#  define STRACING_LSEP_PROCESS_NEW_SCEVENTS() do {  } while(0)
 #endif
 
 #ifdef FILENAME_RESOLUTION_ENABLED
@@ -266,7 +266,7 @@
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
-                         STRACING_FNRES_CHECK_AND_ADD_SCEVENTS(); \
+                         STRACING_LSEP_PROCESS_NEW_SCEVENTS(); \
                          FNRES_TRACE_IOEVENT(&data); \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
@@ -276,7 +276,7 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
-                           STRACING_FNRES_CHECK_AND_ADD_SCEVENTS(); \
+                           STRACING_LSEP_PROCESS_NEW_SCEVENTS(); \
                            FNRES_TRACE_IOEVENT(&data); \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \

@@ -21,7 +21,7 @@ typedef struct {
     char* unwind_module_name;
 
     bool task_warn_not_traced_ioevents;
-    bool task_fnres;
+    bool task_lsep;
 } cli_args_t;
 
 

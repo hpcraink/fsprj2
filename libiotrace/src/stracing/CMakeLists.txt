@@ -12,7 +12,7 @@ list(APPEND STRACER_SOURCE
         stracer/trace/syscalls.c
         stracer/trace/tracing.c
         stracer/tasks/task_hooks.c
-        stracer/tasks/unwind.c
+        stracer/tasks/aux/unwind.c
         stracer/cli.c
         stracer/main.c)
 
@@ -26,7 +26,7 @@ list(APPEND STRACER_COMPILE_OPTIONS
 
 
 # -- CMake options --
-set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.4.0" CACHE STRING "Location of kernel source used to parse syscalls")
+set(STRACING_LINUX_SRC_DIR "/usr/src/linux-5.15.0" CACHE STRING "Location of kernel source used to parse syscalls")
 set(STRACING_UXD_SOCKET_FILEPATH "libiotrace-tracer.sock" CACHE STRING "Filename of socket which is used for IPC b/w tracer & tracee")
 set(STRACING_UXD_REG_SOCKET_BACKLOG_SIZE 5000 CACHE STRING "Backlog size for uxd socket")
 set(STRACING_STRACER_LOG_OUTPUT "LOGFILE" CACHE STRING "Where the log output of the stracer should go")
@@ -51,10 +51,10 @@ list(APPEND STRACER_COMPILE_OPTIONS
         -DSTRACING_FNRES_SCERBMAP_SIZE=${STRACING_FNRES_SCERBMAP_SIZE})
 
 list(APPEND STRACER_SOURCE
-        stracer/tasks/fnres/scerb/scerb_ipc_utils.c
-        stracer/tasks/fnres/scerb/scerb_producer_rmind.c
-        stracer/tasks/fnres/scerbmap/scerbmap_atomic_hash.c
-        stracer/tasks/fnres/stracing_fnres.c)
+        stracer/tasks/lsep/scerb/scerb_ipc_utils.c
+        stracer/tasks/lsep/scerb/scerb_producer_rmind.c
+        stracer/tasks/lsep/scerbmap/scerbmap_atomic_hash.c
+        stracer/tasks/lsep/stracing_lsep.c)
 list(APPEND STRACER_LINK_OPTIONS
         libringbuf_object
         atomic_hash_object)
@@ -105,9 +105,9 @@ list(APPEND LIBIOTRACE_COMPILE_OPTIONS
 # - For task "fnres" -
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND LIBIOTRACE_SOURCE
-            stracing/libiotrace/tasks/fnres/scerb/scerb_ipc_utils.c
-            stracing/libiotrace/tasks/fnres/scerb/scerb_consumer_rmind.c
-            stracing/libiotrace/tasks/fnres/stracing_fnres.c)
+            stracing/libiotrace/tasks/lsep/scerb/scerb_ipc_utils.c
+            stracing/libiotrace/tasks/lsep/scerb/scerb_consumer_rmind.c
+            stracing/libiotrace/tasks/lsep/stracing_lsep.c)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DSTRACING_FNRES_RB_SIZE=${STRACING_FNRES_RB_SIZE})
     list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS libringbuf_object)
     list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS libringbuf_object)

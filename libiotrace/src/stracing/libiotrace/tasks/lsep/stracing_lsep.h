@@ -1,5 +1,10 @@
-#ifndef LIBIOTRACE_STRACING_FNRES_H
-#define LIBIOTRACE_STRACING_FNRES_H
+/**
+ * Libiotrace Syscall Event Passing (lsep)
+ *   Allows libiotrace to receive syscall events, which have been traced by the stracer
+ *   by storing them in a ringbuffer, which is allocated in a shared memory segment
+ */
+#ifndef LIBIOTRACE_STRACING_LSEP_H_
+#define LIBIOTRACE_STRACING_LSEP_H_
 
 
 /* -- Forward type declarations -- */
@@ -12,21 +17,22 @@ struct basic;           /* Note: #include "../libiotrace_include_struct.h" cause
  *
  * @return void
  */
-void stracing_fnres_setup(void);
+void stracing_lsep_setup(void);
 
 /**
  * @brief                                 Detaches scerb for current thread
  *
  * @return void
  */
-void stracing_fnres_fin(void);
+void stracing_lsep_cleanup(void);
 
 /**
- * @brief                                 Checks scerb for new scevent's and adds them to the fnmap
+ * @brief                                 Checks scerb for new scevent's and processes them (e.g., by adding them to the fnmap)
  *
  * @return void
  */
-void stracing_fnres_check_and_add_scevents(void);
+void stracing_lsep_process_new_scevents(void);
+
 
 /**
  * @brief                                 Alias given stream (by looking it up using derived fd) in fnmap
@@ -37,4 +43,4 @@ void stracing_fnres_check_and_add_scevents(void);
  */
 int stracing_fnres_lookup_and_alias_stream(struct basic* ioevent_ptr);
 
-#endif /* LIBIOTRACE_STRACING_FNRES_H */
+#endif /* LIBIOTRACE_STRACING_LSEP_H_ */

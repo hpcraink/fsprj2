@@ -4,8 +4,8 @@
 #include "task_hooks.h"
 #include "../../common/stracer_types.h"
 #include "../trace/syscalls.h"
-#include "unwind.h"
-#include "fnres/stracing_fnres.h"
+#include "aux/unwind.h"
+#include "lsep/stracing_lsep.h"
 
 #include "../common/utils.h"
 
@@ -33,13 +33,13 @@ void tasks_on_stracer_init(cli_args_t* cli_args_ptr) {
 
 /* Unwinding functionality */
     if (g_cli_args_ptr->task_warn_not_traced_ioevents ||            // All tasks which require stack unwinding
-        g_cli_args_ptr->task_fnres) {
+        g_cli_args_ptr->task_lsep) {
         unwind_init();
     }
 
 /* FNRES task */
-    if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_init(STRACING_FNRES_SCERBMAP_SIZE);
+    if (g_cli_args_ptr->task_lsep) {
+        stracing_lsep_init(STRACING_FNRES_SCERBMAP_SIZE);
     }
 }
 
@@ -54,8 +54,8 @@ void tasks_on_stracer_fin(void) {
         unwind_fin();
     }
 
-    if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_fin();
+    if (g_cli_args_ptr->task_lsep) {
+        stracing_lsep_cleanup();
     }
 
     g_cli_args_ptr = NULL;
@@ -65,8 +65,8 @@ void tasks_on_stracer_fin(void) {
 void tasks_on_event_attached_tracee(pid_t new_tracee_tid, __attribute__((unused))uxd_sock_ipc_msg_t *new_tracee_ipc_request) {
     assert( g_cli_args_ptr && "Not inited yet" );
 
-    if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_tracee_attach(new_tracee_tid);
+    if (g_cli_args_ptr->task_lsep) {
+        stracing_lsep_tracee_attach(new_tracee_tid);
     }
 }
 
@@ -88,14 +88,14 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
             print_syscall(stderr, trapped_tracee_tid, read_regs_ptr);
         }
 
-/* -- TASK: FNRES -- */
-        if (g_cli_args_ptr->task_fnres) {
+/* -- TASK: LSEP -- */
+        if (g_cli_args_ptr->task_lsep) {
             scevent_t *scevent_buf_ptr = (scevent_t*)alloca(SCEVENT_MAX_SIZE);
             if (0 != syscall_to_scevent(trapped_tracee_tid, read_regs_ptr, scevent_buf_ptr)) {
                 LOG_ERROR_AND_EXIT("Couldn't 'translate' syscall to `scevent`");
             }
 
-            stracing_fnres_tracee_add_scevent(trapped_tracee_tid, scevent_buf_ptr);
+            stracing_lsep_tracee_add_scevent(trapped_tracee_tid, scevent_buf_ptr);
         }
     }
 }
@@ -104,8 +104,8 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
 void tasks_on_event_tracee_exit(pid_t trapped_tracee_tid) {
     assert( g_cli_args_ptr && "Not inited yet" );
 
-    if (g_cli_args_ptr->task_fnres) {
-        stracing_fnres_tracee_detach(trapped_tracee_tid);
+    if (g_cli_args_ptr->task_lsep) {
+        stracing_lsep_tracee_detach(trapped_tracee_tid);
     }
 }
 

@@ -12,11 +12,11 @@
 #define STRACER_CLI_LIBIOTRACE_LINKAGE_SHARED 'd'
 
 #define STRACER_CLI_OPTION_TASK_WARN          'w'
-#define STRACER_CLI_OPTION_TASK_FNRES         'f'
+#define STRACER_CLI_OPTION_TASK_LSEP          'f'
 
 
 /* - Misc. - */
-#define STRACING_FNRES_SMO_NAME_FORMAT        "_STRACING__tid_%d"
+#define STRACING_LSEP_SMO_NAME_FORMAT         "_STRACING__tid_%d"
 
 
 #endif /* COMMON_STRACER_CONSTS_H_ */

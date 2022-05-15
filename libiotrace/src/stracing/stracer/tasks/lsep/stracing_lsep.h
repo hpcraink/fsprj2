@@ -1,5 +1,10 @@
-#ifndef STRACER_STRACING_FNRES_H_
-#define STRACER_STRACING_FNRES_H_
+/**
+ * Libiotrace Syscall Event Passing (lsep)
+ *   Allows libiotrace to receive syscall events, which have been traced by the stracer
+ *   by storing them in a ringbuffer, which is allocated in a shared memory segment
+ */
+#ifndef STRACER_STRACING_LSEP_H_
+#define STRACER_STRACING_LSEP_H_
 
 #include <sys/types.h>
 #include <stdbool.h>
@@ -14,14 +19,14 @@
  * @param[in] scerbmap_max_size           Max # of scerb-pointers which may be traced at any given point
  * @return void
  */
-void stracing_fnres_init(long scerbmap_max_size);
+void stracing_lsep_init(long scerbmap_max_size);
 
 /**
  * @brief                                 Finalizes this module
  *
  * @return void
  */
-void stracing_fnres_fin(void);
+void stracing_lsep_cleanup(void);
 
 
 /**
@@ -31,7 +36,7 @@ void stracing_fnres_fin(void);
  * @param[in] tid                         Tid of to be tracee
  * @return void
  */
-void stracing_fnres_tracee_attach(pid_t tid);
+void stracing_lsep_tracee_attach(pid_t tid);
 
 /**
  * @brief                                 Detaches scerb of tracee corresponding to provided tid
@@ -40,7 +45,7 @@ void stracing_fnres_tracee_attach(pid_t tid);
  * @param[in] tid                         Tid of to be tracee
  * @return void
  */
-void stracing_fnres_tracee_detach(pid_t tid);
+void stracing_lsep_tracee_detach(pid_t tid);
 
 /**
  * @brief                                 Writes scevent into corresponding tracee's scerb
@@ -50,6 +55,6 @@ void stracing_fnres_tracee_detach(pid_t tid);
  * @param[in] scevent_buf_ptr             scevent which shall be written into tracee's scerb
  * @return void
  */
-void stracing_fnres_tracee_add_scevent(pid_t tid, scevent_t* scevent_buf_ptr);
+void stracing_lsep_tracee_add_scevent(pid_t tid, scevent_t* scevent_buf_ptr);
 
-#endif /* STRACER_STRACING_FNRES_H_ */
+#endif /* STRACER_STRACING_LSEP_H_ */

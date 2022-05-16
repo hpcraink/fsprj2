@@ -32,9 +32,8 @@
 #include "tasks/task_hooks.h"
 #include "cli.h"
 
-#include "common/error.h"
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "common/debug.h"
+#include "common/error.h"
 
 
 

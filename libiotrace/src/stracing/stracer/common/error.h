@@ -45,4 +45,13 @@
     (NULL == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); NULL; }) : __val); \
   }); })
 
+
+/* -- Debugging macros -- */
+#ifdef DEV_DEBUG_ENABLE_LOGS
+#  include "error.h"
+#  define DEV_DEBUG_PRINT_MSG(format, ...) LOG_DEBUG(format, ##__VA_ARGS__)
+#else
+#  define DEV_DEBUG_PRINT_MSG(format, ...) do {  } while(0)
+#endif
+
 #endif /* STRACER_ERROR_H_ */

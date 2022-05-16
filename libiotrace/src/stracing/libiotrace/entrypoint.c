@@ -9,7 +9,10 @@
  * TODOs:
  *   - ...
  */
+//#define DEV_DEBUG_ENABLE_LOGS
 #include "../../event.h"
+#include "../../common/error.h"  /* NOTE: Already incl. via `event.h` */
+
 #include <unistd.h>
 
 #include <sys/un.h>
@@ -18,10 +21,6 @@
 #include "entrypoint.h"
 #include "../common/stracer_consts.h"
 #include "ipc/uxd_socket.h"
-
-#include "../../common/error.h"  /* NOTE: Already incl. via `event.h` */
-//#define DEV_DEBUG_ENABLE_LOGS
-#include "../../common/debug.h"
 
 #ifdef FILENAME_RESOLUTION_ENABLED
 #  include "tasks/lsep/stracing_lsep.h"

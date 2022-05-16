@@ -16,7 +16,7 @@
 //#endif
 
 
-#define __LOG_MODULE_NAME "libiotrace"
+#define __LOG_UNIT_NAME "libiotrace"
 
 
 /* Mapping of error values; 0 is no error. */
@@ -28,7 +28,7 @@
 #ifndef NDEBUG
 #  define LOG_DEBUG(format, ...)                                                                                                                                           \
 	do {                                                                                                                                                                          \
-		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LOG_MODULE_NAME">> [DEBUG] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LOG_UNIT_NAME">> [DEBUG] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 #else
 #  define LOG_DEBUG(format, ...) do {  } while(0)
@@ -37,7 +37,7 @@
 
 #define LOG_WARN(format, ...)                                                                                                                                             \
 	do {                                                                                                                                                                         \
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_MODULE_NAME">> [WARN] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_UNIT_NAME">> [WARN] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 
 
@@ -45,7 +45,7 @@
 // ToDo: __func__ dependencies (like in posix_io.c)
 #define LOG_ERROR_AND_EXIT(format, ...) \
 	do {                                                                                                                                                                          \
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_MODULE_NAME">> [ERROR] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_UNIT_NAME">> [ERROR] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 		exit(EXIT_FAILURE);                                                                                                                                                       \
 	} while(0)
 
@@ -59,5 +59,14 @@
     void* __val = (FUNC);                                                             \
     (NULL == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); NULL; }) : __val); \
   }); })
+
+
+
+/* -- Debugging -- */
+#ifdef DEV_DEBUG_ENABLE_LOGS
+#  define DEV_DEBUG_PRINT_MSG(format, ...) LOG_DEBUG(format, ##__VA_ARGS__)
+#else
+#  define DEV_DEBUG_PRINT_MSG(format, ...) do {  } while(0)
+#endif
 
 #endif /* LIBIOTRACE_ERROR_H */

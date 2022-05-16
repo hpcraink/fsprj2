@@ -15,9 +15,8 @@
 #include "unwind.h"
 
 #include <assert.h>
-#include "../../common/error.h"
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "../../common/debug.h"
+#include "../../common/error.h"
 
 
 /* -- Macros / Globals  -- */

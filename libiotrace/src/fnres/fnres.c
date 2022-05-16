@@ -23,9 +23,8 @@
 #include "fnmap/fnmap.h"
 
 #include <assert.h>
-#include "../common/error.h"
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "../common/debug.h"
+#include "../common/error.h"
 
 #include <string.h>
 #include <stdbool.h>        /* Be careful: Insertion order might cause issues w/ "../libiotrace_include_struct.h" */

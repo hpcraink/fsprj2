@@ -1,5 +1,5 @@
-#ifndef LIBIOTRACE_STRACER_UXD_IPC_TYPES_H
-#define LIBIOTRACE_STRACER_UXD_IPC_TYPES_H
+#ifndef COMMON_UXD_IPC_TYPES_H
+#define COMMON_UXD_IPC_TYPES_H
 
 
 /* -- Data types -- */
@@ -18,4 +18,4 @@ typedef struct {
 } uxd_sock_ipc_msg_t;
 
 
-#endif /* LIBIOTRACE_STRACER_UXD_IPC_TYPES_H */
+#endif /* COMMON_UXD_IPC_TYPES_H */

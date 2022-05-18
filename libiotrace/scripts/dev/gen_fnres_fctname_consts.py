@@ -204,7 +204,7 @@ FUNCTION_NAMES = [
 
 
     # --- libiotrace internal (nonexistent) fcts ---
-    "cleanup", "init_on_load"
+    "cleanup_process", "init_on_load"
 ]
 
 PRINT_HASHES_IN_HEX = True

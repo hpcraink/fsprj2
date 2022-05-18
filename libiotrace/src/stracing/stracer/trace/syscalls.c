@@ -9,6 +9,7 @@
 #include "ptrace_utils.h"
 #include "syscall_types.h"
 #include "syscalls.h"
+#include "common/utils.h"
 
 
 /* -- Function prototypes -- */
@@ -35,6 +36,48 @@ long syscalls_get_nr(char* syscall_name) {
         }
     }
     return -1L;
+}
+
+
+int syscall_to_scevent(pid_t tid, struct user_regs_struct_full *read_regs_ptr, scevent_t* event_buf_ptr) {
+    event_buf_ptr->ts_in_ns = gettime();
+    event_buf_ptr->filename_len = 0;        /* By default NO filename */
+
+    const long syscall_no = USER_REGS_STRUCT_SC_NO( (*read_regs_ptr) );
+    switch(syscall_no) {
+        case __SNR_open:
+        case __SNR_openat:
+        {
+            const unsigned long scall_arg_fname_addr = (__SNR_open == syscall_no) ? USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) ) : USER_REGS_STRUCT_SC_ARG1( (*read_regs_ptr) );
+            const long scall_rtn_val = USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
+
+            char* ptrace_read_fname_ptr;
+            const size_t ptrace_read_fname_len = ptrace_read_string(tid, scall_arg_fname_addr, -1, &ptrace_read_fname_ptr) +1;
+
+            event_buf_ptr->succeeded = -1 != scall_rtn_val;
+            event_buf_ptr->type = OPEN;
+            event_buf_ptr->fd = (int)scall_rtn_val;
+            strncpy(event_buf_ptr->filename, ptrace_read_fname_ptr, SCEVENT_FILENAME_MAX);  // !!!!!!!!!!!!!!!!!!   TODO: CHECK NUL BYTE BUFFER SIZE     !!!!!!!!!!!!!!!!!!
+            event_buf_ptr->filename[SCEVENT_FILENAME_MAX -1] = '\0';        // Make sure always NUL-terminated
+            free(ptrace_read_fname_ptr);
+            event_buf_ptr->filename_len = ptrace_read_fname_len;
+        }
+            return 0;
+
+
+        case __SNR_close:
+            event_buf_ptr->succeeded = -1 != (long)USER_REGS_STRUCT_SC_RTNVAL( (*read_regs_ptr) );
+            event_buf_ptr->type = CLOSE;
+            event_buf_ptr->fd = USER_REGS_STRUCT_SC_ARG0( (*read_regs_ptr) );
+            return 0;
+
+
+    /* TODO: ADD 'CONVERSION'-SUPPORT MORE SYSCALLS */
+
+
+        default:
+            return -1;
+    }
 }
 
 
@@ -77,8 +120,9 @@ void syscalls_print_args(__attribute__((unused)) pid_t tid, struct user_regs_str
                 fprintf(stderr, "0x%lx", (unsigned long)arg);
                 break;
         }
-        if (arg_nr != nargs -1)
+        if (arg_nr != nargs -1) {
             fprintf(stderr, ", ");
+        }
     }
 }
 

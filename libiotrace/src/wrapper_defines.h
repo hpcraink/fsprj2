@@ -5,18 +5,35 @@
 #include <dlfcn.h>
 
 #include "libiotrace_config.h"
-#include "gettime.h"
-#include "utils.h"
-#include "error.h"
+#include "common/gettime.h"
+#include "common/utils.h"
+#include "common/error.h"
 #include "libiotrace_include_struct.h"
 
 
-#ifdef FILENAME_RESOLUTION_ENABLED
-#  include "fnres/fctevent.h"
-#  define FNRES_TRACE_FCTEVENT(fctevent) fnres_trace_fctevent(fctevent)
+#if defined(STRACING_ENABLED) && defined(FILENAME_RESOLUTION_ENABLED)
+#  include "stracing/libiotrace/tasks/lsep/stracing_lsep.h"
+#  define STRACING_LSEP_PROCESS_NEW_SCEVENTS() stracing_lsep_process_new_scevents()
 #else
-#  define FNRES_TRACE_FCTEVENT(fctevent) do {  } while(0)
+#  define STRACING_LSEP_PROCESS_NEW_SCEVENTS() do {  } while(0)
 #endif
+
+#ifdef FILENAME_RESOLUTION_ENABLED
+#  include "fnres/fnres.h"
+#  ifdef STRACING_ENABLED
+#    define FNRES_TRACE_IOEVENT(IOEVENT_PTR) do { \
+         if ((0 != fnres_trace_ioevent((IOEVENT_PTR)) && __void_p_enum_file_type_file_stream == (IOEVENT_PTR)->__void_p_enum_file_type) && \
+              0 == stracing_fnres_lookup_and_alias_stream(IOEVENT_PTR)) { \
+              fnres_trace_ioevent((IOEVENT_PTR)); \
+         } \
+     } while(0)
+#  else
+#    define FNRES_TRACE_IOEVENT(IOEVENT_PTR) (void)fnres_trace_ioevent(IOEVENT_PTR)
+#  endif /* STRACING_ENABLED */
+#else
+#  define FNRES_TRACE_IOEVENT(IOEVENT_PTR) do {  } while(0)
+#endif /* FILENAME_RESOLUTION_ENABLED */
+
 
 
 
@@ -137,9 +154,9 @@
 #endif
 
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
-#  define CALL_CLEANUP() cleanup()
+#  define CALL_CLEANUP_PROCESS() cleanup_process()
 #else
-#  define CALL_CLEANUP()
+#  define CALL_CLEANUP_PROCESS()
 #endif
 
 #define __CALL_REAL_FUNCTION_RET(data, return_value, function, ...) data.time_start = gettime(); \
@@ -150,7 +167,7 @@
 #define __CALL_REAL_FUNCTION_RET_NO_RETURN(data, return_value, function, ...) data.time_start = gettime(); \
                                                                               data.time_end = gettime(); \
                                                                               WRAP_END(data, function) \
-                                                                              CALL_CLEANUP(); \
+                                                                              CALL_CLEANUP_PROCESS(); \
                                                                               errno = errno_data.errno_value; \
                                                                               return_value = CALL_REAL(function)(__VA_ARGS__); \
                                                                               errno_data.errno_value = errno;
@@ -162,7 +179,7 @@
 #define __CALL_REAL_FUNCTION_NO_RETURN(data, function, ...) data.time_start = gettime(); \
                                                             data.time_end = gettime(); \
                                                             WRAP_END(data, function) \
-                                                            CALL_CLEANUP(); \
+                                                            CALL_CLEANUP_PROCESS(); \
                                                             errno = errno_data.errno_value; \
                                                             CALL_REAL(function)(__VA_ARGS__); \
                                                             errno_data.errno_value = errno; \
@@ -237,8 +254,9 @@
                             (data.__void_p_enum_file_type == __void_p_enum_file_type_file_stream \
                              && stdin != ((struct file_stream *)data.__file_type)->stream \
                              && stdout != ((struct file_stream *)data.__file_type)->stream \
-                             && stderr != ((struct file_stream *)data.__file_type)->stream)) { \
-                            FNRES_TRACE_FCTEVENT(&data); \
+                             && stderr != ((struct file_stream *)data.__file_type)->stream)) {     \
+                            STRACING_FNRES_CHECK_AND_ADD_SCEVENTS();                             \
+                            FNRES_TRACE_IOEVENT(&data); \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \
                               CALL_WRITE_INTO_BUFFER(data); \
@@ -248,7 +266,8 @@
                          errno = errno_data.errno_value;
 #else
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
-                         FNRES_TRACE_FCTEVENT(&data); \
+                         STRACING_LSEP_PROCESS_NEW_SCEVENTS(); \
+                         FNRES_TRACE_IOEVENT(&data); \
                          if(active_wrapper_status.functionname){ \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
@@ -257,7 +276,8 @@
                          errno = errno_data.errno_value;
 #endif
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
-                           FNRES_TRACE_FCTEVENT(&data); \
+                           STRACING_LSEP_PROCESS_NEW_SCEVENTS(); \
+                           FNRES_TRACE_IOEVENT(&data); \
                            CALL_WRITE_INTO_INFLUXDB(data); \
                            CALL_WRITE_INTO_BUFFER(data); \
                            WRAP_FREE(&data) \

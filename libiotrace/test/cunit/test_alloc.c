@@ -4,8 +4,8 @@
 
 #include "../../src/alloc.h"
 #include "../../src/libiotrace_functions.c"
-#include "../../src/utils.h"
-#include "../../src/gettime.h"
+#include "../../src/common/utils.h"
+#include "../../src/common/gettime.h"
 
 extern void* WRAP(malloc)(size_t size);
 extern void WRAP(free)(void *ptr);

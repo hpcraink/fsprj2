@@ -11,9 +11,9 @@ include(CheckSymbolExists)
 
 check_include_files("linux/kcmp.h" HAVE_LINUX_KCMP_H)
 
-# ToDo: generate file with set LINK_OPTIONS_STATIC and include it here
+# ToDo: generate file with set TESTS_LINK_OPTIONS_STATIC and include it here
 
-list(APPEND LINK_OPTIONS_STATIC
+list(APPEND TESTS_LINK_OPTIONS_STATIC
         "-Wl,-wrap=execve"
         "-Wl,-wrap=execv"
         "-Wl,-wrap=execl"
@@ -28,7 +28,7 @@ list(APPEND LINK_OPTIONS_STATIC
 )
 
 if(WITH_POSIX_IO)
-    list(APPEND LINK_OPTIONS_STATIC
+    list(APPEND TESTS_LINK_OPTIONS_STATIC
         "-Wl,-wrap=open"
         "-Wl,-wrap=__open"
         "-Wl,-wrap=__open64"
@@ -197,8 +197,8 @@ if(WITH_POSIX_IO)
 endif()
 
 if(WITH_POSIX_AIO)
-    list(APPEND LINK_OPTIONS "-lrt")
-    list(APPEND LINK_OPTIONS_STATIC
+    list(APPEND TESTS_LINK_OPTIONS "-lrt")
+    list(APPEND TESTS_LINK_OPTIONS_STATIC
         "-Wl,-wrap=aio_read"
         "-Wl,-wrap=aio_read64"
         "-Wl,-wrap=aio_write"
@@ -221,22 +221,22 @@ if(WITH_POSIX_AIO)
 endif()
 
 if(WITH_MPI_IO)
-    list(APPEND LINK_OPTIONS MPI::MPI_C)
-    list(APPEND LINK_OPTIONS_STATIC
+    list(APPEND TESTS_LINK_OPTIONS MPI::MPI_C)
+    list(APPEND TESTS_LINK_OPTIONS_STATIC
         "-Wl,-wrap=MPI_File_open"
     )
 endif()
 
 if(WITH_DL_IO)
-    list(APPEND LINK_OPTIONS "-ldl")
-    list(APPEND LINK_OPTIONS_STATIC
+    list(APPEND TESTS_LINK_OPTIONS "-ldl")
+    list(APPEND TESTS_LINK_OPTIONS_STATIC
         "-Wl,-wrap=dlopen"
         "-Wl,-wrap=dlmopen"
     )
 endif()
 
 if(WITH_ALLOC)
-    list(APPEND LINK_OPTIONS_STATIC
+    list(APPEND TESTS_LINK_OPTIONS_STATIC
         "-Wl,-wrap=malloc"
         "-Wl,-wrap=free"
         "-Wl,-wrap=calloc"
@@ -245,18 +245,17 @@ if(WITH_ALLOC)
     )
 endif()
 
-list(APPEND LINK_OPTIONS
+list(APPEND TESTS_LINK_OPTIONS
     "-lpthread"
 )
 
 if (FILENAME_RESOLUTION_ENABLED)
-# TODO: Disable for tests not related to fnres  --> Requires additional object-library which is compiled w/o fnres
-    list(APPEND LINK_OPTIONS
-        "atomic_hash_object"
-    )
+    list(APPEND TESTS_LINK_OPTIONS "atomic_hash_object")
 endif()
 
 if (STRACING_ENABLED)
+    list(APPEND TESTS_LINK_OPTIONS "libringbuf_object")
+
 # - Programs for testing tracing  -
     # test with: IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared [--loop] [--fork | --pthread]
     add_executable(stracing_trace_pthread_fork_shared stracing/trace_pthread_fork.c)
@@ -276,8 +275,8 @@ if (STRACING_ENABLED)
         $<TARGET_OBJECTS:stracing_trace_manual_syscall_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
-    target_link_libraries(stracing_trace_manual_syscall_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(stracing_trace_manual_syscall_static ${LINK_OPTIONS} pthread)
+    target_link_libraries(stracing_trace_manual_syscall_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(stracing_trace_manual_syscall_static ${TESTS_LINK_OPTIONS} pthread)
 endif()
 
 
@@ -286,7 +285,7 @@ endif()
 if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared
     add_executable(read_byte_shared read_byte.c)
-    target_link_libraries(read_byte_shared ${LINK_OPTIONS})
+    target_link_libraries(read_byte_shared ${TESTS_LINK_OPTIONS})
     #add_test ("Read" read_byte)
 
     add_library(read_byte_object OBJECT read_byte.c)
@@ -296,8 +295,8 @@ if(WITH_POSIX_IO)
         $<TARGET_OBJECTS:read_byte_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
-    target_link_libraries(read_byte_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(read_byte_static ${LINK_OPTIONS})
+    target_link_libraries(read_byte_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(read_byte_static ${TESTS_LINK_OPTIONS})
 
 endif()
 
@@ -307,7 +306,7 @@ if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared
     add_executable(read_stream_shared read_stream.c)
     target_compile_options(read_stream_shared PRIVATE -D_GNU_SOURCE)
-    target_link_libraries(read_stream_shared ${LINK_OPTIONS})
+    target_link_libraries(read_stream_shared ${TESTS_LINK_OPTIONS})
 
     add_library(read_stream_object OBJECT read_stream.c)
     target_compile_options(read_stream_object PRIVATE -D_GNU_SOURCE)
@@ -317,8 +316,8 @@ if(WITH_POSIX_IO)
         $<TARGET_OBJECTS:read_stream_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
-    target_link_libraries(read_stream_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(read_stream_static ${LINK_OPTIONS})
+    target_link_libraries(read_stream_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(read_stream_static ${TESTS_LINK_OPTIONS})
 endif()
 
 ##########################################################################################################
@@ -326,7 +325,7 @@ endif()
 if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
     add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
-    target_link_libraries(read_byte_and_stream_shared ${LINK_OPTIONS})
+    target_link_libraries(read_byte_and_stream_shared ${TESTS_LINK_OPTIONS})
     target_link_libraries(read_byte_and_stream_shared iotrace_control)
 
     add_library(read_byte_and_stream_object OBJECT read_byte_and_stream.c)
@@ -336,8 +335,8 @@ if(WITH_POSIX_IO)
         $<TARGET_OBJECTS:read_byte_and_stream_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
-    target_link_libraries(read_byte_and_stream_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(read_byte_and_stream_static ${LINK_OPTIONS})
+    target_link_libraries(read_byte_and_stream_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(read_byte_and_stream_static ${TESTS_LINK_OPTIONS})
 endif()
 
 ##########################################################################################################
@@ -345,7 +344,7 @@ endif()
 if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared
     add_executable(write_stream_shared write_stream.c)
-    target_link_libraries(write_stream_shared ${LINK_OPTIONS})
+    target_link_libraries(write_stream_shared ${TESTS_LINK_OPTIONS})
 
     add_library(write_stream_object OBJECT write_stream.c)
 
@@ -354,8 +353,8 @@ if(WITH_POSIX_IO)
         $<TARGET_OBJECTS:write_stream_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
-    target_link_libraries(write_stream_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(write_stream_static ${LINK_OPTIONS})
+    target_link_libraries(write_stream_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(write_stream_static ${TESTS_LINK_OPTIONS})
 endif()
 
 ##########################################################################################################
@@ -364,7 +363,7 @@ if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared
     add_executable(send_recv_shared send_recv.c)
     target_compile_options(send_recv_shared PRIVATE "-D_GNU_SOURCE")
-    target_link_libraries(send_recv_shared ${LINK_OPTIONS})
+    target_link_libraries(send_recv_shared ${TESTS_LINK_OPTIONS})
 
     add_library(send_recv_object OBJECT send_recv.c)
 
@@ -375,8 +374,8 @@ if(WITH_POSIX_IO)
     )
 
     target_compile_options(send_recv_static PRIVATE "-D_GNU_SOURCE")
-    target_link_libraries(send_recv_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(send_recv_static ${LINK_OPTIONS})
+    target_link_libraries(send_recv_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(send_recv_static ${TESTS_LINK_OPTIONS})
 endif()
 
 ##########################################################################################################
@@ -417,7 +416,7 @@ endif()
 if(WITH_POSIX_AIO)
     # test with: IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared
     add_executable(read_async_byte_shared read_async_byte.c)
-    target_link_libraries(read_async_byte_shared ${LINK_OPTIONS})
+    target_link_libraries(read_async_byte_shared ${TESTS_LINK_OPTIONS})
 
     add_library(read_async_byte_object OBJECT read_async_byte.c)
 
@@ -426,8 +425,8 @@ if(WITH_POSIX_AIO)
         $<TARGET_OBJECTS:read_async_byte_object>
         $<TARGET_OBJECTS:iotrace_object>
     )
-    target_link_libraries(read_async_byte_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(read_async_byte_static ${LINK_OPTIONS})
+    target_link_libraries(read_async_byte_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(read_async_byte_static ${TESTS_LINK_OPTIONS})
 endif()
 
 ##########################################################################################################
@@ -435,31 +434,31 @@ endif()
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read
     add_executable(MPI_read MPI_read.c)
-    target_link_libraries(MPI_read PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(MPI_read PRIVATE ${TESTS_LINK_OPTIONS})
 endif()
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_IO_single
     add_executable(MPI_parallel_IO_single MPI_parallel_IO_single.c)
-    target_link_libraries(MPI_parallel_IO_single PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(MPI_parallel_IO_single PRIVATE ${TESTS_LINK_OPTIONS})
 endif()
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_read
     add_executable(MPI_parallel_read MPI_parallel_read.c)
-    target_link_libraries(MPI_parallel_read PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(MPI_parallel_read PRIVATE ${TESTS_LINK_OPTIONS})
 endif()
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread
     add_executable(MPI_parallel_iread MPI_parallel_iread.c)
-    target_link_libraries(MPI_parallel_iread PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(MPI_parallel_iread PRIVATE ${TESTS_LINK_OPTIONS})
 endif()
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_immediate_test
     add_executable(MPI_immediate_test MPI_immediate_test.c)
-    target_link_libraries(MPI_immediate_test PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(MPI_immediate_test PRIVATE ${TESTS_LINK_OPTIONS})
 endif()
 
 if(WITH_MPI_IO)
@@ -471,28 +470,28 @@ if(WITH_MPI_IO)
     
     # test with: rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10
     add_executable(mpi_file_io mpi_file_io.c)
-    target_link_libraries(mpi_file_io PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(mpi_file_io PRIVATE ${TESTS_LINK_OPTIONS})
     
     add_executable(mpi_file_io_sleep mpi_file_io_sleep.c)
-    target_link_libraries(mpi_file_io_sleep PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(mpi_file_io_sleep PRIVATE ${TESTS_LINK_OPTIONS})
     
     add_executable(mpi_file_io_clear_caches mpi_file_io.c)
     target_compile_options(mpi_file_io_clear_caches PRIVATE "-DWANT_CLEAR_CACHES")
-    target_link_libraries(mpi_file_io_clear_caches PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(mpi_file_io_clear_caches PRIVATE ${TESTS_LINK_OPTIONS})
     
     find_package(OpenMP)
     
     # test with: rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10
     add_executable(mpi_file_io_openmp mpi_file_io.c)
     target_compile_options(mpi_file_io_openmp PRIVATE "-DWANT_OPENMP")
-    target_link_libraries(mpi_file_io_openmp PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(mpi_file_io_openmp PRIVATE ${TESTS_LINK_OPTIONS})
     if(OpenMP_C_FOUND)
         target_link_libraries(mpi_file_io_openmp PUBLIC OpenMP::OpenMP_C)
     endif()
     
     add_executable(mpi_file_io_openmp_clear_caches mpi_file_io.c)
     target_compile_options(mpi_file_io_openmp_clear_caches PRIVATE "-DWANT_OPENMP -DWANT_CLEAR_CACHES")
-    target_link_libraries(mpi_file_io_openmp_clear_caches PRIVATE ${LINK_OPTIONS})
+    target_link_libraries(mpi_file_io_openmp_clear_caches PRIVATE ${TESTS_LINK_OPTIONS})
     if(OpenMP_C_FOUND)
         target_link_libraries(mpi_file_io_openmp_clear_caches PUBLIC OpenMP::OpenMP_C)
     endif()
@@ -504,7 +503,7 @@ if(WITH_POSIX_IO)
     # test with: IOTRACE_LOG_NAME=clone_test1 LD_PRELOAD=../src/libiotrace_shared.so ./clone_shared
     add_executable(clone_shared clone.c)
     target_compile_options(clone_shared PRIVATE "-D_GNU_SOURCE")
-    target_link_libraries(clone_shared ${LINK_OPTIONS})
+    target_link_libraries(clone_shared ${TESTS_LINK_OPTIONS})
 
     add_library(clone_object OBJECT clone.c)
     target_compile_options(clone_object PRIVATE "-D_GNU_SOURCE")
@@ -515,8 +514,8 @@ if(WITH_POSIX_IO)
         $<TARGET_OBJECTS:iotrace_object>
     )
     target_compile_options(clone_static PRIVATE "-D_GNU_SOURCE")
-    target_link_libraries(clone_static ${LINK_OPTIONS_STATIC})
-    target_link_libraries(clone_static ${LINK_OPTIONS})
+    target_link_libraries(clone_static ${TESTS_LINK_OPTIONS_STATIC})
+    target_link_libraries(clone_static ${TESTS_LINK_OPTIONS})
 endif()
 
 ##########################################################################################################
@@ -538,7 +537,7 @@ endif()
 
 # test with: IOTRACE_LOG_NAME=init_thread_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./init_thread_shared
 add_executable(init_thread_shared init_thread_test.c)
-target_link_libraries(init_thread_shared ${LINK_OPTIONS})
+target_link_libraries(init_thread_shared ${TESTS_LINK_OPTIONS})
 
 add_library(init_thread_object OBJECT init_thread_test.c)
 
@@ -548,7 +547,7 @@ add_executable(init_thread_static
     $<TARGET_OBJECTS:iotrace_object>
 )
 target_compile_options(init_thread_static PRIVATE "-D_GNU_SOURCE")
-target_link_libraries(init_thread_static ${LINK_OPTIONS_STATIC})
-target_link_libraries(init_thread_static ${LINK_OPTIONS})
+target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS_STATIC})
+target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS})
 
 ##########################################################################################################

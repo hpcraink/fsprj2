@@ -49,19 +49,20 @@
 
 #include <execinfo.h>
 
-#include "error.h"
+#include "common/error.h"
 
 #include "libs/llhttp/llhttp.h"
 
 #include "os.h"
 #include "event.h"
-#include "gettime.h"
-#include "utils.h"
+#include "common/gettime.h"
+#include "common/utils.h"
 
 #include "libiotrace.h"
 #include "libiotrace_functions.h"
 
 #include "wrapper_name.h"
+
 
 #if !defined(WITH_ALLOC) && !defined(WITH_DL_IO) && !defined(WITH_MPI_IO) && !defined(WITH_POSIX_AIO) && !defined(WITH_POSIX_IO)
 #  error "at least one group of wrappers must be included"
@@ -70,6 +71,7 @@
 #if defined(STRACING_ENABLED) && !defined(WITH_POSIX_IO)
 #  error "`STRACING_ENABLED` requires `WITH_POSIX_IO`"
 #endif
+
 
 /* defines for exec-functions */
 #ifndef MAX_EXEC_ARRAY_LENGTH
@@ -296,7 +298,7 @@ static ATTRIBUTE_THREAD SOCKET socket_peer = -1;
 #endif
 
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
-void cleanup(void) ATTRIBUTE_DESTRUCTOR;
+void cleanup_process(void) ATTRIBUTE_DESTRUCTOR;
 #endif
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
@@ -332,7 +334,7 @@ void *restrict arg) REAL_DEFINITION_INIT;
 #endif
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-#  include "fnres/fctevent.h"
+#  include "fnres/fnres.h"
 
 static const char* const FNRES_ENV_FNMAP_MAX_FNAMES = "IOTRACE_FNRES_MAX_FILENAMES";
 static const long FNRES_DEFAULT_FNMAP_MAX_FNAMES = 100;
@@ -1179,7 +1181,7 @@ void open_std_fd(int fd)
 
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -1232,7 +1234,7 @@ void open_std_file(FILE *file)
 
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #endif
 
 
@@ -1280,7 +1282,7 @@ void init_on_load(void) {
 
 #ifdef LOG_WRAPPER_TIME
 #  ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #  endif
 
 #  ifdef IOTRACE_ENABLE_LOGFILE
@@ -1678,7 +1680,7 @@ SOCKET prepare_control_socket(void) {
  *
  * This thread runs and reads/listens the multiple sockets until
  * "event_cleanup_done" is set to "true". This is done during call
- * of "cleanup" if the program exits.
+ * of "cleanup_process" if the program exits.
  *
  * @param[in] arg Not used.
  * @return Not used (allways NULL)
@@ -2328,7 +2330,7 @@ void init_thread(void) {
 #endif
 
 #ifdef STRACING_ENABLED
-    stracing_register_with_stracer();
+    stracing_tracee_register_with_stracer();
 #endif
 }
 
@@ -2458,7 +2460,7 @@ void free_memory(struct basic *data) {
  * closes open connections (sockets) and destroys mutexes.
  */
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
-void cleanup(void) {
+void cleanup_process(void) {
 	event_cleanup_done = 1;
 
 #ifdef IOTRACE_ENABLE_LOGFILE
@@ -2486,10 +2488,10 @@ void cleanup(void) {
 
 #ifdef LOG_WRAPPER_TIME
 #  ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_trace_fctevent(&data);
+    fnres_trace_ioevent(&data);
 #  endif
 
-	if (active_wrapper_status.cleanup && !no_logging) {
+	if (active_wrapper_status.cleanup_process && !no_logging) {
 		io_log_file_buffer_write(&data);
 	}
 
@@ -2915,6 +2917,14 @@ void WRAP(exit_group)(int status)
 }
 #endif
 
+static void cleanup_thread(void) {
+// !!!   TODO: Check whether gets exec'ed when calling `pthread_cancel` (otherwise potential mem-leak) ???   !!!
+
+#ifdef STRACING_ENABLED
+    stracing_tracee_fin();
+#endif
+}
+
 struct pthread_create_data {
 	void* (*start_routine)(void*);
 	void *restrict arg;
@@ -2932,6 +2942,9 @@ void* pthread_create_start_routine(void *arg) {
 
 	ret = data->start_routine(data->arg);
 	CALL_REAL_ALLOC_SYNC(free)(data);
+
+    cleanup_thread();
+
 	return ret;
 }
 

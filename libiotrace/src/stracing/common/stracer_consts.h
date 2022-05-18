@@ -1,0 +1,22 @@
+#ifndef COMMON_STRACER_CONSTS_H_
+#define COMMON_STRACER_CONSTS_H_
+
+
+/* -- Consts -- */
+/* - CLI - */
+#define STRACER_CLI_OPTION_SOCKFD             's'
+#define STRACER_CLI_OPTION_SSUBSET            'e'
+
+#define STRACER_CLI_OPTION_LIBIOTRACE_LINKAGE 'l'
+#define STRACER_CLI_LIBIOTRACE_LINKAGE_STATIC 's'
+#define STRACER_CLI_LIBIOTRACE_LINKAGE_SHARED 'd'
+
+#define STRACER_CLI_OPTION_TASK_WARN          'w'
+#define STRACER_CLI_OPTION_TASK_LSEP          'f'
+
+
+/* - Misc. - */
+#define STRACING_LSEP_SMO_NAME_FORMAT         "_STRACING__tid_%d"
+
+
+#endif /* COMMON_STRACER_CONSTS_H_ */

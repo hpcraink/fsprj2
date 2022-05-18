@@ -16,10 +16,19 @@
  */
 void stracing_init_stracer(void);
 
+
+/**
+ * @brief                        Cleans up scerb for tracee
+ *                               May be called by `cleanup_thread`
+ */
+void stracing_tracee_fin(void);
+
+
 /**
  * @brief                        Sends tracing request to stracer
  *                               Requires the stracer to be already running
+ *                               May be called by `init_thread`
  */
-void stracing_register_with_stracer(void);
+void stracing_tracee_register_with_stracer(void);
 
 #endif /* LIBIOTRACE_ENTRYPOINT_H */

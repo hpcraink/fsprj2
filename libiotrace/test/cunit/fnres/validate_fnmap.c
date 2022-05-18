@@ -9,7 +9,7 @@
 
 #include "CUnit/CUnitCI.h"
 
-#include "../../../src/fnres/internal/fnmap.h"
+#include "../../../src/fnres/fnmap/fnmap.h"
 #include "../../../src/libiotrace_include_struct.h"
 
 

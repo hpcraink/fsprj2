@@ -7723,7 +7723,7 @@ int llhttp__internal_execute(llhttp__internal_t* state, const char* p, const cha
 #endif  /* __SSE4_2__ */
 
 #include "libiotrace_config.h"
-#include "../../error.h"
+#include "../../common/error.h"
 
 #include "llhttp.h"
 

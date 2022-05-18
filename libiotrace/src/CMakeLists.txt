@@ -192,8 +192,9 @@ check_symbol_exists(_POSIX_HOST_NAME_MAX "limits.h" HAVE__POSIX_HOST_NAME_MAX)
 
 # Please keep in alphabetical order
 set(LIBIOTRACE_SOURCE
+    common/utils.c
+    common/gettime.c
     event.c
-    gettime.c
     io_log_file.c
     libiotrace_defines_utils.c
     libiotrace_functions.c
@@ -201,7 +202,6 @@ set(LIBIOTRACE_SOURCE
     libs/llhttp/http.c
     libs/llhttp/llhttp.c
     os.c
-    utils.c
 )
 
 #compile using cmake -DWITH_POSIX_IO for Posix-IO
@@ -233,23 +233,31 @@ if(WITH_ALLOC)
     list(APPEND LIBIOTRACE_SOURCE alloc.c)
 endif()
 
-if (FILENAME_RESOLUTION_ENABLED)
-    list(APPEND LIBIOTRACE_SOURCE
-            fnres/fctevent.c
-            fnres/internal/fnmap_atomic_hash.c)
 
+
+if (FILENAME_RESOLUTION_ENABLED OR STRACING_ENABLED)
     add_subdirectory(libs/atomic_hash)
-
-    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS atomic_hash_object)
-    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS atomic_hash_object)
 else()
     # Remove atomic_hash's CMake options from cache
     unset(HASH_FUNCTION CACHE)
     unset(HASH_FUNCTION_VALUES CACHE)
 endif()
 
+if (FILENAME_RESOLUTION_ENABLED)
+    list(APPEND LIBIOTRACE_SOURCE
+            fnres/fnres.c
+            fnres/fnmap/fnmap_atomic_hash.c)
+
+    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS atomic_hash_object)
+    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS atomic_hash_object)
+endif()
+
 if (STRACING_ENABLED)
+    add_subdirectory(libs/rmind-ringbuf)
     add_subdirectory(stracing)
+else()
+    unset(STRACING_FNRES_RB_SIZE CACHE)
+    unset(STRACING_FNRES_SCERBMAP_SIZE CACHE)
 endif()
 
 
@@ -266,7 +274,7 @@ add_library(iotrace_control SHARED libiotrace.c)
 
 # Let the user chose the gettime functionality
 # XXX Instead of hard-coding these settings, they should be chosen dependant on availability...
-set_property(SOURCE gettime.c CACHE LIBIOTRACE_GETTIME PROPERTY STRINGS "LIBIOTRACE_GETTIME" "WANT_GETTIMEOFDAY;WANT_GETTIME;WANT_RDTSC")
+set_property(SOURCE common/gettime.c CACHE LIBIOTRACE_GETTIME PROPERTY STRINGS "LIBIOTRACE_GETTIME" "WANT_GETTIMEOFDAY;WANT_GETTIME;WANT_RDTSC")
 set(LIBIOTRACE_GETTIME "NOTHING" CACHE STRING "Build with the timing option")
 set(WANT_GETTIMEOFDAY 1 CACHE BOOL "If gettimeofday is selected")
 set(WANT_GETTIME 1 CACHE BOOL "If gettimeof is selected")

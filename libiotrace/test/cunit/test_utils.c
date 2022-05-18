@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "CUnit/CUnitCI.h"
-#include "../../src/utils.h"
+#include "../../src/common/utils.h"
 
 /* run at the start of the suite */
 CU_SUITE_SETUP() {

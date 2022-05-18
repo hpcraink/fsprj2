@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <math.h>
 
-#include "error.h"
+#include "common/error.h"
 #include "libiotrace_defines_utils.h"
 
 /*

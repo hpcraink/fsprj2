@@ -15,6 +15,10 @@
 /* -- Globals -- */
 int g_fd = -1;
 
+/* -- Consts -- */
+#define CLI_ARG_OPEN_PTHREAD      "--use-glibc-wrapper"
+#define CLI_ARG_USE_GLIBC_WRAPPER "--perform-open-in-pthread"
+
 
 void* open_routine(void* arg) {
     const int use_glibc_wrapper = *(int*)arg;
@@ -34,15 +38,15 @@ int main(int argc, char** argv) {
         cli_perform_open_in_pthread = 0;
 
     for (int i = 1; i < argc; ++i) {  // NOTE: Cli arg 0 = Program name
-        if (!strcmp("--use-glibc-wrapper", argv[i])) {
+        if (!strcmp(CLI_ARG_OPEN_PTHREAD, argv[i])) {
             cli_use_glibc_wrapper = 1;
             continue;
         }
-        if (!strcmp("--perform-open-in-pthread", argv[i])) {
+        if (!strcmp(CLI_ARG_USE_GLIBC_WRAPPER, argv[i])) {
             cli_perform_open_in_pthread = 1;
             continue;
         }
-        fprintf(stderr, "Invalid cli arg\n");
+        fprintf(stderr, "Usage: %s [%s] [%s]\n", argv[0], CLI_ARG_USE_GLIBC_WRAPPER, CLI_ARG_OPEN_PTHREAD);
         exit(1);
     }
 

@@ -521,6 +521,21 @@ endif()
 
 ##########################################################################################################
 
+if(WITH_POSIX_IO)
+    # test with: rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=4 ./multi_shared 20 4
+    
+    find_package(OpenMP)
+    
+    add_executable(multi_shared multi_processes_threads_files.c)
+    target_compile_options(multi_shared PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(multi_shared PRIVATE ${LINK_OPTIONS})
+    if(OpenMP_C_FOUND)
+        target_link_libraries(multi_shared PUBLIC OpenMP::OpenMP_C)
+    endif()
+endif()
+
+##########################################################################################################
+
 # test with: IOTRACE_LOG_NAME=init_thread_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./init_thread_shared
 add_executable(init_thread_shared init_thread_test.c)
 target_link_libraries(init_thread_shared ${LINK_OPTIONS})

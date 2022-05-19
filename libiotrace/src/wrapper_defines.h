@@ -255,7 +255,7 @@
                              && stdin != ((struct file_stream *)data.__file_type)->stream \
                              && stdout != ((struct file_stream *)data.__file_type)->stream \
                              && stderr != ((struct file_stream *)data.__file_type)->stream)) {     \
-                            STRACING_FNRES_CHECK_AND_ADD_SCEVENTS();                             \
+                            STRACING_LSEP_PROCESS_NEW_SCEVENTS();                             \
                             FNRES_TRACE_IOEVENT(&data); \
                             if(active_wrapper_status.functionname){ \
                               CALL_WRITE_INTO_INFLUXDB(data); \

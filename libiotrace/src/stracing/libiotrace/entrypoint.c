@@ -112,7 +112,7 @@ void stracing_tracee_register_with_stracer(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
   /* Create scerb for receiving syscall events (traced by stracer) */
     stracing_lsep_setup();
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Created scerb for fnres", gettid());
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Created scerb for lsep", gettid());
 #endif
 
 /* 1. Send tracing request to stracer */
@@ -131,6 +131,6 @@ void stracing_tracee_register_with_stracer(void) {
 void stracing_tracee_fin(void) {
 #ifdef FILENAME_RESOLUTION_ENABLED
     stracing_lsep_cleanup();
-    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Detached scerb for fnres", gettid());
+    DEV_DEBUG_PRINT_MSG("[PARENT:tid=%d] Detached scerb for lsep", gettid());
 #endif
 }

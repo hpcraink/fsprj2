@@ -43,7 +43,7 @@ if (STRACING_STRACER_LOG_OUTPUT STREQUAL "LOGFILE")
 endif()
 
 
-# - For task "fnres" -
+# - For task "lsep" -
 set(STRACING_FNRES_RB_SIZE "16384" CACHE STRING "RingBuffer size for each thread")    # NOTE: CMake option is ALWAYS required for stracing
 set(STRACING_FNRES_SCERBMAP_SIZE "1000" CACHE STRING "# of threads which shall be straced")
 list(APPEND STRACER_COMPILE_OPTIONS
@@ -102,7 +102,7 @@ list(APPEND LIBIOTRACE_COMPILE_OPTIONS
         -DSTRACING_UXD_SOCKET_FILEPATH="${STRACING_UXD_SOCKET_FILEPATH}"
         -DSTRACING_UXD_REG_SOCKET_BACKLOG_SIZE=${STRACING_UXD_REG_SOCKET_BACKLOG_SIZE})
 
-# - For task "fnres" -
+# - For task "lsep" -
 if (FILENAME_RESOLUTION_ENABLED)
     list(APPEND LIBIOTRACE_SOURCE
             stracing/libiotrace/tasks/lsep/scerb/scerb_ipc_utils.c

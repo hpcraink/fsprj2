@@ -2,12 +2,12 @@
  * Scerb map (scerb_map)
  *   Implements abstraction (API) for map implementation (which is used for tracking pointers to scerb's)
  */
-#ifndef STRACER_FNRES_SCERBMAP_H_
-#define STRACER_FNRES_SCERBMAP_H_
+#ifndef STRACER_LSEP_SCERBMAP_H_
+#define STRACER_LSEP_SCERBMAP_H_
 
 #include <sys/types.h>
 #include <stdbool.h>
-#include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "../../../../common/tasks/lsep/scerb/scerb_types.h"
 
 
 
@@ -66,4 +66,4 @@ void scerbmap_add(pid_t* tid_ptr, sm_scerb_t* sm_scerb);
  */
 int scerbmap_remove(pid_t* tid_ptr);
 
-#endif /* STRACER_FNRES_SCERBMAP_H_ */
+#endif /* STRACER_LSEP_SCERBMAP_H_ */

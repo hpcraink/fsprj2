@@ -23,14 +23,14 @@ void stracing_lsep_init(long scerbmap_max_size) {
     assert( !scerbmap_is_inited() && "Got already init" );
 
     scerbmap_create(scerbmap_max_size);
-    DEV_DEBUG_PRINT_MSG("Init'ed stracing-fnres module");
+    DEV_DEBUG_PRINT_MSG("Init'ed stracing-lsep module");
 }
 
 void stracing_lsep_cleanup(void) {
     assert( scerbmap_is_inited() && "Got no init yet" );
 
     scerbmap_destroy();
-    DEV_DEBUG_PRINT_MSG("Fin'ed stracing-fnres module");
+    DEV_DEBUG_PRINT_MSG("Fin'ed stracing-lsep module");
 }
 
 

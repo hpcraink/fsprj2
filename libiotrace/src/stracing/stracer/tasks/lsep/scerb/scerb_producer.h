@@ -1,11 +1,11 @@
 /**
  * Producer API for Syscall Event RingBuffer (aka., `scerb`), which stores syscall events (aka., `scevent`) for the filename resolution (aka., `fnres`)
  */
-#ifndef STRACER_FNRES_SCERB_PRODUCER_H_
-#define STRACER_FNRES_SCERB_PRODUCER_H_
+#ifndef STRACER_LSEP_SCERB_PRODUCER_H_
+#define STRACER_LSEP_SCERB_PRODUCER_H_
 
 #include "../../../../common/stracer_types.h"
-#include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "../../../../common/tasks/lsep/scerb/scerb_types.h"
 
 
 /* -- Function prototypes -- */
@@ -39,4 +39,4 @@ int scerb_destory_detach(sm_scerb_t** sm_scerb, char* smo_name);
  */
 int scerb_offer(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr);
 
-#endif /* STRACER_FNRES_SCERB_PRODUCER_H_ */
+#endif /* STRACER_LSEP_SCERB_PRODUCER_H_ */

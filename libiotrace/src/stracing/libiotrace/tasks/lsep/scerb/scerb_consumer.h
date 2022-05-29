@@ -1,11 +1,11 @@
 /**
  * Consumer API for Syscall Event RingBuffer (aka., `scerb`), which stores syscall events (aka., `scevent`) for the filename resolution (aka., `fnres`)
  */
-#ifndef LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_
-#define LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_
+#ifndef LIBIOTRACE_STRACING_LSEP_SCERB_CONSUMER_H_
+#define LIBIOTRACE_STRACING_LSEP_SCERB_CONSUMER_H_
 
 #include "../../../../common/stracer_types.h"
-#include "../../../../common/tasks/fnres/scerb/scerb_types.h"
+#include "../../../../common/tasks/lsep/scerb/scerb_types.h"
 
 
 /* -- Function prototypes -- */
@@ -40,4 +40,4 @@ int scerb_detach(sm_scerb_t** sm_scerb, char* smo_name);
  */
 int scerb_poll(sm_scerb_t* sm_scerb, scevent_t* scevent_buf_ptr);
 
-#endif /* LIBIOTRACE_FNRES_STRACING_SCERB_CONSUMER_H_ */
+#endif /* LIBIOTRACE_STRACING_LSEP_SCERB_CONSUMER_H_ */

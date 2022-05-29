@@ -1,6 +1,0 @@
-
-
-
-- STREAMLINE: gettime (utils.c ?? --> gettime + str_to_long; -> COMPILE_OPTIONS -> include + source ergänzen)   + error.h  /debug.h   +     scerb_ipc_utils
-
-- "MULTI-TENANT" support:   - Job name should also apply 2 stracer-log file

@@ -5,9 +5,6 @@
  *     (e.g., `pthread_create`(3)), may not be traced properly (won't send a tracing request)
  *     NOTE: A possible remedy would be to also set the ptrace flags `PTRACE_O_TRACECLONE`, etc.,
  *           (since the process init via '.ctors' is guaranteed)
- *
- * TODOs:
- *   - ...
  */
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../../event.h"

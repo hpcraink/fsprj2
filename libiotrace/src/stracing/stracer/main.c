@@ -2,23 +2,28 @@
  * stracer (aka. 'System call Tracer')
  *   - Lifecycle:
  *     - Gets launched by libiotrace as separate process
- *     - Tracees request to be traced by sending a tracing request (via a Unix Domain Socket used for IPC)
- *     - Tracer performs selected 'Task's on tracees (e.g., checking whether syscall has been traced)
- *     - Tracer terminates itself as soon as last tracee has exited and timeout has expired
+ *     - Tracee's request tracing by sending a tracing request (via an Unix Domain Socket)
+ *        - NOTE: We could also set the ptrace option `PTRACE_O_TRACECLONE`, which would automatically attach
+ *                newly `clone`(2)d child processes (therefore, making this registration superfluous)
+ *                HOWEVER this would require us to trace the MPI ORTED process
+ *     - Tracer performs selected 'Task's on tracee's (e.g., checking whether an ioevent has been traced by libiotrace)
+ *     - Tracer terminates as soon as the last tracee has exited and timeout has expired
  *
- *   - Supported 'Tasks': The tracer may perform the following tasks on tracees during tracing
- *     - Warn: Check whether the provided syscalls have been traced by libiotrace, if not, print a warning
- *     - fnres: ...
- *
- *   - Things to keep in mind:
- *     - stracer may NOT include any functionality provided by libiotrace (since it's a independent process)
+ *   - Supported 'Tasks': The tracer may perform the following Tasks on tracee's during tracing:
+ *     - warn: Check whether the provided syscalls have been traced by libiotrace, if not, print a warning
+ *     - lsep: "Libiotrace Syscall-Event Passing" -- Interface (i.e., IPC mechanism) for passing traced syscalls to libiotrace
  *
  *   - Known ISSUEs:
- *     - ...
+ *     - Attaching issues when functions like `pthread_create`(3) are statically linked (for more details, see comments in libiotrace/entrypoint.c)
+ *     - lsep offers only "narrow" -- per thread "view" of traced syscalls (for more details, see comments in libiotrace/tasks/lsep/stracing_lsep.c)
  *
  *   - TODOs:
- *     - IMPLEMENT FNRES TASK
- *     - arm64 support (returns currently wrong syscall-nr, hence disabled)
+ *     - REUSE CODE B/W libiotrace & stracer & tests:
+ *        - gettime    (utils.c ?? --> gettime + str_to_long; -> how2: COMPILE_OPTIONS -> include + add source)
+ *        - error.h
+ *        - scerb_ipc_utils
+ *     - (OPTIONAL: Pass job-name via CLI args from libiotrace (logfile could then also contain the jobname))
+ *     - aarch64 support (returns currently wrong syscall-nr, hence disabled)
  */
 #include <errno.h>
 #include <fcntl.h>

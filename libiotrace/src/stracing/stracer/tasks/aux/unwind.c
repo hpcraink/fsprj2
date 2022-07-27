@@ -64,7 +64,7 @@ void unwind_fin(void) {
 
 bool unwind_ioevent_was_traced(pid_t tid,
                                char* stacktrace_module_name, char* stacktrace_fct_name) {
-    assert(g_unw_as && "Unwind context may be inited prior usage." );
+    assert( g_unw_as && "Unwind context may be inited prior usage." );
 
     DEV_DEBUG_PRINT_MSG(">>> Unwind: Unwinding stack for %d, searching for \"%s:%s*\"",
                         tid, stacktrace_module_name, __extension__( stacktrace_fct_name ? : "*" ));

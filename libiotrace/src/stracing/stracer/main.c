@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 #endif /* DEV_DEBUG_ENABLE_LOGS */
     DEV_DEBUG_PRINT_MSG("Ready for tracing requests (running under pid=%d) ..", tracer_pid);
 
-    for (int tracee_count = 0; ; ) {
+    for (unsigned int tracee_count = 0; ; ) {
 
     /* 2.1. Check for new IPC requests */
         for (;;) {
@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
                         tasks_on_event_attached_tracee(new_tracee_tid, &ipc_request);
                         uxd_ipc_tracer_send_tracing_ack(tracee_conn_fd);
                     }
-                    break; /* APPLIES TO SWITCH-CASE !! */
+                    break; /* PERTAINS TO THE SWITCH-CASE !! */
 
 
                 /* NOTE: We do NOT implement a detach IPC request (e.g., during libiotrace's cleanup) since

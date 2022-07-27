@@ -76,8 +76,8 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
 
 #define LIBIOTRACE_STATIC_WRAPPERS_PREFIX "__wrap_"
     const bool ioevent_was_traced = (unwind_is_inited()) ? ( unwind_ioevent_was_traced(trapped_tracee_tid,
-                                                                                    g_cli_args_ptr->unwind_module_name,
-                                                                                    g_cli_args_ptr->unwind_static_linkage ? (LIBIOTRACE_STATIC_WRAPPERS_PREFIX) : (NULL)) ) :
+                                                                                       g_cli_args_ptr->unwind_module_name,
+                                                                                       g_cli_args_ptr->unwind_static_linkage ? (LIBIOTRACE_STATIC_WRAPPERS_PREFIX) : (NULL)) ) :
                                                            ( false );
 
     if (!ioevent_was_traced) {

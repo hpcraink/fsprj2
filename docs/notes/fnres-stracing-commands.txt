@@ -45,7 +45,7 @@ rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DEN
 
 
 
-echo "" | tee ./test/libiotrace_stracer.log ./test/stracing_trace_manual_syscall_shared_test1_iotrace.log > /dev/null   && codium   ./test/libiotrace_stracer.log ./test/stracing_trace_manual_syscall_shared_test1_iotrace.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared  --use-glibc-wrapper)
+echo "" | tee ./test/libiotrace_stracer.log ./test/stracing_trace_manual_syscall_shared_test1_iotrace.log > /dev/null   && codium   ./test/libiotrace_stracer.log ./test/stracing_trace_manual_syscall_shared_test1_iotrace.log    && (cd test &&   IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared)
 
 
 

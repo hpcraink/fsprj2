@@ -26,16 +26,19 @@ The collected data is written to log files.
 
 ### Prerequisites
 
-_libiotrace_ is currently only available for Linux-Systems.
-It's tested with _Red Hat Enterprise Linux Server release 7.7_, _KDE neon User Edition 5.18 release 18.04_ and _Ubuntu 22.04 LTS_.
+_libiotrace_ is currently only available for GNU/Linux-Systems.
+It has been tested with _Red Hat Enterprise Linux Server release 7.7_, _KDE neon User Edition 5.18 release 18.04_ and _Ubuntu 22.04 LTS_.
 
-To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ and optional _ccmake_.
+To build _libiotrace_ on your system you need a C/C++-Compiler, _make_, _CMake_ and optionally _ccmake_.
 
 ### License
 
 BSD 3-Clause
 
-llhttp source https://github.com/nodejs/llhttp: MIT License
+3rd party libraries:
+  * [llhttp source](https://github.com/nodejs/llhttp): MIT License
+  * CUnit (GNU LIBRARY GENERAL PUBLIC LICENSE Version 2, see [CUnit](https://gitlab.com/cunity/cunit))
+
 
 #### Tools needed to build _libiotrace_
 
@@ -43,172 +46,162 @@ CMake and ccmake: OSI-approved BSD 3-Clause License (see [CMake](https://cmake.o
 
 CUnit: GNU LIBRARY GENERAL PUBLIC LICENSE Version 2 (see [CUnit](https://gitlab.com/cunity/cunit))
 
+
 ### Build libiotrace
+* Steps to build _libiotrace_:
+  1. open terminal
+  2. go to &lt;libiotrace-folder&gt;
+  3. `cd fsprj2/libiotrace/`
+  4. `git rm --cached ext/cunit`
+  5. `rm -rf ext/cunit`
+  6. `cd ..`
+  7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
+  8. `cd libiotrace/`
+  9. `mkdir build` (for out of source build)
+  10. `cd build/`
+  11. `ccmake ..` (if you want to use cmake instead of ccmake type `cmake ..` instead of `ccmake ..`, set options with -D\<option\> and continue with step `make`)
+  12. press “c” and wait until configuration is done
+  13. optional: customize libiotrace (set/change _cmake_ options)
 
-Steps to build _libiotrace_:
+      * _BUFFER_SIZE_:
 
-1. create a new folder &lt;libiotrace-folder&gt; for the source
-2. to get the source you have two options
-    * using git with terminal:
-        1. change dir to &lt;libiotrace-folder&gt;
-        2. use command `git clone https://github.com/hpcraink/fsprj2.git`
-    * using “Clone or download”-Button on https://github.com/hpcraink/fsprj2
-        1. download zip
-        2. extract zip to &lt;libiotrace-folder&gt;
-3. build it
-    1. open terminal
-    2. go to &lt;libiotrace-folder&gt;
-    3. `cd fsprj2/libiotrace/`
-    4. `git rm --cached ext/cunit`
-    5. `rm -rf ext/cunit`
-    6. `cd ..`
-    7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
-    8. `cd libiotrace/`
-    9. `mkdir build` (for out of source build)
-    10. `cd build/`
-    11. `ccmake ..` (if you want to use cmake instead of ccmake type `cmake ..` instead of `ccmake ..`, set options with -D\<option\> and continue with step `make`)
-    12. press “c” and wait until configuration is done
-    13. optional: customize libiotrace (set/change _cmake_ options)
+        libiotrace buffers output in one buffer per monitored process.
+        This option sets the buffer size in bytes.
+        A bigger buffer reduces the overhead of libiotrace.
+        But a bigger buffer means also reduced available memory for the monitored program and the system.
 
-        * _BUFFER_SIZE_:
+      * _FILENAME_RESOLUTION_ENABLED_:
 
-          libiotrace buffers output in one buffer per monitored process.
-          This option sets the buffer size in bytes.
-          A bigger buffer reduces the overhead of libiotrace.
-          But a bigger buffer means also reduced available memory for the monitored program and the system.
+        Disclaimer: This feature requires depending on chosen _HASH_FUNCTION_ either SSE4.2 support (for _CITY3HASH_128_) or the library `libssl-dev` (for _MD5HASH_). Also, some POSIX-/MPI-IO functions are currently not supported.
 
-        * _FILENAME_RESOLUTION_ENABLED_:
+        If set to _ON_ libiotrace will create a mapping between filenames and file handles (e.g., fildes) during runtime and write the traced filenames to the trace.
+        Supports by default up to 100 open files. This limit can be raised to max. 10000 using the environment variable _IOTRACE_FNRES_MAX_FILENAMES_.
+        Note: This mapping can also be created post-mortem using the tool _IOTrace_Analyze_.
 
-          Disclaimer: This feature requires depending on chosen _HASH_FUNCTION_ either SSE4.2 support (for _CITY3HASH_128_) or the library `libssl-dev` (for _MD5HASH_). Also, some POSIX-/MPI-IO functions are currently not supported.
+        WARNING: Might affect async-signal safety of functions which open/close files (affects mostly functions which aren't async-signal safe from the get-go)
 
-          If set to _ON_ libiotrace will create a mapping between filenames and file handles (e.g., fildes) during runtime and write the traced filenames to the trace.
-          Supports by default up to 100 open files. This limit can be raised to max. 10000 using the environment variable _IOTRACE_FNRES_MAX_FILENAMES_.
-          Note: This mapping can also be created post-mortem using the tool _IOTrace_Analyze_.
+      * _LOGGING_:
 
-          WARNING: Might affect async-signal safety of functions which open/close files (affects mostly functions which aren't async-signal safe from the get-go)
+        If set to _ON_ detailed data is collected and written to output files.
+        If set to _OFF_ nothing is collected.
+        Setting this option to _OFF_ is only useful together with using the _libiotrace.h_ (see [Use libiotrace](#Use-libiotrace)).
 
-        * _LOGGING_:
+      * _LOG_WRAPPER_TIME_:
 
-          If set to _ON_ detailed data is collected and written to output files.
-          If set to _OFF_ nothing is collected.
-          Setting this option to _OFF_ is only useful together with using the _libiotrace.h_ (see [Use libiotrace](#Use-libiotrace)).
+        If set to _ON_ the time needed for collecting and writing the data is written to the output.
+        In that case the overhead of _libiotrace_ can be included in further analysis.
 
-        * _LOG_WRAPPER_TIME_:
+      * _MAX_ERROR_TEXT_:
 
-          If set to _ON_ the time needed for collecting and writing the data is written to the output.
-          In that case the overhead of _libiotrace_ can be included in further analysis.
+        For functions which use the lvalue errno to return error values libiotrace collects the error value and a corresponding error text.
+        This option sets the maximum length of this text.
+        Longer values are truncated.
 
-        * _MAX_ERROR_TEXT_:
+      * _MAX_EXEC_ARRAY_LENGTH_:
 
-          For functions which use the lvalue errno to return error values libiotrace collects the error value and a corresponding error text.
-          This option sets the maximum length of this text.
-          Longer values are truncated.
+        If the monitored program is dynamically linked and calls a exec-function the environment variable _LD_PRELOAD_ must be set for the new process (see [Use libiotrace](#Use-libiotrace) for _LD_PRELOAD_).
+        To ensure this all in the parameters of the exec function given environment variables have to be inspected and in some cases changed.
+        The maximum number of inspected variables is set with this option.
 
-        * _MAX_EXEC_ARRAY_LENGTH_:
+      * _MAX_FUNCTION_NAME_:
 
-          If the monitored program is dynamically linked and calls a exec-function the environment variable _LD_PRELOAD_ must be set for the new process (see [Use libiotrace](#Use-libiotrace) for _LD_PRELOAD_).
-          To ensure this all in the parameters of the exec function given environment variables have to be inspected and in some cases changed.
-          The maximum number of inspected variables is set with this option.
+        Sets the maximum length of collected function names.
+        Longer names get truncated.
 
-        * _MAX_FUNCTION_NAME_:
+      * _MAX_INFLUX_TOKEN_:
 
-          Sets the maximum length of collected function names.
-          Longer names get truncated.
+        Sets the maximum length for the InfluxDB token.
 
-        * _MAX_INFLUX_TOKEN_:
+      * _MAX_MMSG_MESSAGES_:
 
-          Sets the maximum length for the InfluxDB token.
+        If the monitored program sends or receives multiple messages via call of function sendmmsg or recvmmsg this option sets the maximum count of collected messages in a single function call.
 
-        * _MAX_MMSG_MESSAGES_:
+      * _MAX_MSG_FILE_DESCRIPTORS_:
 
-          If the monitored program sends or receives multiple messages via call of function sendmmsg or recvmmsg this option sets the maximum count of collected messages in a single function call.
+        If the monitored program uses _Unix Domain Sockets_ to send _File Descriptors_ from one process to another process this option sets the maximum count of collected _File Descriptors_ in a single send or receive message.
 
-        * _MAX_MSG_FILE_DESCRIPTORS_:
+      * _MAX_STACKTRACE_DEPTH_:
 
-          If the monitored program uses _Unix Domain Sockets_ to send _File Descriptors_ from one process to another process this option sets the maximum count of collected _File Descriptors_ in a single send or receive message.
+        This option sets the maximum depth of an collected stack trace (the maximum number of inspected stack frames).
+        A stack trace for each monitored function call is only collected if the option _STACKTRACE_DEPTH_ is set to a number greater than 0 and at least one of the options _STACKTRACE_PTR_ and _STACKTRACE_SYMBOL_ is set to _ON_ or a corresponding function from _libiotrace.h_ (see [Use libiotrace](#Use-libiotrace)) is used.
 
-        * _MAX_STACKTRACE_DEPTH_:
+      * _MAX_STACKTRACE_ENTRY_LENGTH_:
 
-          This option sets the maximum depth of an collected stack trace (the maximum number of inspected stack frames).
-          A stack trace for each monitored function call is only collected if the option _STACKTRACE_DEPTH_ is set to a number greater than 0 and at least one of the options _STACKTRACE_PTR_ and _STACKTRACE_SYMBOL_ is set to _ON_ or a corresponding function from _libiotrace.h_ (see [Use libiotrace](#Use-libiotrace)) is used.
+        Sets maximum length of a single entry in a collected stack trace.
+        Longer values are truncated.
 
-        * _MAX_STACKTRACE_ENTRY_LENGTH_:
+      * _PORT_RANGE_MAX_:
 
-          Sets maximum length of a single entry in a collected stack trace.
-          Longer values are truncated.
+        When Live-Tracing is enabled wrappers can be enabled and disabled remotely at runtime per process. To receive the control information libiotrace has to use a port per process. This is the maximum port value for that libiotrace tries to get a port.
 
-        * _PORT_RANGE_MAX_:
+      * _PORT_RANGE_MIN_:
 
-          When Live-Tracing is enabled wrappers can be enabled and disabled remotely at runtime per process. To receive the control information libiotrace has to use a port per process. This is the maximum port value for that libiotrace tries to get a port.
+        When Live-Tracing is enabled wrappers can be enabled and disabled remotely at runtime per process. To receive the control information libiotrace has to use a port per process. This is the minimum port value for that libiotrace tries to get a port.
 
-        * _PORT_RANGE_MIN_:
+      * _SENDING_:
 
-          When Live-Tracing is enabled wrappers can be enabled and disabled remotely at runtime per process. To receive the control information libiotrace has to use a port per process. This is the minimum port value for that libiotrace tries to get a port.
+        When set to _ON_ each wrapper sends its data live to InfluxDB. Please look in section _Live-Tracing_ which parameters are required to send data to InfluxDB.
 
-        * _SENDING_:
+      * _STACKTRACE_DEPTH_:
 
-          When set to _ON_ each wrapper sends its data live to InfluxDB. Please look in section _Live-Tracing_ which parameters are required to send data to InfluxDB.
+        Sets the maximum number of currently collected stack trace entries.
+        If the current stack trace is deeper than _STACKTRACE_DEPTH_ entries will be omitted.
+        The value of _STACKTRACE_DEPTH_ has to be less than or equal to the value of _MAX_STACKTRACE_DEPTH_.
+        _STACKTRACE_DEPTH_ can be changed during the run of the monitored program if _libiotrace.h_ is used see [Use libiotrace](#Use-libiotrace).
 
-        * _STACKTRACE_DEPTH_:
+      * _STACKTRACE_PTR_:
 
-          Sets the maximum number of currently collected stack trace entries.
-          If the current stack trace is deeper than _STACKTRACE_DEPTH_ entries will be omitted.
-          The value of _STACKTRACE_DEPTH_ has to be less than or equal to the value of _MAX_STACKTRACE_DEPTH_.
-          _STACKTRACE_DEPTH_ can be changed during the run of the monitored program if _libiotrace.h_ is used see [Use libiotrace](#Use-libiotrace).
+        If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the memory address of stack trace entries is collected.
+        WARNING: Might affect async-signal safety of traced functions
 
-        * _STACKTRACE_PTR_:
+      * _STACKTRACE_SYMBOL_:
 
-          If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the memory address of stack trace entries is collected.
-          WARNING: Might affect async-signal safety of traced functions
+        If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the symbol name of stack trace entries is collected.
+        WARNING: Might affect async-signal safety of traced functions
 
-        * _STACKTRACE_SYMBOL_:
+      * _STRACING_ENABLED_:
 
-          If set to _ON_ and _STACKTRACE_DEPTH_ is greater than 0 the symbol name of stack trace entries is collected.
-          WARNING: Might affect async-signal safety of traced functions
+        Prerequisites: Linux kernel sources (for Debian based systems: `sudo apt source linux`; NOTE: `deb-src` lines in apt-sources may need to be uncommented first), dependencies: *libunwind* and *libdwfl* (on Debian based systems: `sudo apt install -y libunwind-dev libdw-dev`)
 
-        * _STRACING_ENABLED_:
+        If set to _ON_, libiotrace will launch an additional process, "the stracer", which uses ptrace(2) to trace the program traced by libiotrace, "the tracee".
+        This enables libiotrace to indirectly trace library calls, which cannot be traced by libiotrace itself, e.g., due to static linkage.
 
-          Prerequisites: Linux kernel sources (for Debian based systems: `sudo apt source linux`; NOTE: `deb-src` lines in apt-sources may need to be uncommented first), dependencies: *libunwind* and *libdwfl* (on Debian based systems: `sudo apt install -y libunwind-dev libdw-dev`)
+      * _WITH_DL_IO_:
 
-          If set to _ON_, libiotrace will launch an additional process, "the stracer", which uses ptrace(2) to trace the program traced by libiotrace, "the tracee".
-          This enables libiotrace to indirectly trace library calls, which cannot be traced by libiotrace itself, e.g., due to static linkage.
+        If set to _ON_ functions from _dlfcn.h_ are monitored (namely _dlopen_ and _dlmopen_).
 
-        * _WITH_DL_IO_:
+      * _WITH_MPI_IO_:
 
-          If set to _ON_ functions from _dlfcn.h_ are monitored (namely _dlopen_ and _dlmopen_).
+        If set to _ON_ functions from _mpi_io.c_ are monitored
 
-        * _WITH_MPI_IO_:
+      * _WITH_POSIX_AIO_:
 
-          If set to _ON_ functions from _mpi_io.c_ are monitored
+        If set to _ON_ functions from _aio.h_ (POSIX Asynchronous Input and Output) are monitored (namely _aio_read_, _aio_read64_, _aio_write_, _aio_write64_, _lio_listio_, _lio_listio64_, _aio_error_, _aio_error64_, _aio_return_, _aio_return64_, _aio_fsync_, _aio_fsync64_, _aio_suspend_, _aio_suspend64_, _aio_cancel_, _aio_cancel64_, _aio_init_ and _shm_open_).
+        IOTrace_Analyze (see [IOTrace_Analyze](#IOTrace_Analyze)) doesn't analyze these functions. This will be implemented in the future.
 
-        * _WITH_POSIX_AIO_:
+      * _WITH_POSIX_IO_:
 
-          If set to _ON_ functions from _aio.h_ (POSIX Asynchronous Input and Output) are monitored (namely _aio_read_, _aio_read64_, _aio_write_, _aio_write64_, _lio_listio_, _lio_listio64_, _aio_error_, _aio_error64_, _aio_return_, _aio_return64_, _aio_fsync_, _aio_fsync64_, _aio_suspend_, _aio_suspend64_, _aio_cancel_, _aio_cancel64_, _aio_init_ and _shm_open_).
-          IOTrace_Analyze (see [IOTrace_Analyze](#IOTrace_Analyze)) doesn't analyze these functions. This will be implemented in the future.
+        If set to _ON_ functions from _dirent.h_, _fcntl.h_, _stdio.h_, _stdio_ext.h_, _stdlib.h_, _sys/epoll.h_, _sys/eventfd.h_, _sys/inotify.h_, _sys/memfd.h_, _sys/mman.h_, _sys/select.h_, _sys/socket.h_, _sys/uio.h_, _unistd.h_ and _wchar.h_ are monitored (for a complete list of functions see &lt;libiotrace-folder&gt;/fsprj2/libiotrace/src/posix_io.h).
 
-        * _WITH_POSIX_IO_:
+      * _WITH_STD_IO_:
 
-          If set to _ON_ functions from _dirent.h_, _fcntl.h_, _stdio.h_, _stdio_ext.h_, _stdlib.h_, _sys/epoll.h_, _sys/eventfd.h_, _sys/inotify.h_, _sys/memfd.h_, _sys/mman.h_, _sys/select.h_, _sys/socket.h_, _sys/uio.h_, _unistd.h_ and _wchar.h_ are monitored (for a complete list of functions see &lt;libiotrace-folder&gt;/fsprj2/libiotrace/src/posix_io.h).
+        If set to _ON_ functions calls which work with a _File Descriptor_ equal to _STDIN_FILENO_, _STDOUT_FILENO_ or _STDERR_FILENO_ and functions which work with a _file stream_ equal to _stdin_, _stdout_ or _stderr_ will be monitored.
+        So if set to _OFF_, for such function calls no data will be collected.
+        This can be a problem in _IOTrace_Analyze_.
+        If for example the _File Descriptor_ _STDOUT_FILENO_ is duplicated with an call to the _dup2_ function and the resulting duplicate is not equal to _STDIN_FILENO_ or _STDERR_FILENO_ the output analysis in _IOTrace_Analyze_ will be wrong.
+        Thats the case because the original _File Descriptor_ and the call of the _dup2_ function are not collected but the new _File Descriptor_ and function calls with this new _File Descriptor_ are collected.
+        With this data the _IOTrace_Analyze_ is not able to get the correct file for the monitored function calls. The new _File Descriptor_ could be in use with an other file before the call to _dup2_.
+        So during analysis the following calls to the new _File Descriptor_ will be connected to the file in use before the call of _dup2_.
+        Which is probably wrong.
+        So if you are not sure if the monitored program manipulates the standard (std) _file streams_ or _File Descriptors_ (e.g. with an redirect of standard _file streams_ during start of an new process) set this option to _ON_.
+        In any other case you can omit a lot of overhead by setting it to _OFF_.
 
-        * _WITH_STD_IO_:
-
-          If set to _ON_ functions calls which work with a _File Descriptor_ equal to _STDIN_FILENO_, _STDOUT_FILENO_ or _STDERR_FILENO_ and functions which work with a _file stream_ equal to _stdin_, _stdout_ or _stderr_ will be monitored.
-          So if set to _OFF_, for such function calls no data will be collected.
-          This can be a problem in _IOTrace_Analyze_.
-          If for example the _File Descriptor_ _STDOUT_FILENO_ is duplicated with an call to the _dup2_ function and the resulting duplicate is not equal to _STDIN_FILENO_ or _STDERR_FILENO_ the output analysis in _IOTrace_Analyze_ will be wrong.
-          Thats the case because the original _File Descriptor_ and the call of the _dup2_ function are not collected but the new _File Descriptor_ and function calls with this new _File Descriptor_ are collected.
-          With this data the _IOTrace_Analyze_ is not able to get the correct file for the monitored function calls. The new _File Descriptor_ could be in use with an other file before the call to _dup2_.
-          So during analysis the following calls to the new _File Descriptor_ will be connected to the file in use before the call of _dup2_.
-          Which is probably wrong.
-          So if you are not sure if the monitored program manipulates the standard (std) _file streams_ or _File Descriptors_ (e.g. with an redirect of standard _file streams_ during start of an new process) set this option to _ON_.
-          In any other case you can omit a lot of overhead by setting it to _OFF_.
-
-    14. press “c” again (this brings up the option “g” to generate)
-    15. press “g” and wait until _ccmake_ exits
-    16. `make` (wait until build is done)
-    17. libiotrace is now available in folder &lt;libiotrace-folder&gt;/fsprj2/libiotrace/build/src
-        * _libiotrace_shared.so_ (for dynamically linked programs)
-        * _libiotrace_static.a_ (for linking against static linked programs)
+  14. press “c” again (this brings up the option “g” to generate)
+  15. press “g” and wait until _ccmake_ exits
+  16. `make` (wait until build is done)
+  17. libiotrace is now available in folder &lt;libiotrace-folder&gt;/fsprj2/libiotrace/build/src
+      * _libiotrace_shared.so_ (for dynamically linked programs)
+      * _libiotrace_static.a_ (for linking against static linked programs)
 
 ### Use libiotrace
 
@@ -277,6 +270,8 @@ Steps to build _libiotrace_:
 
 The output will be placed in the working direrctory of &lt;monitor-program&gt;.
 Every generated file has a name beginning with &lt;prefix-for-log-names&gt;.
+
+
 
 ## IOTrace_Analyze
 

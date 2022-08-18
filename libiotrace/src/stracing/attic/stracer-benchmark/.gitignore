@@ -1,0 +1,6 @@
+stracing_benchmark
+
+results/*/*.bak
+
+delete_me*
+libiotrace_stracer.log

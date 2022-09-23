@@ -1,0 +1,40 @@
+---
+- name: Change SSH settings
+  block:
+    - name: Disable root login
+      ansible.builtin.lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+        validate: '/usr/sbin/sshd -T -f %s'
+
+    - name: Enable public key authentication
+      ansible.builtin.lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+        state: present
+        validate: '/usr/sbin/sshd -T -f %s'
+
+    - name: Disable password login
+      ansible.builtin.lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '{{ common_ssh_item.regex }}'
+        line: '{{ common_ssh_item.line }}'
+        validate: '/usr/sbin/sshd -T -f %s'
+      loop_control:
+        loop_var: common_ssh_item
+      with_items:
+        - { regex: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+        - { regex: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
+
+
+    - name: Allow client to pass locale environment variables
+      ansible.builtin.lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^#?AcceptEnv LANG LC_\*$'
+        line: 'AcceptEnv LANG LC_*'
+        validate: '/usr/sbin/sshd -T -f %s'
+  notify: restart ssh daemon
+  become: true

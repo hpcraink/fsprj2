@@ -1,0 +1,36 @@
+---
+- name: Install flatpak
+  block:
+    - name: Install depdencies
+      ansible.builtin.apt:
+        name: dirmngr
+        state: present
+
+    - name: Install it
+      ansible.builtin.apt:
+        name: flatpak
+        state: present
+
+    - name: 'Install GNOME Software "store"'
+      ansible.builtin.apt:
+        name: gnome-software-plugin-flatpak
+        state: present
+        install_recommends: true
+  when: ansible_os_family == 'Debian'
+  become: true
+
+- name: Add the flathub flatpak repository
+  community.general.flatpak_remote:
+    name: flathub
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+    state: present
+  become: true
+# ------------------------------------------------------------------------------------------
+
+
+- name: Install VSCodium
+  community.general.flatpak:
+    name: com.vscodium.codium
+    state: present
+  become: true

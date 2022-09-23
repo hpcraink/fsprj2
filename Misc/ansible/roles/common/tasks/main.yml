@@ -1,0 +1,8 @@
+---
+- ansible.builtin.include_tasks: '{{ included_common_task }}'
+  loop:
+    - config.yml
+    - packages.yml
+    - setup_libiotrace.yml
+  loop_control:
+    loop_var: included_common_task

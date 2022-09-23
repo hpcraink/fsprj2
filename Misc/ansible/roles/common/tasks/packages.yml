@@ -1,0 +1,69 @@
+---
+- name: Update and upgrade apt packages
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    upgrade: dist
+    clean: true
+    autoremove: true
+    allow_downgrade: true
+  become: true
+
+
+- name: Install prereqs.
+  ansible.builtin.apt:
+    name:
+      - sudo
+      - util-linux
+      - ssh
+    state: present
+  become: true
+
+
+- name: Install git
+  ansible.builtin.apt:
+    name:
+      - git
+      - git-lfs
+    state: present
+  become: true
+
+- name: Init git LFS for current user        # TODO: NOT  IDEMPOTENT ???
+  ansible.builtin.command: git lfs install
+  become: false
+
+
+- name: Install systems programming tools
+  ansible.builtin.apt:
+    name:
+      # Compiler / build tools
+      - manpages-dev
+      - build-essential       # Includes GNU debugger, g++/GNU compiler collection, and some more tools (`make`) and libraries that are required to compile a program
+      - cmake
+      - cmake-curses-gui
+      - pkg-config
+      # Debuggers / Tools  (NOTE: binutils, util-linux & gdb are most likely already installed)
+      - binutils              # Contains `readelf`, ...
+      - valgrind
+      - strace
+      # Utils
+      - numactl               # More powerful alternative to `taskset`  (useful on NUMA systems, incl. AMD CPUs w/ "chiplet" design)
+    state: present
+  become: true
+
+
+- ansible.builtin.include_tasks: package-docker.yml
+
+
+- name: Install misc. useful tools
+  ansible.builtin.apt:
+    name:
+      - tree
+      - lsof
+      - neovim
+      - htop
+      - wireshark
+      - openvpn
+      - shellcheck            # Lint bash scripts
+    state: present
+  become: true

@@ -1,0 +1,62 @@
+---
+- name: locale-gen
+  block:
+    - name: Generate locale
+      community.general.locale_gen:
+        name: en_US.UTF-8
+        state: present
+      become: true
+
+    - name: "Fix ssh locale issue"
+      ansible.builtin.lineinfile:
+        dest: /etc/default/locale
+        regexp: '{{ common_locale_fix_item.regex }}'
+        line: '{{ common_locale_fix_item.line }}'
+        state: present
+      with_items:
+        - { regex: '^LANG="?en_US.UTF-8"?$', line: 'LANG=en_US.UTF-8' }
+        - { regex: '^LC_ALL="?en_US.UTF-8"?$', line: 'LC_ALL=en_US.UTF-8' }
+      loop_control:
+        loop_var: common_locale_fix_item
+      become: true
+
+
+- name: Set timezone
+  community.general.timezone:
+    name: Europe/Berlin
+  become: true
+
+
+- name: Set hostname
+  block:
+    - name: Get current hostname
+      ansible.builtin.shell: hostname
+      register: result_hostname
+      changed_when: false
+
+    - name: "Set hostname to 'hse-dev-vm'"
+      ansible.builtin.hostname:
+        name: hse-dev-vm
+      become: true
+
+    - name: Fix hosts file
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        regexp: '^127\.0\.0\.1\s+{{ result_hostname.stdout }}$'
+        line: '127.0.0.1	hse-dev-vm'
+        state: present
+      become: true
+
+
+- ansible.builtin.include_tasks: config-ssh.yml
+
+
+- name: Enable passwordless sudo
+  ansible.builtin.copy:
+    content: 'hse ALL=(ALL) NOPASSWD: ALL'
+    dest: '/etc/sudoers.d/010_hse-nopasswd'
+    owner: root
+    group: root
+    mode: 0440
+    validate: visudo -cf %s
+  become: true

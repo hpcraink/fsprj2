@@ -1,0 +1,63 @@
+---
+- name: Check if Docker is already present.
+  ansible.builtin.command: which docker
+  failed_when: false
+  changed_when: false
+  check_mode: false
+  register: result_docker_command
+
+- name: Install Docker
+  block:
+    - name: Download Docker install convenience script.
+      ansible.builtin.get_url:
+        url: https://get.docker.com/
+        dest: /tmp/get-docker.sh
+        mode: 0775
+
+    - name: Run Docker install convenience script.
+      ansible.builtin.command: /tmp/get-docker.sh
+      environment:
+        CHANNEL: stable
+  when: result_docker_command.rc == 1
+  become: true
+
+- name: Ensure Docker is started.
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+  become: true
+
+- name: Ensure dependencies are installed (Debian).
+  ansible.builtin.apt:
+    name:
+      - libffi-dev
+      - libssl-dev
+      - python3-dev
+      - python3-pip
+      - git
+      - rsync
+    state: present
+  become: true
+
+- name: Install Docker Compose using Pip.
+  ansible.builtin.pip:   # NOTE: sudo installs it for ALL users (otherwise only local user)
+    name: docker-compose
+    state: present
+    executable: pip3
+  become: true
+
+
+- name: Add user to docker group
+  block:
+    - name: Ensure user is added to the docker group.
+      ansible.builtin.user:
+        name: hse
+        groups: docker
+        append: true
+      become: true
+
+    # (See: https://www.jeffgeerling.com/tags/resetconnection)
+    #   TODO: Execute only once  ---- PROBLEM: reset_connection doesn't support conditionals.
+    - name: Reset connection so docker group is picked up.
+      meta: reset_connection

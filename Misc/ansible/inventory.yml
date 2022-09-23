@@ -1,0 +1,8 @@
+---
+# !!  KEEP IN MIND: Must match Hosts in `~/.ssh/config` (auth details will be taken from this file)  !!
+all:
+  children:
+    workstations:
+      hosts:
+        hse-dev-vm:
+          ansible_sudo_pass: 1

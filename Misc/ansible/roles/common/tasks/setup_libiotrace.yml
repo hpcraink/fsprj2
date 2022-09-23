@@ -1,0 +1,37 @@
+---
+- name: Install required libs (for libiotrace)
+  ansible.builtin.apt:
+    name:
+      - libomp-dev            # OpenMP
+      - openmpi-bin
+      - openmpi-common        # OpenMPI
+      - libopenmpi-dev
+      - libssl-dev            # ...
+      - libelf-dev
+      - libdw-dev
+    state: present
+  become: true
+
+
+- name: Clone repo
+  ansible.builtin.git:
+    repo: https://github.com/hpcraink/fsprj2.git
+    dest: /home/hse/fsprj2
+    clone: true
+#    depth: 1
+    update: true
+  register: repo_clone
+  failed_when:
+    - repo_clone.failed
+    - not 'Local modifications exist in the destination' in repo_clone.msg
+  become: false
+
+
+- name: Start InfluxDB & Grafana
+  community.docker.docker_compose:
+    project_src: /home/hse/fsprj2/Live-Tracing/
+    build: false
+  become: false
+
+
+# TODO: Automatically compile libiotrace ??!!

@@ -6,6 +6,7 @@
 
 
 ## Steps  (NOTE: tested only on Mac)
+### Remotely managed (via ssh)
 1. **Install Ubuntu** as VM (e.g. on Mac, in [VirutalBox](https://www.virtualbox.org/))
   * During installation (for Ubuntu) tick *Install third-party software for graphics ans Wi-Fi hardware [...]* and use:
     * username: `hse`
@@ -26,3 +27,7 @@
   ```
 5. **Run playbook**: `ansible-playbook run.yml`
 6. Reboot system (optional, but recommended)
+
+
+### Locally managed (via shell)
+* Run the script on your already installed Ubuntu via: `wget -q -O - https://raw.githubusercontent.com/hpcraink/fsprj2/master/Misc/ansible/locally_setup_ansible.sh | sudo bash`

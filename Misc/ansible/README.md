@@ -5,7 +5,12 @@
 * Installed playbook dependencies: `ansible-galaxy install -r requirements.yml`
 
 
-## Steps  (NOTE: tested only on Mac)
+## Steps  (NOTE: tested only on Mac using VMware Fusion)
+### Locally managed (via shell)
+1. **Install Ubuntu**
+2. **Run** the **Ansible Role** locally: `wget -q -O - https://raw.githubusercontent.com/hpcraink/fsprj2/master/Misc/ansible/locally_bootstrap_ansible.sh | sudo bash`
+3. Reboot system (recommended (the new membership in the group `docker` won't have no effect otherwise))
+
 ### Remotely managed (via ssh)
 1. **Install Ubuntu** as VM (e.g. on Mac, in [VirutalBox](https://www.virtualbox.org/))
   * During installation (for Ubuntu) tick *Install third-party software for graphics ans Wi-Fi hardware [...]* and use:
@@ -27,7 +32,3 @@
   ```
 5. **Run playbook**: `ansible-playbook run.yml`
 6. Reboot system (optional, but recommended)
-
-
-### Locally managed (via shell)
-* Run the script on your already installed Ubuntu via: `wget -q -O - https://raw.githubusercontent.com/hpcraink/fsprj2/master/Misc/ansible/locally_setup_ansible.sh | sudo bash`

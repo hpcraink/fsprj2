@@ -32,6 +32,7 @@
     project_src: '/home/{{ username }}/fsprj2/Live-Tracing/'
     build: false
   become: false
+  when: libiotrace_setup_docker_containers|bool == true
 
 
 # TODO: Automatically compile libiotrace ??!!

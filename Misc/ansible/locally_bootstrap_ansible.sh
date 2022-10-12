@@ -5,7 +5,6 @@
 # Removes therefore the need of managing the machine remotely (via ssh)
 #######################################################################
 
-
 set -e
 
 USERNAME="$(logname)"
@@ -33,7 +32,7 @@ apt install -y ansible
 
 # 2. Download & extract repo
 sudo -u "${USERNAME}"  wget -O /tmp/fsprj2-master.zip https://github.com/hpcraink/fsprj2/archive/refs/heads/master.zip
-sudo -u "${USERNAME}"  unzip -d /tmp /tmp/fsprj2-master.zip
+sudo -u "${USERNAME}"  unzip -o -d /tmp /tmp/fsprj2-master.zip
 
 
 # 3. Install playbook dependencies & run only the 'common' role
@@ -41,15 +40,13 @@ cd /tmp/fsprj2-master/Misc/ansible/
 
 sudo -u "${USERNAME}"  ansible-galaxy install -r requirements.yml
 
-# NOTE: Must be run as root since we don't know the become-pw (and we also don't want to ask (may be confusing to the user))
-ansible localhost   -e hostname="${HOSTNAME}" -e username="${USERNAME}"  -m include_role -a name=roles/common
-
-
-# 4. Fix fs permissions & ownership of repo  (despite `become: false`, we run ansbile role as root --> hence permissions are wrong)
-chown -R "${USERNAME}:" "/home/${USERNAME}/fsprj2"
-sudo -u "${USERNAME}"  git -C "/home/${USERNAME}/fsprj2" reset --hard origin/master
+# NOTE: Must be run as correct user, otherwise fs ownership will be wrong  (but requires us 2 ask for the root pw)
+# ALSO: We can't startup the docker containers b/c the group membership will only be updated once we log in again (and using the root user instead causes permission issues for Grafana plugins)
+#  --> Has to be done manually by the user via `docker-compose up -d` once logged in again
+echo -e "\nPlease enter your root pw once again"
+sudo -u "${USERNAME}"  ansible localhost  --ask-become-pass   -e hostname="${HOSTNAME}" -e username="${USERNAME}" -e libiotrace_setup_docker_containers=false  -m include_role -a name=roles/common
 
 
 
-echo "Finished."
+echo "Finished. Pls reboot now."
 exit 0

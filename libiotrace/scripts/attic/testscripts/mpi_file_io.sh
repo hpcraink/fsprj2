@@ -18,8 +18,8 @@ file=performance_test
 format="\t%E\t%U\t%S\t%D\t%K\t%M"
 
 module purge
-module load compiler/gnu/11.2
-module load mpi/openmpi/4.1.2
+module load compiler/gnu/12.1
+module load mpi/openmpi/4.1
 
 rm $file
 rm -f $IOTRACE_WHITELIST

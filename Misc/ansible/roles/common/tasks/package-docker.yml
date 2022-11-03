@@ -52,7 +52,7 @@
   block:
     - name: Ensure user is added to the docker group.
       ansible.builtin.user:
-        name: hse
+        name: '{{ username }}'
         groups: docker
         append: true
       become: true

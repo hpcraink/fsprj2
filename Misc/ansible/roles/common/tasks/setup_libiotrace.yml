@@ -16,7 +16,7 @@
 - name: Clone repo
   ansible.builtin.git:
     repo: https://github.com/hpcraink/fsprj2.git
-    dest: /home/hse/fsprj2
+    dest: '/home/{{ username }}/fsprj2'
     clone: true
 #    depth: 1
     update: true
@@ -29,9 +29,10 @@
 
 - name: Start InfluxDB & Grafana
   community.docker.docker_compose:
-    project_src: /home/hse/fsprj2/Live-Tracing/
+    project_src: '/home/{{ username }}/fsprj2/Live-Tracing/'
     build: false
   become: false
+  when: libiotrace_setup_docker_containers|bool == true
 
 
 # TODO: Automatically compile libiotrace ??!!

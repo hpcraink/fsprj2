@@ -34,16 +34,16 @@
       register: result_hostname
       changed_when: false
 
-    - name: "Set hostname to 'hse-dev-vm'"
+    - name: "Set hostname to '{{ hostname }}'"
       ansible.builtin.hostname:
-        name: hse-dev-vm
+        name: '{{ hostname }}'
       become: true
 
     - name: Fix hosts file
       ansible.builtin.lineinfile:
         dest: /etc/hosts
         regexp: '^127\.0\.0\.1\s+{{ result_hostname.stdout }}$'
-        line: '127.0.0.1	hse-dev-vm'
+        line: '127.0.0.1	{{ hostname }}'
         state: present
       become: true
 
@@ -53,8 +53,8 @@
 
 - name: Enable passwordless sudo
   ansible.builtin.copy:
-    content: 'hse ALL=(ALL) NOPASSWD: ALL'
-    dest: '/etc/sudoers.d/010_hse-nopasswd'
+    content: '{{ username }} ALL=(ALL) NOPASSWD: ALL'
+    dest: '/etc/sudoers.d/010_{{ username }}-nopasswd'
     owner: root
     group: root
     mode: 0440

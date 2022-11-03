@@ -1,0 +1,3 @@
+username: hse
+hostname: hse-dev-vm
+libiotrace_setup_docker_containers: true

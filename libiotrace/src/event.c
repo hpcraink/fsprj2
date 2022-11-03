@@ -205,7 +205,7 @@ static const char ENV_LD_PRELOAD[] =  "LD_PRELOAD";
 #endif
 
 // once per process
-static pid_t pid;
+pid_t pid;
 static char *hostname;
 
 #if defined(IOTRACE_ENABLE_LOGFILE) \
@@ -291,7 +291,7 @@ static llhttp_settings_t settings;
 struct wrapper_status active_wrapper_status;
 
 // once per thread
-static ATTRIBUTE_THREAD pid_t tid = -1;
+ATTRIBUTE_THREAD pid_t tid = -1;
 
 #if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 static ATTRIBUTE_THREAD SOCKET socket_peer = -1;
@@ -1132,6 +1132,9 @@ void print_working_directory(void) {
 void reset_values_in_forked_process(void) {
 	init_done = 0;
 	tid = -1;
+#if defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
+	socket_peer = -1;
+#endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
 	recv_sockets = NULL;
 	recv_sockets_len = 0;
@@ -1321,8 +1324,8 @@ void send_data(const char *message, SOCKET socket) {
 				LOG_WARN(
 						"Send buffer is full. Please increase your limit.");
 			} else {
-				LOG_ERROR_AND_EXIT("send() returned %d, errno: %d", bytes_sent,
-						errno);
+				LOG_ERROR_AND_EXIT("send() returned %d, errno: %d, socket: %d", bytes_sent,
+						errno, socket);
 			}
 		} else {
 			if ((size_t)bytes_sent < bytes_to_send) {
@@ -2202,6 +2205,12 @@ void init_process() {
 		socket_control = prepare_control_socket();
 #endif
 
+#ifdef IOTRACE_ENABLE_INFLUXDB
+	        if (-1 == socket_peer) {
+        	        prepare_socket();
+        	}
+#endif
+
 		/* at this point all preparations necessary for a wrapper call
 		 * are done: set corresponding flag */
 		init_done = 1;
@@ -2235,11 +2244,6 @@ void init_process() {
 		(defined(IOTRACE_ENABLE_LOGFILE) \
 				|| defined(IOTRACE_ENABLE_INFLUXDB))
 #  ifdef __linux__ // TODO: RAY MacOS; Windows?
-#    if defined(IOTRACE_ENABLE_INFLUXDB)
-		if (-1 == socket_peer) {
-			prepare_socket();
-		}
-#    endif
 		print_filesystem();
 #  endif
 #endif

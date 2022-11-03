@@ -24,11 +24,13 @@
 //#define LIBIOTRACE_ENOMEM   2
 //#define LIBIOTRACE_ENOSPC   3
 
+extern pid_t pid;
+extern ATTRIBUTE_THREAD pid_t tid;
 
 #ifndef NDEBUG
 #  define LOG_DEBUG(format, ...)                                                                                                                                           \
 	do {                                                                                                                                                                          \
-		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LOG_UNIT_NAME">> [DEBUG] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stdout, "<<"__LOG_UNIT_NAME">> [DEBUG][%d][%d] `%s` (%s:%d): " format "." LINE_BREAK, pid, tid, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 #else
 #  define LOG_DEBUG(format, ...) do {  } while(0)
@@ -37,7 +39,7 @@
 
 #define LOG_WARN(format, ...)                                                                                                                                             \
 	do {                                                                                                                                                                         \
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_UNIT_NAME">> [WARN] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_UNIT_NAME">> [WARN][%d][%d] `%s` (%s:%d): " format "." LINE_BREAK, pid, tid, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	} while(0)
 
 
@@ -45,7 +47,7 @@
 // ToDo: __func__ dependencies (like in posix_io.c)
 #define LOG_ERROR_AND_EXIT(format, ...) \
 	do {                                                                                                                                                                          \
-		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_UNIT_NAME">> [ERROR] `%s` (%s:%d): " format "." LINE_BREAK, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		CALL_REAL_POSIX_SYNC(fprintf)(stderr, "<<"__LOG_UNIT_NAME">> [ERROR][%d][%d] `%s` (%s:%d): " format "." LINE_BREAK, pid, tid, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 		exit(EXIT_FAILURE);                                                                                                                                                       \
 	} while(0)
 

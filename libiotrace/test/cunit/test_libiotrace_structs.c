@@ -17,6 +17,9 @@
 #include "../../src/libiotrace_include_struct.h"
 #include "../../src/libiotrace_functions.c"
 
+pid_t pid = 0;
+ATTRIBUTE_THREAD pid_t tid = 0;
+
 /* run at the start of the suite */
 CU_SUITE_SETUP() {
 	return CUE_SUCCESS;

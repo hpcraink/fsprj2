@@ -2382,6 +2382,10 @@ void write_into_influxdb(struct basic *data) {
 		return;
 	}
 
+	if (-1 == socket_peer) {
+                prepare_socket();
+        }
+
 	//buffer for body
 	int body_length = libiotrace_struct_push_max_size_basic(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
 	char body[body_length];

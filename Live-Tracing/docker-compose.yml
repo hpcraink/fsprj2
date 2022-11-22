@@ -28,6 +28,8 @@ services:
     volumes:
       # NOTE: MIGHT cause issues w/ fs permissions (container tries `chown`) -> if so, comment volume out
       - ./influx-data:/var/lib/influxdb2
+      #Save the Backup of OpenFoam Test to docker
+      - ./testbackup:/backup
 
   # WARNING: Required for setting up influxdb instance (!! therefore, must run at first initial startup of influxdb instance !!)
   influxdb_cli:

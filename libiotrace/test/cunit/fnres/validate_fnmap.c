@@ -19,6 +19,8 @@
 /* -- Globals -- */
 // int64_t g_next_dummy_id = 3;     /* Avoid colliding ids */
 
+pid_t pid = 0;
+ATTRIBUTE_THREAD pid_t tid = 0;
 
 /* -- Hooks -- */
 /* run at the start of the suite */

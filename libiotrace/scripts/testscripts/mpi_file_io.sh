@@ -1,6 +1,5 @@
 #!/bin/bash
 iterations=1000
-processes=80
 threads=1
 number_of_writes=1000
 IOTRACE_LOG_NAME=mpi_file_io_test1
@@ -17,9 +16,8 @@ TESTARGUMENTS=$number_of_writes
 file=performance_test
 format="\t%E\t%U\t%S\t%D\t%K\t%M"
 
-module purge
-module load compiler/gnu/12.1
-module load mpi/openmpi/4.1
+processes=$(( ${6} * ${7} ))
+echo "    process count: ${processes}"
 
 rm $file
 rm -f $IOTRACE_WHITELIST
@@ -30,7 +28,7 @@ for ((i = 0; i < iterations; i += 1)); do
 
 rm -f mpi_file_io.txt
 rm -f $IOTRACE_LOG_NAME*
-/usr/bin/time -o $file -a -f "mpi_file_write_active\t$i$format" mpirun -np $processes -x OMP_NUM_THREADS=$threads -x IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME -x IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP -x IOTRACE_DATABASE_PORT=$IOTRACE_DATABASE_PORT -x IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION -x IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET -x IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN -x IOTRACE_WHITELIST=$IOTRACE_WHITELIST -x LD_PRELOAD=$LD_PRELOAD $PWD/$TESTNAME $TESTARGUMENTS
+/usr/bin/time -o $file -a -f "mpi_file_write_active\t$i$format" mpirun -N ${7} -H ${5} -np $processes -x OMP_NUM_THREADS=$threads -x IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME -x IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP -x IOTRACE_DATABASE_PORT=$IOTRACE_DATABASE_PORT -x IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION -x IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET -x IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN -x IOTRACE_WHITELIST=$IOTRACE_WHITELIST -x LD_PRELOAD=$LD_PRELOAD $PWD/$TESTNAME $TESTARGUMENTS
 
 done
 echo -e "">$IOTRACE_WHITELIST
@@ -38,7 +36,7 @@ for ((i = 0; i < iterations; i += 1)); do
 
 rm -f mpi_file_io.txt
 rm -f $IOTRACE_LOG_NAME*
-/usr/bin/time -o $file -a -f "all_wrapper_inactive\t$i$format" mpirun -np $processes -x OMP_NUM_THREADS=$threads -x IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME -x IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP -x IOTRACE_DATABASE_PORT=$IOTRACE_DATABASE_PORT -x IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION -x IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET -x IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN -x IOTRACE_WHITELIST=$IOTRACE_WHITELIST -x LD_PRELOAD=$LD_PRELOAD $PWD/$TESTNAME $TESTARGUMENTS
+/usr/bin/time -o $file -a -f "all_wrapper_inactive\t$i$format" mpirun -N ${7} -H ${5} -np $processes -x OMP_NUM_THREADS=$threads -x IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME -x IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP -x IOTRACE_DATABASE_PORT=$IOTRACE_DATABASE_PORT -x IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION -x IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET -x IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN -x IOTRACE_WHITELIST=$IOTRACE_WHITELIST -x LD_PRELOAD=$LD_PRELOAD $PWD/$TESTNAME $TESTARGUMENTS
 
 done
 
@@ -46,6 +44,6 @@ for ((i = 0; i < iterations; i += 1)); do
 
 rm -f mpi_file_io.txt
 rm -f $IOTRACE_LOG_NAME*
-/usr/bin/time -o $file -a -f "without_libiotrace\t$i$format" mpirun -np $processes -x OMP_NUM_THREADS=$threads $PWD/$TESTNAME $TESTARGUMENTS
+/usr/bin/time -o $file -a -f "without_libiotrace\t$i$format" mpirun -N ${7} -H ${5} -np $processes -x OMP_NUM_THREADS=$threads $PWD/$TESTNAME $TESTARGUMENTS
 
 done

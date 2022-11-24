@@ -536,6 +536,13 @@ endif()
 
 ##########################################################################################################
 
+add_executable(influxdb_mock influxdb_mock.c)
+target_compile_options(influxdb_mock PRIVATE "-D_GNU_SOURCE")
+target_link_libraries(influxdb_mock PRIVATE ${LINK_OPTIONS})
+target_link_libraries(influxdb_mock pthread)
+
+##########################################################################################################
+
 # test with: IOTRACE_LOG_NAME=init_thread_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./init_thread_shared
 add_executable(init_thread_shared init_thread_test.c)
 target_link_libraries(init_thread_shared ${TESTS_LINK_OPTIONS})

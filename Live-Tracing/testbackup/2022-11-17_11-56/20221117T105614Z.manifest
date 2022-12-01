@@ -1,0 +1,18 @@
+{
+  "kv": {
+    "fileName": "20221117T105614Z.bolt",
+    "size": 45056
+  },
+  "files": [
+    {
+      "organizationID": "f41ee61b0c3981f9",
+      "organizationName": "hse",
+      "bucketID": "7ae196e5bb493f45",
+      "bucketName": "hsebucket",
+      "shardID": 1,
+      "fileName": "20221117T105614Z.s1.tar.gz",
+      "size": 66065149,
+      "lastModified": "2022-11-17T10:56:18Z"
+    }
+  ]
+}

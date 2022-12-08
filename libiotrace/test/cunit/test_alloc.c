@@ -15,6 +15,9 @@ extern void* WRAP(realloc)(void *ptr, size_t size);
 extern void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size);
 #endif
 
+pid_t pid = 0;
+ATTRIBUTE_THREAD pid_t tid = 0;
+
 struct wrapper_status active_wrapper_status;
 char init_done = 0;
 static const int id = 1010;

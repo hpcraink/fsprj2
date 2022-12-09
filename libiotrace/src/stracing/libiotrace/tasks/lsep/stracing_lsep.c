@@ -1,7 +1,7 @@
 /**
  * NOTE: This current implementation w/ per THREAD view has a major drawback,
  *       especially for events which shall be processed by the fnres-module:
- *       - Not traced io-relevant events will only be added to the fnmap if a wrapper
+ *       - Not traced I/O-relevant events will only be added to the fnmap if a wrapper
  *         for the affected thread gets triggered (which then in turn reads the scevents in the scerb)
  *       - BETTER solution would be: Implement PROCESS-WIDE view
  *         HOWEVER: This would require a "single producer-MULTI CONSUMER, MESSAGE PASSING capable" ringbuffer impl.
@@ -93,6 +93,8 @@ void stracing_lsep_process_new_scevents(void) {
         /* -- ... -- */
     }
 }
+
+
 
 
 

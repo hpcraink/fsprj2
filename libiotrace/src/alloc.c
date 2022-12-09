@@ -84,7 +84,9 @@ void* WRAP(malloc)(size_t size) {
 	}
 	file_alloc_data.address = ret;
 
+#ifdef HAVE_MALLOC_USABLE_SIZE
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#endif
 
 	WRAP_END(data, malloc)
 	return ret;
@@ -192,7 +194,9 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	}
 	file_alloc_data.address = ret;
 
+#ifdef HAVE_MALLOC_USABLE_SIZE
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#endif
 
 	WRAP_END(data, calloc)
 	return ret;
@@ -221,7 +225,9 @@ void* WRAP(realloc)(void *ptr, size_t size) {
 	}
 	file_alloc_data.address = ret;
 
+#ifdef HAVE_MALLOC_USABLE_SIZE
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#endif
 
 	WRAP_END(data, realloc)
 	return ret;
@@ -251,7 +257,9 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 	}
 	file_alloc_data.address = ret;
 	
+#ifdef HAVE_MALLOC_USABLE_SIZE
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#endif
 
 	WRAP_END(data, reallocarray)
 	return ret;

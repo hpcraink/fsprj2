@@ -43,7 +43,7 @@ sudo -u "${USERNAME}"  ansible-galaxy install -r requirements.yml
 # NOTE: Must be run as correct user, otherwise fs ownership will be wrong  (but requires us 2 ask for the root pw)
 # ALSO: We can't startup the docker containers b/c the group membership will only be updated once we log in again (and using the root user instead causes permission issues for Grafana plugins)
 #  --> Has to be done manually by the user via `docker-compose up -d` once logged in again
-echo -e "\nPlease enter your root pw once again"
+echo -e "\nPlease enter your pw once again"
 sudo -u "${USERNAME}"  ansible localhost  --ask-become-pass   -e hostname="${HOSTNAME}" -e username="${USERNAME}" -e libiotrace_setup_docker_containers=false  -m include_role -a name=roles/common
 
 

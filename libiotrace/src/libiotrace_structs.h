@@ -1085,19 +1085,19 @@ LIBIOTRACE_STRUCT_START(wrapper_status)
 #include "event_wrapper.h"
 #include "event_sim_wrapper.h"
 #ifdef WITH_POSIX_IO
-#include "posix_io_wrapper.h"
+#  include "posix_io_wrapper.h"
 #endif
 #ifdef WITH_POSIX_AIO
-#include "posix_aio_wrapper.h"
+#  include "posix_aio_wrapper.h"
 #endif
 #ifdef WITH_DL_IO
-#include "dl_io_wrapper.h"
+#  include "dl_io_wrapper.h"
 #endif
 #ifdef WITH_MPI_IO
-#include "mpi_io_wrapper.h"
+#  include "mpi_io_wrapper.h"
 #endif
 #ifdef WITH_ALLOC
-#include "alloc_wrapper.h"
+#  include "alloc_wrapper.h"
 #endif
 LIBIOTRACE_STRUCT_END
 

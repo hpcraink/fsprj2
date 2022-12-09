@@ -4,6 +4,7 @@
 #include "libiotrace_config.h"
 
 #include <stdlib.h>
+#include <malloc.h>         // `malloc_usable_size`
 
 #include "event.h"
 #include "wrapper_defines.h"
@@ -24,8 +25,8 @@ REAL_DEFINITION_TYPE void* REAL_DEFINITION(calloc)(size_t nmemb, size_t size) RE
 REAL_DEFINITION_TYPE void* REAL_DEFINITION(realloc)(void *ptr, size_t size) REAL_DEFINITION_INIT;
 #ifdef HAVE_REALLOCARRAY
 REAL_DEFINITION_TYPE void* REAL_DEFINITION(reallocarray)(void *ptr, size_t nmemb, size_t size) REAL_DEFINITION_INIT;
-#endif
-#endif
+#endif /* HAVE_REALLOCARRAY */
+#endif /* IO_LIB_STATIC */
 
 char toggle_alloc_wrapper(const char *line, const char toggle)
 {
@@ -59,6 +60,7 @@ void alloc_init(void) {
 }
 #endif
 
+
 void* WRAP(malloc)(size_t size) {
 	void *ret;
 	struct basic data;
@@ -81,6 +83,8 @@ void* WRAP(malloc)(size_t size) {
 		data.return_state = ok;
 	}
 	file_alloc_data.address = ret;
+
+	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 
 	WRAP_END(data, malloc)
 	return ret;
@@ -108,6 +112,7 @@ void WRAP(free)(void *ptr) {
 
 	data.return_state = ok;
 	file_alloc_data.address = ptr;
+
 	WRAP_END(data, free)
 }
 
@@ -187,6 +192,8 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	}
 	file_alloc_data.address = ret;
 
+	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+
 	WRAP_END(data, calloc)
 	return ret;
 }
@@ -213,6 +220,8 @@ void* WRAP(realloc)(void *ptr, size_t size) {
 		data.return_state = ok;
 	}
 	file_alloc_data.address = ret;
+
+	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 
 	WRAP_END(data, realloc)
 	return ret;
@@ -241,6 +250,8 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 		data.return_state = ok;
 	}
 	file_alloc_data.address = ret;
+	
+	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 
 	WRAP_END(data, reallocarray)
 	return ret;

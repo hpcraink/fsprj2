@@ -1,4 +1,5 @@
 #include <string.h>
+#include <malloc.h>
 
 #include "CUnit/CUnitCI.h"
 
@@ -135,6 +136,7 @@ void* call_and_check_malloc(size_t size, char *function_name) {
 
 	test_start = gettime();
 	mem = __test_malloc(size);
+	const size_t usable_size = malloc_usable_size(mem);
 	ret_errno = errno;
 	test_end = gettime();
 
@@ -146,6 +148,7 @@ void* call_and_check_malloc(size_t size, char *function_name) {
 
 	CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
 	CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+	CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
 
 	errno = ret_errno;
 	return mem;

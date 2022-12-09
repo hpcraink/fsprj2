@@ -948,6 +948,7 @@ LIBIOTRACE_STRUCT_END
 /* struct for alloc */
 LIBIOTRACE_STRUCT_START(alloc_function)
   LIBIOTRACE_STRUCT_SIZE_T(size)
+  LIBIOTRACE_STRUCT_SIZE_T(_usable_size)
 LIBIOTRACE_STRUCT_END
 
 /* struct for additional wrapper informations */

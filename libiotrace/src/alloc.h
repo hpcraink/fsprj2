@@ -4,6 +4,9 @@
 #include "libiotrace_config.h"
 
 #include <stdlib.h>
+#ifdef HAVE_SBRK
+#include <unistd.h>
+#endif
 #include "wrapper_defines.h"
 
 #define STATIC_CALLOC_BUFFER_SIZE 1024
@@ -18,6 +21,9 @@ REAL_TYPE void* REAL(calloc)(size_t nmemb, size_t size) REAL_INIT;
 REAL_TYPE void* REAL(realloc)(void *ptr, size_t size) REAL_INIT;
 #ifdef HAVE_REALLOCARRAY
 REAL_TYPE void* REAL(reallocarray)(void *ptr, size_t nmemb, size_t size) REAL_INIT;
+#endif
+#ifdef HAVE_SBRK
+REAL_TYPE void* REAL(sbrk)(intptr_t increment) REAL_INIT;
 #endif
 
 #ifndef IO_LIB_STATIC

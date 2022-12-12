@@ -15,6 +15,9 @@ extern void* WRAP(realloc)(void *ptr, size_t size);
 #ifdef HAVE_REALLOCARRAY
 extern void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size);
 #endif
+#ifdef HAVE_SBRK
+extern void* WRAP(sbrk)(intptr_t increment);
+#endif
 
 pid_t pid = 0;
 ATTRIBUTE_THREAD pid_t tid = 0;
@@ -148,7 +151,7 @@ void* call_and_check_malloc(size_t size, char *function_name) {
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
 #ifdef HAVE_MALLOC_USABLE_SIZE
-    const size_t usable_size = (0 == errno) ? malloc_usable_size(mem) : 0;
+    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
     CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
 #endif
 
@@ -175,6 +178,10 @@ void* call_and_check_calloc(size_t nmemb, size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+#ifdef HAVE_MALLOC_USABLE_SIZE
+    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
+    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#endif
 
     errno = ret_errno;
     return mem;
@@ -199,6 +206,10 @@ void* call_and_check_realloc(void *ptr, size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+#ifdef HAVE_MALLOC_USABLE_SIZE
+    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
+    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#endif
 
     errno = ret_errno;
     return mem;
@@ -224,6 +235,40 @@ void* call_and_check_reallocarray(void *ptr, size_t nmemb, size_t size, char *fu
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+#ifdef HAVE_MALLOC_USABLE_SIZE
+    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
+    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#endif
+
+    errno = ret_errno;
+    return mem;
+}
+#endif
+
+#ifdef HAVE_SBRK
+void* call_and_check_sbrk(intptr_t increment, char *function_name) {
+    void *mem;
+    u_int64_t test_start;
+    u_int64_t test_end;
+    int ret_errno;
+
+    test_start = gettime();
+    mem = __test_sbrk(increment);
+    ret_errno = errno;
+    test_end = gettime();
+
+    CU_ASSERT_FATAL(NULL != cached_data);
+
+    CU_ASSERT_FATAL(NULL != cached_data->__file_type);
+
+    check_basic(cached_data, function_name, test_start, test_end);
+
+    CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+    CU_ASSERT_FATAL((size_t)increment == ((struct alloc_function*)(cached_data->__function_data))->size)
+#ifdef HAVE_MALLOC_USABLE_SIZE
+    const size_t usable_size = (ok == cached_data->return_state) ? increment : 0;
+    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#endif
 
     errno = ret_errno;
     return mem;
@@ -249,6 +294,13 @@ void *realloc_ENOMEM(void * ptr ATTRIBUTE_UNUSED, size_t nmemb ATTRIBUTE_UNUSED)
 void *reallocarray_ENOMEM(void * ptr ATTRIBUTE_UNUSED, size_t nmemb ATTRIBUTE_UNUSED, size_t size ATTRIBUTE_UNUSED) {
     errno = ENOMEM;
     return NULL;
+}
+#endif
+
+#ifdef HAVE_SBRK
+void *sbrk_ENOMEM(intptr_t increment ATTRIBUTE_UNUSED) {
+    errno = ENOMEM;
+    return (void *) -1;
 }
 #endif
 
@@ -640,6 +692,67 @@ static void test_reallocarray(void) {
 #endif
 }
 
+static void test_sbrk(void) {
+#ifdef HAVE_SBRK
+    char function_name[] = "sbrk";
+    void *mem;
+    size_t size;
+    int ret_errno;
+    void *(*tmp_sbrk)(intptr_t);
+
+    toggle_alloc_wrapper(function_name, 1);
+    CU_ASSERT_FATAL(1 == active_wrapper_status.sbrk);
+
+    // new allocation with size 1
+
+    size = 1;
+    mem = call_and_check_sbrk(size, function_name);
+    CU_ASSERT_FATAL(NULL != mem);
+    CU_ASSERT_FATAL((void *) -1 != mem);
+    memset(mem, 'm', size);
+    brk(mem);
+
+    CU_ASSERT_FATAL(ok == cached_data->return_state);
+    CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+    free(cached_data);
+    cached_data = NULL;
+
+    // new allocation with size 5
+
+    size = 5;
+    mem = call_and_check_sbrk(size, function_name);
+    CU_ASSERT_FATAL(NULL != mem);
+    CU_ASSERT_FATAL((void *) -1 != mem);
+    memset(mem, 'm', size);
+    brk(mem);
+
+    CU_ASSERT_FATAL(ok == cached_data->return_state);
+    CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+    free(cached_data);
+    cached_data = NULL;
+
+    // new allocation with size 5 returns ENOMEM
+
+    size = 5;
+    tmp_sbrk = __real_sbrk;
+    __real_sbrk = sbrk_ENOMEM;
+    mem = call_and_check_sbrk(size, function_name);
+    ret_errno = errno;
+    __real_sbrk = tmp_sbrk;
+    CU_ASSERT_FATAL((void *) -1 == mem);
+
+    CU_ASSERT_FATAL(error == cached_data->return_state);
+    CU_ASSERT_FATAL(NULL != cached_data->return_state_detail);
+    CU_ASSERT_FATAL(ret_errno == cached_data->return_state_detail->errno_value);
+    CU_ASSERT_FATAL(0 == strcmp(strerror(ret_errno), cached_data->return_state_detail->errno_text));
+
+    free(cached_data);
+    cached_data = NULL;
+#endif
+}
+
 CUNIT_CI_RUN("Suite_1",
         CUNIT_CI_TEST(test_toggle_alloc_wrapper),
         CUNIT_CI_TEST(test_alloc_init),
@@ -647,5 +760,6 @@ CUNIT_CI_RUN("Suite_1",
         CUNIT_CI_TEST(test_free),
         CUNIT_CI_TEST(test_calloc),
         CUNIT_CI_TEST(test_realloc),
-        CUNIT_CI_TEST(test_reallocarray)
+        CUNIT_CI_TEST(test_reallocarray),
+		CUNIT_CI_TEST(test_sbrk)
         )

@@ -7,3 +7,6 @@ WRAPPER_NAME(realloc)
 #ifdef HAVE_REALLOCARRAY
 WRAPPER_NAME(reallocarray)
 #endif
+#ifdef HAVE_SBRK
+WRAPPER_NAME(sbrk)
+#endif

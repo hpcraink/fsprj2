@@ -143,6 +143,8 @@ check_symbol_exists(getmntent_r "mntent.h" HAVE_GETMNTENT_R)
 
 check_symbol_exists(reallocarray "stdlib.h" HAVE_REALLOCARRAY)
 
+check_symbol_exists(sbrk "unistd.h" HAVE_SBRK)
+
 check_symbol_exists(malloc_usable_size "malloc.h" HAVE_MALLOC_USABLE_SIZE)
 
 #ToDo: right place to search for off64_t?

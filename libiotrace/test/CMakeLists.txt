@@ -242,6 +242,7 @@ if(WITH_ALLOC)
         "-Wl,-wrap=calloc"
         "-Wl,-wrap=realloc"
         "-Wl,-wrap=reallocarray"
+        "-Wl,-wrap=sbrk"
     )
 endif()
 

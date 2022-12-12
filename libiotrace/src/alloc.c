@@ -26,6 +26,9 @@ REAL_DEFINITION_TYPE void* REAL_DEFINITION(realloc)(void *ptr, size_t size) REAL
 #ifdef HAVE_REALLOCARRAY
 REAL_DEFINITION_TYPE void* REAL_DEFINITION(reallocarray)(void *ptr, size_t nmemb, size_t size) REAL_DEFINITION_INIT;
 #endif /* HAVE_REALLOCARRAY */
+#ifdef HAVE_BRK
+REAL_DEFINITION_TYPE int REAL_DEFINITION(brk)(void *addr) REAL_DEFINITION_INIT;
+#endif /* HAVE_BRK */
 #ifdef HAVE_SBRK
 REAL_DEFINITION_TYPE void* REAL_DEFINITION(sbrk)(intptr_t increment) REAL_DEFINITION_INIT;
 #endif /* HAVE_SBRK */
@@ -259,12 +262,37 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 		data.return_state = ok;
 	}
 	file_alloc_data.address = ret;
-	
+
 #ifdef HAVE_MALLOC_USABLE_SIZE
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 #endif
 
 	WRAP_END(data, reallocarray)
+	return ret;
+}
+#endif
+
+
+// ---   Syscalls   ---
+#ifdef HAVE_BRK
+int WRAP(brk)(void* addr) {
+	int ret;
+	struct basic data;
+	struct file_memory file_memory_data;         // TODO: CHOOSE MORE SUITABLE STRUCT MEMBERS
+	WRAP_START(data)
+
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
+	file_memory_data.length = -1;
+	file_memory_data.address = addr;
+
+	CALL_REAL_FUNCTION_RET(data, ret, brk, addr)
+
+	data.return_state = (-1 == ret) ? error : ok;
+
+	WRAP_END(data, brk)
 	return ret;
 }
 #endif

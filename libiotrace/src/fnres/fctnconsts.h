@@ -41,6 +41,7 @@ static uint64_t hash_string(const char *str) {
 #define CASE_DUP2 0x17c95e5c0
 #define CASE_DUP3 0x17c95e5c1
 #define CASE_FCNTL 0x310f6cf05c
+#define CASE_BRK 0xb8862e4
 #define CASE_SBRK 0x17c9dcf17
 #define CASE_MMAP 0x17c9ab170
 #define CASE_MMAP64 0x6530e0cd49a

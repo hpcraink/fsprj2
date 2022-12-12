@@ -392,6 +392,9 @@
 /* Define to 1 if system supports reallocarray(). */
 #cmakedefine HAVE_REALLOCARRAY 1
 
+/* Define to 1 if system supports brk(). */
+#cmakedefine HAVE_BRK 1
+
 /* Define to 1 if system supports sbrk(). */
 #cmakedefine HAVE_SBRK 1
 

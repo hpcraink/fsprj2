@@ -28,6 +28,7 @@ FUNCTION_NAMES = [
     "dup", "dup2", "dup3",
     "fcntl",
 
+    "sbrk",
     "mmap", "mmap64",               # Partially relevant 4 tracing (when NOT not file backed -> MAP_ANONYMOUS)
     "mremap",
     "msync",

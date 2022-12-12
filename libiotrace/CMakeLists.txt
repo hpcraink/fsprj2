@@ -1,4 +1,4 @@
-find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
+find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)        # Find compiler based on env-var, and not soley based on `/usr/bin/cc`  (which causes issues on systems where the compiler is loaded via `module load <compiler-module>`)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
 project(libiotrace)
@@ -215,7 +215,7 @@ endif()
 include(CheckIncludeFiles)
 include(${libiotrace_SOURCE_DIR}/cmake/CheckCompilerAttributes.cmake)
 include(${libiotrace_SOURCE_DIR}/cmake/CheckRDTSC.cmake)
-CheckCompilerAttributes() 
+CheckCompilerAttributes()
 CheckRDTSC()
 
 
@@ -241,11 +241,11 @@ if (WITH_UNIT_TESTS)
     # might be to find_package(CUnit REQUIRED) and check for pre-installed version.
 
     add_git_submodule(ext/cunit)
-    
+
     add_subdirectory(ext)
-    
+
     set(CMAKE_PREFIX_PATH "${PROJECT_SOURCE_DIR}/ext/cunit/CUnit/;${CMAKE_PREFIX_PATH}")
-    
+
     enable_testing()
 endif()
 

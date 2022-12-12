@@ -348,13 +348,20 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
         case CASE_CLEANUP_PROCESS:          /* Internal libiotrace functions (which are written to trace) */
         case CASE_INIT_ON_LOAD:
 
+        case CASE_MALLOC:                   /* - Dynamically allocated mem. - */
+        case CASE_CALLOC:
+        case CASE_REALLOC:
+        case CASE_REALLOCARRAY:
+        case CASE_FREE:
+        case CASE_SBRK:
+
         case CASE_PTHREAD_CREATE:
         case CASE_FORK:             /* Handled by hook `reset_on_fork` in event.c, which is automatically called on `fork` */
         case CASE_VFORK:
             SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_NAF);
             return rtn_status;
 
-        case CASE_EXECL:            /* TODO: ASK -> Old (but still inherited) fildes will be gone */
+        case CASE_EXECL:            /* TODO: PROBLEM: Old (but still inherited) fildes will be gone */
         case CASE_EXECLP:
         case CASE_EXECLE:
         case CASE_EXECV:
@@ -513,13 +520,6 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
             SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, (extracted_fname) ? (extracted_fname) : ("MAIN PROGRAM"));
             return rtn_status;
         }
-
-    /* - Dynamically allocated mem. - */
-        case CASE_MALLOC:
-        case CASE_CALLOC:
-        case CASE_REALLOC:
-        case CASE_REALLOCARRAY:
-        case CASE_FREE:
 
     /* - POSIX-AIO */
         case CASE_SHM_OPEN:

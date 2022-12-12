@@ -285,7 +285,7 @@ int WRAP(brk)(void* addr) {
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_memory, file_memory_data)
-	file_memory_data.length = -1;
+	file_memory_data.length = 0;
 	file_memory_data.address = addr;
 
 	CALL_REAL_FUNCTION_RET(data, ret, brk, addr)

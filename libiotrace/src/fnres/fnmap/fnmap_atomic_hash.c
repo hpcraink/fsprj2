@@ -50,12 +50,12 @@ static int sprint_fnmap_key(const fnmap_key_t *key, char *str_buf, size_t str_bu
 
 static void log_fnmap_key(const fnmap_key_t *key) {
     const int key_str_buf_size = sprint_fnmap_key(key, NULL, 0) + 1;
-    char* key_str_buf = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC( malloc(key_str_buf_size) ) );
+    char* key_str_buf = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC(malloc)(key_str_buf_size) );
 
     sprint_fnmap_key(key, key_str_buf, key_str_buf_size);
     DEV_DEBUG_PRINT_MSG("fnmap-key: %s", key_str_buf);
 
-    CALL_REAL_ALLOC_SYNC( free(key_str_buf) );
+    CALL_REAL_ALLOC_SYNC(free)(key_str_buf);
 }
 
 #  define DEV_DEBUG_PRINT_FNMAP_KEY(key) log_fnmap_key(key)
@@ -70,8 +70,8 @@ static int hmap_del_hook(void *hash_data, void *caller_data ATTRIBUTE_UNUSED) {
     if (hash_data) {
         fnmap_entry_t* entry = (fnmap_entry_t*)hash_data;
         DEV_DEBUG_PRINT_MSG("Freeing entry (`ts_in_ns`=%lu,`fname_ptr`=\"%s\")", entry->ts_in_ns, entry->fname_ptr);
-        CALL_REAL_ALLOC_SYNC( free(entry->fname_ptr) );
-        CALL_REAL_ALLOC_SYNC( free(entry) );
+        CALL_REAL_ALLOC_SYNC(free)(entry->fname_ptr);
+        CALL_REAL_ALLOC_SYNC(free)(entry);
     }
 
     return HOOK_NODE_REMOVE;
@@ -126,8 +126,8 @@ void fnmap_add_or_update(const fnmap_key_t *key, const char *fname, const uint64
     assert( key && fname && "params may not be `NULL`" );
 
 /* (0) Create new entry */
-    fnmap_entry_t *new_entry_ptr = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC( malloc(sizeof *new_entry_ptr) ) );
-    new_entry_ptr->fname_ptr = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC( strdup(fname) ) );
+    fnmap_entry_t *new_entry_ptr = DIE_WHEN_ERRNO_VPTR( CALL_REAL_ALLOC_SYNC(malloc)(sizeof *new_entry_ptr) );
+    new_entry_ptr->fname_ptr = DIE_WHEN_ERRNO_VPTR( strdup(fname) );
     new_entry_ptr->ts_in_ns = ts_in_ns;
 
 /* (1) Try to add entry */
@@ -144,8 +144,8 @@ add_after_removal:
                     LOG_DEBUG("Already existing entry seems "
                               "to be more recent (existing=%lu vs. to-be-added=%lu), "
                               "aborting update ...", existing_entry->ts_in_ns, ts_in_ns);
-                    CALL_REAL_ALLOC_SYNC( free(new_entry_ptr->fname_ptr) );
-                    CALL_REAL_ALLOC_SYNC( free(new_entry_ptr) );
+                    CALL_REAL_ALLOC_SYNC(free)(new_entry_ptr->fname_ptr);
+                    CALL_REAL_ALLOC_SYNC(free)(new_entry_ptr);
                     return;
                 }
             }

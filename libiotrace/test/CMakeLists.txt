@@ -431,6 +431,12 @@ if(WITH_POSIX_AIO)
 endif()
 
 ##########################################################################################################
+if(WITH_ALLOC)
+    # test with: IOTRACE_LOG_NAME=s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./s_brk
+    add_executable(s_brk s_brk.c)
+endif()
+
+##########################################################################################################
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read
@@ -468,20 +474,20 @@ if(WITH_MPI_IO)
     # MPI_File_seek
     # MPI_File_write
     # MPI_File_close
-    
+
     # test with: rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10
     add_executable(mpi_file_io mpi_file_io.c)
     target_link_libraries(mpi_file_io PRIVATE ${TESTS_LINK_OPTIONS})
-    
+
     add_executable(mpi_file_io_sleep mpi_file_io_sleep.c)
     target_link_libraries(mpi_file_io_sleep PRIVATE ${TESTS_LINK_OPTIONS})
-    
+
     add_executable(mpi_file_io_clear_caches mpi_file_io.c)
     target_compile_options(mpi_file_io_clear_caches PRIVATE "-DWANT_CLEAR_CACHES")
     target_link_libraries(mpi_file_io_clear_caches PRIVATE ${TESTS_LINK_OPTIONS})
-    
+
     find_package(OpenMP)
-    
+
     # test with: rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10
     add_executable(mpi_file_io_openmp mpi_file_io.c)
     target_compile_options(mpi_file_io_openmp PRIVATE "-DWANT_OPENMP")
@@ -489,7 +495,7 @@ if(WITH_MPI_IO)
     if(OpenMP_C_FOUND)
         target_link_libraries(mpi_file_io_openmp PUBLIC OpenMP::OpenMP_C)
     endif()
-    
+
     add_executable(mpi_file_io_openmp_clear_caches mpi_file_io.c)
     target_compile_options(mpi_file_io_openmp_clear_caches PRIVATE "-DWANT_OPENMP -DWANT_CLEAR_CACHES")
     target_link_libraries(mpi_file_io_openmp_clear_caches PRIVATE ${TESTS_LINK_OPTIONS})
@@ -524,9 +530,9 @@ endif()
 if(WITH_POSIX_IO)
     # test with: rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=4 ./multi_shared 20 4
     # rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=4 ./multi_shared 20 4
-    
+
     find_package(OpenMP)
-    
+
     add_executable(multi_shared multi_processes_threads_files.c)
     target_compile_options(multi_shared PRIVATE "-D_GNU_SOURCE")
     target_link_libraries(multi_shared PRIVATE ${LINK_OPTIONS})

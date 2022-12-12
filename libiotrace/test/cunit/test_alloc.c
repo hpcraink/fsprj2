@@ -49,6 +49,11 @@ void io_log_file_buffer_write(struct basic *data) {
     CU_ASSERT_FATAL((char *)((void*)cached_data) + len == pos);
 }
 
+// is called from wrappers if fnres is enabled
+int fnres_trace_ioevent(struct basic *ioevent_ptr ATTRIBUTE_UNUSED) {
+	return 0;
+}
+
 void get_basic(struct basic *data) {
     data->process_id = id;
     data->thread_id = id;

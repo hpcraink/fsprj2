@@ -14,6 +14,9 @@
 //#define DEV_DEBUG_ENABLE_LOGS
 #include "../../common/error.h"
 
+#ifdef WITH_ALLOC
+#  include "../../alloc.h"
+#endif
 
 /* -- Globals / Constants -- */
 static hmap_t *g_hmap;      /* TODO:  in BSS -> inited w/ 0  ?? */

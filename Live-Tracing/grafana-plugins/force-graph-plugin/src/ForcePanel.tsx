@@ -8,49 +8,44 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     let nodes: any = [];
     let links: any = [];
 
-    const threads = data.series
+    const values = data.series
       .map((series) => series.fields.find((field) => field.type === 'number'))
       .map((field) => field?.values.get(0));
 
-    /*
-    function getRandomArbitrary(min: number, max: number) {
-      return Math.random() * (max - min) + min;
+    function addNodes(_callback: any) {
+      let nodeNumber = 0;
+      for (let i = 0; i < data.series.length; i++) {
+        if (!nodes.map((a: any) => a.name).includes(data.series[i].fields[1].labels?.hostname)) {
+          nodes.push({ index: nodeNumber, name: data.series[i].fields[1].labels?.hostname, r: 10 });
+          nodeNumber += 1;
+        }
+        if (!nodes.map((a: any) => a.name).includes(data.series[i].fields[1].labels?.thread)) {
+          nodes.push({ index: nodeNumber, name: data.series[i].fields[1].labels?.thread, r: 5 });
+          nodeNumber += 1;
+        }
+      }
+      _callback();
     }
 
-    let threads = [
-      getRandomArbitrary(20, 40),
-      getRandomArbitrary(20, 60),
-      getRandomArbitrary(30, 80),
-      getRandomArbitrary(20, 80),
-    ];
-*/
-    let threadPos = [
-      { x: -100, y: -100 },
-      { x: -100, y: 100 },
-      { x: 100, y: -100 },
-      { x: 100, y: 100 },
-    ];
-    console.log(threads);
-    let nodeNumber = 0;
-    let saveNode = 0;
-    //for (let i = 0; i < threads.length; i++) {
-    for (let i = 0; i < 4; i++) {
-      nodes.push({ index: nodeNumber, r: 10, fx: threadPos[i].x, fy: threadPos[i].y });
-      saveNode = nodeNumber;
-      nodeNumber += 1;
-      for (let j = 0; j < threads[i]; j++) {
-        nodes.push({ index: nodeNumber, r: 4 });
-        links.push({ source: nodeNumber, target: saveNode });
-        nodeNumber += 1;
+    function addLinks() {
+      console.log(nodes);
+      for (let i = 0; i < data.series.length; i++) {
+        let source = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.thread);
+        let target = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.hostname);
+
+        links.push({
+          source: source.index,
+          target: target.index,
+        });
       }
     }
 
     function forceSimulation(_callback: any) {
       let simulation = d3
         .forceSimulation(nodes)
-        .force('link', d3.forceLink().links(links).distance(50))
+        .force('link', d3.forceLink().links(links).distance(60))
         .force('charge', d3.forceManyBody().strength(-2))
-        //        .force('collide', d3.forceCollide().radius(10))
+        //.force('collide', d3.forceCollide().radius(10))
         .stop();
 
       simulation.tick(1000);
@@ -117,10 +112,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     function runSimulation() {
+      addNodes(() => addLinks());
       forceSimulation(() => drawForceGraph());
     }
 
-    if (threads[0] === undefined) {
+    if (values[0] === undefined) {
       d3.select('p').text('No data');
     } else {
       runSimulation();

@@ -1,14 +1,16 @@
 import React, {useEffect} from 'react';
 import { PanelProps } from '@grafana/data';
-import { SimpleOptions } from 'types';
+import { PanelOptions } from 'options';
 import _ from 'lodash';
-//import { CustomScrollbar } from '@grafana/ui' //npn istall @grafana/ui
-//import { Component } from 'react';
-//import ReactCustomScrollbars from 'react-custom-scrollbars-2';
+import { CustomScrollbar } from '@grafana/ui' //npnmistall @grafana/ui
 
-interface Props extends PanelProps<SimpleOptions> {}
 
-export const ThreadMap: React.FC<Props> = ({ options, data, width, height }) => {
+interface ThreadMapPanelProps extends PanelProps<PanelOptions> {}
+
+export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ 
+  options, data, height 
+
+}) => {
 
   var ProcessIDArrCss = new Array //Css Daten für Grafana
   var ProcessColour = new Array   //Farbe Auslastung Prozesse
@@ -17,7 +19,8 @@ export const ThreadMap: React.FC<Props> = ({ options, data, width, height }) => 
   var Colours = new Array         //Anzahl möglicher Farben
 
   useEffect(() =>{ //useEffect notwendig oder anderen Operator?
-  },[data, height, width]);
+    options
+  },[data, height]);
 
   //Färbung der Anhand deren Auslastung
   Colours = ColourSteps()
@@ -158,19 +161,16 @@ export const ThreadMap: React.FC<Props> = ({ options, data, width, height }) => 
     );
   }
 
-  const divStyle={
-   overflow: 'scroll',   
-  };
-
   return(
-    <div style={divStyle}> 
-      <svg width={width} height={height}>
-        "Prozess"
-        {ProcessIDArrCss}
-        "Threads"
-        {ThreadIDArrCss}
-        <rect  x={0} y={(0)} width={30000} height={1}/>      
-      </svg>
+    //<div style={divStyle}>
+    <div>
+      <CustomScrollbar>
+        <svg width={data.series.length*140} height={height}>
+          {ProcessIDArrCss}
+          {ThreadIDArrCss}
+          <rect  x={0} y={(0)} width={30000} height={1}/>      
+        </svg>
+      </CustomScrollbar>
     </div>
   );
 };

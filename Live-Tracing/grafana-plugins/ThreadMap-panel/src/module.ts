@@ -1,8 +1,8 @@
 import { PanelPlugin } from '@grafana/data';
-import { SimpleOptions } from './types';
+import { PanelOptions } from 'options';
 import { ThreadMap } from './ThreadMap';
 
-export const plugin = new PanelPlugin<SimpleOptions>(ThreadMap).setPanelOptions((builder) => {
+export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions((builder) => {
   return builder
     .addTextInput({
       path: 'text',

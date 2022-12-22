@@ -16,11 +16,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       let nodeNumber = 0;
       for (let i = 0; i < data.series.length; i++) {
         if (!nodes.map((a: any) => a.name).includes(data.series[i].fields[1].labels?.hostname)) {
-          nodes.push({ index: nodeNumber, name: data.series[i].fields[1].labels?.hostname, r: 10 });
+          nodes.push({ index: nodeNumber, name: data.series[i].fields[1].labels?.hostname, r: 10, writtenBytes: 0 });
           nodeNumber += 1;
         }
         if (!nodes.map((a: any) => a.name).includes(data.series[i].fields[1].labels?.thread)) {
-          nodes.push({ index: nodeNumber, name: data.series[i].fields[1].labels?.thread, r: 5 });
+          nodes.push({ index: nodeNumber, name: data.series[i].fields[1].labels?.thread, r: 5, writtenBytes: 0 });
           nodeNumber += 1;
         }
       }
@@ -33,22 +33,44 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         let source = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.thread);
         let target = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.hostname);
 
-        links.push({
-          source: source.index,
-          target: target.index,
-        });
+        let link_color = '#003f5c';
+        if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
+          link_color = '#ef5675';
+        } else if (data.series[i].fields[1].labels?.functionname === 'write') {
+          link_color = '#ffa600';
+        }
+
+        if (links.length === 0) {
+          links.push({
+            source: source.index,
+            target: target.index,
+            color: link_color,
+          });
+        } else {
+          if (
+            links.map((a: any) => a.source).includes(source.index) &&
+            links.map((a: any) => a.target).includes(target.index)
+          ) {
+            //pass
+          } else {
+            links.push({
+              source: source.index,
+              target: target.index,
+              color: link_color,
+            });
+          }
+        }
       }
     }
 
     function forceSimulation(_callback: any) {
       let simulation = d3
         .forceSimulation(nodes)
-        .force('link', d3.forceLink().links(links).distance(60))
-        .force('charge', d3.forceManyBody().strength(-2))
-        //.force('collide', d3.forceCollide().radius(10))
+        .force('link', d3.forceLink().links(links).distance(75).strength(4))
+        .force('charge', d3.forceManyBody().strength(-8))
         .stop();
 
-      simulation.tick(1000);
+      simulation.tick(500);
       _callback();
     }
 
@@ -56,6 +78,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       const margin = { left: 30, top: 30, right: 30, bottom: 30 };
       const chartWidth = width - (margin.left + margin.right);
       const chartHeight = height - (margin.top + margin.bottom);
+      console.log(links);
 
       let xBorder: [any, any] = d3.extent(nodes, function (d: any) {
         return +d.x;
@@ -92,7 +115,9 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .attr('y2', function (d: any) {
           return yScale(d.target.y);
         })
-        .attr('stroke', 'blue')
+        .attr('stroke', function (d: any) {
+          return d.color;
+        })
         .attr('stroke-width', 1.5);
       svg
         .selectAll('circle')
@@ -108,7 +133,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .attr('r', function (d: any) {
           return d.r;
         })
-        .style('fill', 'green');
+        .style('fill', '#888888');
     }
 
     function runSimulation() {

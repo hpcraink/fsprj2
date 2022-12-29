@@ -15,7 +15,7 @@
 
 /* must be static because calloc has to return zero initialized memory
  * and static variables are zero initialized */
-static char static_calloc_buffer[STATIC_CALLOC_BUFFER_SIZE];
+static char static_calloc_buffer[STATIC_CALLOC_BUFFER_SIZE_BYTES];
 static char *static_calloc_buffer_pos = static_calloc_buffer;
 
 #ifndef IO_LIB_STATIC
@@ -103,7 +103,7 @@ void WRAP(free)(void *ptr) {
 	struct file_alloc file_alloc_data;
 
 	if ((char*) ptr
-			>= &(static_calloc_buffer[0])&& (char*)ptr < &(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE) {
+			>= &(static_calloc_buffer[0])&& (char*)ptr < &(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE_BYTES) {
 		/* ptr was returned by wrapper of calloc from static memory: don't
 		 * free it (will result in undefined behavior) */
 		return;
@@ -167,7 +167,7 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 			/* check if static_calloc_buffer has enough free memory left for
 			 * needed size (do it without adding size to static_calloc_buffer_pos
 			 * to prevent wrap around during evaluation) */
-			if ((size_t)(&(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE
+			if ((size_t)(&(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE_BYTES
 					- old_value) >= real_size) {
 				new_value = (void*) (old_value + real_size);
 			} else {

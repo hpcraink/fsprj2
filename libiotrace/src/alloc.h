@@ -9,7 +9,7 @@
 #endif
 #include "wrapper_defines.h"
 
-#define STATIC_CALLOC_BUFFER_SIZE 1024
+#define STATIC_CALLOC_BUFFER_SIZE_BYTES 1024
 
 /* Function pointers for  alloc functions */
 

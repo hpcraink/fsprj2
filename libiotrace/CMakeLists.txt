@@ -54,7 +54,7 @@ option (REALTIME "Use the real system time (is affected by discontinuous jumps i
 option (ENABLE_REMOTE_CONTROL "Remotely control wrappers (toggle on/off) via REST-API" ON)
 option (ENABLE_FILESYSTEM_METADATA "writes mount points to LOGFILE and/or to INFLUXDB if ENABLE_OUTPUT is set to LOGFILE, INFLUXDB or LOGFILE_AND_INFLUXDB" ON)
 
-set(BUFFER_SIZE "1048576" CACHE STRING "buffer size per process")
+set(BUFFER_SIZE_BYTES "1048576" CACHE STRING "Buffer size per process in bytes")
 set(MAX_FUNCTION_NAME "40" CACHE STRING "max length of function names")
 set(MAX_ERROR_TEXT "1024" CACHE STRING "max length of error text for errno number")
 set(MAX_MMSG_MESSAGES "20" CACHE STRING "max number of messages send/received over a socket via single function call")
@@ -103,7 +103,7 @@ if(LOG_WRAPPER_TIME)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DLOG_WRAPPER_TIME)
 endif()
 
-list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DBUFFER_SIZE=${BUFFER_SIZE})
+list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DBUFFER_SIZE_BYTES=${BUFFER_SIZE_BYTES})
 list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DMAX_FUNCTION_NAME=${MAX_FUNCTION_NAME})
 list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DMAX_ERROR_TEXT=${MAX_ERROR_TEXT})
 list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DMAX_MMSG_MESSAGES=${MAX_MMSG_MESSAGES})

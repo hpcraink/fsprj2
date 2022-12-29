@@ -402,7 +402,7 @@ static void test_calloc(void) {
     int i;
     int ret_errno;
     size_t size;
-    void* mem[STATIC_CALLOC_BUFFER_SIZE + 1];
+    void* mem[STATIC_CALLOC_BUFFER_SIZE_BYTES + 1];
     void* (*tmp_calloc)(size_t nmemb, size_t size);
 
     memset(zeros, 0, sizeof(zeros));
@@ -443,7 +443,7 @@ static void test_calloc(void) {
     cached_data = NULL;
     tmp_calloc = __real_calloc;
     __real_calloc = NULL;
-    for (i = 0; i <= STATIC_CALLOC_BUFFER_SIZE; i++) {
+    for (i = 0; i <= STATIC_CALLOC_BUFFER_SIZE_BYTES; i++) {
         mem[i] = __test_calloc(1, 1);
         CU_ASSERT_FATAL(NULL == cached_data);
         if (NULL == mem[i]) {
@@ -453,8 +453,8 @@ static void test_calloc(void) {
             CU_ASSERT_FATAL('\0' == *((char *)mem[i]));
         }
     }
-    if (STATIC_CALLOC_BUFFER_SIZE + 1 == i) {
-        CU_FAIL_FATAL("It should not be possible to allocate more memory than STATIC_CALLOC_BUFFER_SIZE.");
+    if (STATIC_CALLOC_BUFFER_SIZE_BYTES + 1 == i) {
+        CU_FAIL_FATAL("It should not be possible to allocate more memory than STATIC_CALLOC_BUFFER_SIZE_BYTES.");
     }
     for (int l = 0; l < i; l++) {
         __test_free(mem[l]);

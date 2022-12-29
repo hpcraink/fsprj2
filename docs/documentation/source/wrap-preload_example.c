@@ -17,8 +17,8 @@ static int (*real_printf)(const char *__restrict format, ...) = NULL;
 static int (*real_vprintf)(const char *__restrict format, _G_va_list arg) = NULL;
 
 /* Buffer */
-#define BUFFER_SIZE 400
-static char data_buffer[BUFFER_SIZE];
+#define BUFFER_SIZE_BYTES 400
+static char data_buffer[BUFFER_SIZE_BYTES];
 static char* endpos;
 static char* pos;
 
@@ -61,7 +61,7 @@ static void init() {
 	real_printf = dlsym(RTLD_NEXT, "printf");
 	real_vprintf = dlsym(RTLD_NEXT, "vprintf");
 
-	endpos = data_buffer + BUFFER_SIZE - 1;
+	endpos = data_buffer + BUFFER_SIZE_BYTES - 1;
 	pos = data_buffer;
 
 	pthread_mutex_init(&lock, NULL);

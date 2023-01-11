@@ -63,7 +63,7 @@ CUnit: GNU LIBRARY GENERAL PUBLIC LICENSE Version 2 (see [CUnit](https://gitlab.
   12. press “c” and wait until configuration is done
   13. optional: customize libiotrace (set/change _cmake_ options)
 
-      * _BUFFER_SIZE_BYTES_:
+      * _BUFFER_SIZE_:
 
         libiotrace buffers output in one buffer per monitored process.
         This option sets the buffer size in bytes.

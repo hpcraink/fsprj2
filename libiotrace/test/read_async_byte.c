@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define BUFFER_SIZE_BYTES 50
+#define BUFFER_SIZE 50
 
 int main(void) {
 	int fd;
@@ -16,15 +16,15 @@ int main(void) {
 	struct sigevent aio1_sigevent;
 	struct aiocb * list[4];
 	struct timespec timeout;
-	volatile char buffer1[BUFFER_SIZE_BYTES];
-	volatile char buffer2[BUFFER_SIZE_BYTES / 2];
+	volatile char buffer1[BUFFER_SIZE];
+	volatile char buffer2[BUFFER_SIZE / 2];
 
 	fd = open("/etc/passwd", O_RDONLY);
 	assert(0 <= fd);
 
 	aiocb1.aio_fildes = fd;
 	aiocb1.aio_buf = &buffer1;
-	aiocb1.aio_nbytes = BUFFER_SIZE_BYTES;
+	aiocb1.aio_nbytes = BUFFER_SIZE;
 	aiocb1.aio_offset = 0;
 	aiocb1.aio_lio_opcode = LIO_READ;
 	aiocb1.aio_reqprio = 0;
@@ -33,7 +33,7 @@ int main(void) {
 
 	aiocb2.aio_fildes = fd;
 	aiocb2.aio_buf = &buffer2;
-	aiocb2.aio_nbytes = BUFFER_SIZE_BYTES / 2;
+	aiocb2.aio_nbytes = BUFFER_SIZE / 2;
 	aiocb2.aio_offset = 1;
 	aiocb2.aio_lio_opcode = LIO_READ;
 	aiocb2.aio_reqprio = 0;
@@ -41,7 +41,7 @@ int main(void) {
 
 	aiocb3.aio_fildes = fd;
 	aiocb3.aio_buf = &buffer1;
-	aiocb3.aio_nbytes = BUFFER_SIZE_BYTES;
+	aiocb3.aio_nbytes = BUFFER_SIZE;
 	aiocb3.aio_offset = 0;
 	aiocb3.aio_lio_opcode = LIO_NOP;
 	aiocb3.aio_reqprio = 0;

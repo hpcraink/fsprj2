@@ -1,40 +1,74 @@
 import { PanelPlugin } from '@grafana/data';
-import { PanelOptions } from 'options';
+import { defaultPanelOptions, PanelOptions } from 'options';
 import { ThreadMap } from './ThreadMap';
 
-export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions((builder) => {
-  return builder
-    .addTextInput({
-      path: 'text',
-      name: 'Simple text option',
-      description: 'Description of panel option',
-      defaultValue: 'Default value of text input option',
-    })
-    .addBooleanSwitch({
-      path: 'showSeriesCount',
-      name: 'Show series counter',
-      defaultValue: false,
-    })
-    .addRadio({
-      path: 'seriesCountSize',
-      defaultValue: 'sm',
-      name: 'Series counter size',
+export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(builder => {
+  let category = ['ThreadMap']
+  builder
+  .addBooleanSwitch({
+    path: 'UseMinMaxBoolean',
+    name: 'Use specified min/max Values',
+    defaultValue: false,
+    category,
+  })
+    .addNumberInput({
+      path: 'ThreadMapColor.min',
+      name: 'Min.value',
+      defaultValue: defaultPanelOptions.minmax.min,
       settings: {
-        options: [
-          {
-            value: 'sm',
-            label: 'Small',
-          },
-          {
-            value: 'md',
-            label: 'Medium',
-          },
-          {
-            value: 'lg',
-            label: 'Large',
-          },
-        ],
+        placeholder: 'Auto',
       },
-      showIf: (config) => config.showSeriesCount,
-    });
-});
+      category,
+    })
+    .addNumberInput({
+      path: 'ThreadMapColor.max',
+      name: 'Max.value',
+      defaultValue: defaultPanelOptions.minmax.max,
+      settings: {
+        placeholder: 'Auto',
+      },
+      category,
+    })
+  
+  category = ['ONLY FOR TETSTING! Y Axis']
+
+    builder
+      .addUnitPicker({
+        category,
+        path: 'yAxis.unit',
+        name: 'Unit',
+        defaultValue: undefined,
+        settings: {
+          isClearable: true,
+        },
+      })
+      .addNumberInput({
+        category,
+        path: 'yAxis.decimals',
+        name: 'Decimals',
+        settings: {
+          placeholder: 'Auto',
+        },
+      });
+
+      if (!false) {
+        // if undefined, then show the min+max
+        builder
+          .addNumberInput({
+            path: 'yAxis.min',
+            name: 'Min value',
+            settings: {
+              placeholder: 'Auto',
+            },
+            category,
+          })
+          .addTextInput({
+            path: 'yAxis.max',
+            name: 'Max value',
+            settings: {
+              placeholder: 'Auto',
+            },
+            category,
+          });
+      }
+})

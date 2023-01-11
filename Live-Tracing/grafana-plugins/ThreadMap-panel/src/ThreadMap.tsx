@@ -43,11 +43,11 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({
   {
     let Colour = new Array
     const step = 255 / ((data.series.length-1)*0.5)
-    Colour[0] = "#00FF00"
+    Colour[0] = "#00ff00"
 
     for (let i = 1; i < (data.series.length); i++) {
       if(i < (data.series.length/2)) { //Grün #00FF00 bis Gelb #FFFF00
-        if ((i*step) < 15) {
+        if ((i*step) < 16) {
           Colour[i] = "#0" + (i*step).toString(16).substring(0,1) + "ff00"
         }
         else {
@@ -122,7 +122,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({
       return(ReturnColour);
     }
     return[ReturnColourThreads, ReturnColourProcess];
-    //return(ReturnColourThreads);
+
   }
 
   function BuildPanelProcess(i: number,Colour: any)
@@ -130,9 +130,10 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({
     return (
     //horizontal
     <g>
-    <rect x={(140*i)} y={(0)} width={135} height={50} rx="10" fill={Colour}/>
-    <text x={(5+140*i)} y= {(40)} font-family="Arial" font-size="30" fill="black">{data.series[i].fields[1].labels?.processid}</text>
-    <rect x={(8*i)} y={(70)} width={7} height={7} rx="10" fill={Colour}/>
+    <rect x={(5+150*i)} y={(40)} width={135} height={50} rx="10" fill={Colour}/>
+    <text x={(10+150*i)} y= {(80)} font-family="Arial" font-size="30" fill="black">{data.series[i].fields[1].labels?.processid}</text>
+    <rect x={(8*i)} y={(110)} width={7} height={7} rx="10" fill={Colour}/>
+    <rect x={(150*i-3)} y={(0)} width={3} height={height} fill="black"/>
     </g>
 
     //vertikal  
@@ -148,9 +149,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({
     return (
     //horizontal
     <g>
-    <rect x={(140*i)} y={(100)} width={135} height={50} rx="10" fill={Colour}/>
-    <text x={(5+140*i)} y= {(140)} font-family="Arial" font-size="20" fill="black">{data.series[i].fields[1].labels?.thread}</text>
-    <rect x={(8*i)} y={(170)} width={7} height={7} rx="10" fill={Colour}/>
+    <rect x={(5+150*i)} y={(160)} width={135} height={50} rx="10" fill={Colour}/>
+    <text x={(10+150*i)} y= {(200)} font-family="Arial" font-size="20" fill="black">{data.series[i].fields[1].labels?.thread}</text>
+    {/* <rect x={(8*i)} y={(230)} width={7} height={7} rx="10" fill={Colour}/> */}
     </g>
 
     //vertikal
@@ -161,14 +162,16 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({
     );
   }
 
+
   return(
     //<div style={divStyle}>
     <div>
       <CustomScrollbar>
-        <svg width={data.series.length*140} height={height}>
+        <svg width={data.series.length*150} height={height}>
+          <text x={(5)} y= {(30)} font-family="Arial" font-size="20" fill="White" font-weight="bold">Prozesse:</text>
           {ProcessIDArrCss}
-          {ThreadIDArrCss}
-          <rect  x={0} y={(0)} width={30000} height={1}/>      
+          <text x={(5)} y= {(150)} font-family="Arial" font-size="20" fill="White" font-weight="bold">Threads:</text>
+          {ThreadIDArrCss}    
         </svg>
       </CustomScrollbar>
     </div>

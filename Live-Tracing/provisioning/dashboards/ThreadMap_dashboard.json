@@ -65,9 +65,14 @@
       },
       "id": 8,
       "options": {
+        "UseMinMaxBoolean": false,
         "seriesCountSize": "sm",
         "showSeriesCount": false,
-        "text": "Default value of text input option"
+        "text": "Default value of text input option",
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false
+        }
       },
       "targets": [
         {
@@ -79,7 +84,7 @@
           "refId": "A"
         }
       ],
-      "title": "Prozesse & Threads",
+      "title": "ThreadMap Panel",
       "type": "hse-testpluginsr-panel"
     },
     {
@@ -127,8 +132,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -268,13 +272,13 @@
     "list": []
   },
   "time": {
-    "from": "2022-11-17T10:50:00.000Z",
-    "to": "2022-11-17T10:56:30.000Z"
+    "from": "2022-11-17T10:46:45.000Z",
+    "to": "2022-11-17T10:59:45.000Z"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Heat Map & Performance",
   "uid": "Mu-IsxOVk",
-  "version": 6,
+  "version": 11,
   "weekStart": ""
 }

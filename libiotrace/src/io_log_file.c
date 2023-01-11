@@ -25,11 +25,11 @@
 /* log file write Buffer */
 #ifdef IOTRACE_ENABLE_LOGFILE
 
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE 1048576 // 1 MB
-#endif
-static char data_buffer[BUFFER_SIZE];
-static const char *endpos = data_buffer + BUFFER_SIZE;
+#ifndef BUFFER_SIZE_BYTES
+#  define BUFFER_SIZE_BYTES 1048576 // 1 MB
+#endif /* BUFFER_SIZE_BYTES */
+static char data_buffer[BUFFER_SIZE_BYTES];
+static const char *endpos = data_buffer + BUFFER_SIZE_BYTES;
 static char *pos;
 static int count_basic;
 

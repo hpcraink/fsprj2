@@ -5,8 +5,8 @@ gcc_version="12.1"
 openmpi_version="4.1"
 
 # download sources
-git clone https://github.com/OpenFOAM/OpenFOAM-${openfoam_version}.git
-git clone https://github.com/OpenFOAM/ThirdParty-${openfoam_version}.git
+git clone --depth 1 https://github.com/OpenFOAM/OpenFOAM-${openfoam_version}.git
+git clone --depth 1 https://github.com/OpenFOAM/ThirdParty-${openfoam_version}.git
 
 # load dependencies
 module load compiler/gnu/${gcc_version}
@@ -32,4 +32,3 @@ module load mpi/openmpi/${openmpi_version}
 # compile OpenFoam
 cd OpenFOAM-${openfoam_version}
 ./Allwmake -j
-

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite as follows"
+type: software
+authors:
+    - name: "Rainer Keller"
+    - name: "Philipp Koester"
+    - name: "Julian Ruess"
+    - name: "Gerrit Klein"
+title: "libiotrace"
+abstract: "Library for analyzing File-I/O of applications"
+url: "https://github.com/hpcraink/fsprj2"
+keywords:
+    - "POSIX I/O"
+    - "MPI I/O"
+    - "HPC"
+    - "Performance Profiling"
+license: "BSD 3-Clause License"

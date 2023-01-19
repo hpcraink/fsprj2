@@ -3,40 +3,42 @@ import { PanelProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
 import * as d3 from 'd3';
 interface Props extends PanelProps<SimpleOptions> {}
+
 export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, height }) => {
   useEffect(() => {
-    console.log(data.series);
-
     let nodes: any = [];
+    let addingNodes = false;
     let links: any = [];
+    if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
+      nodes = JSON.parse(sessionStorage.getItem('nodes')!);
+    }
 
     function addNodes(_callback: any) {
-      let nodeNumber = 0; // nodes.length?
+      let nodeNumber = nodes.length;
       let nodeHosts: any = data.series[0].fields[0].values;
       let nodeThreads: any = data.series[1].fields[0].values;
 
-      // ToDo check if name in nodes does not work
       for (let i = 0; i < nodeHosts.length; i++) {
         if (!nodes.map((a: any) => a.name).includes(nodeHosts.get(i))) {
           nodes.push({ index: nodeNumber, name: nodeHosts.get(i), r: 10, writtenBytes: 0 });
           nodeNumber += 1;
+          addingNodes = true;
         }
       }
       for (let i = 0; i < nodeThreads.length; i++) {
         if (!nodes.map((a: any) => a.name).includes(nodeThreads.get(i))) {
           nodes.push({ index: nodeNumber, name: nodeThreads.get(i), r: 5, writtenBytes: 0 });
           nodeNumber += 1;
+          addingNodes = true;
         }
       }
-      console.log(nodeNumber);
-
       _callback();
     }
 
     function changeNodeSize(node: any, value: any) {
       let maxNodeSize = 30;
       let minNodeSize = 10;
-      let maxWrittenBytes = 1000; //ToDo rel Wert?
+      let maxWrittenBytes = 10000; //ToDo rel Wert?
       node.writtenBytes += value;
       let nodeSize = node.writtenBytes / maxWrittenBytes;
       if (nodeSize >= 1) {
@@ -136,13 +138,27 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .style('fill', '#888888');
     }
 
+    function fixateNodes() {
+      if (addingNodes === true) {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].x !== undefined && nodes[i].y !== undefined) {
+            nodes[i].fx = nodes[i].x;
+            nodes[i].fy = nodes[i].y;
+          }
+        }
+      }
+    }
+
     function runSimulation() {
       addNodes(() => addLinks());
       forceSimulation(() => drawForceGraph());
+      fixateNodes();
+      sessionStorage.setItem('nodes', JSON.stringify(nodes));
     }
     if (data.series[2].length === 0) {
       d3.select('#area').selectAll('*').remove();
       d3.select('p').text('No data');
+      sessionStorage.clear();
     } else {
       d3.select('p').text('');
       d3.select('#area').selectAll('*').remove();

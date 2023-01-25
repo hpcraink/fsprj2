@@ -58,13 +58,17 @@
       },
       "description": "Anzeige von Prozessen und deren Threads\n(inkl. Auslastung)",
       "gridPos": {
-        "h": 8,
+        "h": 12,
         "w": 24,
         "x": 0,
         "y": 2
       },
       "id": 8,
       "options": {
+        "ThreadMapColor": {
+          "max": 100,
+          "min": 0
+        },
         "UseMinMaxBoolean": false,
         "seriesCountSize": "sm",
         "showSeriesCount": false,
@@ -80,8 +84,17 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"new_hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")\r\n",
+          "query": "from(bucket: \"new_hsebucket_filename3\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "  from(bucket: \"new_hsebucket_filename3\")\r\n      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n            |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace_filesystem\")\r\n                    |> filter(fn: (r) => r[\"_field\"] == \"mount_type\")\r\n                              |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n                                          |> yield(name: \"last\")",
+          "refId": "B"
         }
       ],
       "title": "ThreadMap Panel",
@@ -132,7 +145,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -147,7 +161,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 14
       },
       "id": 4,
       "options": {
@@ -168,7 +182,7 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"new_hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "query": "from(bucket: \"new_hsebucket_filename3\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "A"
         }
       ],
@@ -199,7 +213,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 14
       },
       "id": 2,
       "options": {
@@ -256,7 +270,7 @@
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "query": "from(bucket: \"new_hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "query": "from(bucket: \"new_hsebucket_filename3\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "A"
         }
       ],
@@ -272,13 +286,13 @@
     "list": []
   },
   "time": {
-    "from": "2022-11-17T10:46:45.000Z",
-    "to": "2022-11-17T10:59:45.000Z"
+    "from": "now-3h",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Heat Map & Performance",
   "uid": "Mu-IsxOVk",
-  "version": 11,
+  "version": 16,
   "weekStart": ""
 }

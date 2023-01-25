@@ -90,7 +90,7 @@ void* WRAP(malloc)(size_t size) {
 	}
 	file_alloc_data.address = ret;
 
-#ifdef HAVE_MALLOC_USABLE_SIZE
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 #endif
 
@@ -200,7 +200,7 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	}
 	file_alloc_data.address = ret;
 
-#ifdef HAVE_MALLOC_USABLE_SIZE
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 #endif
 
@@ -231,7 +231,7 @@ void* WRAP(realloc)(void *ptr, size_t size) {
 	}
 	file_alloc_data.address = ret;
 
-#ifdef HAVE_MALLOC_USABLE_SIZE
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 #endif
 
@@ -263,7 +263,7 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 	}
 	file_alloc_data.address = ret;
 
-#ifdef HAVE_MALLOC_USABLE_SIZE
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
 	alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
 #endif
 
@@ -321,7 +321,7 @@ void* WRAP(sbrk)(intptr_t increment) {
 	}
 	file_alloc_data.address = ret;
 
-#ifdef HAVE_MALLOC_USABLE_SIZE
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
 	alloc_function_data._usable_size = (ok == data.return_state) ? increment : (0);
 #endif
 

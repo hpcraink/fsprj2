@@ -91,7 +91,7 @@ public class WriteSQLPostTask extends PostTask {
                             }
 
                             insert = "insert into grafana_iotrace.functions "
-                                    + "(collection_id, id, name, type, error, time, wrapper_time, bytes, start_time, end_time, thread_id) "
+                                    + "(collection_id, id, name, type, error, time, wrapper_time, bytes, start_time, end_time, tid) "
                                     + "values(" + uuidToBin(uuid) + ", " + fe.getId() + ", "
                                     + getSqlString(fe.getFunctionName()) + ", " + getSqlString(type) + ", "
                                     + fe.hasError() + ", " + fe.getFunctionTimePeriod() + ", "

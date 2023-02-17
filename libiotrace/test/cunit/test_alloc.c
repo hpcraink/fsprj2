@@ -56,7 +56,7 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr ATTRIBUTE_UNUSED) {
 
 void get_basic(struct basic *data) {
     data->pid = id;
-    data->thread_id = id;
+    data->tid = id;
 
     data->hostname = hostname;
 
@@ -84,7 +84,7 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 
 void check_basic(const struct basic *data, const char *function_name, u_int64_t test_start, u_int64_t test_end) {
     CU_ASSERT_FATAL(id == data->pid);
-    CU_ASSERT_FATAL(id == data->thread_id);
+    CU_ASSERT_FATAL(id == data->tid);
     CU_ASSERT_FATAL(0 == strcmp(hostname, data->hostname));
 
     CU_ASSERT_FATAL(0 == strcmp(function_name, data->function_name));

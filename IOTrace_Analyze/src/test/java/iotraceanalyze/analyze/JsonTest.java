@@ -13,7 +13,7 @@ public class JsonTest {
     @Test
     public void test() {
         Json tmp = new Json(
-                "{\"hostname\":\"test-VirtualBox\",\"pid\":3471,\"thread_id\":3471,\"function_name\":\"fopen\",\"time_start\":7098154894160,\"time_end\":7098154920432,\"return_state\":\"ok\",\"file_type\":{\"stream\":\"0x7f18a6e15800\"},\"function_data\":{\"mode\":\"read_only\",\"creation\":[],\"status\":[],\"file_mode\":[\"read_by_owner\",\"write_by_owner\",\"read_by_group\",\"write_by_group\",\"read_by_others\",\"write_by_others\"],\"file_name\":\"/usr/lib/firefox/dependentlibs.list\",\"test_array\":[42,\"string\",{\"element_in_object_in_array\":\"it work's\"}]}}");
+                "{\"hostname\":\"test-VirtualBox\",\"pid\":3471,\"tid\":3471,\"function_name\":\"fopen\",\"time_start\":7098154894160,\"time_end\":7098154920432,\"return_state\":\"ok\",\"file_type\":{\"stream\":\"0x7f18a6e15800\"},\"function_data\":{\"mode\":\"read_only\",\"creation\":[],\"status\":[],\"file_mode\":[\"read_by_owner\",\"write_by_owner\",\"read_by_group\",\"write_by_group\",\"read_by_others\",\"write_by_others\"],\"file_name\":\"/usr/lib/firefox/dependentlibs.list\",\"test_array\":[42,\"string\",{\"element_in_object_in_array\":\"it work's\"}]}}");
         Json json = new Json(tmp.toString());
         Json json2 = json;
 

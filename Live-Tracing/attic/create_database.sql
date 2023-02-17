@@ -56,9 +56,9 @@ create table if not exists grafana_iotrace.functions(
     bytes long,
     start_time long not null,
     end_time long not null,
-    thread_id int not null,
+    tid int not null,
     constraint pk_function primary key (collection_id, id),
-    constraint fk_thread_function foreign key (collection_id, thread_id) references grafana_iotrace.threads(collection_id, id)
+    constraint fk_thread_function foreign key (collection_id, tid) references grafana_iotrace.threads(collection_id, id)
 );
 
 create table if not exists grafana_iotrace.function_manipulates_file(

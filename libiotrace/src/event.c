@@ -1092,7 +1092,7 @@ void print_working_directory(void) {
 
 	working_dir_data.time = gettime();
 	working_dir_data.hostname = hostname;
-	working_dir_data.process_id = pid;
+	working_dir_data.pid = pid;
 	working_dir_data.dir = cwd;
 
 	fd = CALL_REAL_POSIX_SYNC(open)(working_dir_log_name,
@@ -1611,7 +1611,7 @@ SOCKET prepare_control_socket(void) {
 				LOG_ERROR_AND_EXIT("open() of file %s returned %d", control_log_name, fd);
 			}
 
-			meta_data.process_id = pid;
+			meta_data.pid = pid;
 			meta_data.port = i;
 			for (size_t l = 0; l < ic.ifc_len / sizeof(struct ifreq); ++l)
 			{
@@ -2341,7 +2341,7 @@ void init_thread(void) {
 /**
  * Sets some basic information to the given structure.
  *
- * Fills the "process_id", "thread_id", "hostname" and if
+ * Fills the "pid", "thread_id", "hostname" and if
  * needed the stacktrace with the current values.
  * If "get_basic" is called for the first time in a new
  * thread the "init_thread" function is called to
@@ -2357,7 +2357,7 @@ void get_basic(struct basic *data) {
 		init_thread();
 	}
 
-	data->process_id = pid;
+	data->pid = pid;
 	data->thread_id = tid;
 
 	data->hostname = hostname;
@@ -2405,12 +2405,12 @@ void write_into_influxdb(struct basic *data) {
 			"libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s";
 	int body_labels_length = strlen(labels) + sizeof(short_log_name) /* jobname */
 	+ HOST_NAME_MAX /* hostname */
-	+ COUNT_DEC_AS_CHAR(data->process_id) + 1 /* processid with sign */
+	+ COUNT_DEC_AS_CHAR(data->pid) + 1 /* processid with sign */
 	+ COUNT_DEC_AS_CHAR(data->thread_id) + 1 /* thread with sign */
 	+ MAX_FUNCTION_NAME; /* functionname */
 	char body_labels[body_labels_length];
 	snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
-			data->hostname, data->process_id, data->thread_id,
+			data->hostname, data->pid, data->thread_id,
 			data->function_name);
 	body_labels_length = strlen(body_labels);
 

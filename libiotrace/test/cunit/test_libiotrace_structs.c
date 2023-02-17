@@ -166,7 +166,7 @@ static void check_mpi_waitall_copy(const struct mpi_waitall *data,
 static void check_basic_copy(const struct basic *data, const struct basic *copy) {
 	CU_ASSERT_FATAL(data->hostname != copy->hostname);
 	CU_ASSERT_FATAL(0 == strcmp(data->hostname, copy->hostname));
-	CU_ASSERT_FATAL(data->process_id == copy->process_id);
+	CU_ASSERT_FATAL(data->pid == copy->pid);
 	CU_ASSERT_FATAL(data->thread_id == copy->thread_id);
 	CU_ASSERT_FATAL(0 == strcmp(data->function_name, copy->function_name));
 	CU_ASSERT_FATAL(data->time_start == copy->time_start);
@@ -616,8 +616,8 @@ static void check_basic_print(const struct basic *data, const char *print_buf,
 #endif
 	check_json_string(print_buf, &tokens[i++], "hostname");
 	check_json_string(print_buf, &tokens[i++], data->hostname);
-	check_json_string(print_buf, &tokens[i++], "process_id");
-	check_json_number(print_buf, &tokens[i++], data->process_id, 0);
+	check_json_string(print_buf, &tokens[i++], "pid");
+	check_json_number(print_buf, &tokens[i++], data->pid, 0);
 	check_json_string(print_buf, &tokens[i++], "thread_id");
 	check_json_number(print_buf, &tokens[i++], data->thread_id, 0);
 	check_json_string(print_buf, &tokens[i++], "function_name");
@@ -834,8 +834,8 @@ static void check_basic_push(const struct basic *data, const char *line_buf) {
 	CU_ASSERT_FATAL(0 == strcmp("thread_id", next_field->key));
 	check_push_integer(data->thread_id, next_field);
 	next_field = next_field->next_item;
-	CU_ASSERT_FATAL(0 == strcmp("process_id", next_field->key));
-	check_push_integer(data->process_id, next_field);
+	CU_ASSERT_FATAL(0 == strcmp("pid", next_field->key));
+	check_push_integer(data->pid, next_field);
 	next_field = next_field->next_item;
 	CU_ASSERT_FATAL(0 == strcmp("hostname", next_field->key));
 	check_push_string(data->hostname, next_field);
@@ -1264,7 +1264,7 @@ static void test_struct_basic(void) {
 #endif
 
 	data.hostname = hostname;
-	data.process_id = pid_t_value;
+	data.pid = pid_t_value;
 	data.thread_id = pid_t_value;
 	fill_string(data.function_name, sizeof(data.function_name), 'f');
 	data.time_start = u_int64_t_value;

@@ -80,6 +80,7 @@ void* WRAP(malloc)(size_t size) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     alloc_function_data.size = size;
+	alloc_function_data.ptr = NULL;
 
     CALL_REAL_FUNCTION_RET(data, ret, malloc, size)
 
@@ -190,6 +191,7 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     alloc_function_data.size = nmemb * size;
+	alloc_function_data.ptr = NULL;
 
     CALL_REAL_FUNCTION_RET(data, ret, calloc, nmemb, size)
 
@@ -221,6 +223,7 @@ void* WRAP(realloc)(void *ptr, size_t size) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     alloc_function_data.size = size;
+	alloc_function_data.ptr = ptr;
 
     CALL_REAL_FUNCTION_RET(data, ret, realloc, ptr, size)
 
@@ -253,6 +256,7 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     alloc_function_data.size = nmemb * size;
+	alloc_function_data.ptr = ptr;
 
     CALL_REAL_FUNCTION_RET(data, ret, reallocarray, ptr, nmemb, size)
 
@@ -273,7 +277,7 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 #endif
 
 
-// ---   Syscalls   ---
+// ---   libc syscall wrappers   ---
 #ifdef HAVE_BRK
 int WRAP(brk)(void* addr) {
     int ret;
@@ -311,6 +315,7 @@ void* WRAP(sbrk)(intptr_t increment) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     alloc_function_data.size = increment;
+	alloc_function_data.ptr = NULL;
 
     CALL_REAL_FUNCTION_RET(data, ret, sbrk, increment)
 

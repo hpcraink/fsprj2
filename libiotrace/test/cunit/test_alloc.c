@@ -155,6 +155,7 @@ void* call_and_check_malloc(size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(NULL == ((struct alloc_function*)(cached_data->__function_data))->ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
     const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
     CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
@@ -183,6 +184,7 @@ void* call_and_check_calloc(size_t nmemb, size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(NULL == ((struct alloc_function*)(cached_data->__function_data))->ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
     const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
     CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
@@ -211,6 +213,7 @@ void* call_and_check_realloc(void *ptr, size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(ptr == ((struct alloc_function*)(cached_data->__function_data))->ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
     const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
     CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
@@ -240,6 +243,7 @@ void* call_and_check_reallocarray(void *ptr, size_t nmemb, size_t size, char *fu
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(ptr == ((struct alloc_function*)(cached_data->__function_data))->ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
     const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
     CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
@@ -270,6 +274,7 @@ void* call_and_check_sbrk(intptr_t increment, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL((size_t)increment == ((struct alloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(NULL == ((struct alloc_function*)(cached_data->__function_data))->ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
     const size_t usable_size = (ok == cached_data->return_state) ? increment : 0;
     CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)

@@ -948,7 +948,14 @@ LIBIOTRACE_STRUCT_END
 /* struct for alloc */
 LIBIOTRACE_STRUCT_START(alloc_function)
   LIBIOTRACE_STRUCT_SIZE_T(size)
-  LIBIOTRACE_STRUCT_VOID_P(ptr)         // Used by `realloc`
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
+  LIBIOTRACE_STRUCT_SIZE_T(_usable_size)
+#endif
+LIBIOTRACE_STRUCT_END
+
+LIBIOTRACE_STRUCT_START(realloc_function)     // `realloc` & `reallocarray`
+  LIBIOTRACE_STRUCT_SIZE_T(size)
+  LIBIOTRACE_STRUCT_VOID_P(ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
   LIBIOTRACE_STRUCT_SIZE_T(_usable_size)
 #endif
@@ -1059,7 +1066,8 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_delete_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate_at)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_waitall)
-	LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, realloc_function)
   LIBIOTRACE_STRUCT_VOID_P_END(function_data)
 LIBIOTRACE_STRUCT_END
 

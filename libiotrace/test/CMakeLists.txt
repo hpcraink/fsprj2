@@ -432,12 +432,6 @@ if(WITH_POSIX_AIO)
 endif()
 
 ##########################################################################################################
-if(WITH_ALLOC)
-    # test with: IOTRACE_LOG_NAME=s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./s_brk
-    add_executable(s_brk s_brk.c)
-endif()
-
-##########################################################################################################
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read
@@ -540,6 +534,19 @@ if(WITH_POSIX_IO)
     if(OpenMP_C_FOUND)
         target_link_libraries(multi_shared PUBLIC OpenMP::OpenMP_C)
     endif()
+endif()
+
+##########################################################################################################
+
+if (WITH_ALLOC)
+    find_package(OpenMP REQUIRED)
+
+    # test with: IOTRACE_LOG_NAME=alloc_trace_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_trace
+    add_executable(alloc_trace alloc_trace.c)
+    target_link_libraries(alloc_trace PUBLIC OpenMP::OpenMP_C)
+
+    # test with: IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_s_brk
+    add_executable(alloc_s_brk alloc_s_brk.c)
 endif()
 
 ##########################################################################################################

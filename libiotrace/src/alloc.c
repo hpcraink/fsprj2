@@ -296,7 +296,7 @@ int WRAP(posix_memalign)(void **memptr, size_t alignment, size_t size) {
     file_alloc_data.address = (ok == data.return_state) ? (*memptr) : (NULL);
 
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+    alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(file_alloc_data.address) : (0);
 #endif
 
     WRAP_END(data, posix_memalign)

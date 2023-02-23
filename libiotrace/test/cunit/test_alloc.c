@@ -15,6 +15,7 @@ extern void* WRAP(realloc)(void *ptr, size_t size);
 #ifdef HAVE_REALLOCARRAY
 extern void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size);
 #endif
+extern int WRAP(posix_memalign)(void **memptr, size_t alignment, size_t size);
 #ifdef HAVE_SBRK
 extern void* WRAP(sbrk)(intptr_t increment);
 #endif
@@ -251,6 +252,34 @@ void* call_and_check_reallocarray(void *ptr, size_t nmemb, size_t size, char *fu
     return mem;
 }
 #endif
+
+int call_and_check_posix_memalign(void **memptr, size_t alignment, size_t size, char *function_name) {
+    int rc;
+    u_int64_t test_start;
+    u_int64_t test_end;
+    int ret_errno;
+
+    test_start = gettime();
+    rc = __test_posix_memalign(memptr, alignment, size);
+    ret_errno = errno;
+    test_end = gettime();
+
+    CU_ASSERT_FATAL(NULL != cached_data);
+
+    CU_ASSERT_FATAL(NULL != cached_data->__file_type);
+
+    check_basic(cached_data, function_name, test_start, test_end);
+
+    CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+    CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
+    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(*memptr) : 0;
+    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#endif
+
+    errno = ret_errno;
+    return rc;
+}
 
 #ifdef HAVE_SBRK
 void* call_and_check_sbrk(intptr_t increment, char *function_name) {
@@ -699,6 +728,32 @@ static void test_reallocarray(void) {
 #endif
 }
 
+static void test_posix_memalign(void) {
+    char function_name[] = "posix_memalign";
+    int rc;
+    void* mem;
+    size_t size, alignment;
+
+    toggle_alloc_wrapper(function_name, 1);
+    CU_ASSERT_FATAL(1 == active_wrapper_status.posix_memalign);
+
+    // alloc with size 666
+
+    size = 666;
+    alignment = sizeof(void*);
+    rc = call_and_check_posix_memalign(&mem, alignment, size, function_name);
+    CU_ASSERT_FATAL(rc == 0);
+    memset(mem, 'm', size);
+    free(mem);
+    mem = NULL;
+
+    CU_ASSERT_FATAL(ok == cached_data->return_state);
+    CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+    free(cached_data);
+    cached_data = NULL;
+}
+
 static void test_sbrk(void) {
 #ifdef HAVE_SBRK
     char function_name[] = "sbrk";
@@ -768,5 +823,6 @@ CUNIT_CI_RUN("Suite_1",
         CUNIT_CI_TEST(test_calloc),
         CUNIT_CI_TEST(test_realloc),
         CUNIT_CI_TEST(test_reallocarray),
+        CUNIT_CI_TEST(test_posix_memalign),
         CUNIT_CI_TEST(test_sbrk)
         )

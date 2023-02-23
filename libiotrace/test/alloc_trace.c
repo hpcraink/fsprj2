@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         ptr = NULL;
 
         // --  Test `posix_memalign`  --
-        DIE_WHEN_ERRNO( posix_memalign(&ptr, 64, 666) );
+        DIE_WHEN_ERRNO( posix_memalign(&ptr, sizeof(void*), 666) );
         free(ptr);
         ptr = NULL;
     }

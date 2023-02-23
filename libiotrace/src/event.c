@@ -2511,7 +2511,7 @@ void cleanup_process(void) {
 #endif /* IOTRACE_ENABLE_LOGFILE */
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-    fnres_fin();
+    //fnres_fin();
 #endif
 
 #ifdef IOTRACE_ENABLE_INFLUXDB

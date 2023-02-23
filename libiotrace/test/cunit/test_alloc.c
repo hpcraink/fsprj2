@@ -51,7 +51,7 @@ void io_log_file_buffer_write(struct basic *data) {
 
 // is called from wrappers if fnres is enabled
 int fnres_trace_ioevent(struct basic *ioevent_ptr ATTRIBUTE_UNUSED) {
-	return 0;
+    return 0;
 }
 
 void get_basic(struct basic *data) {
@@ -769,5 +769,5 @@ CUNIT_CI_RUN("Suite_1",
         CUNIT_CI_TEST(test_calloc),
         CUNIT_CI_TEST(test_realloc),
         CUNIT_CI_TEST(test_reallocarray),
-		CUNIT_CI_TEST(test_sbrk)
+        CUNIT_CI_TEST(test_sbrk)
         )

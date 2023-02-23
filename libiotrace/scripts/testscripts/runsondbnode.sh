@@ -28,7 +28,7 @@ ifconfig ib0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.
 
 # sleep until test finished
 until [ -e ${3}/finished_${1} ]; do
-	sleep 30
+    sleep 30
 done
 
 # make a backup of influsDB

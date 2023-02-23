@@ -639,8 +639,8 @@ static void create_fnmap_key_using_ioevent_file_type(struct basic *ioevent_ptr, 
         case __void_p_enum_file_type_file_async:
         case __void_p_enum_file_type_shared_library:
         case __void_p_enum_file_type_file_alloc:
-        	LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
-        	return;
+            LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
+            return;
         default:
             LOG_WARN("Unknown case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
             return;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */

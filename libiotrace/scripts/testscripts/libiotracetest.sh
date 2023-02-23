@@ -10,7 +10,7 @@
 
 # 1-arg:
 # a script to run on multiple nodes
-# this script gets the 
+# this script gets the
 # e.g. ./mpi_file_io.sh or ./openFOAM.sh
 
 # 2-arg:
@@ -49,17 +49,17 @@ else
 fi
 if [ -z "${2+x}" ]
 then
-	echo "second argument must be a unique test name"
-	return 2
+        echo "second argument must be a unique test name"
+        return 2
 else
-	TEST_NAME=${2}
+    TEST_NAME=${2}
 fi
 if [ -z "${3+x}" ]
 then
-	echo "third argument must be a path to a influxDB directory"
-	return 3
+        echo "third argument must be a path to a influxDB directory"
+        return 3
 else
-	INFLUXDB_DIR=${3}
+    INFLUXDB_DIR=${3}
 fi
 if [ -z "${4+x}" ]
 then

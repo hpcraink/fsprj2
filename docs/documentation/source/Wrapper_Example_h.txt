@@ -4,6 +4,6 @@ REAL_TYPE int REAL(close)(int filedes) REAL_INIT;
 static void posix_io_init() ATTRIBUTE_CONSTRUCTOR;
 
 static void posix_io_init() {
-	DLSYM(close);
+    DLSYM(close);
 }
 #endif

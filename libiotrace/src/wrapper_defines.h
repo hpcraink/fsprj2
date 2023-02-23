@@ -66,8 +66,8 @@
 #  define __DLSYM(function) do { dlerror(); /* clear old error conditions */\
                                  __extension__({ \
                                      /* dlsym returns a void pointer (data pointer) */ \
-									 /* ISO C forbids cast to function pointer      */ \
-									 /* => __extension__ to suppress the warning    */ \
+                                     /* ISO C forbids cast to function pointer      */ \
+                                     /* => __extension__ to suppress the warning    */ \
                                      __real_##function = dlsym(RTLD_NEXT, #function); \
                                  }); \
                                  char * dlsym_dlerror_##function = dlerror(); \

@@ -221,7 +221,7 @@ void* WRAP(realloc)(void *ptr, size_t size) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     realloc_function_data.size = size;
-	realloc_function_data.ptr = ptr;
+    realloc_function_data.ptr = ptr;
 
     CALL_REAL_FUNCTION_RET(data, ret, realloc, ptr, size)
 
@@ -254,7 +254,7 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
     LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
     realloc_function_data.size = nmemb * size;
-	realloc_function_data.ptr = ptr;
+    realloc_function_data.ptr = ptr;
 
     CALL_REAL_FUNCTION_RET(data, ret, reallocarray, ptr, nmemb, size)
 

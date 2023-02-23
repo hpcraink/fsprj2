@@ -26,74 +26,74 @@ static char* pos;
 static pthread_mutex_t lock;
 
 void printData() {
-	real_printf(data_buffer);
-	pos = data_buffer;
-	*pos = '\0';
+    real_printf(data_buffer);
+    pos = data_buffer;
+    *pos = '\0';
 }
 
 void writeData(char *data) {
-	int tmp_pos;
-	char print[100];
-	sprintf(print, "pid:%lu;pts:%lu;", getpid(), pthread_self());
-	strcat(print, data);
-	strcat(print, "\n");
+    int tmp_pos;
+    char print[100];
+    sprintf(print, "pid:%lu;pts:%lu;", getpid(), pthread_self());
+    strcat(print, data);
+    strcat(print, "\n");
 
-	/* write (synchronized) */
-	pthread_mutex_lock(&lock);
-	if (pos + strlen(print) > endpos) {
-		printData();
-	}
-	strcpy(pos, print);
-	pos += strlen(print);
+    /* write (synchronized) */
+    pthread_mutex_lock(&lock);
+    if (pos + strlen(print) > endpos) {
+        printData();
+    }
+    strcpy(pos, print);
+    pos += strlen(print);
 
-	pthread_mutex_unlock(&lock);
+    pthread_mutex_unlock(&lock);
 }
 
 void cleanup() {
-	printData();
+    printData();
 
-	pthread_mutex_destroy(&lock);
+    pthread_mutex_destroy(&lock);
 }
 
 static void init() {
-	real_write = dlsym(RTLD_NEXT, "write");
-	real_puts = dlsym(RTLD_NEXT, "puts");
-	real_printf = dlsym(RTLD_NEXT, "printf");
-	real_vprintf = dlsym(RTLD_NEXT, "vprintf");
+    real_write = dlsym(RTLD_NEXT, "write");
+    real_puts = dlsym(RTLD_NEXT, "puts");
+    real_printf = dlsym(RTLD_NEXT, "printf");
+    real_vprintf = dlsym(RTLD_NEXT, "vprintf");
 
-	endpos = data_buffer + BUFFER_SIZE - 1;
-	pos = data_buffer;
+    endpos = data_buffer + BUFFER_SIZE - 1;
+    pos = data_buffer;
 
-	pthread_mutex_init(&lock, NULL);
+    pthread_mutex_init(&lock, NULL);
 }
 
 ssize_t write(int fd, const void *buf, size_t count) {
-	char print[40];
-	sprintf(print, "write:chars#:%lu", count);
-	writeData(print);
+    char print[40];
+    sprintf(print, "write:chars#:%lu", count);
+    writeData(print);
 
-	return real_write(fd, buf, count);
+    return real_write(fd, buf, count);
 }
 
 int puts(const char* str) {
-	char print[40];
-	sprintf(print, "puts:chars#:%lu", strlen(str));
-	writeData(print);
+    char print[40];
+    sprintf(print, "puts:chars#:%lu", strlen(str));
+    writeData(print);
 
-	return real_puts(str);
+    return real_puts(str);
 }
 
 int printf(const char *__restrict format, ...) {
-	va_list args;
-	int retval;
+    va_list args;
+    int retval;
 
-	char print[40];
-	sprintf(print, "printf:chars#:%lu", strlen(format));
-	writeData(print);
+    char print[40];
+    sprintf(print, "printf:chars#:%lu", strlen(format));
+    writeData(print);
 
-	va_start(args, format);
-	/* use vprintf instead of printf because of the variable parameter-list */
-	retval = real_vprintf(format, args);
-	va_end(args);
-	return retval;
+    va_start(args, format);
+    /* use vprintf instead of printf because of the variable parameter-list */
+    retval = real_vprintf(format, args);
+    va_end(args);
+    return retval;
 }

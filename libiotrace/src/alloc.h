@@ -22,6 +22,7 @@ REAL_TYPE void* REAL(realloc)(void *ptr, size_t size) REAL_INIT;
 #ifdef HAVE_REALLOCARRAY
 REAL_TYPE void* REAL(reallocarray)(void *ptr, size_t nmemb, size_t size) REAL_INIT;
 #endif
+REAL_TYPE int REAL(posix_memalign)(void **memptr, size_t alignment, size_t size) REAL_INIT;
 #ifdef HAVE_BRK
 REAL_TYPE int REAL(brk)(void *addr) REAL_INIT;
 #endif

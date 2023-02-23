@@ -358,6 +358,7 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
         case CASE_CALLOC:
         case CASE_REALLOC:
         case CASE_REALLOCARRAY:
+        case CASE_POSIX_MEMALIGN:
         case CASE_FREE:
         case CASE_BRK:
         case CASE_SBRK:

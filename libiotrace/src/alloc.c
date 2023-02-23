@@ -26,6 +26,7 @@ REAL_DEFINITION_TYPE void* REAL_DEFINITION(realloc)(void *ptr, size_t size) REAL
 #ifdef HAVE_REALLOCARRAY
 REAL_DEFINITION_TYPE void* REAL_DEFINITION(reallocarray)(void *ptr, size_t nmemb, size_t size) REAL_DEFINITION_INIT;
 #endif /* HAVE_REALLOCARRAY */
+REAL_DEFINITION_TYPE int REAL_DEFINITION(posix_memalign)(void **memptr, size_t alignment, size_t size) REAL_DEFINITION_INIT;
 #ifdef HAVE_BRK
 REAL_DEFINITION_TYPE int REAL_DEFINITION(brk)(void *addr) REAL_DEFINITION_INIT;
 #endif /* HAVE_BRK */
@@ -273,6 +274,34 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
     return ret;
 }
 #endif
+
+int WRAP(posix_memalign)(void **memptr, size_t alignment, size_t size) {
+    int ret;
+    struct basic data;
+    struct alloc_function alloc_function_data;
+    struct file_alloc file_alloc_data;
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
+            alloc_function_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
+    alloc_function_data.size = size;                             // TODO: Add arg `alignment` (currently left out)
+
+    CALL_REAL_FUNCTION_RET(data, ret, posix_memalign, memptr, alignment, size)
+
+    data.return_state = (0 == ret) ? ok : error;
+
+    file_alloc_data.address = (ok == data.return_state) ? (*memptr) : (NULL);
+
+#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
+    alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#endif
+
+    WRAP_END(data, posix_memalign)
+    return ret;
+}
 
 
 // ---   libc syscall wrappers   ---

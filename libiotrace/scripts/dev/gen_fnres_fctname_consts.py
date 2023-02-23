@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Assists in generating constants of function names for the file name resolution (fnres) module
@@ -201,6 +201,7 @@ FUNCTION_NAMES = [
     "realloc",
     "reallocarray",
     "free",
+    "posix_memalign",
 
 
 

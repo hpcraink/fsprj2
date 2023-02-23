@@ -953,7 +953,7 @@ LIBIOTRACE_STRUCT_START(alloc_function)
 #endif
 LIBIOTRACE_STRUCT_END
 
-LIBIOTRACE_STRUCT_START(realloc_function)     // `realloc` & `reallocarray`
+LIBIOTRACE_STRUCT_START(realloc_function)
   LIBIOTRACE_STRUCT_SIZE_T(size)
   LIBIOTRACE_STRUCT_VOID_P(ptr)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)

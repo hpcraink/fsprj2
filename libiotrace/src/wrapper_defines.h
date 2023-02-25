@@ -239,13 +239,18 @@
 #define WRAP_END(data, functionname) __WRAP_END(data, functionname)
 
 #ifndef WITH_STD_IO
+#  ifdef WITH_ALLOC
+#    define CHECK_FTYPE_ALLOC(DATA) DATA.__void_p_enum_file_type == __void_p_enum_file_type_file_alloc ||
+#  else
+#    define CHECK_FTYPE_ALLOC(DATA)
+#  endif /* WITH_ALLOC */
 #  define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          if(data.__file_type == NULL || \
                             data.__void_p_enum_file_type == __void_p_enum_file_type_file_memory || \
                             data.__void_p_enum_file_type == __void_p_enum_file_type_file_async || \
                             data.__void_p_enum_file_type == __void_p_enum_file_type_file_mpi || \
                             data.__void_p_enum_file_type == __void_p_enum_file_type_shared_library || \
-                            data.__void_p_enum_file_type == __void_p_enum_file_type_file_alloc || \
+                            CHECK_FTYPE_ALLOC(data) \
                             (data.__void_p_enum_file_type == __void_p_enum_file_type_file_descriptor \
                              && STDIN_FILENO != ((struct file_descriptor *)data.__file_type)->descriptor \
                              && STDOUT_FILENO != ((struct file_descriptor *)data.__file_type)->descriptor \
@@ -264,8 +269,8 @@
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
-#else
-#  define __WRAP_END(data, functionname) GET_ERRNO(data) \
+#  else
+#    define __WRAP_END(data, functionname) GET_ERRNO(data) \
                          STRACING_LSEP_PROCESS_NEW_SCEVENTS(); \
                          FNRES_TRACE_IOEVENT(&data); \
                          if(active_wrapper_status.functionname){ \
@@ -274,7 +279,8 @@
                          } \
                          WRAP_FREE(&data) \
                          errno = errno_data.errno_value;
-#endif
+#  endif /* WITH_STD_IO */
+
 #define WRAP_MPI_END(data, functionname) GET_MPI_ERRNO(data) \
                            STRACING_LSEP_PROCESS_NEW_SCEVENTS(); \
                            FNRES_TRACE_IOEVENT(&data); \

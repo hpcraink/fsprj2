@@ -639,7 +639,9 @@ static void create_fnmap_key_using_ioevent_file_type(struct basic *ioevent_ptr, 
 
         case __void_p_enum_file_type_file_async:
         case __void_p_enum_file_type_shared_library:
+#ifdef WITH_ALLOC
         case __void_p_enum_file_type_file_alloc:
+#endif /* WITH_ALLOC */
             LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
             return;
         default:
@@ -776,9 +778,11 @@ static void create_fnmap_key_using_ioevent_function_data(struct basic* ioevent_p
         case __void_p_enum_function_data_mpi_wait:
         case __void_p_enum_function_data_mpi_delete_function:
         case __void_p_enum_function_data_mpi_waitall:
+#ifdef WITH_ALLOC
         case __void_p_enum_function_data_alloc_function:
         case __void_p_enum_function_data_realloc_function:
         case __void_p_enum_function_data_free_function:
+#endif /* WITH_ALLOC */
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
 #endif
@@ -863,9 +867,11 @@ static const char* get_file_name_from_ioevent_function_data(struct basic* ioeven
         case __void_p_enum_function_data_mpi_wait:
         case __void_p_enum_function_data_mpi_immediate_at:
         case __void_p_enum_function_data_mpi_waitall:
+#ifdef WITH_ALLOC
         case __void_p_enum_function_data_alloc_function:
         case __void_p_enum_function_data_realloc_function:
         case __void_p_enum_function_data_free_function:
+#endif /* WITH_ALLOC */
             LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
             return NULL;
         default:

@@ -78,9 +78,11 @@ LIBIOTRACE_STRUCT_START(shared_library)
   LIBIOTRACE_STRUCT_VOID_P_CONST(dl_handle)
 LIBIOTRACE_STRUCT_END
 
+#ifdef WITH_ALLOC
 LIBIOTRACE_STRUCT_START(file_alloc)
   LIBIOTRACE_STRUCT_VOID_P(address)
 LIBIOTRACE_STRUCT_END
+#endif /* WITH_ALLOC */
 
 LIBIOTRACE_STRUCT_START(errno_detail)
   LIBIOTRACE_STRUCT_INT(errno_value)
@@ -946,6 +948,7 @@ LIBIOTRACE_STRUCT_START(mpi_waitall)
 LIBIOTRACE_STRUCT_END
 
 /* struct for alloc */
+#ifdef WITH_ALLOC
 LIBIOTRACE_STRUCT_START(alloc_function)
   LIBIOTRACE_STRUCT_SIZE_T(size)
 #if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
@@ -964,6 +967,7 @@ LIBIOTRACE_STRUCT_END
 LIBIOTRACE_STRUCT_START(free_function)
   LIBIOTRACE_STRUCT_VOID_P(ptr)
 LIBIOTRACE_STRUCT_END
+#endif /* WITH_ALLOC */
 
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
@@ -1004,7 +1008,9 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, file_mpi)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, shared_library)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, request_mpi)
+#ifdef WITH_ALLOC
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, file_alloc)
+#endif /* WITH_ALLOC */
   LIBIOTRACE_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position has changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)
@@ -1070,9 +1076,11 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_delete_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate_at)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_waitall)
+#ifdef WITH_ALLOC
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, realloc_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, free_function)
+#endif /* WITH_ALLOC */
   LIBIOTRACE_STRUCT_VOID_P_END(function_data)
 LIBIOTRACE_STRUCT_END
 

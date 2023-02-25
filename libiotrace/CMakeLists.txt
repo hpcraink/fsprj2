@@ -197,6 +197,9 @@ endif()
 #compile using cmake -DWITH_ALLOC for memory allocations
 if(WITH_ALLOC)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DWITH_ALLOC)
+else()
+    # Remove CMake options from cache
+    unset(WITH_USABLE_SIZE CACHE)
 endif()
 
 #compile using cmake -DWITH_USABLE_SIZE to collect usable size per memory allocation

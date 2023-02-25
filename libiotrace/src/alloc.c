@@ -76,10 +76,10 @@ void* WRAP(malloc)(size_t size) {
     WRAP_START(data)
 
     get_basic(&data);
-    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,                                // NOTE: `function_data` contains args
             alloc_function_data)
     POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)                       // NOTE: `file_type` contains rtn value
     alloc_function_data.size = size;
 
     CALL_REAL_FUNCTION_RET(data, ret, malloc, size)
@@ -97,32 +97,6 @@ void* WRAP(malloc)(size_t size) {
 
     WRAP_END(data, malloc)
     return ret;
-}
-
-void WRAP(free)(void *ptr) {
-    struct basic data;
-    struct file_alloc file_alloc_data;
-
-    if ((char*) ptr
-            >= &(static_calloc_buffer[0])&& (char*)ptr < &(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE) {
-        /* ptr was returned by wrapper of calloc from static memory: don't
-         * free it (will result in undefined behavior) */
-        return;
-    }
-
-    WRAP_START(data)
-
-    get_basic(&data);
-    LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, function_data)
-    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
-
-    CALL_REAL_FUNCTION(data, free, ptr)
-
-    data.return_state = ok;
-    file_alloc_data.address = ptr;
-
-    WRAP_END(data, free)
 }
 
 void* WRAP(calloc)(size_t nmemb, size_t size) {
@@ -301,6 +275,32 @@ int WRAP(posix_memalign)(void **memptr, size_t alignment, size_t size) {
 
     WRAP_END(data, posix_memalign)
     return ret;
+}
+
+void WRAP(free)(void *ptr) {
+    struct basic data;
+    struct free_function free_function_data;
+
+    if ((char*) ptr
+            >= &(static_calloc_buffer[0])&& (char*)ptr < &(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE) {
+        /* ptr was returned by wrapper of calloc from static memory: don't
+         * free it (will result in undefined behavior) */
+        return;
+    }
+
+    WRAP_START(data)
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, free_function, free_function_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+
+    CALL_REAL_FUNCTION(data, free, ptr)
+
+    data.return_state = ok;
+    free_function_data.ptr = ptr;
+
+    WRAP_END(data, free)
 }
 
 

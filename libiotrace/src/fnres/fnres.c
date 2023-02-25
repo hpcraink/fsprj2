@@ -778,6 +778,7 @@ static void create_fnmap_key_using_ioevent_function_data(struct basic* ioevent_p
         case __void_p_enum_function_data_mpi_waitall:
         case __void_p_enum_function_data_alloc_function:
         case __void_p_enum_function_data_realloc_function:
+        case __void_p_enum_function_data_free_function:
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
 #endif
@@ -864,6 +865,7 @@ static const char* get_file_name_from_ioevent_function_data(struct basic* ioeven
         case __void_p_enum_function_data_mpi_waitall:
         case __void_p_enum_function_data_alloc_function:
         case __void_p_enum_function_data_realloc_function:
+        case __void_p_enum_function_data_free_function:
             LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
             return NULL;
         default:

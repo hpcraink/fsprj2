@@ -961,6 +961,10 @@ LIBIOTRACE_STRUCT_START(realloc_function)
 #endif
 LIBIOTRACE_STRUCT_END
 
+LIBIOTRACE_STRUCT_START(free_function)
+  LIBIOTRACE_STRUCT_VOID_P(ptr)
+LIBIOTRACE_STRUCT_END
+
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
 LIBIOTRACE_STRUCT_START(wrapper_data)
@@ -1068,6 +1072,7 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_waitall)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, realloc_function)
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, free_function)
   LIBIOTRACE_STRUCT_VOID_P_END(function_data)
 LIBIOTRACE_STRUCT_END
 

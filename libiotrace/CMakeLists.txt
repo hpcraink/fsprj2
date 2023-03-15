@@ -1,10 +1,8 @@
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)        # Find compiler based on env-var, and not soley based on `/usr/bin/cc`  (which causes issues on systems where the compiler is loaded via `module load <compiler-module>`)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-project(libiotrace)
+project(libiotrace C CXX)
 cmake_minimum_required(VERSION 3.3.2)
-
-enable_language(C)
 
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type")
@@ -51,6 +49,8 @@ endif()
 
 
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
+
 
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS

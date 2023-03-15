@@ -575,3 +575,13 @@ target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS_STATIC})
 target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS})
 
 ##########################################################################################################
+
+
+
+# Build libiotrace as follows: `rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF ..  &&  make -j6)`
+# test w/: `IOTRACE_LOG_NAME=test_cpp_linkage_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./test_cpp_linkage_shared`
+add_executable(test_cpp_linkage_shared test_cpp_linkage.cpp)
+
+# TODO: Apparently currently broken  ??!
+#add_executable(test_cpp_linkage_static test_cpp_linkage.cpp)
+#target_link_libraries(test_cpp_linkage_static $<TARGET_OBJECTS:iotrace_object>)

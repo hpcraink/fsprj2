@@ -13,7 +13,7 @@ jobs:
   # --- libiotrace ---
   libiotrace:
     name: libiotrace
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
          # Required for CUnit tests --> doesn't work ?
@@ -44,7 +44,7 @@ jobs:
 
       - name: Build w/ CMake
         shell: bash
-        run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
+        run: make -C $LIBIOTRACE_BUILD_PATH -j$(nproc)
 
       # - Test -
       - name: Test (CUnit)
@@ -54,7 +54,7 @@ jobs:
         # >> WORKAROUND <<: Not feasible w/ cmake (see 'libiotrace/test/cunit/CMakeLists.txt')
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
-      
+
       # - Release -
       - uses: marvinpinto/action-automatic-releases@latest
         with:

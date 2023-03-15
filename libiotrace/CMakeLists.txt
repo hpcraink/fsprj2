@@ -12,6 +12,15 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 
+#include(CheckIPOSupported)                               # WARNING: !!  Requires changing `cmake_minimum_required` 2 newer version (e.g., 3.21)  !!
+#check_ipo_supported(RESULT lto_supported)
+#if(lto_supported)
+#    #set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+#    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)         # Enable LTO by default (I.E., 4 all targets (SEE: https://stackoverflow.com/a/47370726))
+#else()
+#    message(WARNING "LTO isn't supported")
+#endif()
+
 
 add_compile_options(
     -Wall

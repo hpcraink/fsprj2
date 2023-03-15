@@ -6,9 +6,12 @@ cmake_minimum_required(VERSION 3.3.2)
 
 enable_language(C)
 
-# XXX For production version, these should be deleted (it's a user-option)
-# set(CMAKE_BUILD_TYPE Release)
-# set(CMAKE_BUILD_TYPE Debug)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type")
+    message(STATUS "No build type selected, defaulting to ${CMAKE_BUILD_TYPE}")
+endif()
+
+
 
 add_compile_options(
     -Wall

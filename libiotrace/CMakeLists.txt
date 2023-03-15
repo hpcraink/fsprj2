@@ -16,20 +16,27 @@ add_compile_options(
     -pedantic
     -pedantic-errors
     -Wformat=2
-    -Wformat-signedness
-    -Walloc-zero
     -Wdouble-promotion
-    -Wduplicated-cond
     -Wfloat-equal
     -Winit-self
-    -Wstrict-prototypes
+    $<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes>
     -Wundef
     -Wunused-macros
     -Wswitch-enum
     -Wswitch-default
     -Werror
-    -frecord-gcc-switches
 )
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")                 # Definitions which don't seem 2 work w/ `clang`
+    add_compile_options(
+#            -march=native -mtune=native                  # ALWAYS optimize 4 local machine  (since built binaries won't be distributed anyways)
+            -Walloc-zero
+            -Wformat-signedness
+            -Wduplicated-cond
+            -frecord-gcc-switches
+    )
+endif()
+
+
 
 set(CMAKE_C_STANDARD 99)
 

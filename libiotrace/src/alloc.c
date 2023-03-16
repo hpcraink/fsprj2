@@ -4,7 +4,10 @@
 #include "libiotrace_config.h"
 
 #include <stdlib.h>
-#include <malloc.h>         // `malloc_usable_size`
+
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+#  include <sched.h>
+#endif
 
 #include "event.h"
 #include "wrapper_defines.h"
@@ -91,8 +94,8 @@ void* WRAP(malloc)(size_t size) {
     }
     file_alloc_data.address = ret;
 
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    alloc_function_data._cpu = sched_getcpu();   // Don't check 4 errors
 #endif
 
     WRAP_END(data, malloc)
@@ -175,8 +178,8 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
     }
     file_alloc_data.address = ret;
 
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    alloc_function_data._cpu = sched_getcpu();   // Don't check 4 errors
 #endif
 
     WRAP_END(data, calloc)
@@ -207,8 +210,8 @@ void* WRAP(realloc)(void *ptr, size_t size) {
     }
     file_alloc_data.address = ret;
 
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    realloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    realloc_function_data._cpu = sched_getcpu();   // Don't check 4 errors
 #endif
 
     WRAP_END(data, realloc)
@@ -240,8 +243,8 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
     }
     file_alloc_data.address = ret;
 
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    realloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(ret) : (0);
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    realloc_function_data._cpu = sched_getcpu();   // Don't check 4 errors
 #endif
 
     WRAP_END(data, reallocarray)
@@ -269,8 +272,8 @@ int WRAP(posix_memalign)(void **memptr, size_t alignment, size_t size) {
 
     file_alloc_data.address = (ok == data.return_state) ? (*memptr) : (NULL);
 
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    alloc_function_data._usable_size = (ok == data.return_state) ? malloc_usable_size(file_alloc_data.address) : (0);
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    alloc_function_data._cpu = sched_getcpu();   // Don't check 4 errors
 #endif
 
     WRAP_END(data, posix_memalign)
@@ -299,6 +302,10 @@ void WRAP(free)(void *ptr) {
 
     data.return_state = ok;
     free_function_data.ptr = ptr;
+
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    free_function_data._cpu = sched_getcpu();   // Don't check 4 errors
+#endif
 
     WRAP_END(data, free)
 }
@@ -352,8 +359,8 @@ void* WRAP(sbrk)(intptr_t increment) {
     }
     file_alloc_data.address = ret;
 
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    alloc_function_data._usable_size = (ok == data.return_state) ? increment : (0);
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    alloc_function_data._cpu = sched_getcpu();   // Don't check 4 errors
 #endif
 
     WRAP_END(data, sbrk)

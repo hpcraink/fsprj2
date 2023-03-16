@@ -542,11 +542,11 @@ endif()
 if (WITH_ALLOC)
     find_package(OpenMP REQUIRED)
 
-    # test with: IOTRACE_LOG_NAME=alloc_trace_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_trace
+    # test with: `IOTRACE_LOG_NAME=alloc_trace_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_trace`
     add_executable(alloc_trace alloc_trace.c)
     target_link_libraries(alloc_trace PUBLIC OpenMP::OpenMP_C)
 
-    # test with: IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_s_brk
+    # test with: `IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_s_brk`
     add_executable(alloc_s_brk alloc_s_brk.c)
 endif()
 

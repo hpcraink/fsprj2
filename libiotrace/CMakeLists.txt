@@ -5,14 +5,14 @@ project(libiotrace C CXX)
 cmake_minimum_required(VERSION 3.3.2)
 
 if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type")
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
     message(STATUS "No build type selected, defaulting to ${CMAKE_BUILD_TYPE}")
 endif()
 
 
 #include(CheckIPOSupported)                               # WARNING: !!  Requires changing `cmake_minimum_required` 2 newer version (e.g., 3.21)  !!
 #check_ipo_supported(RESULT lto_supported)
-#if(lto_supported)
+#if (lto_supported)
 #    #set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 #    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)         # Enable LTO by default (I.E., 4 all targets (SEE: https://stackoverflow.com/a/47370726))
 #else()

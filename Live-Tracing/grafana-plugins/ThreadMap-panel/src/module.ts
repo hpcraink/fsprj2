@@ -1,6 +1,7 @@
 import { PanelPlugin } from '@grafana/data';
 import { defaultPanelOptions, PanelOptions } from 'options';
 import { ThreadMap } from './ThreadMap';
+//import { minValue } from "ThreadMap";
 
 export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(builder => {
   let category = ['ThreadMap']
@@ -14,7 +15,7 @@ export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(b
     .addNumberInput({
       path: 'ThreadMapColor.min',
       name: 'Min.value',
-      defaultValue: defaultPanelOptions.minmax.min,
+      defaultValue: 10,//minValue[0]?.[1],
       settings: {
         placeholder: 'Auto',
       },
@@ -70,5 +71,20 @@ export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(b
             },
             category,
           });
+          //.addCustomEditor({
+            // id: '__scale__',
+            // path: `__scale__`,
+            // name: '',
+            // category,
+            // editor: () => {
+            //   const palette = quantizeScheme(opts.color, config.theme2);
+            //   return (
+            //     <div>
+            //       <ColorScale colorPalette={palette} min={1} max={100} />
+            //     </div>
+            //   );
+            // },
+          //});
+          
       }
 })

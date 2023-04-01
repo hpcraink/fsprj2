@@ -48,7 +48,7 @@
         "y": 1
       },
       "id": 6,
-      "title": "Test",
+      "title": "ThreadMap & Drilldown",
       "type": "row"
     },
     {
@@ -64,20 +64,6 @@
         "y": 2
       },
       "id": 8,
-      "options": {
-        "ThreadMapColor": {
-          "max": 100,
-          "min": 0
-        },
-        "UseMinMaxBoolean": false,
-        "seriesCountSize": "sm",
-        "showSeriesCount": false,
-        "text": "Default value of text input option",
-        "yAxis": {
-          "axisPlacement": "left",
-          "reverse": false
-        }
-      },
       "targets": [
         {
           "datasource": {
@@ -206,18 +192,37 @@
         "text": "Default value of text input option"
       },
       "targets": [
+               {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "hide": false,
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"hostname\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "refId": "NodesHost"
+        },
         {
           "datasource": {
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n        |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n          |> yield(name: \"sum\")",
-          "refId": "A"
+          "hide": false,
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"thread_id\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "refId": "NodesThread"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n      |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n        |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n          |> yield(name: \"sum\")",
+          "refId": "Data"
         }
       ],
       "title": "Drill Down Force Graph",
       "type": "hs-esslingen-force-graph"
     }
+    
   ],
   "refresh": false,
   "schemaVersion": 37,

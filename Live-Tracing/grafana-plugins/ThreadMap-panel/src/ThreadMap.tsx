@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { PanelProps } from '@grafana/data';
 import { PanelOptions } from 'options';
 import _ from 'lodash';
 import { CustomScrollbar } from '@grafana/ui'; //npnmistall @grafana/ui
-export var minValue: any  //Test for Settings
 
 interface ThreadMapPanelProps extends PanelProps<PanelOptions> {}
 
-export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height }) => {
+export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height, onOptionsChange}) => {
+  sessionStorage.clear()
   var ProcessIDArrCss = new Array   //Css Daten für Grafana
   var ProcessColour = new Array     //Farbe Auslastung Prozesse
   var ThreadIDArrCss = new Array    //Css Daten für Grafana
@@ -15,40 +15,45 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
   var Colours = new Array           //Anzahl möglicher Farben
   var FilesystemValue = new Array
   var FilesystemArrCSS = new Array  //Css
-  var DataLenght = 0                //Datenlänge libiotrace ohne filesystem
+  var DataLength = 0                //Datenlänge libiotrace ohne filesystem
 
-  useEffect(() =>{ //useEffect notwendig oder anderen Operator?
-    options
-  },[data, height])
+  //console.log("optionen:",options)
 
   //Anzahl echter Datenpunkte
-  if(DataLenght == 0)
+  if(DataLength == 0)
   {
     for (let i = 0; i < data.series.length; i++) { 
       if (data.series[i].name === "libiotrace") {
-        DataLenght++
+        DataLength++
       }
     }
   }
 
   //Färbung der Anhand deren Auslastung
-  Colours = ColourSteps(DataLenght)
-  const ColAssig = ColourAssignment(Colours, DataLenght)
+  Colours = ColourSteps(DataLength)
+  const ColAssig = ColourAssignment(Colours, DataLength)
   ThreadColour = ColAssig[0]?.[0]
-  minValue = ColAssig[0]?.[1]
   ProcessColour = ColAssig[1]
   FilesystemValue = FilesystemAssignment()
 
+  //Assign min/max values to default Options
+  let minVal: number, maxVal: number
+  if (options.UseMinMaxBoolean === false) {
+    options.ThreadMapColor.min = minVal = ColAssig[0]?.[1]
+    options.ThreadMapColor.max = maxVal = ColAssig[0]?.[2]
+  }
+  else  {
+    minVal = options.ThreadMapColor.min
+    maxVal = options.ThreadMapColor.max
+  }
+  let minValLength = (minVal.toString().length) * 11
+
   //Generieren der Css-Daten für alle Prozesse & Threads
-  //let j = 0
-  for (let i = 0;i < DataLenght; i++) {
+  for (let i = 0;i < DataLength; i++) {
     if(ProcessColour[i] !== undefined) 
     {
       ProcessIDArrCss[i] = BuildPanelProcess(i, ProcessColour[i])
-      //FilesystemArrCSS[i] = BuildPanelFilesystem(i, j)
-      //j++;
     }
-    //ProcessIDArr[i] = data.series[i].fields[1].labels?.processid
     ThreadIDArrCss[i] = BuildPanelThread(i, ThreadColour[i])
     FilesystemArrCSS[i] = BuildPanelFilesystem(i,FilesystemValue )
   }
@@ -88,7 +93,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
     var ReturnColourProcess = new Array
 
     for (let i = 0; i < lDatalength; i++) {
-      //data.series[i].fields[1].values.buffer[0] //nicht verwendbar? => ThreadHeatValue.buffer[i] als Workaround
       ThreadHeatValue[i] =data.series[i].fields[1].values
       ThreadHeatValue[i] = _.sum(ThreadHeatValue[i].buffer)
     }
@@ -122,38 +126,60 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
       let test = 0
       var ReturnColour = new Array()
       let j = 0
-      for (; HeatValue[j] >= (min+test*((max-min)/DataLenght)) && (j < DataLenght);) { 
-        if (HeatValue[j] <= (min+(test+1)*((max-min)/DataLenght))){
-          ReturnColour[j] = Colour[test]
-          j++
-          test = 0
-          if (HeatValue[j] === undefined) {
+      //min/max Values from data
+      if(options.UseMinMaxBoolean === false){
+        for (; HeatValue[j] >= (min+test*((max-min)/DataLength)) && (j < DataLength);) { 
+          if (HeatValue[j] <= (min+(test+1)*((max-min)/DataLength))){
+            ReturnColour[j] = Colour[test]
             j++
+            test = 0
+            //Skip for PID
+            if (HeatValue[j] === undefined) {
+              j++
+            }
+          }
+          else{
+            test++
           }
         }
-        else{
-          test++
+      }
+      //specified min/max Values
+      else{
+        for (; ((HeatValue[j] >= (options.ThreadMapColor.min+test*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength))) || HeatValue[j] < options.ThreadMapColor.min) && (j < DataLength);) { 
+          if ((HeatValue[j] <= (options.ThreadMapColor.min+(test+1)*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength)))|| HeatValue[j] >= options.ThreadMapColor.max ){
+            ReturnColour[j] = Colour[test]
+            j++
+            test = 0
+            //Skip for PID
+            if (HeatValue[j] === undefined) {
+              j++
+            }
+          }
+          else{
+            test++
+          }
         }
       }
       return[ReturnColour, min, max]
     }
+    //MinMax hier nur für Threads zurück gegeben, auch für Prozesse zurückgebenß
     return[ReturnColourThreads, ReturnColourProcess[0]]
   }
 
   function FilesystemAssignment(){
     var lFilesystemValue = new Array
     var HelpArr = new Array
-    for (let i = 0; i < data.series.length-DataLenght; i++) {
-      HelpArr[i] =data.series[i+DataLenght].fields[1].values
+    for (let i = 0; i < data.series.length-DataLength; i++) {
+      HelpArr[i] =data.series[i+DataLength].fields[1].values
     }
     let j = 0,k = 0
-    for (let i = 0; i < DataLenght; i++) {
+    for (let i = 0; i < DataLength; i++) {
       lFilesystemValue[i] = HelpArr[j].buffer[k]
       k++
       if (HelpArr[j].buffer[k] === undefined) 
       {
         j++
-        if (j >= data.series.length-DataLenght) {
+        if (j >= data.series.length-DataLength) {
           break
         }
         k=0
@@ -211,22 +237,21 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
   return(
     <div>
       <CustomScrollbar>
-        <svg width={DataLenght*150} height={height-100}>
-          <text x={(5)} y= {(30)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">ProzessID:</text>
-          {ProcessIDArrCss}
-          <text x={(5)} y= {(150)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">ThreadID:</text>
-          {ThreadIDArrCss}
-          <text x={(5)} y= {(270)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">Filesystem:</text>
-          {FilesystemArrCSS}
+        <svg width={DataLength*150} height={height-100}>
+        <text x={(5)} y= {(30)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">ProzessID:</text>
+        <text x={(5)} y= {(150)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">ThreadID:</text>
+        <text x={(5)} y= {(270)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">Filesystem:</text>
+        {ProcessIDArrCss}
+        {ThreadIDArrCss}
+        {FilesystemArrCSS}
         </svg>
       </CustomScrollbar>
-      <svg width={DataLenght*150} height={height}>
-          {/* Min Color + Min Value | Max Colour + MaxValue  | Colour Überlauf wie in HeatMap?*/}
-          <text x={(5)} y= {(30)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">Written Bytes: (Min / Max)</text>
+      <svg width={DataLength*150} height={height}>
+          <text x={(5)} y= {(30)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">Colour by written bytes Threads: (Min / Max)</text>
           <rect x={(5)} y={(50)} width={20} height={20} rx="10" fill="#00FF00"/>
-          <text x={(30)} y= {(67)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">{ColAssig[0]?.[1]}</text>
-          <rect x={(70)} y={(50)} width={20} height={20} rx="10" fill="#FF0000"/>         
-          <text x={(95)} y= {(67)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">{ColAssig[0]?.[2]}</text>
+          <text x={(30)} y= {(67)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">{minVal}</text>
+          <rect x={(59 + minValLength)} y={(50)} width={20} height={20} rx="10" fill="#FF0000"/>         
+          <text x={(84 + minValLength)} y= {(67)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">{maxVal}</text>
           </svg>
     </div>
   )

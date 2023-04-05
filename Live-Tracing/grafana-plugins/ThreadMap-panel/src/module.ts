@@ -1,15 +1,27 @@
 import { PanelPlugin } from '@grafana/data';
 import {PanelOptions, defaultPanelOptions } from 'options';
 import { ThreadMap } from './ThreadMap';
-//import { minValue } from './ThreadMap';
 
 export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(builder => {
   let category = ['ThreadMap']
   builder
+  .addSelect({
+    path: 'SortThreadMapBy',
+    name: 'Sort By:',
+    defaultValue: defaultPanelOptions.SortThreadMapBy[0],
+    category,
+    settings: {
+      options: defaultPanelOptions.SortThreadMapBy.map((SortBy: string) =>
+      ({
+        value: SortBy,
+        label: SortBy
+      }))
+    },
+  })
   .addBooleanSwitch({
     path: 'UseMinMaxBoolean',
     name: 'Use specified min/max Values',
-    defaultValue: false,
+    defaultValue: defaultPanelOptions.UseMinMaxBoolean,
     category,
   })
   .addNumberInput({

@@ -6,8 +6,7 @@ import { CustomScrollbar } from '@grafana/ui'; //npnmistall @grafana/ui
 
 interface ThreadMapPanelProps extends PanelProps<PanelOptions> {}
 
-export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height, onOptionsChange}) => {
-  sessionStorage.clear()
+export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width, height}) => {
   var ProcessIDArrCss = new Array   //Css Daten für Grafana
   var ProcessColour = new Array     //Farbe Auslastung Prozesse
   var ThreadIDArrCss = new Array    //Css Daten für Grafana
@@ -15,15 +14,13 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
   var Colours = new Array           //Anzahl möglicher Farben
   var FilesystemValue = new Array
   var FilesystemArrCSS = new Array  //Css
+  var ThreadBufferCss = new Array
   var DataLength = 0                //Datenlänge libiotrace ohne filesystem
 
-  //console.log("optionen:",options)
-
   //Anzahl echter Datenpunkte
-  if(DataLength == 0)
-  {
+  if(DataLength == 0) {
     for (let i = 0; i < data.series.length; i++) { 
-      if (data.series[i].name === "libiotrace") {
+      if (data.series[i].name === 'libiotrace') {
         DataLength++
       }
     }
@@ -35,6 +32,20 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
   ThreadColour = ColAssig[0]?.[0]
   ProcessColour = ColAssig[1]
   FilesystemValue = FilesystemAssignment()
+
+  //Generieren der Css-Daten für alle Prozesse & Threads
+  let j = 0
+  for (let i = 0;i < DataLength; i++) {
+    if(ProcessColour[i] !== undefined) 
+    {
+      ProcessIDArrCss[i] = BuildPanelProcess(i, ProcessColour[i])
+    }
+    ThreadIDArrCss[i] = BuildPanelThread(i, ThreadColour[i])
+    for (let buffer = 0; buffer < data.series[i].fields[1].values.length; buffer++) {
+      ThreadBufferCss[j] = BuildPanelThreadBuffer_FileSystem(i, buffer, ThreadColour[i], FilesystemValue)
+      j++
+    }
+  }
 
   //Assign min/max values to default Options
   let minVal: number, maxVal: number
@@ -48,38 +59,28 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
   }
   let minValLength = (minVal.toString().length) * 11
 
-  //Generieren der Css-Daten für alle Prozesse & Threads
-  for (let i = 0;i < DataLength; i++) {
-    if(ProcessColour[i] !== undefined) 
-    {
-      ProcessIDArrCss[i] = BuildPanelProcess(i, ProcessColour[i])
-    }
-    ThreadIDArrCss[i] = BuildPanelThread(i, ThreadColour[i])
-    FilesystemArrCSS[i] = BuildPanelFilesystem(i,FilesystemValue )
-  }
-
   //Funktionen
   function ColourSteps(lDdatalength: any)
   {
     let Colour = new Array
     const step = 255 / ((lDdatalength-1)*0.5)
-    Colour[0] = "#00ff00"
+    Colour[0] = '#00ff00'
 
     for (let i = 1; i < (lDdatalength); i++) {
       if(i < (lDdatalength/2)) { //Grün #00FF00 bis Gelb #FFFF00
         if ((i*step) < 16) {
-          Colour[i] = "#0" + (i*step).toString(16).substring(0,1) + "ff00"
+          Colour[i] = '#0' + (i*step).toString(16).substring(0,1) + 'ff00'
         }
         else {
-        Colour[i] = "#" + (i*step).toString(16).substring(0,2) + "ff00"
+        Colour[i] = '#' + (i*step).toString(16).substring(0,2) + 'ff00'
         }
-      }
+      } 
       else { //Gelb #FFFF00 bis Rot #FF0000 
-        if (((i-lDdatalength/2)*step) >= 240) {
-          Colour[i] = "#ff0" + (255-((i-lDdatalength/2)*step)).toString(16).substring(0,1) + "00"
+        if (((i-lDdatalength/2)*step) >= 239) {
+          Colour[i] = '#ff0' + (255-((i-lDdatalength/2)*step)).toString(16).substring(0,1) + '00'
         }
         else {
-        Colour[(i)] = "#ff" + (255-((i-lDdatalength/2)*step)).toString(16).substring(0,2) + "00"
+        Colour[(i)] = '#ff' + (255-((i-lDdatalength/2)*step)).toString(16).substring(0,2) + '00'
         }
       }
     }
@@ -93,7 +94,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
     var ReturnColourProcess = new Array
 
     for (let i = 0; i < lDatalength; i++) {
-      ThreadHeatValue[i] =data.series[i].fields[1].values
+      ThreadHeatValue[i] = data.series[i].fields[1].values
       ThreadHeatValue[i] = _.sum(ThreadHeatValue[i].buffer)
     }
 
@@ -146,7 +147,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
       //specified min/max Values
       else{
         for (; ((HeatValue[j] >= (options.ThreadMapColor.min+test*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength))) || HeatValue[j] < options.ThreadMapColor.min) && (j < DataLength);) { 
-          if ((HeatValue[j] <= (options.ThreadMapColor.min+(test+1)*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength)))|| HeatValue[j] >= options.ThreadMapColor.max ){
+          if ((HeatValue[j] <= (options.ThreadMapColor.min+(test+1)*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength))) || (HeatValue[j] >= options.ThreadMapColor.max)){
             ReturnColour[j] = Colour[test]
             j++
             test = 0
@@ -170,8 +171,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
     var lFilesystemValue = new Array
     var HelpArr = new Array
     for (let i = 0; i < data.series.length-DataLength; i++) {
-      HelpArr[i] =data.series[i+DataLength].fields[1].values
+      HelpArr[i] = data.series[i+DataLength].fields[1].values
     }
+  
     let j = 0,k = 0
     for (let i = 0; i < DataLength; i++) {
       lFilesystemValue[i] = HelpArr[j].buffer[k]
@@ -193,44 +195,44 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
     return (
     //horizontal
     <g>
-    <rect x={(5+150*i)} y={(50)} width={135} height={50} rx="10" fill={Colour}/>
-    <text x={(10+150*i)} y= {(90)} fontFamily="Arial" fontSize="30" fill="black">{data.series[i].fields[1].labels?.processid}</text>
-    {/* <rect x={(8*i)} y={(110)} width={7} height={7} rx="10" fill={Colour}/> */}
-    <rect x={(150*i-3)} y={(0)} width={3} height={height-150} fill="black"/>
+    <rect x={(5+150*i)} y={(50)} width={135} height={50} rx='10' fill={Colour}/>
+    <text x={(10+150*i)} y= {(90)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
+    <rect x={(150*i-3)} y={(0)} width={3} height={height-150} fill='black'/>
     </g>
 
     //vertikal
     // <g>
-    // <rect x={(10)} y={(55*i)} width={135} height={50} rx="10" fill = {Colour} />
-    // <text x={(15)} y= {(40+55*i)} fontFamily="Arial" fontSize="30" fill="black">{data.series[i].fields[1].labels?.processid}</text>
+    // <rect x={(10)} y={(55*i)} width={135} height={50} rx='10' fill = {Colour} />
+    // <text x={(15)} y= {(40+55*i)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
     // </g>
     )
   }
 
   function BuildPanelThread(i: number,Colour: any)
   {
-    return (
+    return(
     //horizontal
     <g>
-    <rect x={(5+150*i)} y={(170)} width={135} height={50} rx="10" fill={Colour}/>
-    <text x={(10+150*i)} y= {(210)} fontFamily="Arial" fontSize="20" fill="black">{data.series[i].fields[1].labels?.thread}</text>
-    {/* <rect x={(8*i)} y={(230)} width={7} height={7} rx="10" fill={Colour}/> */}
+    <rect x={(5+150*i)} y={(170)} width={135} height={50} rx='10' fill={Colour}/>
+    <text x={(10+150*i)} y= {(210)} fontFamily='Arial' fontSize='20' fill='black'>{data.series[i].fields[1].labels?.thread}</text>
     </g>
 
     //vertikal
     // <g>
-    // <rect x={(195)} y={(55*i)} width={135} height={50} rx="10" fill={Colour}/>
-    // <text x={(200)} y= {(40+55*i)} fontFamily="Arial" fontSize="30" fill="black">{data.series[i].fields[1].labels?.processid}</text>
+    // <rect x={(195)} y={(55*i)} width={135} height={50} rx='10' fill={Colour}/>
+    // <text x={(200)} y= {(40+55*i)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
     // </g>
     )
   }
 
-  function BuildPanelFilesystem(i: number, lFilesystemValue: any)
+  function BuildPanelThreadBuffer_FileSystem(i: number, j: number, Colour: any, lFilesystemValue: any)
   {
-    return (
-    <g>
-      <text x={(20+150*i)} y= {(320)} fontFamily="Arial" fontSize="20" fill="white">{lFilesystemValue[i]}</text>
-    </g>
+    return(
+      //horizontal
+      <g>
+        <rect x={(20+150*i)} y={(300+30*j)} width={16} height={16} rx='10' fill={Colour}/>
+        <text x={(65+150*i)} y= {(316+ 30*j)} fontFamily='Arial' fontSize='16' fill='white'>{lFilesystemValue[i]}</text>
+      </g>
     )
   }
 
@@ -238,21 +240,23 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, height
     <div>
       <CustomScrollbar>
         <svg width={DataLength*150} height={height-100}>
-        <text x={(5)} y= {(30)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">ProzessID:</text>
-        <text x={(5)} y= {(150)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">ThreadID:</text>
-        <text x={(5)} y= {(270)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">Filesystem:</text>
-        {ProcessIDArrCss}
-        {ThreadIDArrCss}
-        {FilesystemArrCSS}
+          <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>ProzessID:</text>
+          <text x={(5)} y= {(150)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>ThreadID:</text>
+          <text x={(5)} y= {(270)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Filesystem:</text>
+          {ProcessIDArrCss}
+          {ThreadIDArrCss}
+          <text x={(5)} y= {(270)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Filesystem:</text>
+          {ThreadBufferCss}
+          {FilesystemArrCSS}
         </svg>
       </CustomScrollbar>
-      <svg width={DataLength*150} height={height}>
-          <text x={(5)} y= {(30)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">Colour by written bytes Threads: (Min / Max)</text>
-          <rect x={(5)} y={(50)} width={20} height={20} rx="10" fill="#00FF00"/>
-          <text x={(30)} y= {(67)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">{minVal}</text>
-          <rect x={(59 + minValLength)} y={(50)} width={20} height={20} rx="10" fill="#FF0000"/>         
-          <text x={(84 + minValLength)} y= {(67)} fontFamily="Arial" fontSize="20" fill="White" fontWeight="bold">{maxVal}</text>
-          </svg>
-    </div>
+      <svg width={DataLength*150}>
+        <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written bytes Threads: (Min / Max)</text>
+        <rect x={(5)} y={(50)} width={20} height={20} rx='10' fill='#00FF00'/>
+        <text x={(30)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{minVal}</text>
+        <rect x={(59 + minValLength)} y={(50)} width={20} height={20} rx='10' fill='#FF0000'/>         
+        <text x={(84 + minValLength)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{maxVal}</text>
+      </svg>
+      </div>
   )
 }

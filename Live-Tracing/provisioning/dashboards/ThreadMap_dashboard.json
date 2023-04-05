@@ -198,7 +198,7 @@
             "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "from(bucket: \"hsebucket_filres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"hostname\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"hostname\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
           "refId": "NodesHost"
         },
         {

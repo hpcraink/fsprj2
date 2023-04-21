@@ -34,8 +34,7 @@ REAL_DEFINITION_TYPE void* REAL_DEFINITION(sbrk)(intptr_t increment) REAL_DEFINI
 #endif /* HAVE_SBRK */
 #endif /* IO_LIB_STATIC */
 
-char toggle_alloc_wrapper(const char *line, const char toggle)
-{
+char toggle_alloc_wrapper(const char *line, const char toggle) {
 	char ret = 1;
 
 	if (!strcmp(line, "")) {
@@ -44,8 +43,7 @@ char toggle_alloc_wrapper(const char *line, const char toggle)
 #undef WRAPPER_NAME_TO_SOURCE
 #define WRAPPER_NAME_TO_SOURCE WRAPPER_NAME_TO_SET_VARIABLE
 #include "alloc_wrapper.h"
-	else
-	{
+	else {
 		ret = 0;
 	}
 	return ret;
@@ -65,7 +63,6 @@ void alloc_init(void) {
 	}
 }
 #endif
-
 
 void* WRAP(malloc)(size_t size) {
 	void *ret;
@@ -136,17 +133,17 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 	/* gcc assumes the address of ‘__real_calloc’ will never be NULL
 	 * this produces wrong warnings in the following if-statement */
 #pragma GCC diagnostic ignored "-Waddress"
+	/* dlsym compiled with pthread uses calloc: first call of dlsym calls
+	 * calloc before initialization of pointer to real calloc is done.
+	 * That will start initialization via alloc_init() which calls dlsym
+	 * which calls calloc which calls alloc_init() and so on.
+	 *
+	 * To prevent that a call of the wrapper of calloc with uninitialized
+	 * pointer to real calloc must return memory from a static allocated
+	 * area. So no recursive function calls will happen. This means also
+	 * that calls of calloc before initialization via ctor are not logged. */
 	if (NULL == CALL_REAL(calloc)) {
 #pragma GCC diagnostic pop
-		/* dlsym compiled with pthread uses calloc: first call of dlsym calls
-		 * calloc before initialization of pointer to real calloc is done.
-		 * That will start initialization via alloc_init() which calls dlsym
-		 * which calls calloc which calls alloc_init() and so on.
-		 *
-		 * To prevent that a call of the wrapper of calloc with uninitialized
-		 * pointer to real calloc must return memory from a static allocated
-		 * area. So no recursive function calls will happen. This means also
-		 * that calls of calloc before initialization via ctor are not logged. */
 
 		if (0 == nmemb || 0 == size) {
 			return NULL;
@@ -167,7 +164,7 @@ void* WRAP(calloc)(size_t nmemb, size_t size) {
 			/* check if static_calloc_buffer has enough free memory left for
 			 * needed size (do it without adding size to static_calloc_buffer_pos
 			 * to prevent wrap around during evaluation) */
-			if ((size_t)(&(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE
+			if ((size_t) (&(static_calloc_buffer[0]) + STATIC_CALLOC_BUFFER_SIZE
 					- old_value) >= real_size) {
 				new_value = (void*) (old_value + real_size);
 			} else {
@@ -272,13 +269,12 @@ void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size) {
 }
 #endif
 
-
 // ---   Syscalls   ---
 #ifdef HAVE_BRK
-int WRAP(brk)(void* addr) {
+int WRAP(brk)(void *addr) {
 	int ret;
 	struct basic data;
-	struct file_memory file_memory_data;         // TODO: CHOOSE MORE SUITABLE STRUCT MEMBERS
+	struct file_memory file_memory_data; // TODO: CHOOSE MORE SUITABLE STRUCT MEMBERS
 	WRAP_START(data)
 
 	get_basic(&data);
@@ -307,14 +303,14 @@ void* WRAP(sbrk)(intptr_t increment) {
 
 	get_basic(&data);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, alloc_function,
-				alloc_function_data)
+			alloc_function_data)
 	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_alloc, file_alloc_data)
 	alloc_function_data.size = increment;
 
 	CALL_REAL_FUNCTION_RET(data, ret, sbrk, increment)
 
-	if ((void *) -1 == ret) {
+	if ((void*) -1 == ret) {
 		data.return_state = error;
 	} else {
 		data.return_state = ok;

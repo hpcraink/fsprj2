@@ -77,7 +77,7 @@ public class WriteSQLPostTask extends PostTask {
                     for (Map.Entry<String, ThreadTrace> e3 : e2.getValue().getTraces().entrySet()) {
                         String threadId = e3.getKey();
 
-                        insert = "insert into grafana_iotrace.threads (collection_id, id, process_id) values("
+                        insert = "insert into grafana_iotrace.threads (collection_id, id, pid) values("
                                 + uuidToBin(uuid) + ", " + threadId + ", " + processId + ");";
                         bufferedWriter.write(insert + System.lineSeparator());
 
@@ -91,7 +91,7 @@ public class WriteSQLPostTask extends PostTask {
                             }
 
                             insert = "insert into grafana_iotrace.functions "
-                                    + "(collection_id, id, name, type, error, time, wrapper_time, bytes, start_time, end_time, thread_id) "
+                                    + "(collection_id, id, name, type, error, time, wrapper_time, bytes, start_time, end_time, tid) "
                                     + "values(" + uuidToBin(uuid) + ", " + fe.getId() + ", "
                                     + getSqlString(fe.getFunctionName()) + ", " + getSqlString(type) + ", "
                                     + fe.hasError() + ", " + fe.getFunctionTimePeriod() + ", "

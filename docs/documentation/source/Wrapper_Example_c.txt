@@ -1,24 +1,24 @@
 int WRAP(close)(int filedes) {
-	int ret;
-	struct file_descriptor file_descriptor_data;
-	struct basic data;
-	WRAP_START(data)
+    int ret;
+    struct file_descriptor file_descriptor_data;
+    struct basic data;
+    WRAP_START(data)
 
-	get_basic(&data);
-	JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
-	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
-	file_descriptor_data.descriptor = filedes;
-	JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
-			file_descriptor_data)
+    get_basic(&data);
+    JSON_STRUCT_SET_VOID_P_NULL(data, function_data)
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    file_descriptor_data.descriptor = filedes;
+    JSON_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+            file_descriptor_data)
 
-	CALL_REAL_FUNCTION_RET(data, ret, close, filedes)
+    CALL_REAL_FUNCTION_RET(data, ret, close, filedes)
 
-	if (0 == ret) {
-		data.return_state = ok;
-	} else {
-		data.return_state = error;
-	}
+    if (0 == ret) {
+        data.return_state = ok;
+    } else {
+        data.return_state = error;
+    }
 
-	WRAP_END(data)
-	return ret;
+    WRAP_END(data)
+    return ret;
 }

@@ -45,73 +45,73 @@ inline pid_t iotrace_get_tid() {
  * @return Returns the boot time.
  */
 u_int64_t iotrace_get_boot_time() {
-	u_int64_t boot_time = 0;
+    u_int64_t boot_time = 0;
 
 #ifdef __linux__
-	const char *utmp = "/var/run/utmp";
-	int file;
-	int entrys = 10;
-	int i;
-	struct utmp log[entrys];
-	ssize_t bytes;
-	int offset = 0;
+    const char *utmp = "/var/run/utmp";
+    int file;
+    int entrys = 10;
+    int i;
+    struct utmp log[entrys];
+    ssize_t bytes;
+    int offset = 0;
 
-	file = CALL_REAL_POSIX_SYNC(open)(utmp, O_RDONLY);
-	if (0 > file) {
-		LOG_ERROR_AND_EXIT("open of %s failed, errno=%d", utmp, errno);
-	}
+    file = CALL_REAL_POSIX_SYNC(open)(utmp, O_RDONLY);
+    if (0 > file) {
+        LOG_ERROR_AND_EXIT("open of %s failed, errno=%d", utmp, errno);
+    }
 
-	// read until EOF
-	do {
-		bytes = CALL_REAL_POSIX_SYNC(read)(file, (char *)(&(log)) + offset, sizeof(log) - offset);
-		if (0 > bytes) {
-			if (EINTR == errno) {
-				// read interrupted by signal: try again
-				continue;
-			} else {
-				LOG_ERROR_AND_EXIT("read of %s failed, errno=%d", utmp, errno);
-			}
-		}
+    // read until EOF
+    do {
+        bytes = CALL_REAL_POSIX_SYNC(read)(file, (char *)(&(log)) + offset, sizeof(log) - offset);
+        if (0 > bytes) {
+            if (EINTR == errno) {
+                // read interrupted by signal: try again
+                continue;
+            } else {
+                LOG_ERROR_AND_EXIT("read of %s failed, errno=%d", utmp, errno);
+            }
+        }
 
-		// check all complete structures for boot_time
-		for (i = 0; (bytes - (i * sizeof(struct utmp))) >= sizeof(struct utmp); i++) {
-			if (log[i].ut_type == BOOT_TIME) {
-				// get boot_time in nano s from s and micro s in ut_tv
-				boot_time = (u_int64_t)log[i].ut_tv.tv_sec * 1000000000ll + (u_int64_t)log[i].ut_tv.tv_usec * 1000ll;
+        // check all complete structures for boot_time
+        for (i = 0; (bytes - (i * sizeof(struct utmp))) >= sizeof(struct utmp); i++) {
+            if (log[i].ut_type == BOOT_TIME) {
+                // get boot_time in nano s from s and micro s in ut_tv
+                boot_time = (u_int64_t)log[i].ut_tv.tv_sec * 1000000000ll + (u_int64_t)log[i].ut_tv.tv_usec * 1000ll;
 
-				break;
-			}
-		}
+                break;
+            }
+        }
 
-		// if incomplete structure was read: prepare input buffer
-		if ((bytes - (i * sizeof(struct utmp))) > 0) {
-			offset = (bytes - (i * sizeof(struct utmp)));
-			if (i > 0) {
-				// copy incomplete structure to begin of buffer
-				memcpy(&log, (char *)(&(log)) + (i * sizeof(struct utmp)), offset);
-			}
-		} else {
-			offset = 0;
-		}
-	} while (0 != bytes); // until EOF
+        // if incomplete structure was read: prepare input buffer
+        if ((bytes - (i * sizeof(struct utmp))) > 0) {
+            offset = (bytes - (i * sizeof(struct utmp)));
+            if (i > 0) {
+                // copy incomplete structure to begin of buffer
+                memcpy(&log, (char *)(&(log)) + (i * sizeof(struct utmp)), offset);
+            }
+        } else {
+            offset = 0;
+        }
+    } while (0 != bytes); // until EOF
 
-	CALL_REAL_POSIX_SYNC(close)(file);
+    CALL_REAL_POSIX_SYNC(close)(file);
 
-	if (0 == boot_time) {
-		LOG_ERROR_AND_EXIT("boot entry in %s not found", utmp);
-	}
+    if (0 == boot_time) {
+        LOG_ERROR_AND_EXIT("boot entry in %s not found", utmp);
+    }
 #elif defined(__APPLE__) || defined(__OSX__)
-	struct utmpx * utxent;
-	struct utmpx utx_boottime;
-	utx_boottime.ut_type = BOOT_TIME;
+    struct utmpx * utxent;
+    struct utmpx utx_boottime;
+    utx_boottime.ut_type = BOOT_TIME;
 
-	utxent = getutxid(&utx_boottime);
-	boot_time = (u_int64_t)utxent.ut_tv.tv_sec * 1000000000ll + (u_int64_t)utxent.ut_tv.tv_usec * 1000ll;
+    utxent = getutxid(&utx_boottime);
+    boot_time = (u_int64_t)utxent.ut_tv.tv_sec * 1000000000ll + (u_int64_t)utxent.ut_tv.tv_usec * 1000ll;
 #else
 #   error "iotrace_get_boot_time has not been defined for this OS."
 #endif
 
-	return boot_time;
+    return boot_time;
 }
 
 
@@ -122,15 +122,15 @@ u_int64_t iotrace_get_boot_time() {
  */
 void *memrchr(const void *s, int c, size_t n)
 {
-	char * tmp;
+    char * tmp;
 
-	// In case size_t is *not* unsigned int
-	if (n < 0)
-		return NULL;
-	for (tmp = (char*)s; tmp[n] != c && n > 0; n--) /* Just loop */ ;
+    // In case size_t is *not* unsigned int
+    if (n < 0)
+        return NULL;
+    for (tmp = (char*)s; tmp[n] != c && n > 0; n--) /* Just loop */ ;
 
-	if (0 == n)
-		return NULL;
-	return &(tmp[n]);
+    if (0 == n)
+        return NULL;
+    return &(tmp[n]);
 }
 #endif

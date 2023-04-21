@@ -23,14 +23,14 @@ ATTRIBUTE_THREAD pid_t tid = 0;
 CU_SUITE_SETUP() {
     fnres_init(DEFAULT_FNMAP_MAX_SIZE);
 
-	return CUE_SUCCESS;
+    return CUE_SUCCESS;
 }
 
 /* run at the end of the suite */
 CU_SUITE_TEARDOWN() {
     fnres_fin();            /* Note: As mentioned in 'ioevent.c', 'fnres_fin' doesn't clean up dyn. allocated filenames (i.e., leaks memory) */
 
-	return CUE_SUCCESS;
+    return CUE_SUCCESS;
 }
 
 /* run at the start of each test */

@@ -146,7 +146,7 @@ check_symbol_exists(reallocarray "stdlib.h" HAVE_REALLOCARRAY)
 check_symbol_exists(brk "unistd.h" HAVE_BRK)
 check_symbol_exists(sbrk "unistd.h" HAVE_SBRK)
 
-check_symbol_exists(malloc_usable_size "malloc.h" HAVE_MALLOC_USABLE_SIZE)
+check_symbol_exists(sched_getcpu "sched.h" HAVE_SCHED_GETCPU)
 
 #ToDo: right place to search for off64_t?
 check_symbol_exists(off64_t "stdio.h,sys/types.h" HAVE_OFF64_T)

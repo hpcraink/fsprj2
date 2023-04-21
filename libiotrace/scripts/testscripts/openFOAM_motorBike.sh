@@ -60,25 +60,25 @@ cp -r $WM_PROJECT_DIR/tutorials/incompressible/pisoFoam/LES/motorBike/motorBike/
 echo "    patch test case (use ${PROCESS_COUNT} subdomains with ${PROCESS_COUNT} processes)"
 sed -i -r "s:^numberOfSubdomains  8;:numberOfSubdomains  ${PROCESS_COUNT};:" "${3}/${2}/motorBike/system/decomposeParDict"
 case ${PROCESS_COUNT} in
-	4)
-		SUBDOMAINS="2 2 1"
-		;;
-	8)
-		SUBDOMAINS="4 2 1"
+    4)
+        SUBDOMAINS="2 2 1"
+        ;;
+    8)
+        SUBDOMAINS="4 2 1"
                 ;;
-	16)
-		SUBDOMAINS="8 2 1"
+    16)
+        SUBDOMAINS="8 2 1"
                 ;;
-	32)
-		SUBDOMAINS="8 4 1"
-		;;
-	64)
-		SUBDOMAINS="4 4 4"
+    32)
+        SUBDOMAINS="8 4 1"
+        ;;
+    64)
+        SUBDOMAINS="4 4 4"
                 ;;
-	*)
-		echo "unknown subdomain count: ${PROCESS_COUNT}"
-		exit 1
-		;;
+    *)
+        echo "unknown subdomain count: ${PROCESS_COUNT}"
+        exit 1
+        ;;
 esac
 sed -i -r "s:^    n               \(4 2 1\);:    n               (${SUBDOMAINS});:" "${3}/${2}/motorBike/system/decomposeParDict"
 sed -i -r "s:^endTime         500;:endTime         ${END_TIME};:" "${3}/${2}/motorBike/system/controlDict"

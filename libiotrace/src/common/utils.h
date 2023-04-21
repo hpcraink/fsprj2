@@ -8,10 +8,10 @@
 BEGIN_C_DECLS
 
 void generate_env(char *env, const char *key, const int key_length,
-		const char *value);
+        const char *value);
 char* read_line(const char *buf, const size_t len, char **pos);
 void shorten_log_name(char *short_log_name, const int short_log_name_len,
-		const char *log_name, const int log_name_len);
+        const char *log_name, const int log_name_len);
 
 
 int str_to_long(char* str, long* num);

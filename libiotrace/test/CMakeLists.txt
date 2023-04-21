@@ -242,6 +242,7 @@ if(WITH_ALLOC)
         "-Wl,-wrap=calloc"
         "-Wl,-wrap=realloc"
         "-Wl,-wrap=reallocarray"
+        "-Wl,-wrap=posix_memalign"
         "-Wl,-wrap=brk"
         "-Wl,-wrap=sbrk"
     )
@@ -432,12 +433,6 @@ if(WITH_POSIX_AIO)
 endif()
 
 ##########################################################################################################
-if(WITH_ALLOC)
-    # test with: IOTRACE_LOG_NAME=s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./s_brk
-    add_executable(s_brk s_brk.c)
-endif()
-
-##########################################################################################################
 
 if(WITH_MPI_IO)
     # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read
@@ -544,6 +539,19 @@ endif()
 
 ##########################################################################################################
 
+if (WITH_ALLOC)
+    find_package(OpenMP REQUIRED)
+
+    # test with: `IOTRACE_LOG_NAME=alloc_trace_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_trace`
+    add_executable(alloc_trace alloc_trace.c)
+    target_link_libraries(alloc_trace PUBLIC OpenMP::OpenMP_C)
+
+    # test with: `IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_s_brk`
+    add_executable(alloc_s_brk alloc_s_brk.c)
+endif()
+
+##########################################################################################################
+
 add_executable(influxdb_mock influxdb_mock.c)
 target_compile_options(influxdb_mock PRIVATE "-D_GNU_SOURCE")
 target_link_libraries(influxdb_mock PRIVATE ${LINK_OPTIONS})
@@ -567,3 +575,13 @@ target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS_STATIC})
 target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS})
 
 ##########################################################################################################
+
+
+
+# Build libiotrace as follows: `rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF ..  &&  make -j6)`
+# test w/: `IOTRACE_LOG_NAME=test_cpp_linkage_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./test_cpp_linkage_shared`
+add_executable(test_cpp_linkage_shared test_cpp_linkage.cpp)
+
+# TODO: Apparently currently broken  ??!
+#add_executable(test_cpp_linkage_static test_cpp_linkage.cpp)
+#target_link_libraries(test_cpp_linkage_static $<TARGET_OBJECTS:iotrace_object>)

@@ -1,23 +1,21 @@
 //options are used for the manual configuartion of the ThreadMap, also in module
 
-
-export interface ThreadMapColor {
-    min?: number
-    max?: number
-}
-
-//Following is for tests
-
-
-//delete until here
-
+//Options to Panel
 export interface PanelOptions {
-  minmax: ThreadMapColor
+    UseMinMaxBoolean: any;
+    ThreadMapColor: { min: any; max: any; }
+    SortThreadMapBy: [string, string, string]
 }
-
+ 
 export const defaultPanelOptions: PanelOptions = {
-    minmax: {
-        min: 0,
-        max: 100
-    }
+    ThreadMapColor: {
+        min: 'no data',
+        max: 'no data', //series max value
+    },
+    UseMinMaxBoolean: false,
+    SortThreadMapBy: [
+        'default',
+        'MaxBytes',
+        'Filesystem'
+    ]
 };

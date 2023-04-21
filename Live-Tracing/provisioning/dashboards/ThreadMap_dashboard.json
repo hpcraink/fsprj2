@@ -48,52 +48,38 @@
         "y": 1
       },
       "id": 6,
-      "title": "Test",
+      "title": "ThreadMap & Drilldown",
       "type": "row"
     },
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "_uciXaf4z"
       },
       "description": "Anzeige von Prozessen und deren Threads\n(inkl. Auslastung)",
       "gridPos": {
-        "h": 12,
+        "h": 16,
         "w": 24,
         "x": 0,
         "y": 2
       },
       "id": 8,
-      "options": {
-        "ThreadMapColor": {
-          "max": 100,
-          "min": 0
-        },
-        "UseMinMaxBoolean": false,
-        "seriesCountSize": "sm",
-        "showSeriesCount": false,
-        "text": "Default value of text input option",
-        "yAxis": {
-          "axisPlacement": "left",
-          "reverse": false
-        }
-      },
       "targets": [
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"new_hsebucket_filename3\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "A"
         },
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "  from(bucket: \"new_hsebucket_filename3\")\r\n      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n            |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace_filesystem\")\r\n                    |> filter(fn: (r) => r[\"_field\"] == \"mount_type\")\r\n                              |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n                                          |> yield(name: \"last\")",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace_filesystem\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"mount_type\")\r\n        |> sort()\r\n          |> yield(name: \"sort\")",
           "refId": "B"
         }
       ],
@@ -103,56 +89,19 @@
     {
       "datasource": {
         "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
+        "uid": "_uciXaf4z"
       },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
           "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
             }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
           }
         },
         "overrides": []
@@ -161,59 +110,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 14
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "query": "from(bucket: \"new_hsebucket_filename3\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
-          "refId": "A"
-        }
-      ],
-      "title": "Alle Daten",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "P951FEA4DE68E13C5"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 12,
-        "x": 12,
-        "y": 14
+        "y": 15
       },
       "id": 2,
       "options": {
@@ -268,15 +165,64 @@
         {
           "datasource": {
             "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
+            "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"new_hsebucket_filename3\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "A"
         }
       ],
-      "title": "Heat Map \"write\" Data",
+      "title": "Heat Map All Data",
       "type": "heatmap"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "_uciXaf4z"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 12,
+      "options": {
+        "seriesCountSize": "sm",
+        "showSeriesCount": false,
+        "text": "Default value of text input option"
+      },
+      "targets": [
+               {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "hide": false,
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"hostname\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "refId": "NodesHost"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "hide": false,
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"thread_id\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "refId": "NodesThread"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n      |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n        |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n          |> yield(name: \"sum\")",
+          "refId": "Data"
+        }
+      ],
+      "title": "Drill Down Force Graph",
+      "type": "hs-esslingen-force-graph"
     }
+    
   ],
   "refresh": false,
   "schemaVersion": 37,
@@ -286,13 +232,13 @@
     "list": []
   },
   "time": {
-    "from": "now-3h",
-    "to": "now"
+    "from": "2023-02-22T10:00:00.000Z",
+    "to": "2023-02-22T16:59:59.000Z"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Heat Map & Performance",
   "uid": "Mu-IsxOVk",
-  "version": 16,
+  "version": 27,
   "weekStart": ""
 }

@@ -23,10 +23,10 @@
  *                       variable.
  */
 void generate_env(char *env, const char *key, const int key_length,
-		const char *value) {
-	strcpy(env, key);
-	strcpy(env + key_length, "=");
-	strcpy(env + key_length + 1, value);
+        const char *value) {
+    strcpy(env, key);
+    strcpy(env + key_length, "=");
+    strcpy(env + key_length + 1, value);
 }
 
 /**
@@ -49,33 +49,33 @@ void generate_env(char *env, const char *key, const int key_length,
  *         exists.
  */
 char* read_line(const char *buf, const size_t len, char **pos) {
-	char *tmp_pos = *pos;
+    char *tmp_pos = *pos;
 
-	if (**pos == '\0') {
-		return NULL;
-	}
+    if (**pos == '\0') {
+        return NULL;
+    }
 
-	for (; **pos != '\0' && *pos < buf + len; (*pos)++) {
-		if ('\r' == **pos) {
-			**pos = '\0';
-			(*pos)++;
-			if ('\n' == **pos) {
-				**pos = '\0';
-				(*pos)++;
-			}
-			return tmp_pos;
-		}
-		if ('\n' == **pos) {
-			**pos = '\0';
-			(*pos)++;
-			return tmp_pos;
-		}
-	}
+    for (; **pos != '\0' && *pos < buf + len; (*pos)++) {
+        if ('\r' == **pos) {
+            **pos = '\0';
+            (*pos)++;
+            if ('\n' == **pos) {
+                **pos = '\0';
+                (*pos)++;
+            }
+            return tmp_pos;
+        }
+        if ('\n' == **pos) {
+            **pos = '\0';
+            (*pos)++;
+            return tmp_pos;
+        }
+    }
 
-	if (tmp_pos < buf + len) {
-		return tmp_pos;
-	}
-	return NULL;
+    if (tmp_pos < buf + len) {
+        return tmp_pos;
+    }
+    return NULL;
 }
 
 /**
@@ -93,14 +93,14 @@ char* read_line(const char *buf, const size_t len, char **pos) {
  * @param[in]  log_name_len       Length of log_name.
  */
 void shorten_log_name(char *short_log_name, const int short_log_name_len,
-		const char *log_name, const int log_name_len) {
-	if (log_name_len <= short_log_name_len) {
-		strncpy(short_log_name, log_name, short_log_name_len);
-	} else {
-		strncpy(short_log_name,
-				log_name + (log_name_len - short_log_name_len),
-				short_log_name_len);
-	}
+        const char *log_name, const int log_name_len) {
+    if (log_name_len <= short_log_name_len) {
+        strncpy(short_log_name, log_name, short_log_name_len);
+    } else {
+        strncpy(short_log_name,
+                log_name + (log_name_len - short_log_name_len),
+                short_log_name_len);
+    }
 }
 
 

@@ -78,9 +78,11 @@ LIBIOTRACE_STRUCT_START(shared_library)
   LIBIOTRACE_STRUCT_VOID_P_CONST(dl_handle)
 LIBIOTRACE_STRUCT_END
 
+#ifdef WITH_ALLOC
 LIBIOTRACE_STRUCT_START(file_alloc)
   LIBIOTRACE_STRUCT_VOID_P(address)
 LIBIOTRACE_STRUCT_END
+#endif /* WITH_ALLOC */
 
 LIBIOTRACE_STRUCT_START(errno_detail)
   LIBIOTRACE_STRUCT_INT(errno_value)
@@ -946,12 +948,29 @@ LIBIOTRACE_STRUCT_START(mpi_waitall)
 LIBIOTRACE_STRUCT_END
 
 /* struct for alloc */
+#ifdef WITH_ALLOC
 LIBIOTRACE_STRUCT_START(alloc_function)
   LIBIOTRACE_STRUCT_SIZE_T(size)
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-  LIBIOTRACE_STRUCT_SIZE_T(_usable_size)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+  LIBIOTRACE_STRUCT_INT(_cpu)
 #endif
 LIBIOTRACE_STRUCT_END
+
+LIBIOTRACE_STRUCT_START(realloc_function)
+  LIBIOTRACE_STRUCT_SIZE_T(size)
+  LIBIOTRACE_STRUCT_VOID_P(ptr)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+  LIBIOTRACE_STRUCT_INT(_cpu)
+#endif
+LIBIOTRACE_STRUCT_END
+
+LIBIOTRACE_STRUCT_START(free_function)
+  LIBIOTRACE_STRUCT_VOID_P(ptr)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+  LIBIOTRACE_STRUCT_INT(_cpu)
+#endif
+LIBIOTRACE_STRUCT_END
+#endif /* WITH_ALLOC */
 
 /* struct for additional wrapper informations */
 #ifdef LOG_WRAPPER_TIME
@@ -967,8 +986,8 @@ LIBIOTRACE_STRUCT_START(basic)
   LIBIOTRACE_STRUCT_CSTRING(traced_filename, FILENAME_MAX)
 #endif
   LIBIOTRACE_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
-  LIBIOTRACE_STRUCT_PID_T(process_id)
-  LIBIOTRACE_STRUCT_PID_T(thread_id)
+  LIBIOTRACE_STRUCT_PID_T(pid)
+  LIBIOTRACE_STRUCT_PID_T(tid)
   // ToDo: function_name as CSTRING_P ?
   LIBIOTRACE_STRUCT_CSTRING(function_name, MAX_FUNCTION_NAME)
   LIBIOTRACE_STRUCT_U_INT64_T(time_start)
@@ -992,7 +1011,9 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, file_mpi)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, shared_library)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, request_mpi)
+#ifdef WITH_ALLOC
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(file_type, file_alloc)
+#endif /* WITH_ALLOC */
   LIBIOTRACE_STRUCT_VOID_P_END(file_type)
   // ToDo: new field for boolean which shows if file position has changed (e.g. copy_file_range don't change file position)
   // or corrupted (e.g. async functions)
@@ -1058,7 +1079,11 @@ LIBIOTRACE_STRUCT_START(basic)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_delete_function)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_immediate_at)
     LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, mpi_waitall)
-	LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
+#ifdef WITH_ALLOC
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, alloc_function)
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, realloc_function)
+    LIBIOTRACE_STRUCT_VOID_P_ELEMENT(function_data, free_function)
+#endif /* WITH_ALLOC */
   LIBIOTRACE_STRUCT_VOID_P_END(function_data)
 LIBIOTRACE_STRUCT_END
 
@@ -1077,7 +1102,7 @@ LIBIOTRACE_STRUCT_END
 LIBIOTRACE_STRUCT_START(working_dir)
   LIBIOTRACE_STRUCT_U_INT64_T(time)
   LIBIOTRACE_STRUCT_CSTRING_P(hostname, HOST_NAME_MAX)
-  LIBIOTRACE_STRUCT_PID_T(process_id)
+  LIBIOTRACE_STRUCT_PID_T(pid)
   LIBIOTRACE_STRUCT_CSTRING_P(dir, MAXFILENAME)
 LIBIOTRACE_STRUCT_END
 
@@ -1116,7 +1141,7 @@ LIBIOTRACE_STRUCT_END
 #if defined(ENABLE_REMOTE_CONTROL) && defined(IOTRACE_ENABLE_LOGFILE)
 /* control commands meta data*/
 LIBIOTRACE_STRUCT_START(control_meta)
-  LIBIOTRACE_STRUCT_PID_T(process_id)
+  LIBIOTRACE_STRUCT_PID_T(pid)
   LIBIOTRACE_STRUCT_CSTRING_P(interface_name, IFNAMSIZ)
   LIBIOTRACE_STRUCT_CSTRING_P(ip, 39)
   LIBIOTRACE_STRUCT_INT(port)

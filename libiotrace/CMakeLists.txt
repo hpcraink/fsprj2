@@ -1,14 +1,24 @@
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)        # Find compiler based on env-var, and not soley based on `/usr/bin/cc`  (which causes issues on systems where the compiler is loaded via `module load <compiler-module>`)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
-project(libiotrace)
+project(libiotrace C CXX)
 cmake_minimum_required(VERSION 3.3.2)
 
-enable_language(C)
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+    message(STATUS "No build type selected, defaulting to ${CMAKE_BUILD_TYPE}")
+endif()
 
-# XXX For production version, these should be deleted (it's a user-option)
-# set(CMAKE_BUILD_TYPE Release)
-# set(CMAKE_BUILD_TYPE Debug)
+
+#include(CheckIPOSupported)                               # WARNING: !!  Requires changing `cmake_minimum_required` 2 newer version (e.g., 3.21)  !!
+#check_ipo_supported(RESULT lto_supported)
+#if (lto_supported)
+#    #set_property(TARGET foo PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+#    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)         # Enable LTO by default (I.E., 4 all targets (SEE: https://stackoverflow.com/a/47370726))
+#else()
+#    message(WARNING "LTO isn't supported")
+#endif()
+
 
 add_compile_options(
     -Wall
@@ -16,22 +26,31 @@ add_compile_options(
     -pedantic
     -pedantic-errors
     -Wformat=2
-    -Wformat-signedness
-    -Walloc-zero
     -Wdouble-promotion
-    -Wduplicated-cond
     -Wfloat-equal
     -Winit-self
-    -Wstrict-prototypes
+    $<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes>
     -Wundef
     -Wunused-macros
     -Wswitch-enum
     -Wswitch-default
     -Werror
-    -frecord-gcc-switches
 )
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")                 # Definitions which don't seem 2 work w/ `clang`
+    add_compile_options(
+#            -march=native -mtune=native                  # ALWAYS optimize 4 local machine  (since built binaries won't be distributed anyways)
+            -Walloc-zero
+            -Wformat-signedness
+            -Wduplicated-cond
+            -frecord-gcc-switches
+    )
+endif()
+
+
 
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
+
 
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
@@ -48,7 +67,7 @@ option (WITH_POSIX_AIO "build wrappers for asynchronous Posix-IO" OFF)
 option (WITH_MPI_IO "build wrappers for MPI-IO" OFF)
 option (WITH_DL_IO "build wrappers for dlopen() and dlmopen()" OFF)
 option (WITH_ALLOC "build wrappers for memory allocations" OFF)
-option (WITH_USABLE_SIZE "wrappers for memory allocations collect usable size per allocation" OFF)
+option (WITH_ALLOC_CPU "Additionaly log logical CPU on which the allocation was performed" OFF)
 option (FILENAME_RESOLUTION_ENABLED "create mapping b/w file handles and filenames during runtime" OFF)
 option (ALL_WRAPPERS_ACTIVE "Activate or deactivate all wrappers" ON)
 option (REALTIME "Use the real system time (is affected by discontinuous jumps in the system time (e.g., if the system administrator manually changes the clock), and by the incremental adjustments performed by adjtime and NTP)" ON)
@@ -197,11 +216,14 @@ endif()
 #compile using cmake -DWITH_ALLOC for memory allocations
 if(WITH_ALLOC)
     list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DWITH_ALLOC)
+else()
+    # Remove CMake options from cache
+    unset(WITH_ALLOC_CPU CACHE)
 endif()
 
-#compile using cmake -DWITH_USABLE_SIZE to collect usable size per memory allocation
-if(WITH_USABLE_SIZE)
-    list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DWITH_USABLE_SIZE)
+#compile using cmake -DWITH_ALLOC_CPU to collect usable size per memory allocation
+if(WITH_ALLOC_CPU)
+    list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DWITH_ALLOC_CPU)
 endif()
 
 # Compile using cmake -DFILENAME_RESOLUTION_ENABLED for creating mappings b/w file handles and filenames during runtime

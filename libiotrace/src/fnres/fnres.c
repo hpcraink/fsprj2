@@ -358,6 +358,7 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
         case CASE_CALLOC:
         case CASE_REALLOC:
         case CASE_REALLOCARRAY:
+        case CASE_POSIX_MEMALIGN:
         case CASE_FREE:
         case CASE_BRK:
         case CASE_SBRK:
@@ -638,9 +639,11 @@ static void create_fnmap_key_using_ioevent_file_type(struct basic *ioevent_ptr, 
 
         case __void_p_enum_file_type_file_async:
         case __void_p_enum_file_type_shared_library:
+#ifdef WITH_ALLOC
         case __void_p_enum_file_type_file_alloc:
-        	LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
-        	return;
+#endif /* WITH_ALLOC */
+            LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
+            return;
         default:
             LOG_WARN("Unknown case for `ioevent->__void_p_enum_file_type` w/ value %u", ioevent_ptr->__void_p_enum_file_type);
             return;                      /* Note: Currently NOT checked by caller (-> proceeding w/o checking return value might lead to nonsensical fnmap-key; reasoning: indicates incomplete / faulty tracing, hence only warning)  */
@@ -775,12 +778,16 @@ static void create_fnmap_key_using_ioevent_function_data(struct basic* ioevent_p
         case __void_p_enum_function_data_mpi_wait:
         case __void_p_enum_function_data_mpi_delete_function:
         case __void_p_enum_function_data_mpi_waitall:
+#ifdef WITH_ALLOC
         case __void_p_enum_function_data_alloc_function:
+        case __void_p_enum_function_data_realloc_function:
+        case __void_p_enum_function_data_free_function:
+#endif /* WITH_ALLOC */
 #if defined(HAVE_DLMOPEN) && defined(WITH_DL_IO)
         case __void_p_enum_function_data_dlmopen_function:
 #endif
-        	LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
-        	return;
+            LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
+            return;
         default:
             LOG_WARN("Unknown case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
             return;
@@ -811,58 +818,62 @@ static const char* get_file_name_from_ioevent_function_data(struct basic* ioeven
 
         case __void_p_enum_function_data_fork_function:
         case __void_p_enum_function_data_fdopen_function:
-		case __void_p_enum_function_data_information_function:
-		case __void_p_enum_function_data_lock_mode_function:
-		case __void_p_enum_function_data_orientation_mode_function:
-		case __void_p_enum_function_data_write_function:
-		case __void_p_enum_function_data_pwrite_function:
-		case __void_p_enum_function_data_pwrite2_function:
-		case __void_p_enum_function_data_read_function:
-		case __void_p_enum_function_data_pread_function:
-		case __void_p_enum_function_data_pread2_function:
-		case __void_p_enum_function_data_copy_read_function:
-		case __void_p_enum_function_data_copy_write_function:
-		case __void_p_enum_function_data_unget_function:
-		case __void_p_enum_function_data_position_function:
-		case __void_p_enum_function_data_positioning_function:
-		case __void_p_enum_function_data_lpositioning_function:
-		case __void_p_enum_function_data_buffer_function:
-		case __void_p_enum_function_data_fileno_function:
-		case __void_p_enum_function_data_bufsize_function:
-		case __void_p_enum_function_data_memory_map_function:
-		case __void_p_enum_function_data_memory_sync_function:
-		case __void_p_enum_function_data_memory_remap_function:
-		case __void_p_enum_function_data_memory_madvise_function:
-		case __void_p_enum_function_data_select_function:
-		case __void_p_enum_function_data_memory_posix_madvise_function:
-		case __void_p_enum_function_data_asynchronous_read_function:
-		case __void_p_enum_function_data_asynchronous_write_function:
-		case __void_p_enum_function_data_asynchronous_listio_function:
-		case __void_p_enum_function_data_asynchronous_error_function:
-		case __void_p_enum_function_data_asynchronous_return_function:
-		case __void_p_enum_function_data_asynchronous_sync_function:
-		case __void_p_enum_function_data_asynchronous_suspend_function:
-		case __void_p_enum_function_data_asynchronous_cancel_function:
-		case __void_p_enum_function_data_asynchronous_init_function:
-		case __void_p_enum_function_data_dup_function:
-		case __void_p_enum_function_data_dup3_function:
-		case __void_p_enum_function_data_fcntl_function:
-		case __void_p_enum_function_data_file_pair:
-		case __void_p_enum_function_data_readdir_function:
-		case __void_p_enum_function_data_dirfd_function:
-		case __void_p_enum_function_data_msg_function:
-		case __void_p_enum_function_data_mmsg_function:
-		case __void_p_enum_function_data_sockaddr_function:
-		case __void_p_enum_function_data_accept_function:
-		case __void_p_enum_function_data_socketpair_function:
-		case __void_p_enum_function_data_socket_function:
-		case __void_p_enum_function_data_mpi_immediate:
-		case __void_p_enum_function_data_mpi_wait:
-		case __void_p_enum_function_data_mpi_immediate_at:
-		case __void_p_enum_function_data_mpi_waitall:
-		case __void_p_enum_function_data_alloc_function:
-			LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
-			return NULL;
+        case __void_p_enum_function_data_information_function:
+        case __void_p_enum_function_data_lock_mode_function:
+        case __void_p_enum_function_data_orientation_mode_function:
+        case __void_p_enum_function_data_write_function:
+        case __void_p_enum_function_data_pwrite_function:
+        case __void_p_enum_function_data_pwrite2_function:
+        case __void_p_enum_function_data_read_function:
+        case __void_p_enum_function_data_pread_function:
+        case __void_p_enum_function_data_pread2_function:
+        case __void_p_enum_function_data_copy_read_function:
+        case __void_p_enum_function_data_copy_write_function:
+        case __void_p_enum_function_data_unget_function:
+        case __void_p_enum_function_data_position_function:
+        case __void_p_enum_function_data_positioning_function:
+        case __void_p_enum_function_data_lpositioning_function:
+        case __void_p_enum_function_data_buffer_function:
+        case __void_p_enum_function_data_fileno_function:
+        case __void_p_enum_function_data_bufsize_function:
+        case __void_p_enum_function_data_memory_map_function:
+        case __void_p_enum_function_data_memory_sync_function:
+        case __void_p_enum_function_data_memory_remap_function:
+        case __void_p_enum_function_data_memory_madvise_function:
+        case __void_p_enum_function_data_select_function:
+        case __void_p_enum_function_data_memory_posix_madvise_function:
+        case __void_p_enum_function_data_asynchronous_read_function:
+        case __void_p_enum_function_data_asynchronous_write_function:
+        case __void_p_enum_function_data_asynchronous_listio_function:
+        case __void_p_enum_function_data_asynchronous_error_function:
+        case __void_p_enum_function_data_asynchronous_return_function:
+        case __void_p_enum_function_data_asynchronous_sync_function:
+        case __void_p_enum_function_data_asynchronous_suspend_function:
+        case __void_p_enum_function_data_asynchronous_cancel_function:
+        case __void_p_enum_function_data_asynchronous_init_function:
+        case __void_p_enum_function_data_dup_function:
+        case __void_p_enum_function_data_dup3_function:
+        case __void_p_enum_function_data_fcntl_function:
+        case __void_p_enum_function_data_file_pair:
+        case __void_p_enum_function_data_readdir_function:
+        case __void_p_enum_function_data_dirfd_function:
+        case __void_p_enum_function_data_msg_function:
+        case __void_p_enum_function_data_mmsg_function:
+        case __void_p_enum_function_data_sockaddr_function:
+        case __void_p_enum_function_data_accept_function:
+        case __void_p_enum_function_data_socketpair_function:
+        case __void_p_enum_function_data_socket_function:
+        case __void_p_enum_function_data_mpi_immediate:
+        case __void_p_enum_function_data_mpi_wait:
+        case __void_p_enum_function_data_mpi_immediate_at:
+        case __void_p_enum_function_data_mpi_waitall:
+#ifdef WITH_ALLOC
+        case __void_p_enum_function_data_alloc_function:
+        case __void_p_enum_function_data_realloc_function:
+        case __void_p_enum_function_data_free_function:
+#endif /* WITH_ALLOC */
+            LOG_DEBUG("Unhandled case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
+            return NULL;
         default:
             LOG_WARN("Unknown case for `ioevent->__void_p_enum_function_data` w/ value %u", ioevent_ptr->__void_p_enum_function_data);
             return NULL;                      /* Note: Currently NOT checked by all callers (ISSUE: Has sometimes special meaning, e.g., for `dlopen`; Note: Proceeding w/o checking return value might lead to SIGSEGV)  */

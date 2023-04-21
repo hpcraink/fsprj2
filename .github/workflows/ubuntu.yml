@@ -13,7 +13,7 @@ jobs:
   # --- libiotrace ---
   libiotrace:
     name: libiotrace
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
          # Required for CUnit tests --> doesn't work ?
@@ -44,36 +44,36 @@ jobs:
 
       - name: Build w/ CMake
         shell: bash
-        run: cmake --build $LIBIOTRACE_BUILD_PATH --config $LIBIOTRACE_BUILD_TYPE
+        run: make -C $LIBIOTRACE_BUILD_PATH -j$(nproc)
 
       # - Test -
       - name: Test (CUnit)
         shell: bash
         # Executes only tests w/ 'test_' prefix
-        run: make -C $LIBIOTRACE_BUILD_PATH test ARGS="-R '^test_'"
+        run: make -C $LIBIOTRACE_BUILD_PATH -j$(nproc) test ARGS="-R '^test_'"
         # >> WORKAROUND <<: Not feasible w/ cmake (see 'libiotrace/test/cunit/CMakeLists.txt')
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
-      
-      # - Release -
-      - uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{secrets.GITHUB_TOKEN}}"
-          prerelease: true
-          automatic_release_tag: "latest"
-          title: "libiotrace-#${{github.run_number}}"
-          files: |
-            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_control.so
-            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so
-            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_static.a
-            ${{env.LIBIOTRACE_BASE_PATH}}/include/libiotrace.h
-        name: Create Release
+
+#      # - Release -
+#      - uses: marvinpinto/action-automatic-releases@latest
+#        with:
+#          repo_token: "${{secrets.GITHUB_TOKEN}}"
+#          prerelease: true
+#          automatic_release_tag: "latest"
+#          title: "libiotrace-#${{github.run_number}}"
+#          files: |
+#            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_control.so
+#            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_shared.so
+#            ${{env.LIBIOTRACE_BUILD_PATH}}/src/libiotrace_static.a
+#            ${{env.LIBIOTRACE_BASE_PATH}}/include/libiotrace.h
+#        name: Create Release
 
 
   # --- IOTrace_Analyze ---
   iotraceanalyze:
     name: IOTrace_Analyze
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 

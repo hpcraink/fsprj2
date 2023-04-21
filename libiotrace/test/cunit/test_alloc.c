@@ -15,6 +15,7 @@ extern void* WRAP(realloc)(void *ptr, size_t size);
 #ifdef HAVE_REALLOCARRAY
 extern void* WRAP(reallocarray)(void *ptr, size_t nmemb, size_t size);
 #endif
+extern int WRAP(posix_memalign)(void **memptr, size_t alignment, size_t size);
 #ifdef HAVE_SBRK
 extern void* WRAP(sbrk)(intptr_t increment);
 #endif
@@ -51,12 +52,12 @@ void io_log_file_buffer_write(struct basic *data) {
 
 // is called from wrappers if fnres is enabled
 int fnres_trace_ioevent(struct basic *ioevent_ptr ATTRIBUTE_UNUSED) {
-	return 0;
+    return 0;
 }
 
 void get_basic(struct basic *data) {
-    data->process_id = id;
-    data->thread_id = id;
+    data->pid = id;
+    data->tid = id;
 
     data->hostname = hostname;
 
@@ -83,8 +84,8 @@ void fnres_trace_fctevent(struct basic *fctevent) {
 #endif
 
 void check_basic(const struct basic *data, const char *function_name, u_int64_t test_start, u_int64_t test_end) {
-    CU_ASSERT_FATAL(id == data->process_id);
-    CU_ASSERT_FATAL(id == data->thread_id);
+    CU_ASSERT_FATAL(id == data->pid);
+    CU_ASSERT_FATAL(id == data->tid);
     CU_ASSERT_FATAL(0 == strcmp(hostname, data->hostname));
 
     CU_ASSERT_FATAL(0 == strcmp(function_name, data->function_name));
@@ -155,9 +156,8 @@ void* call_and_check_malloc(size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
-    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    CU_ASSERT_FATAL(-1 != ((struct alloc_function*)(cached_data->__function_data))->_cpu)
 #endif
 
     errno = ret_errno;
@@ -183,9 +183,8 @@ void* call_and_check_calloc(size_t nmemb, size_t size, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
-    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    CU_ASSERT_FATAL(-1 != ((struct alloc_function*)(cached_data->__function_data))->_cpu)
 #endif
 
     errno = ret_errno;
@@ -209,11 +208,11 @@ void* call_and_check_realloc(void *ptr, size_t size, char *function_name) {
 
     check_basic(cached_data, function_name, test_start, test_end);
 
-    CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
-    CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
-    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+    CU_ASSERT_FATAL(__void_p_enum_function_data_realloc_function == cached_data->__void_p_enum_function_data)
+    CU_ASSERT_FATAL(size == ((struct realloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(ptr == ((struct realloc_function*)(cached_data->__function_data))->ptr)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    CU_ASSERT_FATAL(-1 != ((struct alloc_function*)(cached_data->__function_data))->_cpu)
 #endif
 
     errno = ret_errno;
@@ -238,17 +237,44 @@ void* call_and_check_reallocarray(void *ptr, size_t nmemb, size_t size, char *fu
 
     check_basic(cached_data, function_name, test_start, test_end);
 
-    CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
-    CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    const size_t usable_size = (ok == cached_data->return_state) ? malloc_usable_size(mem) : 0;
-    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+    CU_ASSERT_FATAL(__void_p_enum_function_data_realloc_function == cached_data->__void_p_enum_function_data)
+    CU_ASSERT_FATAL(size == ((struct realloc_function*)(cached_data->__function_data))->size)
+    CU_ASSERT_FATAL(ptr == ((struct realloc_function*)(cached_data->__function_data))->ptr)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    CU_ASSERT_FATAL(-1 != ((struct alloc_function*)(cached_data->__function_data))->_cpu)
 #endif
 
     errno = ret_errno;
     return mem;
 }
 #endif
+
+int call_and_check_posix_memalign(void **memptr, size_t alignment, size_t size, char *function_name) {
+    int rc;
+    u_int64_t test_start;
+    u_int64_t test_end;
+    int ret_errno;
+
+    test_start = gettime();
+    rc = __test_posix_memalign(memptr, alignment, size);
+    ret_errno = errno;
+    test_end = gettime();
+
+    CU_ASSERT_FATAL(NULL != cached_data);
+
+    CU_ASSERT_FATAL(NULL != cached_data->__file_type);
+
+    check_basic(cached_data, function_name, test_start, test_end);
+
+    CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
+    CU_ASSERT_FATAL(size == ((struct alloc_function*)(cached_data->__function_data))->size)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    CU_ASSERT_FATAL(-1 != ((struct alloc_function*)(cached_data->__function_data))->_cpu)
+#endif
+
+    errno = ret_errno;
+    return rc;
+}
 
 #ifdef HAVE_SBRK
 void* call_and_check_sbrk(intptr_t increment, char *function_name) {
@@ -270,9 +296,8 @@ void* call_and_check_sbrk(intptr_t increment, char *function_name) {
 
     CU_ASSERT_FATAL(__void_p_enum_function_data_alloc_function == cached_data->__void_p_enum_function_data)
     CU_ASSERT_FATAL((size_t)increment == ((struct alloc_function*)(cached_data->__function_data))->size)
-#if defined(HAVE_MALLOC_USABLE_SIZE) && defined(WITH_USABLE_SIZE)
-    const size_t usable_size = (ok == cached_data->return_state) ? increment : 0;
-    CU_ASSERT_FATAL(usable_size == ((struct alloc_function*)(cached_data->__function_data))->_usable_size)
+#if defined(HAVE_SCHED_GETCPU) && defined(WITH_ALLOC_CPU)
+    CU_ASSERT_FATAL(-1 != ((struct alloc_function*)(cached_data->__function_data))->_cpu)
 #endif
 
     errno = ret_errno;
@@ -697,6 +722,32 @@ static void test_reallocarray(void) {
 #endif
 }
 
+static void test_posix_memalign(void) {
+    char function_name[] = "posix_memalign";
+    int rc;
+    void* mem;
+    size_t size, alignment;
+
+    toggle_alloc_wrapper(function_name, 1);
+    CU_ASSERT_FATAL(1 == active_wrapper_status.posix_memalign);
+
+    // alloc with size 666
+
+    size = 666;
+    alignment = sizeof(void*);
+    rc = call_and_check_posix_memalign(&mem, alignment, size, function_name);
+    CU_ASSERT_FATAL(rc == 0);
+    memset(mem, 'm', size);
+    free(mem);
+    mem = NULL;
+
+    CU_ASSERT_FATAL(ok == cached_data->return_state);
+    CU_ASSERT_FATAL(NULL == cached_data->return_state_detail);
+
+    free(cached_data);
+    cached_data = NULL;
+}
+
 static void test_sbrk(void) {
 #ifdef HAVE_SBRK
     char function_name[] = "sbrk";
@@ -766,5 +817,6 @@ CUNIT_CI_RUN("Suite_1",
         CUNIT_CI_TEST(test_calloc),
         CUNIT_CI_TEST(test_realloc),
         CUNIT_CI_TEST(test_reallocarray),
-		CUNIT_CI_TEST(test_sbrk)
+        CUNIT_CI_TEST(test_posix_memalign),
+        CUNIT_CI_TEST(test_sbrk)
         )

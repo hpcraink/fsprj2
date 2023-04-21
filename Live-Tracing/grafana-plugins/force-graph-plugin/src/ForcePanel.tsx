@@ -7,6 +7,7 @@ interface Props extends PanelProps<SimpleOptions> {}
 export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, height }) => {
   useEffect(() => {
     let nodes: any = [];
+    //sessionStorage.clear(); //Clear to erase beforehand data | Took wrong data from false test before!
     let addingNodes = false;
     let links: any = [];
     if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
@@ -15,8 +16,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
     function addNodes(_callback: any) {
       let nodeNumber = nodes.length;
-      let nodeHosts: any = data.series[0].fields[0].values;
-      let nodeThreads: any = data.series[1].fields[0].values;
+      let nodeHosts: any = data.series[0].fields[1].values;
+      let nodeThreads: any = data.series[1].fields[1].values;
 
       for (let i = 0; i < nodeHosts.length; i++) {
         if (!nodes.map((a: any) => a.name).includes(nodeHosts.get(i))) {
@@ -27,7 +28,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       }
       for (let i = 0; i < nodeThreads.length; i++) {
         if (!nodes.map((a: any) => a.name).includes(nodeThreads.get(i))) {
-          nodes.push({ index: nodeNumber, name: nodeThreads.get(i), r: 5, writtenBytes: 0 });
+          nodes.push({ index: nodeNumber, name: nodeThreads.get(i).toString(), r: 5, writtenBytes: 0 });
+          //nodes.push({ index: nodeNumber, name: nodeThreads.get(i), r: 5, writtenBytes: 0 });
           nodeNumber += 1;
           addingNodes = true;
         }
@@ -55,13 +57,16 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       for (let i = 2; i < data.series.length; i++) {
         let source = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.thread);
         let target = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.hostname);
-        let writtenBytes = data.series[i].fields[1].values.get(0);
-        changeNodeSize(nodes[target.index], writtenBytes);
+        let writtenBytes = data.series[i].fields[1].values.get(0); //Falsch, bekommt nicht alle written bytes des Threads nur buffer[0]
+        changeNodeSize(nodes[target.index], writtenBytes); //didnt changed target.index to source.index
         let link_color = '#003f5c';
         if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
           link_color = '#ef5675';
         } else if (data.series[i].fields[1].labels?.functionname === 'write') {
           link_color = '#ffa600';
+        } else if (data.series[i].fields[1].labels?.functionname === 'writev') {
+          //writev not implemented before
+          link_color = '#ff0000';
         }
         links.push({
           source: source.index,

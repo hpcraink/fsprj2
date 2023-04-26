@@ -20,7 +20,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   //Anzahl echter Datenpunkte
   if(DataLength == 0) {
     for (let i = 0; i < data.series.length; i++) { 
-      if (data.series[i].name === 'libiotrace') {
+      if ((data.series[i].fields[1] !== undefined) && (data.series[i].fields[1].name === "function_data_written_bytes")) {
         DataLength++
       }
     }
@@ -32,7 +32,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   ThreadColour = ColAssig[0]?.[0]
   ProcessColour = ColAssig[1]
   ThreadBufferColour = ColAssig[2]
-  console.log(ThreadBufferColour)
   FilesystemValue = FilesystemAssignment()
 
   //Generieren der Css-Daten für alle Prozesse & Threads
@@ -44,11 +43,11 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     }
     ThreadIDArrCss[i] = BuildPanelThread(i, xShift, ThreadColour[i])
     let yPlacement = 0, tShift = 0
-    for (let buffer = 0; buffer < data.series[i].fields[1].values.length; buffer++) {
-      yPlacement = buffer - (5*tShift)
-      ThreadBufferCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, ThreadBufferColour[j], FilesystemValue)
+    for (let bufferCnt = 0; bufferCnt < data.series[i].fields[1].values.length; bufferCnt++) {
+      yPlacement = bufferCnt - (5*tShift)
+      ThreadBufferCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, ThreadBufferColour[j], FilesystemValue[i].buffer[bufferCnt])
       j++
-      if ((yPlacement > 3) && (buffer+1 < data.series[i].fields[1].values.length) ) {
+      if ((yPlacement > 3) && (bufferCnt+1 < data.series[i].fields[1].values.length) ) {
         xShift++
         tShift++
       }
@@ -97,7 +96,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   }
   
   function ColourAssignment(Colour: any, lDatalength: any) {
-    var HelpArray = new Array
+    var HelpArrayDl = new Array
     var ThreadHeatValue = new Array
     var ProcessHeatValue = new Array
     var BufferHeatValue = new Array
@@ -107,10 +106,10 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     let bufferIndex = 0
 
     for (let i = 0; i < lDatalength; i++) {
-      HelpArray[i] = data.series[i].fields[1].values
-      ThreadHeatValue[i] = _.sum(HelpArray[i].buffer)
-      for (let j = 0; j < HelpArray[i].buffer.length; j++) {
-        BufferHeatValue[bufferIndex] = HelpArray[i].buffer[j]
+      HelpArrayDl[i] = data.series[i].fields[1].values
+      ThreadHeatValue[i] = _.sum(HelpArrayDl[i].buffer)
+      for (let j = 0; j < HelpArrayDl[i].buffer.length; j++) {
+        BufferHeatValue[bufferIndex] = HelpArrayDl[i].buffer[j]
         bufferIndex++
       }
     }
@@ -187,26 +186,46 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
 
   function FilesystemAssignment(){
     var lFilesystemValue = new Array
-    var HelpArr = new Array
     for (let i = 0; i < data.series.length-DataLength; i++) {
-      HelpArr[i] = data.series[i+DataLength].fields[1].values
+      lFilesystemValue[i] = data.series[i+DataLength].fields[1].values
+    }
+
+    //Only write filesystem
+    for (let i = 0; i < lFilesystemValue.length; i++) {
+      for (let j = 0; j < lFilesystemValue[i].buffer.length; j++) {
+        lFilesystemValue[i].buffer[j] = lFilesystemValue[i].buffer[j].split(["/"])
+        if (lFilesystemValue[i].buffer[j][1] !== undefined) {
+          lFilesystemValue[i].buffer[j] = lFilesystemValue[i].buffer[j][1]
+        }
+        else{
+          lFilesystemValue[i].buffer[j] = lFilesystemValue[i].buffer[j][0]
+        }
+      }
     }
 
     //Sort?
+    
+    //Assignment
   
-    let j = 0,k = 0
-    for (let i = 0; i < DataLength; i++) {
-      lFilesystemValue[i] = HelpArr[j].buffer[k]
-      k++
-      if (HelpArr[j].buffer[k] === undefined) 
-      {
-        j++
-        if (j >= data.series.length-DataLength) {
-          break
-        }
-        k=0
-      }
-    }
+
+    //Incorrect Assignment
+    // let j = 0,k = 0
+    // for (let i = 0; i < DataLength; i++) {
+    //   lFilesystemValue[i] = HelpArr[j].buffer[k]
+    //   lFilesystemValue[i] = lFilesystemValue[i].split(["/"])
+    //   if (lFilesystemValue[i][1] !== undefined) {
+    //     lFilesystemValue[i] = lFilesystemValue[i][1]
+    //   }
+    //   k++
+    //   if (HelpArr[j].buffer[k] === undefined) 
+    //   {
+    //     j++
+    //     if (j >= data.series.length-DataLength) {
+    //       break
+    //     }
+    //     k=0
+    //   }
+    // }
     return(lFilesystemValue)
   }
 
@@ -215,9 +234,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     return (
     //horizontal
     <g>
-    <rect x={(5+150*(i+lxShift))} y={(50)} width={135} height={50} rx='10' fill={Colour}/>
-    <text x={(10+150*(i+lxShift))} y= {(90)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
-    <rect x={(150*(i+lxShift)-3)} y={(0)} width={3} height={height-150} fill='black'/>
+    <rect x={(5+160*(i+lxShift))} y={(50)} width={135} height={50} rx='10' fill={Colour}/>
+    <text x={(10+160*(i+lxShift))} y= {(90)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
+    <rect x={(160*(i+lxShift)-3)} y={(0)} width={3} height={height-150} fill='black'/>
     </g>
 
     //vertikal
@@ -233,8 +252,8 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     return(
     //horizontal
     <g>
-    <rect x={(5+150*(i+lxShift))} y={(170)} width={135} height={50} rx='10' fill={Colour}/>
-    <text x={(10+150*(i+lxShift))} y= {(210)} fontFamily='Arial' fontSize='20' fill='black'>{data.series[i].fields[1].labels?.thread}</text>
+    <rect x={(5+160*(i+lxShift))} y={(170)} width={135} height={50} rx='10' fill={Colour}/>
+    <text x={(10+160*(i+lxShift))} y= {(210)} fontFamily='Arial' fontSize='20' fill='black'>{data.series[i].fields[1].labels?.thread}</text>
     </g>
 
     //vertikal
@@ -250,8 +269,8 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     return(
       //horizontal
       <g>
-        <rect x={(20+150*(i+lxShift))} y={(300+30*yPlacement)} width={16} height={16} rx='8' fill={Colour}/>
-        <text x={(50+150*(i+lxShift))} y= {(312+30*yPlacement)} fontFamily='Arial' fontSize='16' fill='white'>{lFilesystemValue[i]}</text>
+        <rect x={(20+160*(i+lxShift))} y={(300+30*yPlacement)} width={16} height={16} rx='8' fill={Colour}/>
+        <text x={(45+160*(i+lxShift))} y= {(311+30*yPlacement)} fontFamily='Arial' fontSize='14' fill='white'>{lFilesystemValue}</text>
       </g>
     )
   }

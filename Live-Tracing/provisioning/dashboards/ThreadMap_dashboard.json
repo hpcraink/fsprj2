@@ -70,8 +70,8 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
-          "refId": "A"
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "refId": "Written Bytes"
         },
         {
           "datasource": {
@@ -79,8 +79,8 @@
             "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace_filesystem\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"mount_type\")\r\n        |> sort()\r\n          |> yield(name: \"sort\")",
-          "refId": "B"
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")",
+          "refId": "Filesystem"
         }
       ],
       "title": "ThreadMap Panel",
@@ -168,7 +168,7 @@
             "uid": "_uciXaf4z"
           },
           "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
-          "refId": "A"
+          "refId": "All written bytes"
         }
       ],
       "title": "Heat Map All Data",
@@ -198,7 +198,7 @@
             "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"hostname\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "query": "from(bucket: \"sebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"hostname\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
           "refId": "NodesHost"
         },
         {
@@ -207,7 +207,7 @@
             "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"thread_id\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
+          "query": "from(bucket: \"sebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"thread_id\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"_field\"])\r\n            |> unique()\r\n              |> yield(name: \"unique\")",
           "refId": "NodesThread"
         },
         {
@@ -215,7 +215,7 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n      |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n        |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n          |> yield(name: \"sum\")",
+          "query": "from(bucket: \"sebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n      |> filter(fn: (r) => r[\"functionname\"] == \"write\")\r\n        |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n          |> yield(name: \"sum\")",
           "refId": "Data"
         }
       ],

@@ -70,7 +70,7 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n  |> group(columns: [\"thread\", \"processid\"])\r\n  |> aggregateWindow(every: inf, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "Written Bytes"
         },
         {
@@ -79,7 +79,7 @@
             "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")",
+          "query":  "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n  |> group(columns: [\"thread\", \"processid\"])\r\n  |> aggregateWindow(every: inf, column:\"_value\", fn:distinct, createEmpty: false)\r\n  |>yield(name: \"distinct\")",
           "refId": "Filesystem"
         }
       ],
@@ -94,71 +94,57 @@
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "scaleDistribution": {
-              "type": "linear"
-            }
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 179
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 18
       },
       "id": 2,
       "options": {
-        "calculate": true,
-        "calculation": {
-          "xBuckets": {
-            "mode": "size",
-            "value": ""
-          },
-          "yBuckets": {
-            "mode": "size",
-            "scale": {
-              "type": "linear"
-            }
-          }
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "cellGap": 1,
-        "color": {
-          "exponent": 0.5,
-          "fill": "dark-orange",
-          "mode": "scheme",
-          "reverse": false,
-          "scale": "exponential",
-          "scheme": "RdYlGn",
-          "steps": 64
-        },
-        "exemplars": {
-          "color": "rgba(255,0,255,0.7)"
-        },
-        "filterValues": {
-          "le": 1e-12
-        },
-        "legend": {
-          "show": true
-        },
-        "rowsFrame": {
-          "layout": "auto"
-        },
-        "tooltip": {
-          "show": true,
-          "yHistogram": false
-        },
-        "yAxis": {
-          "axisPlacement": "left",
-          "decimals": 2,
-          "reverse": false,
-          "unit": "bytes"
-        }
+        "showHeader": true,
+        "sortBy": []
       },
       "pluginVersion": "9.1.8",
       "targets": [
@@ -167,12 +153,12 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> aggregateWindow(every: 1ms, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"thread\"])\r\n            |> aggregateWindow(every: inf, column:\"_value\", fn:distinct, createEmpty: false)\r\n              |>yield(name: \"distinct\")",
           "refId": "All written bytes"
         }
       ],
-      "title": "Heat Map All Data",
-      "type": "heatmap"
+      "title": "Drilldown Filename",
+      "type": "table"
     },
     {
       "datasource": {
@@ -237,7 +223,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Heat Map & Performance",
+  "title": "Thread Map & Drilldown",
   "uid": "Mu-IsxOVk",
   "version": 27,
   "weekStart": ""

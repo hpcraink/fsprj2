@@ -13,14 +13,14 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   var ThreadColour = new Array      //Farbe der Auslastung Threads
   var Colours = new Array           //Anzahl möglicher Farben
   var FilesystemValue = new Array
-  var ThreadBufferColour = new Array
+  //var ThreadBufferColour = new Array
   var ThreadBufferCss = new Array
   var DataLength = 0                //Datenlänge libiotrace ohne filesystem
 
   //Anzahl echter Datenpunkte
   if(DataLength == 0) {
     for (let i = 0; i < data.series.length; i++) { 
-      if ((data.series[i].fields[1] !== undefined) && (data.series[i].fields[1].name === "function_data_written_bytes")) {
+      if ((data.series[i].fields[1] !== undefined) && (data.series[i].refId === "Written Bytes")) {
         DataLength++
       }
     }
@@ -31,7 +31,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   const ColAssig = ColourAssignment(Colours, DataLength)
   ThreadColour = ColAssig[0]?.[0]
   ProcessColour = ColAssig[1]
-  ThreadBufferColour = ColAssig[2]
+  //ThreadBufferColour = ColAssig[2]
   FilesystemValue = FilesystemAssignment()
 
   //Generieren der Css-Daten für alle Prozesse & Threads
@@ -43,16 +43,15 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     }
     ThreadIDArrCss[i] = BuildPanelThread(i, xShift, ThreadColour[i])
     let yPlacement = 0, tShift = 0
-    for (let bufferCnt = 0; bufferCnt < data.series[i].fields[1].values.length; bufferCnt++) {
+    for (let bufferCnt = 0; bufferCnt < FilesystemValue[i].length; bufferCnt++) {
       yPlacement = bufferCnt - (5*tShift)
-      ThreadBufferCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, ThreadBufferColour[j], FilesystemValue[i].buffer[bufferCnt])
+      ThreadBufferCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, FilesystemValue[i][bufferCnt])
       j++
       if ((yPlacement > 3) && (bufferCnt+1 < data.series[i].fields[1].values.length) ) {
         xShift++
         tShift++
       }
     }
-    
   }
 
   //Assign min/max values to default Options
@@ -96,41 +95,43 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   }
   
   function ColourAssignment(Colour: any, lDatalength: any) {
-    var HelpArrayDl = new Array
-    var ThreadHeatValue = new Array
-    var ProcessHeatValue = new Array
-    var BufferHeatValue = new Array
+    var HelpArrayDL = new Array
+    let ctrTpP = 0
+    var ThreadHeatValue: any[] = []
+    var ProcessHeatValue: number[] = []
+    ProcessHeatValue[0] = 0
+    //var BufferHeatValue = new Array
     var ReturnColourThreads = new Array
     var ReturnColourProcess = new Array
-    var ReturnColourThreadBuffer = new Array
-    let bufferIndex = 0
+    //var ReturnColourThreadBuffer = new Array
+    //let bufferIndex = 0
 
     for (let i = 0; i < lDatalength; i++) {
-      HelpArrayDl[i] = data.series[i].fields[1].values
-      ThreadHeatValue[i] = _.sum(HelpArrayDl[i].buffer)
-      for (let j = 0; j < HelpArrayDl[i].buffer.length; j++) {
-        BufferHeatValue[bufferIndex] = HelpArrayDl[i].buffer[j]
-        bufferIndex++
-      }
+      HelpArrayDL[i] = data.series[i].fields[1].values
+      ThreadHeatValue[i] = HelpArrayDL[i].buffer
+      //Aufsummierung mit neuer Query nicht nötig
+      // for (let j = 0; j < HelpArrayDl[i].buffer.length; j++) {
+      //   BufferHeatValue[bufferIndex] = HelpArrayDl[i].buffer[j]
+      //   bufferIndex++
+      // }
     }
 
-    for (let iproc = 0; iproc < lDatalength; iproc++) {
-      if ((iproc < (lDatalength - 1))) {
-        if (!(data.series[iproc].fields[1].labels?.processid === data.series[iproc+1].fields[1].labels?.processid)) {
-          ProcessHeatValue[iproc] = ThreadHeatValue[iproc]
-        }
-        else{
-          ProcessHeatValue[iproc] = ThreadHeatValue[iproc] + ThreadHeatValue[iproc+1]
-          iproc++
-        }
+    for (let ictr = 0; ictr < lDatalength-1;) {    
+      if (!(data.series[ictr].fields[1].labels?.processid === data.series[ictr+ctrTpP].fields[1].labels?.processid)) {
+        //Next Process with different PID
+        ictr = ictr + ctrTpP
+        //Resert ctr
+        ctrTpP=1
+        ProcessHeatValue[ictr] = ThreadHeatValue[ictr][0]
       }
-      else{
-        ProcessHeatValue[iproc] = ThreadHeatValue[iproc]
+      else {
+        ProcessHeatValue[ictr] = ProcessHeatValue[ictr] + ThreadHeatValue[ictr+ctrTpP][0]
+        ctrTpP++
       }
     }
     ReturnColourThreads = Assignment(ThreadHeatValue)
     ReturnColourProcess = Assignment(ProcessHeatValue)
-    ReturnColourThreadBuffer = Assignment(BufferHeatValue)
+    //ReturnColourThreadBuffer = Assignment(BufferHeatValue)
 
     function Assignment(HeatValue: any)
     {
@@ -152,7 +153,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
             j++
             test = 0
             //Skip for PID
-            if (HeatValue[j] === undefined) {
+            while (HeatValue[j] === undefined && j < HeatValue.length) {
               j++
             }
           }
@@ -169,7 +170,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
             j++
             test = 0
             //Skip for PID
-            if (HeatValue[j] === undefined) {
+            while (HeatValue[j] === undefined && j < HeatValue.length) {
               j++
             }
           }
@@ -181,52 +182,39 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       return[ReturnColour, min, max]
     }
     //MinMax hier nur für Threads zurückgegeben
-    return[ReturnColourThreads, ReturnColourProcess[0], ReturnColourThreadBuffer[0]]
+    //return[ReturnColourThreads, ReturnColourProcess[0], ReturnColourThreadBuffer[0]]
+    return[ReturnColourThreads, ReturnColourProcess[0]]
   }
 
-  function FilesystemAssignment(){
-    var lFilesystemValue = new Array
+  function FilesystemAssignment() {
+    //Transfer traced_filename to local var
+    var lTracedFilename = new Array
+    let lOutputFs: any[][] = [[]];
     for (let i = 0; i < data.series.length-DataLength; i++) {
-      lFilesystemValue[i] = data.series[i+DataLength].fields[1].values
+      lTracedFilename[i] = data.series[i+DataLength].fields[1].values
     }
-
-    //Only write filesystem
-    for (let i = 0; i < lFilesystemValue.length; i++) {
-      for (let j = 0; j < lFilesystemValue[i].buffer.length; j++) {
-        lFilesystemValue[i].buffer[j] = lFilesystemValue[i].buffer[j].split(["/"])
-        if (lFilesystemValue[i].buffer[j][1] !== undefined) {
-          lFilesystemValue[i].buffer[j] = lFilesystemValue[i].buffer[j][1]
+    
+    //convert filename to filesystem
+    for (let i = 0; i < lTracedFilename.length; i++) {
+      const lFileSystem: string[] = [];
+      for (let j = 0; j < lTracedFilename[i].buffer.length; j++) {
+        const pathSegments = lTracedFilename[i].buffer[j].split("/");
+        if (pathSegments[1] !== undefined) {
+          if(!lFileSystem.includes(pathSegments[1])) {
+            lFileSystem.push(pathSegments[1])
+          }
         }
-        else{
-          lFilesystemValue[i].buffer[j] = lFilesystemValue[i].buffer[j][0]
+        else {
+          if (!lFileSystem.includes(pathSegments[0])) {
+          lFileSystem.push(pathSegments[0])
+          }
         }
       }
+      lOutputFs.push(lFileSystem)
     }
-
-    //Sort?
-    
-    //Assignment
-  
-
-    //Incorrect Assignment
-    // let j = 0,k = 0
-    // for (let i = 0; i < DataLength; i++) {
-    //   lFilesystemValue[i] = HelpArr[j].buffer[k]
-    //   lFilesystemValue[i] = lFilesystemValue[i].split(["/"])
-    //   if (lFilesystemValue[i][1] !== undefined) {
-    //     lFilesystemValue[i] = lFilesystemValue[i][1]
-    //   }
-    //   k++
-    //   if (HelpArr[j].buffer[k] === undefined) 
-    //   {
-    //     j++
-    //     if (j >= data.series.length-DataLength) {
-    //       break
-    //     }
-    //     k=0
-    //   }
-    // }
-    return(lFilesystemValue)
+    //delete first Element
+    lOutputFs.shift();
+    return(lOutputFs)
   }
 
   function BuildPanelProcess(i: number, lxShift: number,Colour: any)
@@ -264,13 +252,15 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     )
   }
 
-  function BuildPanelThreadBuffer_FileSystem(i: number, yPlacement: number, lxShift : number,Colour: any, lFilesystemValue: any)
+  function BuildPanelThreadBuffer_FileSystem(i: number, yPlacement: number, lxShift : number, lFilesystemValue: any)
   {
+    //include colour as fill for old display
+    //include in return:
+    // <rect x={(20+160*(i+lxShift))} y={(300+30*yPlacement)} width={16} height={16} rx='8' fill={Colour}/>
     return(
       //horizontal
       <g>
-        <rect x={(20+160*(i+lxShift))} y={(300+30*yPlacement)} width={16} height={16} rx='8' fill={Colour}/>
-        <text x={(45+160*(i+lxShift))} y= {(311+30*yPlacement)} fontFamily='Arial' fontSize='14' fill='white'>{lFilesystemValue}</text>
+        <text x={(20+160*(i+lxShift))} y= {(311+30*yPlacement)} fontFamily='Arial' fontSize='14' fill='white'>{lFilesystemValue}</text>
       </g>
     )
   }
@@ -278,7 +268,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   return(
     <div>
       <CustomScrollbar>
-        <svg width={(DataLength+xShift)*150} height={height-100}>
+        <svg width={(DataLength+xShift)*160} height={height-100}>
           <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>ProzessID:</text>
           <text x={(5)} y= {(150)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>ThreadID:</text>
           <text x={(5)} y= {(270)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Filesystem:</text>

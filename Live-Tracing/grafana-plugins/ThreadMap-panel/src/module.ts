@@ -32,6 +32,7 @@ export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(b
       placeholder: 'Auto',
     },
     category,
+    showIf: (config) => config.UseMinMaxBoolean
   })
   .addNumberInput({
     path: 'ThreadMapColor.max',
@@ -41,63 +42,7 @@ export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(b
       placeholder: 'Auto',
     },
     category,
+    showIf: (config) => config.UseMinMaxBoolean
     })
 
-  
-  // category = ['ONLY FOR TETSTING! Y Axis']
-
-  //   builder
-  //     .addUnitPicker({
-  //       category,
-  //       path: 'yAxis.unit',
-  //       name: 'Unit',
-  //       defaultValue: undefined,
-  //       settings: {
-  //         isClearable: true,
-  //       },
-  //     })
-  //     .addNumberInput({
-  //       category,
-  //       path: 'yAxis.decimals',
-  //       name: 'Decimals',
-  //       settings: {
-  //         placeholder: 'Auto',
-  //       },
-  //     });
-
-  //     if (!false) {
-  //       // if undefined, then show the min+max
-  //       builder
-  //         .addNumberInput({
-  //           path: 'yAxis.min',
-  //           name: 'Min value',
-  //           settings: {
-  //             placeholder: 'Auto',
-  //           },
-  //           category,
-  //         })
-  //         .addTextInput({
-  //           path: 'yAxis.max',
-  //           name: 'Max value',
-  //           settings: {
-  //             placeholder: 'Auto',
-  //           },
-  //           category,
-  //         });
-  //         //.addCustomEditor({
-  //           // id: '__scale__',
-  //           // path: `__scale__`,
-  //           // name: '',
-  //           // category,
-  //           // editor: () => {
-  //           //   const palette = quantizeScheme(opts.color, config.theme2);
-  //           //   return (
-  //           //     <div>
-  //           //       <ColorScale colorPalette={palette} min={1} max={100} />
-  //           //     </div>
-  //           //   );
-  //           // },
-  //         //});
-          
-  //     }
 })

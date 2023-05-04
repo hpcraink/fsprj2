@@ -116,7 +116,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       // }
     }
 
-    for (let ictr = 0; ictr < lDatalength-1;) {    
+    for (let ictr = 0; ictr < (lDatalength-ctrTpP);) {    
       if (!(data.series[ictr].fields[1].labels?.processid === data.series[ictr+ctrTpP].fields[1].labels?.processid)) {
         //Next Process with different PID
         ictr = ictr + ctrTpP

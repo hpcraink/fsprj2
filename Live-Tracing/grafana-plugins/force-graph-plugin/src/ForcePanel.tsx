@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { PanelProps } from '@grafana/data';
-import { SimpleOptions } from 'types';
+import { PanelOptions } from 'types';
 import * as d3 from 'd3';
-interface Props extends PanelProps<SimpleOptions> {}
+interface Props extends PanelProps<PanelOptions> {}
 
 export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, height }) => {
   useEffect(() => {
@@ -16,16 +16,22 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
     function addNodes(_callback: any) {
       let nodeNumber = nodes.length;
-      let nodeHosts: any = data.series[0].fields[1].values;
+      //Replace with selectec Process
+      //From Drilldownfilename or from Settings, also implement default values?
+      let nodeProcesss: any = data.series[0].fields[1].values;
+      //Replace with Threads of the Process
+      //Find Index of Process => Find how many following have the same PID (Query makes them in order)
       let nodeThreads: any = data.series[1].fields[1].values;
 
-      for (let i = 0; i < nodeHosts.length; i++) {
-        if (!nodes.map((a: any) => a.name).includes(nodeHosts.get(i))) {
-          nodes.push({ index: nodeNumber, name: nodeHosts.get(i), r: 10, writtenBytes: 0 });
+      //for can be cut => only one process for drilldown
+      for (let i = 0; i < nodeProcesss.length; i++) {
+        if (!nodes.map((a: any) => a.name).includes(nodeProcesss.get(i))) {
+          nodes.push({ index: nodeNumber, name: nodeProcesss.get(i), r: 10, writtenBytes: 0 });
           nodeNumber += 1;
           addingNodes = true;
         }
       }
+      //Show all Threads of the Process
       for (let i = 0; i < nodeThreads.length; i++) {
         if (!nodes.map((a: any) => a.name).includes(nodeThreads.get(i))) {
           nodes.push({ index: nodeNumber, name: nodeThreads.get(i).toString(), r: 5, writtenBytes: 0 });
@@ -34,9 +40,12 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           addingNodes = true;
         }
       }
+      //Later Add Filename for each Thread
+
       _callback();
     }
 
+    //Add actual written Bytes
     function changeNodeSize(node: any, value: any) {
       let maxNodeSize = 30;
       let minNodeSize = 10;
@@ -56,9 +65,10 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       links.length = 0;
       for (let i = 2; i < data.series.length; i++) {
         let source = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.thread);
-        let target = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.hostname);
-        let writtenBytes = data.series[i].fields[1].values.get(0); //Falsch, bekommt nicht alle written bytes des Threads nur buffer[0]
-        changeNodeSize(nodes[target.index], writtenBytes); //didnt changed target.index to source.index
+        let target = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.processid);
+        let writtenBytes = data.series[i].fields[1].values.get(0); //Falsch, bekommt nicht alle written bytes des Threads nur buffer[0] => über query anpassen
+        changeNodeSize(nodes[target.index], writtenBytes);
+        //Change/delete Link Colour | not needed anymore? Colour by Process/Thread/File?
         let link_color = '#003f5c';
         if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
           link_color = '#ef5675';

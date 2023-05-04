@@ -1,7 +1,10 @@
-type SeriesSize = 'sm' | 'md' | 'lg';
 
-export interface SimpleOptions {
-  text: string;
-  showSeriesCount: boolean;
-  seriesCountSize: SeriesSize;
+
+export interface PanelOptions {
+  ProcessID: number;
 }
+
+export const defaultPanelOptions: PanelOptions = {
+  //Make usefull defaultoption!
+  ProcessID: 0
+};

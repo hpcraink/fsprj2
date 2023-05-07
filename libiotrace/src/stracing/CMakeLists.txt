@@ -57,7 +57,7 @@ list(APPEND STRACER_SOURCE
         stracer/tasks/lsep/stracing_lsep.c)
 list(APPEND STRACER_LINK_OPTIONS
         libringbuf_object
-        atomic_hash_object)
+        atomichash-object)
 
 
 # -- Build targets/commands --

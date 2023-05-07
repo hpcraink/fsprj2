@@ -366,8 +366,8 @@ if (FILENAME_RESOLUTION_ENABLED)
             fnres/fnres.c
             fnres/fnmap/fnmap_atomic_hash.c)
 
-    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS atomic_hash_object)
-    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS atomic_hash_object)
+    list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS atomichash-object)
+    list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS atomichash-object)
 endif()
 
 

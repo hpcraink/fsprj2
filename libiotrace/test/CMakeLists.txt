@@ -285,7 +285,7 @@ if (WITH_UNIT_TESTS)
     )
 
     if (FILENAME_RESOLUTION_ENABLED)
-        list(APPEND TESTS_LINK_OPTIONS "atomic_hash_object")
+        list(APPEND TESTS_LINK_OPTIONS "atomichash-object")
     endif()
 
     if (STRACING_ENABLED)

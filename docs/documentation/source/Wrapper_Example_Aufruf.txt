@@ -1,1 +1,1 @@
-MOZ_FAKE_NO_SANDBOX=1 LD_PRELOAD=../src/libiotrace_shared.so firefox
+MOZ_FAKE_NO_SANDBOX=1 LD_PRELOAD=../src/libiotrace.so firefox

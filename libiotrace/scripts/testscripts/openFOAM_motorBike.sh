@@ -10,7 +10,7 @@ IOTRACE_INFLUX_BUCKET=hsebucket
 IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
 MPI_PATH=$(which mpirun)
 MPI_PATH="${MPI_PATH%/*}/../lib64/libmpi.so"
-IOTRACE_LD_PRELOAD=${MPI_PATH}:${PWD}/../../build/src/libiotrace_shared.so
+IOTRACE_LD_PRELOAD=${MPI_PATH}:${PWD}/../../build/src/libiotrace.so
 IOTRACE_WHITELIST=${3}/${2}/whitelist
 IOTRACE_WHITELIST_FUNCTIONS="# newline separated list of functions to trace
 read

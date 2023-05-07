@@ -460,26 +460,30 @@ set(WANT_RDTSC 1 CACHE BOOL "If rdtsc is selected")
 # -----------------------------------------------------------------------------
 # CMake targets
 # -----------------------------------------------------------------------------
+set(LIB_BASENAME "iotrace")
+
 # Linking:
 #   - ${CMAKE_DL_LIBS} needed for dlsym-function
 #   - "-lpthread" needed for pthread_atfork() and pthread_create()
 list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 
-add_library(iotrace_shared SHARED ${LIBIOTRACE_SOURCE})
-target_compile_options(iotrace_shared PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
-target_link_libraries(iotrace_shared PRIVATE ${LIBIOTRACE_SHARED_LINK_OPTIONS})
+add_library(iotrace-shared SHARED ${LIBIOTRACE_SOURCE})
+target_compile_options(iotrace-shared PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
+target_link_libraries(iotrace-shared PRIVATE ${LIBIOTRACE_SHARED_LINK_OPTIONS})
+set_target_properties(iotrace-shared PROPERTIES OUTPUT_NAME ${LIB_BASENAME})
 
-add_library(iotrace_static STATIC ${LIBIOTRACE_SOURCE})
-target_compile_options(iotrace_static PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
-target_link_libraries(iotrace_static PRIVATE ${LIBIOTRACE_STATIC_LINK_OPTIONS})  # TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ??
+add_library(iotrace-static STATIC ${LIBIOTRACE_SOURCE})
+target_compile_options(iotrace-static PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})
+target_link_libraries(iotrace-static PRIVATE ${LIBIOTRACE_STATIC_LINK_OPTIONS})  # TODO: DO WE ALSO NEED target_link_libraries FOR STATIC (i.e., is this line required) ??
+set_target_properties(iotrace-static PROPERTIES OUTPUT_NAME ${LIB_BASENAME})
 
-add_library(iotrace_object OBJECT ${LIBIOTRACE_SOURCE})
-target_compile_options(iotrace_object PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS} -DIO_LIB_STATIC)
+add_library(iotrace-object OBJECT ${LIBIOTRACE_SOURCE})
+target_compile_options(iotrace-object PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS} -DIO_LIB_STATIC)
 
 add_library(iotrace_control SHARED libiotrace.c)
 
 
-#install(TARGETS iotrace_static
+#install(TARGETS iotrace-static
 #        ARCHIVE DESTINATION lib
 #)

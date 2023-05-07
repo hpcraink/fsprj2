@@ -208,7 +208,7 @@ CUnit: GNU LIBRARY GENERAL PUBLIC LICENSE Version 2 (see [CUnit](https://gitlab.
 * dynamically linked program
 
     to monitor the program &lt;monitor-program&gt; use the command
-    `LD_PRELOAD=<libiotrace-folder>/fsprj2/libiotrace/build/src/libiotrace_shared.so IOTRACE_LOG_NAME=<prefix-for-log-names> <monitor-program>`
+    `LD_PRELOAD=<libiotrace-folder>/fsprj2/libiotrace/build/src/libiotrace.so IOTRACE_LOG_NAME=<prefix-for-log-names> <monitor-program>`
 
 * static linked program
 
@@ -412,10 +412,10 @@ You can use a whitelist to specify which wrappers should be traced when "ALL_WRA
 To trace MPI File-I/O wrappers you have to turn on "WITH_MPI_IO" in ccmake.
 
 ### Example to use Live-Tracing for MPI with libiotrace
-`mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=/path/to/libiotrace_shared.so mpi_program_to_be_observed`
+`mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=/path/to/libiotrace.so mpi_program_to_be_observed`
 
 ### Example to use Live-Tracing for a program without MPI
-`IOTRACE_LOG_NAME=MPI_read_test2 IOTRACE_DATABASE_IP=127.0.0.1  IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== IOTRACE_WHITELIST=./whitelist LD_PRELOAD=/path/to/libiotrace_shared.so program_to_be_observed`
+`IOTRACE_LOG_NAME=MPI_read_test2 IOTRACE_DATABASE_IP=127.0.0.1  IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== IOTRACE_WHITELIST=./whitelist LD_PRELOAD=/path/to/libiotrace.so program_to_be_observed`
 
 ### How to use Flux query language to show data in Grafana
 To show the live data from libiotrace in Grafana the Flux query language needs to be used.

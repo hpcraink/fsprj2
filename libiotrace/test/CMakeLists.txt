@@ -292,12 +292,12 @@ if (WITH_UNIT_TESTS)
         list(APPEND TESTS_LINK_OPTIONS "libringbuf_object")
 
     # - Programs for testing tracing  -
-        # test with: IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_pthread_fork_shared [--loop] [--fork | --pthread]
+        # test with: IOTRACE_LOG_NAME=stracing_trace_pthread_fork_shared_test1 LD_PRELOAD=../src/libiotrace.so ./stracing_trace_pthread_fork_shared [--loop] [--fork | --pthread]
         add_executable(stracing_trace_pthread_fork_shared stracing/trace_pthread_fork.c)
         target_link_libraries(stracing_trace_pthread_fork_shared pthread)
 
 
-        # test with: IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./stracing_trace_manual_syscall_shared [--use-glibc-wrapper] [--perform-open-in-pthread]
+        # test with: IOTRACE_LOG_NAME=stracing_trace_manual_syscall_shared_test1 LD_PRELOAD=../src/libiotrace.so ./stracing_trace_manual_syscall_shared [--use-glibc-wrapper] [--perform-open-in-pthread]
         add_executable(stracing_trace_manual_syscall_shared stracing/trace_manual_syscall.c)
         target_compile_options(stracing_trace_manual_syscall_shared PRIVATE -D_GNU_SOURCE)
         target_link_libraries(stracing_trace_manual_syscall_shared pthread)
@@ -308,7 +308,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=stracing_trace_manual_syscall_static_test1 ./stracing_trace_manual_syscall_static [--use-glibc-wrapper]
         add_executable(stracing_trace_manual_syscall_static
             $<TARGET_OBJECTS:stracing_trace_manual_syscall_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_link_libraries(stracing_trace_manual_syscall_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(stracing_trace_manual_syscall_static ${TESTS_LINK_OPTIONS} pthread)
@@ -318,7 +318,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_shared
+        # test with: IOTRACE_LOG_NAME=read_byte_shared_test1 LD_PRELOAD=../src/libiotrace.so ./read_byte_shared
         add_executable(read_byte_shared read_byte.c)
         target_link_libraries(read_byte_shared ${TESTS_LINK_OPTIONS})
         #add_test ("Read" read_byte)
@@ -328,7 +328,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=read_byte_static_test1 ./read_byte_static
         add_executable(read_byte_static
             $<TARGET_OBJECTS:read_byte_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_link_libraries(read_byte_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(read_byte_static ${TESTS_LINK_OPTIONS})
@@ -338,7 +338,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_stream_shared
+        # test with: IOTRACE_LOG_NAME=read_stream_shared_test1 LD_PRELOAD=../src/libiotrace.so ./read_stream_shared
         add_executable(read_stream_shared read_stream.c)
         target_compile_options(read_stream_shared PRIVATE -D_GNU_SOURCE)
         target_link_libraries(read_stream_shared ${TESTS_LINK_OPTIONS})
@@ -349,7 +349,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=read_stream_static_test1 ./read_stream_static
         add_executable(read_stream_static
             $<TARGET_OBJECTS:read_stream_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_link_libraries(read_stream_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(read_stream_static ${TESTS_LINK_OPTIONS})
@@ -358,7 +358,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_byte_and_stream_shared
+        # test with: IOTRACE_LOG_NAME=read_byte_and_stream_shared_test1 LD_PRELOAD=../src/libiotrace.so ./read_byte_and_stream_shared
         add_executable(read_byte_and_stream_shared read_byte_and_stream.c)
         target_link_libraries(read_byte_and_stream_shared ${TESTS_LINK_OPTIONS})
         target_link_libraries(read_byte_and_stream_shared iotrace_control)
@@ -368,7 +368,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=read_byte_and_stream_static_test1 ./read_byte_and_stream_static
         add_executable(read_byte_and_stream_static
             $<TARGET_OBJECTS:read_byte_and_stream_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_link_libraries(read_byte_and_stream_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(read_byte_and_stream_static ${TESTS_LINK_OPTIONS})
@@ -377,7 +377,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./write_stream_shared
+        # test with: IOTRACE_LOG_NAME=write_stream_shared_test1 LD_PRELOAD=../src/libiotrace.so ./write_stream_shared
         add_executable(write_stream_shared write_stream.c)
         target_link_libraries(write_stream_shared ${TESTS_LINK_OPTIONS})
 
@@ -386,7 +386,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=write_stream_static_test1 ./write_stream_static
         add_executable(write_stream_static
             $<TARGET_OBJECTS:write_stream_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_link_libraries(write_stream_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(write_stream_static ${TESTS_LINK_OPTIONS})
@@ -395,7 +395,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./send_recv_shared
+        # test with: IOTRACE_LOG_NAME=send_recv_shared_test1 LD_PRELOAD=../src/libiotrace.so ./send_recv_shared
         add_executable(send_recv_shared send_recv.c)
         target_compile_options(send_recv_shared PRIVATE "-D_GNU_SOURCE")
         target_link_libraries(send_recv_shared ${TESTS_LINK_OPTIONS})
@@ -405,7 +405,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=send_recv_static_test1 ./send_recv_static
         add_executable(send_recv_static
             $<TARGET_OBJECTS:send_recv_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
 
         target_compile_options(send_recv_static PRIVATE "-D_GNU_SOURCE")
@@ -416,7 +416,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        #test with: IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared
+        #test with: IOTRACE_LOG_NAME=OpenMP_read_stream_shared_test1 LD_PRELOAD=../src/libiotrace.so OMP_NUM_THREADS=2 ./OpenMP_read_stream_shared
         add_executable(OpenMP_read_stream_shared OpenMP_read_stream.c)
 
         find_package(OpenMP)
@@ -428,28 +428,28 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=mmap_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./mmap_io
+        # test with: IOTRACE_LOG_NAME=mmap_shared_test1 LD_PRELOAD=../src/libiotrace.so ./mmap_io
         add_executable(mmap_io mmap_io.c)
     endif()
 
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=pipe_ipc_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./pipe_ipc
+        # test with: IOTRACE_LOG_NAME=pipe_ipc_shared_test1 LD_PRELOAD=../src/libiotrace.so ./pipe_ipc
         add_executable(pipe_ipc pipe_ipc.c)
     endif()
 
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./open_var_args
+        # test with: IOTRACE_LOG_NAME=open_var_args_shared_test1 LD_PRELOAD=../src/libiotrace.so ./open_var_args
         add_executable(open_var_args open_var_args.c)
     endif()
 
     ##########################################################################################################
 
     if(WITH_POSIX_AIO)
-        # test with: IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./read_async_byte_shared
+        # test with: IOTRACE_LOG_NAME=read_async_byte_shared_test1 LD_PRELOAD=../src/libiotrace.so ./read_async_byte_shared
         add_executable(read_async_byte_shared read_async_byte.c)
         target_link_libraries(read_async_byte_shared ${TESTS_LINK_OPTIONS})
 
@@ -458,7 +458,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=read_async_byte_static_test1 ./read_async_byte_static
         add_executable(read_async_byte_static
             $<TARGET_OBJECTS:read_async_byte_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_link_libraries(read_async_byte_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(read_async_byte_static ${TESTS_LINK_OPTIONS})
@@ -467,31 +467,31 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_MPI_IO)
-        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_read
+        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test1 -x LD_PRELOAD=../src/libiotrace.so ./MPI_read
         add_executable(MPI_read MPI_read.c)
         target_link_libraries(MPI_read PRIVATE ${TESTS_LINK_OPTIONS})
     endif()
 
     if(WITH_MPI_IO)
-        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_IO_single
+        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test2 -x LD_PRELOAD=../src/libiotrace.so ./MPI_parallel_IO_single
         add_executable(MPI_parallel_IO_single MPI_parallel_IO_single.c)
         target_link_libraries(MPI_parallel_IO_single PRIVATE ${TESTS_LINK_OPTIONS})
     endif()
 
     if(WITH_MPI_IO)
-        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_read
+        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace.so ./MPI_parallel_read
         add_executable(MPI_parallel_read MPI_parallel_read.c)
         target_link_libraries(MPI_parallel_read PRIVATE ${TESTS_LINK_OPTIONS})
     endif()
 
     if(WITH_MPI_IO)
-        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_parallel_iread
+        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_parallel_iread -x LD_PRELOAD=../src/libiotrace.so ./MPI_parallel_iread
         add_executable(MPI_parallel_iread MPI_parallel_iread.c)
         target_link_libraries(MPI_parallel_iread PRIVATE ${TESTS_LINK_OPTIONS})
     endif()
 
     if(WITH_MPI_IO)
-        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace_shared.so ./MPI_immediate_test
+        # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_immediate_test -x LD_PRELOAD=../src/libiotrace.so ./MPI_immediate_test
         add_executable(MPI_immediate_test MPI_immediate_test.c)
         target_link_libraries(MPI_immediate_test PRIVATE ${TESTS_LINK_OPTIONS})
     endif()
@@ -503,7 +503,7 @@ if (WITH_UNIT_TESTS)
         # MPI_File_write
         # MPI_File_close
 
-        # test with: rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10
+        # test with: rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace.so mpi_file_io 10
         add_executable(mpi_file_io mpi_file_io.c)
         target_link_libraries(mpi_file_io PRIVATE ${TESTS_LINK_OPTIONS})
 
@@ -516,7 +516,7 @@ if (WITH_UNIT_TESTS)
 
         find_package(OpenMP)
 
-        # test with: rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace_shared.so mpi_file_io 10
+        # test with: rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace.so mpi_file_io 10
         add_executable(mpi_file_io_openmp mpi_file_io.c)
         target_compile_options(mpi_file_io_openmp PRIVATE "-DWANT_OPENMP")
         target_link_libraries(mpi_file_io_openmp PRIVATE ${TESTS_LINK_OPTIONS})
@@ -535,7 +535,7 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: IOTRACE_LOG_NAME=clone_test1 LD_PRELOAD=../src/libiotrace_shared.so ./clone_shared
+        # test with: IOTRACE_LOG_NAME=clone_test1 LD_PRELOAD=../src/libiotrace.so ./clone_shared
         add_executable(clone_shared clone.c)
         target_compile_options(clone_shared PRIVATE "-D_GNU_SOURCE")
         target_link_libraries(clone_shared ${TESTS_LINK_OPTIONS})
@@ -546,7 +546,7 @@ if (WITH_UNIT_TESTS)
         # test with: IOTRACE_LOG_NAME=clone_static_test1 ./clone_static
         add_executable(clone_static
             $<TARGET_OBJECTS:clone_object>
-            $<TARGET_OBJECTS:iotrace_object>
+            $<TARGET_OBJECTS:iotrace-object>
         )
         target_compile_options(clone_static PRIVATE "-D_GNU_SOURCE")
         target_link_libraries(clone_static ${TESTS_LINK_OPTIONS_STATIC})
@@ -556,8 +556,8 @@ if (WITH_UNIT_TESTS)
     ##########################################################################################################
 
     if(WITH_POSIX_IO)
-        # test with: rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=4 ./multi_shared 20 4
-        # rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=4 ./multi_shared 20 4
+        # test with: rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 LD_PRELOAD=../src/libiotrace.so OMP_NUM_THREADS=4 ./multi_shared 20 4
+        # rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== LD_PRELOAD=../src/libiotrace.so OMP_NUM_THREADS=4 ./multi_shared 20 4
 
         find_package(OpenMP)
 
@@ -574,11 +574,11 @@ if (WITH_UNIT_TESTS)
     if (WITH_ALLOC)
         find_package(OpenMP REQUIRED)
 
-        # test with: `IOTRACE_LOG_NAME=alloc_trace_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_trace`
+        # test with: `IOTRACE_LOG_NAME=alloc_trace_shared_test1 LD_PRELOAD=../src/libiotrace.so ./alloc_trace`
         add_executable(alloc_trace alloc_trace.c)
         target_link_libraries(alloc_trace PUBLIC OpenMP::OpenMP_C)
 
-        # test with: `IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./alloc_s_brk`
+        # test with: `IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace.so ./alloc_s_brk`
         add_executable(alloc_s_brk alloc_s_brk.c)
     endif()
 
@@ -591,7 +591,7 @@ if (WITH_UNIT_TESTS)
 
     ##########################################################################################################
 
-    # test with: IOTRACE_LOG_NAME=init_thread_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./init_thread_shared
+    # test with: IOTRACE_LOG_NAME=init_thread_shared_test1 LD_PRELOAD=../src/libiotrace.so ./init_thread_shared
     add_executable(init_thread_shared init_thread_test.c)
     target_link_libraries(init_thread_shared ${TESTS_LINK_OPTIONS})
 
@@ -600,7 +600,7 @@ if (WITH_UNIT_TESTS)
     # test with: IOTRACE_LOG_NAME=init_thread_static_test1 ./init_thread_static
     add_executable(init_thread_static
         $<TARGET_OBJECTS:init_thread_object>
-        $<TARGET_OBJECTS:iotrace_object>
+        $<TARGET_OBJECTS:iotrace-object>
     )
     target_compile_options(init_thread_static PRIVATE "-D_GNU_SOURCE")
     target_link_libraries(init_thread_static ${TESTS_LINK_OPTIONS_STATIC})
@@ -611,11 +611,11 @@ if (WITH_UNIT_TESTS)
 
 
     # Build libiotrace as follows: `rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF ..  &&  make -j6)`
-    # test w/: `IOTRACE_LOG_NAME=test_cpp_linkage_shared_test1 LD_PRELOAD=../src/libiotrace_shared.so ./test_cpp_linkage_shared`
+    # test w/: `IOTRACE_LOG_NAME=test_cpp_linkage_shared_test1 LD_PRELOAD=../src/libiotrace.so ./test_cpp_linkage_shared`
     add_executable(test_cpp_linkage_shared test_cpp_linkage.cpp)
 
     # TODO: Apparently currently broken  ??!
     #add_executable(test_cpp_linkage_static test_cpp_linkage.cpp)
-    #target_link_libraries(test_cpp_linkage_static $<TARGET_OBJECTS:iotrace_object>)
+    #target_link_libraries(test_cpp_linkage_static $<TARGET_OBJECTS:iotrace-object>)
 endif()
 

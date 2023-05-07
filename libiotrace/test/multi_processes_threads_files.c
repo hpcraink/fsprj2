@@ -7,7 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-/* rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== LD_PRELOAD=../src/libiotrace_shared.so OMP_NUM_THREADS=4 ./multi_shared 20 4 */
+/* rm -f mptf_*.txt && IOTRACE_LOG_NAME=multi_test1 IOTRACE_DATABASE_IP=127.0.0.1 IOTRACE_DATABASE_PORT=8086 IOTRACE_INFLUX_ORGANIZATION=hse IOTRACE_INFLUX_BUCKET=hsebucket IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== LD_PRELOAD=../src/libiotrace.so OMP_NUM_THREADS=4 ./multi_shared 20 4 */
 
 void usage(void) {
     printf(

@@ -10,7 +10,7 @@ IOTRACE_INFLUX_ORGANIZATION=hse
 IOTRACE_INFLUX_BUCKET=hsebucket
 IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
 IOTRACE_WHITELIST=./whitelist
-LD_PRELOAD=../../build/src/libiotrace_shared.so
+LD_PRELOAD=../../build/src/libiotrace.so
 TESTNAME=../../build/test/mpi_file_io_openmp
 TESTARGUMENTS=$number_of_writes
 

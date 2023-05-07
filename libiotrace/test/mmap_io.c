@@ -27,7 +27,7 @@ void test_not_filebacked_shared_mem_fork(const int mmap_num_arr_elements) {
                     -1,
                     0)
             )) {
-        LOG_ERROR_AND_EXIT("`mmap`'ing file failed: ");
+        LOG_ERROR_AND_DIE("`mmap`'ing file failed: ");
     }
     printf("-> `mmap`'ed memory [address=%p, length=%d]\n", (void*)not_file_backed_shared_mem, not_file_backed_shared_mem_len);
 
@@ -94,7 +94,7 @@ void test_filebacked_anon_mem(const char* const file_to_be_mmaped) {
                     fd,
                     0)
                 )) {
-        LOG_ERROR_AND_EXIT("`mmap`'ing file failed: ");
+        LOG_ERROR_AND_DIE("`mmap`'ing file failed: ");
     }
     printf("-> `mmap`'ed file in memory [address=%p, length=%d]\n", (void*)file_backed_anon_mem, file_backed_anon_mem_len);
 

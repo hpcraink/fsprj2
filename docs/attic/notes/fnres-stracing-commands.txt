@@ -41,7 +41,7 @@ EOF
 
 
 --------------------  lsep  --------------------
-rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DFILENAME_RESOLUTION_ENABLED=ON  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.15.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=LOGFILE ..  &&  cmake --build .)
+rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DFILENAME_RESOLUTION_ENABLED=ON  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/home/user/repos/linux -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=LOGFILE ..  &&  cmake --build .)
 
 
 
@@ -54,7 +54,7 @@ echo "" | tee ./test/libiotrace_stracer.log ./test/stracing_trace_manual_syscall
 
 
 --------------------  stracing  --------------------
-- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/usr/src/linux-5.15.0 -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=LOGFILE ..  &&  cmake --build .)
+- Compile: rm -rf build && mkdir build &&  (cd build && cmake DCMAKE_BUILD_TYPE=Debug  -DENABLE_OUTPUT=LOGFILE -DWITH_MPI_IO=OFF -DENABLE_REMOTE_CONTROL=OFF  -DSTRACING_ENABLED=ON -DSTRACING_LINUX_SRC_DIR=/home/user/repos/linux -DSTRACING_UXD_SOCKET_FILEPATH=/tmp/libiotrace-tracer.sock -DSTRACING_STRACER_LOG_OUTPUT=LOGFILE ..  &&  cmake --build .)
 
 
 - Testing:

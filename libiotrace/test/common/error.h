@@ -25,7 +25,7 @@
     fprintf(stderr, "[WARN] `%s` (%s:%d): " format ".\n", __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
   } while(0)
 
-#define LOG_ERROR_AND_EXIT(format, ...)                                                                  \
+#define LOG_ERROR_AND_DIE(format, ...)                                                                  \
   do {                                                                                                   \
     fprintf(stderr, "[ERROR] `%s` (%s:%d): " format ".\n", __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
     exit(EXIT_FAILURE);                                                                                  \
@@ -38,7 +38,7 @@
  */
 #define DIE_WHEN_ERRNO(FUNC) __extension__({ ({                                   \
     int __val = (FUNC);                                                           \
-    (-1 == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); -1; }) : __val); \
+    (-1 == __val ? ({ LOG_ERROR_AND_DIE("%s", strerror(errno)); -1; }) : __val); \
   }); })
 
 /**
@@ -47,7 +47,7 @@
  */
 #define DIE_WHEN_ERR(FUNC) __extension__({ ({                     \
     int __val = (FUNC);                                           \
-    (-1 == __val ? ({ LOG_ERROR_AND_EXIT(#FUNC); -1; }) : __val); \
+    (-1 == __val ? ({ LOG_ERROR_AND_DIE(#FUNC); -1; }) : __val); \
   }); })
 
 /**
@@ -56,7 +56,7 @@
  */
 #define DIE_WHEN_ERRNO_VPTR(FUNC) __extension__({ ({                                  \
     void* __val = (FUNC);                                                             \
-    (NULL == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); NULL; }) : __val); \
+    (NULL == __val ? ({ LOG_ERROR_AND_DIE("%s", strerror(errno)); NULL; }) : __val); \
   }); })
 
 /**
@@ -65,7 +65,7 @@
  */
 #define DIE_WHEN_ERR_VPTR(FUNC, MSG) __extension__({ ({                                  \
     void* __val = (FUNC);                                                             \
-    (NULL == __val ? ({ LOG_ERROR_AND_EXIT(MSG); NULL; }) : __val); \
+    (NULL == __val ? ({ LOG_ERROR_AND_DIE(MSG); NULL; }) : __val); \
   }); })
 
 #endif /* TESTING_ERROR_H */

@@ -91,7 +91,7 @@ void tasks_on_event_syscall(pid_t trapped_tracee_tid,
         if (g_cli_args_ptr->task_lsep) {
             scevent_t *scevent_buf_ptr = (scevent_t*)alloca(SCEVENT_MAX_SIZE);
             if (0 != syscall_to_scevent(trapped_tracee_tid, read_regs_ptr, scevent_buf_ptr)) {
-                LOG_ERROR_AND_EXIT("Couldn't 'translate' syscall to `scevent`");
+                LOG_ERROR_AND_DIE("Couldn't 'translate' syscall to `scevent`");
             }
 
             stracing_lsep_tracee_add_scevent(trapped_tracee_tid, scevent_buf_ptr);

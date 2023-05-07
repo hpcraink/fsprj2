@@ -100,7 +100,7 @@ void stracing_init_stracer(void) {
 #endif
                       NULL,
                       NULL);                            /* Envs (make sure NO `LD_PRELOAD` is passed, otherwise we can't "break out" of libiotrace's tracing) */
-    LOG_ERROR_AND_EXIT("stracer `exec` failed -- %s%s", strerror(errno),
+    LOG_ERROR_AND_DIE("stracer `exec` failed -- %s%s", strerror(errno),
                        ENOENT == errno ? ("\nKEEP IN MIND: The stracer's executable may be in the same directory in which libiotrace (dynamically or statically linked) is located") : (""));
 }
 

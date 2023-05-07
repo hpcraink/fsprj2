@@ -41,7 +41,7 @@ void unwind_init(void) {
      *      - specified byteorder (`0` = default byte-order of unwind target)
      */
     if (! (g_unw_as = unw_create_addr_space(&_UPT_accessors, 0)) ) {
-        LOG_ERROR_AND_EXIT("libunwind -- failed to create address space for stack unwinding");
+        LOG_ERROR_AND_DIE("libunwind -- failed to create address space for stack unwinding");
     }
 
     /* ELUCIDATION:
@@ -75,7 +75,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
     unw_context_t *unw_ctx = _UPT_create(tid);
     unw_cursor_t unw_cursor;
     if (0 > unw_init_remote(&unw_cursor, g_unw_as, unw_ctx)) {
-        LOG_ERROR_AND_EXIT("libunwind -- failed to init context");
+        LOG_ERROR_AND_DIE("libunwind -- failed to init context");
     }
 
   /* 0.2. libdw */
@@ -88,7 +88,7 @@ bool unwind_ioevent_was_traced(pid_t tid,
     /* 1.1. Get IP-address */
         unw_word_t ip = 0;
         if (0 > unw_get_reg(&unw_cursor, UNW_REG_IP, &ip)) {
-            LOG_ERROR_AND_EXIT("libunwind -- failed to walk the stack of process %d", tid);
+            LOG_ERROR_AND_DIE("libunwind -- failed to walk the stack of process %d", tid);
         }
 
     /* 1.2. Check module name in stacktrace */
@@ -157,5 +157,5 @@ static Dwfl* init_ldw_for_proc(pid_t tid) {
     }
 
     dwfl_end(dwfl);
-    LOG_ERROR_AND_EXIT("libdw -- failed to init for process %d", tid);
+    LOG_ERROR_AND_DIE("libdw -- failed to init for process %d", tid);
 }

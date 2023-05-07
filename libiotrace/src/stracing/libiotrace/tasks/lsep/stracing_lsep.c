@@ -41,7 +41,7 @@ void stracing_lsep_setup(void) {
 
     char *smo_name = derive_smo_name();
     if (-1 == scerb_create_attach(&g_scerb, smo_name)) {
-        LOG_ERROR_AND_EXIT("Couldn't create scerb");
+        LOG_ERROR_AND_DIE("Couldn't create scerb");
     }
 
     DEV_DEBUG_PRINT_MSG("Finished setup (i.e., created & attached smo w/ identifier=\"%s\")", smo_name);

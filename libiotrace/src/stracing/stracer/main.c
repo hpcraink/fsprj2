@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     FILE* stderr_logfile = (FILE*)DIE_WHEN_ERRNO_VPTR( freopen(LOGFILE_NAME, "a+", stderr) );
     if (0 != setvbuf(stdout_logfile, NULL, _IONBF, 0) ||
         0 != setvbuf(stderr_logfile, NULL, _IONBF, 0)) {
-        LOG_ERROR_AND_EXIT("Couldn't set buffering options for logfile");
+        LOG_ERROR_AND_DIE("Couldn't set buffering options for logfile");
     }
 #endif /* USE_LOGFILE */
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
 /* 0.3. Check whether fildes is valid */
     if (fcntl(uxd_reg_sock_fd, F_GETFL) < 0 && EBADF == errno) {
-        LOG_ERROR_AND_EXIT("Invalid uxd socket fd");
+        LOG_ERROR_AND_DIE("Invalid uxd socket fd");
     }
 
 

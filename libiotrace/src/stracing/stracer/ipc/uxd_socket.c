@@ -20,7 +20,7 @@ static int uxd_sock_accept(int uxd_reg_sock_fd) {
         if (EAGAIN == errno || EWOULDBLOCK == errno) {
             return -1;      /* No new connections in backlog ... */
         }
-        LOG_ERROR_AND_EXIT("`accept` -- %s", strerror(errno));
+        LOG_ERROR_AND_DIE("`accept` -- %s", strerror(errno));
     }
 
     return conn_fd;
@@ -102,7 +102,7 @@ int uxd_ipc_tracer_block_until_request_or_timeout(int uxd_reg_sock_fd,
                                     "sleeping again ...", remaining_time_in_ms);
                 continue;
             }
-            LOG_ERROR_AND_EXIT("`poll` -- %s", strerror(errno));
+            LOG_ERROR_AND_DIE("`poll` -- %s", strerror(errno));
         }
 
         return ((rv > 0) && (fd.revents & POLLIN));

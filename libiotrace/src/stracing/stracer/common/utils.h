@@ -4,6 +4,10 @@
 #ifndef STRACER_UTILS_H_
 #define STRACER_UTILS_H_
 
+#ifdef LIBIOTRACE_UTILS_H_
+#  error "Included libiotrace's version of header as well"
+#endif
+
 #include <stdint.h>
 
 /* -- Function prototypes -- */

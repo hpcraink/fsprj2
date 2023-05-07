@@ -18,7 +18,7 @@ pid_t tracing_attach_tracee(pid_t tid) {
             LOG_WARN("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
             return -1;              // In case process died shortly after sending request
         }
-        LOG_ERROR_AND_EXIT("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
+        LOG_ERROR_AND_DIE("`PTRACE_ATTACH` on tid=%d -- %s", tid, strerror(errno));
     }
 
 /* 1. Wait until tracee has stopped (after receiving `SIGSTOP`) */
@@ -29,7 +29,7 @@ pid_t tracing_attach_tracee(pid_t tid) {
                 LOG_WARN("`waitpid` on tid=%d -- %s", tid, strerror(errno));
                 return -1;          // In case process died shortly after sending request
             }
-            LOG_ERROR_AND_EXIT("`waitpid` on tid=%d -- %s", tid, strerror(errno));
+            LOG_ERROR_AND_DIE("`waitpid` on tid=%d -- %s", tid, strerror(errno));
         }
     } while (!WIFSTOPPED(tracee_status));
 

@@ -11,7 +11,7 @@
 
 #include <assert.h>
 //#define DEV_DEBUG_ENABLE_LOGS
-#include "../../common/error.h"
+#include "../../../common/error.h"
 
 
 /* -- Globals / Constants -- */
@@ -29,7 +29,7 @@ void scerbmap_create(long max_size) {
     assert( !g_scerbmap && "scerbmap has been already init'ed" );
 
     if (!(g_scerbmap = atomic_hash_create(max_size, HMAP_TTL_DISABLE))) {
-        LOG_ERROR_AND_EXIT("Couldn't init scerbmap w/ `max_size`=%ld", max_size);
+        LOG_ERROR_AND_DIE("Couldn't init scerbmap w/ `max_size`=%ld", max_size);
     }
 }
 

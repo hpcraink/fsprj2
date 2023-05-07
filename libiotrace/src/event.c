@@ -363,7 +363,7 @@ libiotrace_socket* create_libiotrace_socket(SOCKET s, llhttp_type_t type) {
     libiotrace_socket *socket = CALL_REAL_ALLOC_SYNC(malloc)(
     sizeof(libiotrace_socket));
     if (NULL == socket) {
-        LOG_ERROR_AND_EXIT("malloc failed, errno=%d", errno);
+        LOG_ERROR_AND_DIE("malloc failed, errno=%d", errno);
     }
 
     socket->socket = s;
@@ -411,7 +411,7 @@ libiotrace_socket ***array) {
     sizeof(libiotrace_socket*) * (*len));
     if (NULL == ret) {
         CALL_REAL_ALLOC_SYNC(free)(*array);
-        LOG_ERROR_AND_EXIT("realloc() failed");
+        LOG_ERROR_AND_DIE("realloc() failed");
     }
     *array = ret;
     (*array)[*len - 1] = socket;
@@ -468,7 +468,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_so
         else if (NULL == ret)
         {
             CALL_REAL_ALLOC_SYNC(free)(*array);
-            LOG_ERROR_AND_EXIT("realloc() failed");
+            LOG_ERROR_AND_DIE("realloc() failed");
         }
         else
         {
@@ -502,7 +502,7 @@ void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_so
         else if (NULL == ret)
         {
             CALL_REAL_ALLOC_SYNC(free)(*array);
-            LOG_ERROR_AND_EXIT("realloc() failed");
+            LOG_ERROR_AND_DIE("realloc() failed");
         }
         else
         {
@@ -848,7 +848,7 @@ void write_filesystem_into_influxdb(struct filesystem *data) {
     body_length = libiotrace_struct_push_filesystem(body, body_length, data, "");
     if (0 > body_length)
     {
-        LOG_ERROR_AND_EXIT("libiotrace_struct_push_filesystem() returned %d", body_length);
+        LOG_ERROR_AND_DIE("libiotrace_struct_push_filesystem() returned %d", body_length);
     }
     body_length--; /*last comma in ret*/
     body[body_length] = '\0'; /*remove last comma*/
@@ -948,7 +948,7 @@ void print_filesystem(void)
         }
         else
         {
-            LOG_ERROR_AND_EXIT("open() returned %d with errno=%d", fd, errno);
+            LOG_ERROR_AND_DIE("open() returned %d with errno=%d", fd, errno);
         }
     }
 #endif
@@ -956,7 +956,7 @@ void print_filesystem(void)
     file = setmntent("/proc/mounts", "r");
     if (NULL == file)
     {
-        LOG_ERROR_AND_EXIT("setmntent() returned NULL with errno=%d", errno);
+        LOG_ERROR_AND_DIE("setmntent() returned NULL with errno=%d", errno);
     }
 
 #ifdef HAVE_GETMNTENT_R
@@ -970,7 +970,7 @@ void print_filesystem(void)
         ret = strlen(filesystem_entry_ptr->mnt_dir);
         if (MAXFILENAME < ret + 4)
         {
-            LOG_ERROR_AND_EXIT("getmntent() returned mnt_dir too long (%d bytes) for buffer", ret);
+            LOG_ERROR_AND_DIE("getmntent() returned mnt_dir too long (%d bytes) for buffer", ret);
         }
         strcpy(mount_point, filesystem_entry_ptr->mnt_dir);
         // get mounted directory, not the mount point in parent filesystem
@@ -998,10 +998,10 @@ void print_filesystem(void)
         count = ret + sizeof(LINE_BREAK) - 1;
         ret = CALL_REAL_POSIX_SYNC(write)(fd, buf_filesystem, count);
         if (0 > ret) {
-            LOG_ERROR_AND_EXIT("write() returned %d", ret);
+            LOG_ERROR_AND_DIE("write() returned %d", ret);
         }
         if (ret < count) {
-            LOG_ERROR_AND_EXIT("incomplete write() occurred");
+            LOG_ERROR_AND_DIE("incomplete write() occurred");
         }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -1037,7 +1037,7 @@ void get_file_id(int fd, struct file_id *data) {
     } else {
         ret = fstat(fd, &stat_data);
         if (0 > ret) {
-            LOG_ERROR_AND_EXIT("fstat() returned %d with errno=%d", ret, errno);
+            LOG_ERROR_AND_DIE("fstat() returned %d with errno=%d", ret, errno);
         }
 
         data->device_id = stat_data.st_dev;
@@ -1059,7 +1059,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data) {
 
     ret = stat(filename, &stat_data);
     if (0 > ret) {
-        LOG_ERROR_AND_EXIT("stat() returned %d with errno=%d", ret, errno);
+        LOG_ERROR_AND_DIE("stat() returned %d with errno=%d", ret, errno);
     }
 
     data->device_id = stat_data.st_dev;
@@ -1087,7 +1087,7 @@ void print_working_directory(void) {
 
     ret = getcwd(cwd, sizeof(cwd));
     if (NULL == ret) {
-        LOG_ERROR_AND_EXIT("getcwd() returned NULL with errno=%d", errno);
+        LOG_ERROR_AND_DIE("getcwd() returned NULL with errno=%d", errno);
     }
 
     working_dir_data.time = gettime();
@@ -1099,7 +1099,7 @@ void print_working_directory(void) {
     O_WRONLY | O_CREAT | O_APPEND,
     S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     if (-1 == fd) {
-        LOG_ERROR_AND_EXIT("open() of file %s returned %d", working_dir_log_name,
+        LOG_ERROR_AND_DIE("open() of file %s returned %d", working_dir_log_name,
                            fd);
     }
 
@@ -1109,10 +1109,10 @@ void print_working_directory(void) {
     count = ret_int + sizeof(LINE_BREAK) - 1;
     ret_int = CALL_REAL_POSIX_SYNC(write)(fd, buf_working_dir, count);
     if (0 > ret_int) {
-        LOG_ERROR_AND_EXIT("write() returned %d", ret_int);
+        LOG_ERROR_AND_DIE("write() returned %d", ret_int);
     }
     if (ret_int < count) {
-        LOG_ERROR_AND_EXIT("incomplete write() occurred");
+        LOG_ERROR_AND_DIE("incomplete write() occurred");
     }
 
     CALL_REAL_POSIX_SYNC(close)(fd);
@@ -1324,7 +1324,7 @@ void send_data(const char *message, SOCKET socket) {
                 LOG_WARN(
                         "Send buffer is full. Please increase your limit.");
             } else {
-                LOG_ERROR_AND_EXIT("send() returned %d, errno: %d, socket: %d", bytes_sent,
+                LOG_ERROR_AND_DIE("send() returned %d, errno: %d, socket: %d", bytes_sent,
                         errno, socket);
             }
         } else {
@@ -1445,7 +1445,7 @@ int url_callback_requests(llhttp_t *parser, const char *at, size_t length) {
         int ret = libiotrace_struct_print_wrapper_status(buf, sizeof(buf), &active_wrapper_status);
         if (0 > ret)
         {
-            LOG_ERROR_AND_EXIT("libiotrace_struct_print_wrapper_status() returned %d", ret);
+            LOG_ERROR_AND_DIE("libiotrace_struct_print_wrapper_status() returned %d", ret);
         }
 
         const int message_len = strlen(message_header) + COUNT_DEC_AS_CHAR(ret) + ret;
@@ -1492,7 +1492,7 @@ void write_metadata_into_influxdb(void)
     body_length = libiotrace_struct_push_influx_meta(body, body_length, &data, "");
     if (0 > body_length)
     {
-        LOG_ERROR_AND_EXIT("libiotrace_struct_push_influx_meta() returned %d", body_length);
+        LOG_ERROR_AND_DIE("libiotrace_struct_push_influx_meta() returned %d", body_length);
     }
     body_length--; /*last comma in ret*/
     body[body_length] = '\0'; /*remove last comma*/
@@ -1568,7 +1568,7 @@ SOCKET prepare_control_socket(void) {
     socket_control = CALL_REAL_POSIX_SYNC(socket)(PF_INET, SOCK_STREAM, 0);
     if (socket_control < 0)
     {
-        LOG_ERROR_AND_EXIT("could not open socket, errno %d", errno);
+        LOG_ERROR_AND_DIE("could not open socket, errno %d", errno);
     }
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -1584,7 +1584,7 @@ SOCKET prepare_control_socket(void) {
 #ifdef IOTRACE_ENABLE_LOGFILE
 //            if (ioctl(socket_control, SIOCGIFCONF) < 0)
 //            {
-//                LOG_ERROR_AND_EXIT("ioctl returned -1, errno %d", errno);
+//                LOG_ERROR_AND_DIE("ioctl returned -1, errno %d", errno);
 //            }
 
             //Write PORT and IP for control commands to file
@@ -1600,7 +1600,7 @@ SOCKET prepare_control_socket(void) {
 
             if (ioctl(socket_control, SIOCGIFCONF, &ic) < 0)
             {
-                LOG_ERROR_AND_EXIT("ioctl returned -1, errno %d", errno);
+                LOG_ERROR_AND_DIE("ioctl returned -1, errno %d", errno);
             }
 
             int fd = CALL_REAL_POSIX_SYNC(open)(control_log_name,
@@ -1608,7 +1608,7 @@ SOCKET prepare_control_socket(void) {
                                                 S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
             if (-1 == fd)
             {
-                LOG_ERROR_AND_EXIT("open() of file %s returned %d", control_log_name, fd);
+                LOG_ERROR_AND_DIE("open() of file %s returned %d", control_log_name, fd);
             }
 
             meta_data.pid = pid;
@@ -1623,10 +1623,10 @@ SOCKET prepare_control_socket(void) {
                 count = ret + sizeof(LINE_BREAK) - 1;
                 ret = CALL_REAL_POSIX_SYNC(write)(fd, buf, count);
                 if (0 > ret) {
-                    LOG_ERROR_AND_EXIT("write() returned %d", ret);
+                    LOG_ERROR_AND_DIE("write() returned %d", ret);
                 }
                 if (ret < count) {
-                    LOG_ERROR_AND_EXIT("incomplete write() occurred");
+                    LOG_ERROR_AND_DIE("incomplete write() occurred");
                 }
             }
 
@@ -1641,7 +1641,7 @@ SOCKET prepare_control_socket(void) {
     {
         CALL_REAL_POSIX_SYNC(close)
         (socket_control);
-        LOG_ERROR_AND_EXIT("unable to bind socket");
+        LOG_ERROR_AND_DIE("unable to bind socket");
     }
 
 #ifdef IOTRACE_ENABLE_INFLUXDB
@@ -1654,7 +1654,7 @@ SOCKET prepare_control_socket(void) {
     {
         CALL_REAL_POSIX_SYNC(close)
         (socket_control);
-        LOG_ERROR_AND_EXIT("unable to listen to socket, errno=%d", errno);
+        LOG_ERROR_AND_DIE("unable to listen to socket, errno=%d", errno);
     }
 
     return socket_control;
@@ -1761,7 +1761,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
                                 bytes_received);
                         if (err != HPE_OK) {
                             const char *errno_text = llhttp_errno_name(err);
-                            LOG_ERROR_AND_EXIT(
+                            LOG_ERROR_AND_DIE(
                                     "error parsing influxdb response: %s: %s",
                                     errno_text, recv_sockets[i]->parser.reason);
                         }
@@ -1779,7 +1779,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
                 SOCKET socket = accept(socket_control, NULL, NULL);
                 if (0 > socket)
                 {
-                    LOG_ERROR_AND_EXIT("accept returned -1, errno=%d", errno);
+                    LOG_ERROR_AND_DIE("accept returned -1, errno=%d", errno);
                 }
                 //Connection established; write all established sockets in array
                 libiotrace_socket *s = create_libiotrace_socket(socket, HTTP_REQUEST);
@@ -1858,14 +1858,14 @@ int libiotrace_get_env(const char *env_name, char *dst, const int max_len,
     log = getenv(env_name);
     if (NULL == log) {
         if (error_if_not_exists) {
-            LOG_ERROR_AND_EXIT("getenv(\"%s\") returned NULL", env_name);
+            LOG_ERROR_AND_DIE("getenv(\"%s\") returned NULL", env_name);
         } else {
             return 0;
         }
     }
     length = strlen(log);
     if (max_len < length) {
-        LOG_ERROR_AND_EXIT("getenv() returned %s too long (%d bytes) for buffer",
+        LOG_ERROR_AND_DIE("getenv() returned %s too long (%d bytes) for buffer",
                            env_name, length);
     }
 
@@ -1901,12 +1901,12 @@ void read_whitelist(void) {
 
     fd = CALL_REAL_POSIX_SYNC(open)(whitelist, O_RDONLY);
     if (-1 == fd) {
-        LOG_ERROR_AND_EXIT("open() failed, errno=%d", errno);
+        LOG_ERROR_AND_DIE("open() failed, errno=%d", errno);
     }
 
     ret = fstat(fd, &statbuf);
     if (-1 == ret) {
-        LOG_ERROR_AND_EXIT("fstat() failed, errno=%d", errno);
+        LOG_ERROR_AND_DIE("fstat() failed, errno=%d", errno);
     }
 
     if (0 >= statbuf.st_size) {
@@ -1917,21 +1917,21 @@ void read_whitelist(void) {
 
     buffer = (char*) CALL_REAL_ALLOC_SYNC(malloc)(file_len + 1); // +1 for terminating '\0'
     if (NULL == buffer) {
-        LOG_ERROR_AND_EXIT("malloc() failed");
+        LOG_ERROR_AND_DIE("malloc() failed");
     }
 
     // read whole file
     for (p = buffer, toread = file_len; toread > 0; toread -= ret, p += ret) {
         ret = CALL_REAL_POSIX_SYNC(read)(fd, p, toread);
         if (0 > ret) {
-            LOG_ERROR_AND_EXIT("read() failed, errno=%d", errno);
+            LOG_ERROR_AND_DIE("read() failed, errno=%d", errno);
         } else if (0 == ret) {
             // signal interrupt of file changed?
             if (-1 == fstat(fd, &statbuf)) {
-                LOG_ERROR_AND_EXIT("fstat() failed, errno=%d", errno);
+                LOG_ERROR_AND_DIE("fstat() failed, errno=%d", errno);
             }
             if (file_len != statbuf.st_size) {
-                LOG_ERROR_AND_EXIT("whitelist got changed during read");
+                LOG_ERROR_AND_DIE("whitelist got changed during read");
             }
         }
     }
@@ -2056,7 +2056,7 @@ void init_process() {
         pid = getpid();
         hostname = CALL_REAL_ALLOC_SYNC(malloc)(HOST_NAME_MAX);
         if (NULL == hostname)
-            LOG_ERROR_AND_EXIT("malloc failed, errno=%d", errno);
+            LOG_ERROR_AND_DIE("malloc failed, errno=%d", errno);
 
         gethostname(hostname, HOST_NAME_MAX);
 
@@ -2280,12 +2280,12 @@ void get_stacktrace(struct basic *data) {
     char **messages = (char**) NULL;
 
     if (NULL == trace) {
-        LOG_ERROR_AND_EXIT("malloc() returned NULL");
+        LOG_ERROR_AND_DIE("malloc() returned NULL");
     }
 
     size = backtrace(trace, stacktrace_depth + 3);
     if (0 >= size) {
-        LOG_ERROR_AND_EXIT("backtrace() returned %d", size);
+        LOG_ERROR_AND_DIE("backtrace() returned %d", size);
     }
 
     if (stacktrace_ptr) {
@@ -2298,7 +2298,7 @@ void get_stacktrace(struct basic *data) {
     if (stacktrace_symbol) {
         messages = backtrace_symbols(trace, size);
         if (NULL == messages) {
-            LOG_ERROR_AND_EXIT("backtrace_symbols() returned NULL with errno=%d",
+            LOG_ERROR_AND_DIE("backtrace_symbols() returned NULL with errno=%d",
                                errno);
         }
 
@@ -2391,7 +2391,7 @@ void write_into_influxdb(struct basic *data) {
     char body[body_length];
     body_length = libiotrace_struct_push_basic(body, body_length, data, "");
     if (0 > body_length) {
-        LOG_ERROR_AND_EXIT("libiotrace_struct_push_basic() returned %d",
+        LOG_ERROR_AND_DIE("libiotrace_struct_push_basic() returned %d",
                 body_length);
     }
     body_length--; /*last comma in ret*/
@@ -2591,7 +2591,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func) {
     }
 
     if (!envp_null) {
-        LOG_ERROR_AND_EXIT(
+        LOG_ERROR_AND_DIE(
                 "during call of %s envp[] has more elements then buffer (%d)",
                 func, MAX_EXEC_ARRAY_LENGTH);
     }
@@ -2609,7 +2609,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func) {
         }
 
         if (MAX_EXEC_ARRAY_LENGTH <= env_element + count_libiotrace_env) {
-            LOG_ERROR_AND_EXIT(
+            LOG_ERROR_AND_DIE(
                     "during call if %s envp[] with added libiotrace-variables has more elements then buffer (%d)",
                     func, MAX_EXEC_ARRAY_LENGTH);
         }
@@ -2706,7 +2706,7 @@ int WRAP(execl)(const char *path, const char *arg, ... /* (char  *) NULL */) {
     element = (char*) ((void*) arg);
     while (NULL != element) {
         if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-            LOG_ERROR_AND_EXIT(
+            LOG_ERROR_AND_DIE(
                     "buffer (%d elements) not big enough for argument array",
                     MAX_EXEC_ARRAY_LENGTH);
         }
@@ -2771,7 +2771,7 @@ int WRAP(execlp)(const char *file, const char *arg, ... /* (char  *) NULL */) {
     element = (char*) ((void*) arg);
     while (NULL != element) {
         if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-            LOG_ERROR_AND_EXIT(
+            LOG_ERROR_AND_DIE(
                     "buffer (%d elements) not big enough for argument array",
                     MAX_EXEC_ARRAY_LENGTH);
         }
@@ -2828,7 +2828,7 @@ int WRAP(execvpe)(const char *file, char *const argv[], char *const envp[]) {
 int WRAP(execle)(const char *path, const char *arg,
         ... /*, (char *) NULL, char * const envp[] */) {
 #ifndef HAVE_EXECVPE
-    LOG_ERROR_AND_EXIT("wrapper needs function execvpe() to work properly");
+    LOG_ERROR_AND_DIE("wrapper needs function execvpe() to work properly");
 #endif
     int ret;
     struct basic data;
@@ -2849,7 +2849,7 @@ int WRAP(execle)(const char *path, const char *arg,
     element = (char*) ((void*) arg);
     while (NULL != element) {
         if (count >= MAX_EXEC_ARRAY_LENGTH - 1) {
-            LOG_ERROR_AND_EXIT(
+            LOG_ERROR_AND_DIE(
                     "buffer (%d elements) not big enough for argument array",
                     MAX_EXEC_ARRAY_LENGTH);
         }
@@ -2971,7 +2971,7 @@ int WRAP(pthread_create)(pthread_t *restrict thread,
     struct pthread_create_data *pthread_data = CALL_REAL_ALLOC_SYNC(malloc)(
             sizeof(struct pthread_create_data));
     if (NULL == pthread_data) {
-        LOG_ERROR_AND_EXIT("malloc failed, errno=%d", errno);
+        LOG_ERROR_AND_DIE("malloc failed, errno=%d", errno);
     }
     pthread_data->start_routine = start_routine;
     pthread_data->arg = arg;

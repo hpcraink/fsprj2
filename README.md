@@ -52,10 +52,10 @@ CUnit: GNU LIBRARY GENERAL PUBLIC LICENSE Version 2 (see [CUnit](https://gitlab.
   1. open terminal
   2. go to &lt;libiotrace-folder&gt;
   3. `cd fsprj2/libiotrace/`
-  4. `git rm --cached ext/cunit`
-  5. `rm -rf ext/cunit`
+  4. `git rm --cached test/ext/cunit`
+  5. `rm -rf test/ext/cunit`
   6. `cd ..`
-  7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/ext/cunit`
+  7. `git submodule add https://gitlab.com/cunity/cunit.git libiotrace/test/ext/cunit`
   8. `cd libiotrace/`
   9. `mkdir build` (for out of source build)
   10. `cd build/`

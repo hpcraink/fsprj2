@@ -121,5 +121,5 @@ void uxd_ipc_tracee_block_until_tracing_ack(int server_conn_fd) {
     const int rv = uxd_sock_read(server_conn_fd, &ipc_request);
 
     if (!rv && TRACER_REQUEST_ACCEPTED == ipc_request.msg_type) { return; }
-    LOG_ERROR_AND_EXIT("Got invalid tracing request acknowledgement");
+    LOG_ERROR_AND_DIE("Got invalid tracing request acknowledgement");
 }

@@ -33,7 +33,7 @@
 
 
 /* -- Macros -- */
-#define LOG_ERROR_AND_EXIT(format, ...)                                                                  \
+#define LOG_ERROR_AND_DIE(format, ...)                                                                  \
   do {                                                                                                   \
     fprintf(stderr, "[ERROR] `%s` (%s:%d): " format ".\n", __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
     exit(EXIT_FAILURE);                                                                                  \
@@ -41,7 +41,7 @@
 
 #define DIE_WHEN_ERRNO(FUNC) __extension__({ ({                                   \
     int __val = (FUNC);                                                           \
-    (-1 == __val ? ({ LOG_ERROR_AND_EXIT("%s", strerror(errno)); -1; }) : __val); \
+    (-1 == __val ? ({ LOG_ERROR_AND_DIE("%s", strerror(errno)); -1; }) : __val); \
   }); })
 
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
         const char* err_str = NULL;
         nr_measurements = (unsigned long)strtonum(argv[1], 1, 999999, &err_str);
         if (err_str || 0 != nr_measurements % 2) {
-            LOG_ERROR_AND_EXIT("Couldn't parse number of iterations  (NOTE: must be also an even number)");
+            LOG_ERROR_AND_DIE("Couldn't parse number of iterations  (NOTE: must be also an even number)");
         }
     } else if (2 < argc) {
         fprintf(stderr, "Usage: %s [num-measurements]\n", argv[0]);

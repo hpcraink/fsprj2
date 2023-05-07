@@ -5,14 +5,14 @@ function(add_git_submodule dir)
 # Git submodule directory is a CMake project.
 #
 # Usage: in CMakeLists.txt
-# 
+#
 # include(AddGitSubModule.cmake)
 # add_git_submodule(mysubmod_dir)
 
 find_package(Git REQUIRED)
 
 if(NOT EXISTS ${dir}/CMakeLists.txt)
-# git submodule add https://gitlab.com/cunity/cunit.git ext/cunit
+# git submodule add https://gitlab.com/cunity/cunit.git test/ext/cunit
   execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive -- ${dir}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     RESULT_VARIABLE _err)

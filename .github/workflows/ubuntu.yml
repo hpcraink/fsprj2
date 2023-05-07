@@ -24,9 +24,9 @@ jobs:
         shell: bash
         run: |
           cd $LIBIOTRACE_BASE_PATH
-          git rm --cached ext/cunit
-          rm -rf ext/cunit
-          git submodule add --force https://gitlab.com/cunity/cunit.git ext/cunit
+          git rm --cached test/ext/cunit
+          rm -rf test/ext/cunit
+          git submodule add --force https://gitlab.com/cunity/cunit.git test/ext/cunit
 
 
       # - Clean (unnecessary ??) + Build -
@@ -44,13 +44,13 @@ jobs:
 
       - name: Build w/ CMake
         shell: bash
-        run: make -C $LIBIOTRACE_BUILD_PATH -j$(nproc)
+        run: make -C $LIBIOTRACE_BUILD_PATH -j
 
       # - Test -
       - name: Test (CUnit)
         shell: bash
         # Executes only tests w/ 'test_' prefix
-        run: make -C $LIBIOTRACE_BUILD_PATH -j$(nproc) test ARGS="-R '^test_'"
+        run: make -C $LIBIOTRACE_BUILD_PATH -j test ARGS="-R '^test_'"
         # >> WORKAROUND <<: Not feasible w/ cmake (see 'libiotrace/test/cunit/CMakeLists.txt')
         env:
           CTEST_OUTPUT_ON_FAILURE: 1

@@ -4,16 +4,17 @@ project(libiotrace C CXX)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
-
 find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)        # Find compiler based on env-var, and not soley based on `/usr/bin/cc`  (which causes issues on systems where the compiler is loaded via `module load <compiler-module>`)
 find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
 
 
+# -----------------------------------------------------------------------------
+# Compile options
+# -----------------------------------------------------------------------------
 if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
     message(STATUS "No build type selected, defaulting to ${CMAKE_BUILD_TYPE}")
 endif()
-
 
 #include(CheckIPOSupported)                               # WARNING: !!  Requires changing `cmake_minimum_required` 2 newer version (e.g., 3.21)  !!
 #check_ipo_supported(RESULT lto_supported)
@@ -24,10 +25,6 @@ endif()
 #    message(WARNING "LTO isn't supported")
 #endif()
 
-
-# -----------------------------------------------------------------------------
-# Compiler warnings
-# -----------------------------------------------------------------------------
 add_compile_options(
     -Wall
     -Wextra
@@ -54,12 +51,13 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")                 # Definitions which do
     )
 endif()
 
-
-
-# -- "Subdirs" containing targets --
 include_directories(${libiotrace_SOURCE_DIR}/include
                     ${libiotrace_BINARY_DIR}/include)
 
+
+# -----------------------------------------------------------------------------
+# Subdirs containing targets
+# -----------------------------------------------------------------------------
 add_subdirectory(src)
 add_subdirectory(test)
 
@@ -73,7 +71,6 @@ configure_file(
 
 
 
-# --  Print info  --
 message(STATUS "")
 message(STATUS "Build type            : ${CMAKE_BUILD_TYPE}")
 message(STATUS "C Compiler exec       : ${CMAKE_C_COMPILER}")

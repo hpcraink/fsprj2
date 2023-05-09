@@ -1,5 +1,4 @@
 
-# --  Vars  --
 # Please keep in alphabetical order
 set(LIBIOTRACE_SOURCE
     common/utils.c
@@ -17,6 +16,12 @@ set(LIBIOTRACE_SOURCE
 set(LIBIOTRACE_COMPILE_OPTIONS
     -D_GNU_SOURCE                   # needed for the RTLD_NEXT macro and other GNU functions
 )
+
+set(LIBIOTRACE_SHARED_LINK_OPTIONS
+    ${CMAKE_DL_LIBS}                    # Needed for dlsym-function
+    pthread                             # Needed for pthread_atfork() and pthread_create()
+)
+set(LIBIOTRACE_STATIC_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 
 
 # -----------------------------------------------------------------------------
@@ -233,7 +238,7 @@ CheckRDTSC()
 
 
 # -----------------------------------------------------------------------------
-# CMake options / compile options
+# CMake- / Compile options
 # -----------------------------------------------------------------------------
 option (LOGGING "write log (can be changed during execution with functions from libiotrace.h; is only used if ENABLE_OUTPUT is set to LOGFILE or LOGFILE_AND_INFLUXDB)" ON)
 #compile using cmake -DLOGGING for write log (can be changed during execution with functions from libiotrace.h)
@@ -461,12 +466,6 @@ set(WANT_RDTSC 1 CACHE BOOL "If rdtsc is selected")
 # CMake targets
 # -----------------------------------------------------------------------------
 set(LIB_BASENAME "iotrace")
-
-# Linking:
-#   - ${CMAKE_DL_LIBS} needed for dlsym-function
-#   - "-lpthread" needed for pthread_atfork() and pthread_create()
-list(APPEND LIBIOTRACE_SHARED_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
-list(APPEND LIBIOTRACE_STATIC_LINK_OPTIONS ${CMAKE_DL_LIBS} pthread)
 
 add_library(iotrace-shared SHARED ${LIBIOTRACE_SOURCE})
 target_compile_options(iotrace-shared PRIVATE ${LIBIOTRACE_COMPILE_OPTIONS})

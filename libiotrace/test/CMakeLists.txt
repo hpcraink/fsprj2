@@ -1,14 +1,13 @@
 
+# -----------------------------------------------------------------------------
+# CMake- / Compile options
+# -----------------------------------------------------------------------------
 # ensure debug info and assert functions are build during compile of tests
 set(CMAKE_BUILD_TYPE Debug)
-
-
 
 # XXX For production version, the default should be OFF
 # And a CI/CD server should compile using cmake -DWITH_UNIT_TESTS
 option (WITH_UNIT_TESTS "enable building unit tests" ON)
-
-
 if (WITH_UNIT_TESTS)
     # Solution from https://www.scivision.dev/cmake-git-submodule/
     #
@@ -288,6 +287,9 @@ if (WITH_UNIT_TESTS)
         list(APPEND TESTS_LINK_OPTIONS "atomichash-object")
     endif()
 
+# -----------------------------------------------------------------------------
+# CMake targets
+# -----------------------------------------------------------------------------
     if (STRACING_ENABLED)
         list(APPEND TESTS_LINK_OPTIONS "libringbuf_object")
 
@@ -618,4 +620,3 @@ if (WITH_UNIT_TESTS)
     #add_executable(test_cpp_linkage_static test_cpp_linkage.cpp)
     #target_link_libraries(test_cpp_linkage_static $<TARGET_OBJECTS:iotrace-object>)
 endif()
-

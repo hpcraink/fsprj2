@@ -13,7 +13,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   var ThreadColour = new Array      //Farbe der Auslastung Threads
   var Colours = new Array           //Anzahl möglicher Farben
   var FilesystemValue = new Array
-  //var ThreadBufferColour = new Array
   var ThreadBufferCss = new Array
   var DataLength = 0                //Datenlänge libiotrace ohne filesystem
 
@@ -31,7 +30,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   const ColAssig = ColourAssignment(Colours, DataLength)
   ThreadColour = ColAssig[0]?.[0]
   ProcessColour = ColAssig[1]
-  //ThreadBufferColour = ColAssig[2]
   FilesystemValue = FilesystemAssignment()
 
   //Generieren der Css-Daten für alle Prozesse & Threads
@@ -95,25 +93,15 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   }
   
   function ColourAssignment(Colour: any, lDatalength: any) {
-    var HelpArrayDL = new Array
     let ctrTpP = 0
     var ThreadHeatValue: any[] = []
     var ProcessHeatValue: number[] = []
     ProcessHeatValue[0] = 0
-    //var BufferHeatValue = new Array
     var ReturnColourThreads = new Array
     var ReturnColourProcess = new Array
-    //var ReturnColourThreadBuffer = new Array
-    //let bufferIndex = 0
 
     for (let i = 0; i < lDatalength; i++) {
-      HelpArrayDL[i] = data.series[i].fields[1].values
-      ThreadHeatValue[i] = HelpArrayDL[i].buffer
-      //Aufsummierung mit neuer Query nicht nötig
-      // for (let j = 0; j < HelpArrayDl[i].buffer.length; j++) {
-      //   BufferHeatValue[bufferIndex] = HelpArrayDl[i].buffer[j]
-      //   bufferIndex++
-      // }
+      ThreadHeatValue[i] = data.series[i].fields[1].values.get(0)
     }
 
     for (let ictr = 0; ictr < (lDatalength-ctrTpP);) {    
@@ -122,16 +110,15 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         ictr = ictr + ctrTpP
         //Resert ctr
         ctrTpP=1
-        ProcessHeatValue[ictr] = ThreadHeatValue[ictr][0]
+        ProcessHeatValue[ictr] = ThreadHeatValue[ictr]
       }
       else {
-        ProcessHeatValue[ictr] = ProcessHeatValue[ictr] + ThreadHeatValue[ictr+ctrTpP][0]
+        ProcessHeatValue[ictr] = ProcessHeatValue[ictr] + ThreadHeatValue[ictr+ctrTpP]
         ctrTpP++
       }
     }
     ReturnColourThreads = Assignment(ThreadHeatValue)
     ReturnColourProcess = Assignment(ProcessHeatValue)
-    //ReturnColourThreadBuffer = Assignment(BufferHeatValue)
 
     function Assignment(HeatValue: any)
     {
@@ -182,7 +169,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       return[ReturnColour, min, max]
     }
     //MinMax hier nur für Threads zurückgegeben
-    //return[ReturnColourThreads, ReturnColourProcess[0], ReturnColourThreadBuffer[0]]
     return[ReturnColourThreads, ReturnColourProcess[0]]
   }
 
@@ -254,9 +240,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
 
   function BuildPanelThreadBuffer_FileSystem(i: number, yPlacement: number, lxShift : number, lFilesystemValue: any)
   {
-    //include colour as fill for old display
-    //include in return:
-    // <rect x={(20+160*(i+lxShift))} y={(300+30*yPlacement)} width={16} height={16} rx='8' fill={Colour}/>
     return(
       //horizontal
       <g>

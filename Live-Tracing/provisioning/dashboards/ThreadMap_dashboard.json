@@ -96,7 +96,7 @@
           "custom": {
             "align": "auto",
             "displayMode": "auto",
-            "inspect": false
+            "inspect": true
           },
           "mappings": [],
           "thresholds": {
@@ -125,6 +125,18 @@
                 "value": 179
               }
             ]
+            },
+            {
+                "matcher": {  
+                "id": "byName",  
+                "options": "WrittenBytes {processid=\"1952952\", thread=\"1952952\"}"  
+              },  
+              "properties": [  
+                {  
+                  "id": "custom.width",  
+                  "value": 102  
+                }  
+              ]
           }
         ]
       },
@@ -153,7 +165,7 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n      |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n        |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n          |> group(columns: [\"thread\"])\r\n            |> aggregateWindow(every: inf, column:\"_value\", fn:distinct, createEmpty: false)\r\n              |>yield(name: \"distinct\")",
+          "query": "query1 = \r\n  from(bucket: \"hsebucket_fileres\")\r\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n    |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n    |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n    |> keep(columns: [\"thread\", \"processid\", \"_value\"])\r\n    |> distinct()\r\n    |> map(fn: (r) => ({ r with TracedFilename: r._value }))\r\n    |> drop(columns: [\"_value\"])\r\n\r\nquery2 =\r\n  from(bucket: \"hsebucket_fileres\")\r\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n    |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n    |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"write\" or r[\"functionname\"] == \"writev\")\r\n    |> keep(columns: [\"thread\", \"processid\", \"_value\"])\r\n    |> sum()\r\n    |> map(fn: (r) => ({ r with WrittenBytes: string(v: r._value)}))\r\n    |> drop(columns: [\"_value\"])\r\n\r\nunion(tables: [query1, query2])",
           "refId": "All written bytes"
         }
       ],

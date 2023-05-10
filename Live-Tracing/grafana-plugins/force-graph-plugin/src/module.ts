@@ -7,6 +7,6 @@ export const plugin = new PanelPlugin<PanelOptions>(ForceFeedbackPanel).setPanel
     path: 'ProcessID',
     name: 'Add the ProcessID for Drilldown below:',
     description: 'Plugin will show Process with related Threads and the Filenames in which the threads write',
-    defaultValue: defaultPanelOptions.ProcessID
+    defaultValue: defaultPanelOptions.ProcessID,
   });
 });

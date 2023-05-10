@@ -1,56 +1,67 @@
 import React, { useEffect } from 'react';
 import { PanelProps } from '@grafana/data';
-import { PanelOptions } from 'types';
+import { PanelOptions, defaultPanelOptions } from 'types';
 import * as d3 from 'd3';
 interface Props extends PanelProps<PanelOptions> {}
 
 export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, height }) => {
   useEffect(() => {
     let nodes: any = [];
-    //sessionStorage.clear(); //Clear to erase beforehand data | Took wrong data from false test before!
+    //sessionStorage.clear(); //Clear to erase beforehand data
     let addingNodes = false;
     let links: any = [];
-    if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
-      nodes = JSON.parse(sessionStorage.getItem('nodes')!);
-    }
+    let ProcessIndex = 0;
+    // We want old Nodes? Doesnt work w/o
+    // if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
+    //   nodes = JSON.parse(sessionStorage.getItem('nodes')!);
+    // }
 
     function addNodes(_callback: any) {
       let nodeNumber = nodes.length;
-      //Replace with selectec Process
       //From Drilldownfilename or from Settings, also implement default values?
-      let nodeProcesss: any = data.series[0].fields[1].values;
-      //Replace with Threads of the Process
-      //Find Index of Process => Find how many following have the same PID (Query makes them in order)
-      let nodeThreads: any = data.series[1].fields[1].values;
+      let nodeProcess: any = defaultPanelOptions.ProcessID;
+      //Find Index of Process
+      let nodeThreads: any = [];
+      for (let index = 0; index < data.series.length / 2; index++) {
+        if (data.series[index].fields[1].labels?.processid === nodeProcess.toString()) {
+          ProcessIndex = index;
+          break;
+        }
+      }
+      //find all related threads
+      while (data.series[ProcessIndex].fields[1].labels?.processid === nodeProcess.toString()) {
+        nodeThreads.push(data.series[ProcessIndex].fields[1].labels?.thread);
+        ProcessIndex++;
+      }
 
-      //for can be cut => only one process for drilldown
-      for (let i = 0; i < nodeProcesss.length; i++) {
-        if (!nodes.map((a: any) => a.name).includes(nodeProcesss.get(i))) {
-          nodes.push({ index: nodeNumber, name: nodeProcesss.get(i), r: 10, writtenBytes: 0 });
-          nodeNumber += 1;
-          addingNodes = true;
-        }
+      //Node for Process
+      //TODO Add Writtenbytes
+      if (!nodes.map((a: any) => a.name).includes(nodeProcess)) {
+        nodes.push({ index: nodeNumber, name: nodeProcess.toString(), r: 10, writtenBytes: 0 });
+        nodeNumber += 1;
+        addingNodes = true;
       }
+
       //Show all Threads of the Process
-      for (let i = 0; i < nodeThreads.length; i++) {
-        if (!nodes.map((a: any) => a.name).includes(nodeThreads.get(i))) {
-          nodes.push({ index: nodeNumber, name: nodeThreads.get(i).toString(), r: 5, writtenBytes: 0 });
-          //nodes.push({ index: nodeNumber, name: nodeThreads.get(i), r: 5, writtenBytes: 0 });
+      //TODO add writtenbytes
+      for (let i = 1; i < nodeThreads.length + 1; i++) {
+        if (!nodes.map((a: any) => a.name).includes(nodeThreads[i - 1])) {
+          nodes.push({ index: nodeNumber, name: nodeThreads[i - 1], r: 5, writtenBytes: 0 });
           nodeNumber += 1;
           addingNodes = true;
         }
       }
-      //Later Add Filename for each Thread
+      //TODO Later Add Filename for each Thread
 
       _callback();
     }
 
-    //Add actual written Bytes
+    //TODO Add actual written Bytes
     function changeNodeSize(node: any, value: any) {
       let maxNodeSize = 30;
       let minNodeSize = 10;
-      let maxWrittenBytes = 10000; //ToDo rel Wert?
-      node.writtenBytes += value;
+      let maxWrittenBytes = 10000; //TODO rel Wert?
+      node.writtenBytes += value; //TODO wieso aufsummieren?
       let nodeSize = node.writtenBytes / maxWrittenBytes;
       if (nodeSize >= 1) {
         node.r = maxNodeSize;
@@ -63,19 +74,20 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
     function addLinks() {
       links.length = 0;
-      for (let i = 2; i < data.series.length; i++) {
-        let source = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.thread);
-        let target = nodes.find((a: { name: any }) => a.name === data.series[i].fields[1].labels?.processid);
-        let writtenBytes = data.series[i].fields[1].values.get(0); //Falsch, bekommt nicht alle written bytes des Threads nur buffer[0] => über query anpassen
+      for (let i = 0; i < nodes.length; i++) {
+        console.log(i, 'Links:', links);
+        let source = nodes[0];
+        let target = nodes[i];
+        let writtenBytes = data.series[nodes.length - ProcessIndex + i].fields[1].values.get(0);
+        //TODO Add written Bytes for Process aswell
         changeNodeSize(nodes[target.index], writtenBytes);
-        //Change/delete Link Colour | not needed anymore? Colour by Process/Thread/File?
+        //TODO Change/delete Link Colour | not needed anymore? Colour by Filesystem? => Add legend?
         let link_color = '#003f5c';
         if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
           link_color = '#ef5675';
         } else if (data.series[i].fields[1].labels?.functionname === 'write') {
           link_color = '#ffa600';
         } else if (data.series[i].fields[1].labels?.functionname === 'writev') {
-          //writev not implemented before
           link_color = '#ff0000';
         }
         links.push({

@@ -1,10 +1,8 @@
-
-
 export interface PanelOptions {
   ProcessID: number;
 }
 
 export const defaultPanelOptions: PanelOptions = {
   //Make usefull defaultoption!
-  ProcessID: 0
+  ProcessID: 1952952,
 };

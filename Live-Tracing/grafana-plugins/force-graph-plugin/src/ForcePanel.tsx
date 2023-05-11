@@ -1,67 +1,93 @@
 import React, { useEffect } from 'react';
 import { PanelProps } from '@grafana/data';
-import { PanelOptions, defaultPanelOptions } from 'types';
+import { PanelOptions } from 'types';
 import * as d3 from 'd3';
 interface Props extends PanelProps<PanelOptions> {}
 
 export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, height }) => {
   useEffect(() => {
     let nodes: any = [];
-    //sessionStorage.clear(); //Clear to erase beforehand data
+    //sessionStorage.clear(); //Clear to erase beforehand data | not necessary w/o keeping old nodes
     let addingNodes = false;
     let links: any = [];
     let ProcessIndex = 0;
-    // We want old Nodes? Doesnt work w/o
+    //Get Nodeprocess from Plugin Settings
+    let nodeProcess: any = options.ProcessID.toString();
+    let nodeThreads: any = [];
+    let nodeFileName: any = [];
+
+    // We want old Nodes to be reused? Perfromance vs. might be wrong data
+    //Check if changes are made that need sS to be cleared otherwise use it? => Livetest necessary
     // if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
     //   nodes = JSON.parse(sessionStorage.getItem('nodes')!);
     // }
 
     function addNodes(_callback: any) {
       let nodeNumber = nodes.length;
-      //From Drilldownfilename or from Settings, also implement default values?
-      let nodeProcess: any = defaultPanelOptions.ProcessID;
       //Find Index of Process
-      let nodeThreads: any = [];
-      for (let index = 0; index < data.series.length / 2; index++) {
-        if (data.series[index].fields[1].labels?.processid === nodeProcess.toString()) {
-          ProcessIndex = index;
+      for (let i = 0; i < data.series.length / 2; i++) {
+        if (data.series[i].fields[1].labels?.processid === nodeProcess) {
+          ProcessIndex = i;
           break;
         }
       }
-      //find all related threads
-      while (data.series[ProcessIndex].fields[1].labels?.processid === nodeProcess.toString()) {
+      //find all related threads and filenames | data.series.length/2 for second query
+      let ctrFilename = 0;
+      while (data.series[ProcessIndex].fields[1].labels?.processid === nodeProcess) {
         nodeThreads.push(data.series[ProcessIndex].fields[1].labels?.thread);
+        nodeFileName.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
+        nodeFileName[ctrFilename] = nodeFileName[ctrFilename].buffer;
         ProcessIndex++;
+        ctrFilename++;
       }
 
       //Node for Process
-      //TODO Add Writtenbytes
       if (!nodes.map((a: any) => a.name).includes(nodeProcess)) {
-        nodes.push({ index: nodeNumber, name: nodeProcess.toString(), r: 10, writtenBytes: 0 });
+        nodes.push({
+          index: nodeNumber,
+          name: nodeProcess,
+          r: 10,
+          writtenBytes: data.series[ProcessIndex - nodeThreads.length].fields[1].values.get(0),
+        });
         nodeNumber += 1;
         addingNodes = true;
       }
 
-      //Show all Threads of the Process
-      //TODO add writtenbytes
-      for (let i = 1; i < nodeThreads.length + 1; i++) {
-        if (!nodes.map((a: any) => a.name).includes(nodeThreads[i - 1])) {
-          nodes.push({ index: nodeNumber, name: nodeThreads[i - 1], r: 5, writtenBytes: 0 });
+      //Get all Threads of the Process
+      for (let i = 0; i < nodeThreads.length; i++) {
+        //Expection for PID = TID
+        if (!nodes.map((a: any) => a.name).includes(nodeThreads[i]) || nodeProcess === nodeThreads[i]) {
+          nodes.push({
+            index: nodeNumber,
+            name: nodeThreads[i],
+            r: 5,
+            writtenBytes: data.series[ProcessIndex - nodeThreads.length + i].fields[1].values.get(0),
+          });
           nodeNumber += 1;
           addingNodes = true;
         }
       }
-      //TODO Later Add Filename for each Thread
+
+      //Get all traced_filenames for each process
+      for (let i = 0; i < nodeFileName.length; i++) {
+        for (let j = 0; j < nodeFileName[i].length; j++) {
+          //Add Writtenbytes per filename as aditional query? => Also needed for Drilldown Filename then
+          nodes.push({ index: nodeNumber, name: nodeFileName[i][j], r: 5, writtenBytes: 0 });
+          nodeNumber += 1;
+          addingNodes = true;
+        }
+      }
 
       _callback();
     }
 
     //TODO Add actual written Bytes
+    //Add Colour to the Nodes aswell or only for links? Node Colours depending on wether node is Process/Thread/Filename => Friday!
     function changeNodeSize(node: any, value: any) {
       let maxNodeSize = 30;
       let minNodeSize = 10;
       let maxWrittenBytes = 10000; //TODO rel Wert?
-      node.writtenBytes += value; //TODO wieso aufsummieren?
+      node.writtenBytes += value; //TODO why sum?
       let nodeSize = node.writtenBytes / maxWrittenBytes;
       if (nodeSize >= 1) {
         node.r = maxNodeSize;
@@ -74,13 +100,13 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
     function addLinks() {
       links.length = 0;
-      for (let i = 0; i < nodes.length; i++) {
-        console.log(i, 'Links:', links);
-        let source = nodes[0];
-        let target = nodes[i];
-        let writtenBytes = data.series[nodes.length - ProcessIndex + i].fields[1].values.get(0);
-        //TODO Add written Bytes for Process aswell
-        changeNodeSize(nodes[target.index], writtenBytes);
+      //Assign Process
+      let sourceT = nodes[0];
+      changeNodeSize(nodes[0], nodes[0].writtenBytes);
+      //Assign Threads
+      for (let i = 0; i < 1 + nodeThreads.length; i++) {
+        let targetT = nodes[i];
+        changeNodeSize(nodes[targetT.index], nodes[i].writtenBytes);
         //TODO Change/delete Link Colour | not needed anymore? Colour by Filesystem? => Add legend?
         let link_color = '#003f5c';
         if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
@@ -91,10 +117,26 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           link_color = '#ff0000';
         }
         links.push({
-          source: source.index,
-          target: target.index,
+          source: sourceT.index,
+          target: targetT.index,
           color: link_color,
         });
+      }
+      //Assign Filesystem
+      let j = 0;
+      for (let i = 0; i < nodeThreads.length; i++) {
+        let sourceFn = nodes[i + 1];
+        for (let k = 0; k < nodeFileName[i].length; k++) {
+          let targetFn = nodes[nodeThreads.length + 1 + j];
+          //changeNodeSize
+          j++;
+          //LinkColour Filename
+          links.push({
+            source: sourceFn.index,
+            target: targetFn.index,
+            color: '#000fff',
+          });
+        }
       }
     }
 
@@ -180,9 +222,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       addNodes(() => addLinks());
       forceSimulation(() => drawForceGraph());
       fixateNodes();
+      //Use sessionStorage? => IF PID changes clear sS
       sessionStorage.setItem('nodes', JSON.stringify(nodes));
     }
-    if (data.series[2].length === 0) {
+
+    if (data.series.length === 0) {
       d3.select('#area').selectAll('*').remove();
       d3.select('p').text('No data');
       sessionStorage.clear();
@@ -191,7 +235,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       d3.select('#area').selectAll('*').remove();
       runSimulation();
     }
-  }, [data, height, width]);
+  }, [options, data, height, width]);
   return (
     <div className="App">
       <p></p>

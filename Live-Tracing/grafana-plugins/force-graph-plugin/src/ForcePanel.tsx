@@ -16,11 +16,15 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     let nodeThreads: any = [];
     let nodeFileName: any = [];
 
-    // We want old Nodes to be reused? Perfromance vs. might be wrong data
-    //Check if changes are made that need sS to be cleared otherwise use it? => Livetest necessary
-    // if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
-    //   nodes = JSON.parse(sessionStorage.getItem('nodes')!);
-    // }
+    //Get old Nodes
+    if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
+      nodes = JSON.parse(sessionStorage.getItem('nodes')!);
+      //If PID changes, dont use old nodes => clear sessionStorage
+      if (!(nodes[0].name === nodeProcess)) {
+        nodes = [];
+        sessionStorage.clear();
+      }
+    }
 
     function addNodes(_callback: any) {
       let nodeNumber = nodes.length;
@@ -41,7 +45,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         ctrFilename++;
       }
 
-      //Node for Process
+      //Node for Process, skip existing nodes
       if (!nodes.map((a: any) => a.name).includes(nodeProcess)) {
         nodes.push({
           index: nodeNumber,
@@ -55,8 +59,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
       //Get all Threads of the Process
       for (let i = 0; i < nodeThreads.length; i++) {
-        //Expection for PID = TID
-        if (!nodes.map((a: any) => a.name).includes(nodeThreads[i]) || nodeProcess === nodeThreads[i]) {
+        //Check for existing nodes w/o ProcessNode
+        //skip existing nodes
+        if (
+          !nodes
+            .slice(1)
+            .map((a: any) => a.name)
+            .includes(nodeThreads[i])
+        ) {
           nodes.push({
             index: nodeNumber,
             name: nodeThreads[i],
@@ -69,13 +79,23 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       }
 
       //Get all traced_filenames for each process
+      let helpNodes = nodeFileName.length + 1; //helpNodes to only check the area of filenames for each thread
       for (let i = 0; i < nodeFileName.length; i++) {
         for (let j = 0; j < nodeFileName[i].length; j++) {
           //Add Writtenbytes per filename as aditional query? => Also needed for Drilldown Filename then
-          nodes.push({ index: nodeNumber, name: nodeFileName[i][j], r: 5, writtenBytes: 0 });
-          nodeNumber += 1;
-          addingNodes = true;
+          //skip existing nodes
+          if (
+            !nodes
+              .slice(helpNodes, helpNodes + nodeFileName[i].length)
+              .map((a: any) => a.name)
+              .includes(nodeFileName[i][j])
+          ) {
+            nodes.push({ index: nodeNumber, name: nodeFileName[i][j], r: 5, writtenBytes: 0 });
+            nodeNumber += 1;
+            addingNodes = true;
+          }
         }
+        helpNodes += nodeFileName[i].length;
       }
 
       _callback();

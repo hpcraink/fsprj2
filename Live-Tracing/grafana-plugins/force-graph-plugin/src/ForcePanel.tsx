@@ -9,7 +9,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     let nodes: any = [];
     //sessionStorage.clear(); //Clear to erase beforehand data | not necessary w/o keeping old nodes
     let addingNodes = false;
-    let linksNodes: any = [];
+    let nodesLinks: any = [];
     let ProcessIndex = 0;
     //Get Nodeprocess from Plugin Settings
     let nodeProcess: any = options.ProcessID.toString();
@@ -118,7 +118,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     function addLinks() {
-      linksNodes.length = 0;
+      nodesLinks.length = 0;
       //Assign Process
       let sourceT = nodes[0];
       changeNodeSize(nodes[0], nodes[0].writtenBytes);
@@ -128,14 +128,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         changeNodeSize(nodes[targetT.index], nodes[i].writtenBytes);
         //TODO Change/delete Link Colour | not needed anymore? Colour by Filesystem? => Add legend?
         let link_color = '#003f5c';
-        if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
-          link_color = '#ef5675';
-        } else if (data.series[i].fields[1].labels?.functionname === 'write') {
-          link_color = '#ffa600';
-        } else if (data.series[i].fields[1].labels?.functionname === 'writev') {
-          link_color = '#ff0000';
-        }
-        linksNodes.push({
+        // if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
+        //   link_color = '#ef5675';
+        // } else if (data.series[i].fields[1].labels?.functionname === 'write') {
+        //   link_color = '#ffa600';
+        // } else if (data.series[i].fields[1].labels?.functionname === 'writev') {
+        //   link_color = '#ff0000';
+        // }
+        nodesLinks.push({
           source: sourceT.index,
           target: targetT.index,
           color: link_color,
@@ -147,11 +147,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         let sourceFn = nodes[i + 1];
         for (let k = 0; k < nodeFileName[i].length; k++) {
           let targetFn = nodes[nodeThreads.length + 1 + j];
-          //changeNodeSize
+          //TODO changeNodeSize
           j++;
           //LinkColour Filename
-          linksNodes.push({
-            source: sourceFn.index - 1,
+          nodesLinks.push({
+            source: sourceFn,
             target: targetFn.index - 1,
             color: '#000fff',
           });
@@ -163,42 +163,60 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     function forceSimulationThreads(_callback: (lNodes: any, lNodeLinks: any) => void) {
       let simulationThread = d3
         .forceSimulation(nodes.slice(0, nodeThreads.length + 1))
-        .force('link', d3.forceLink().links(linksNodes.slice(0, nodeThreads.length)).distance(75).strength(4))
-        .force('charge', d3.forceManyBody().strength(-10))
+        .force('link', d3.forceLink().links(nodesLinks.slice(0, nodeThreads.length)).distance(150).strength(4))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
         .stop();
       simulationThread.tick(500);
-      _callback(nodes.slice(0, nodeThreads.length + 1), linksNodes.slice(0, nodeThreads.length));
+      _callback(nodes.slice(0, nodeThreads.length + 1), nodesLinks.slice(0, nodeThreads.length));
     }
 
     //Threads and Filesystem
-    //.force('center',d3.forceCenter().x(nodes[1].x + nodes[1].vx).y(nodes[1].y + nodes[1].vy))
-    function forceSimulationFilename(_callback: (cbNodes: any, cbNodeLinks: any) => void) {
+    //.force('center',d3.forceCenter().x(nodes[1].x).y(nodes[1].y))
+    //.force('link', d3.forceLink().links(linksNodes.slice(nodeThreads.length)).distance(10).strength(4))
+    function forceSimulationFilename(
+      i: number,
+      indexFilename: number,
+      _callback: (cbNodes: any, cbNodeLinks: any) => void
+    ) {
+      //const lData = [nodes[i], ...nodes.slice(nodeThreads.length + 1 + indexFilename, nodes.length)];
+      const otherThreads = Array.from({ length: nodeThreads.length - 1 }, () => []);
+      const lData = [nodes[i], ...otherThreads].concat(
+        nodes.slice(nodeThreads.length + 1, nodeThreads.length + 1 + indexFilename)
+      );
+      const lLinks = nodesLinks.slice(nodeThreads.length, nodeThreads.length + indexFilename);
+      console.log('Data', lData, 'Links', lLinks);
+      //nodes[i].x, nodes[i].y
+      //.force('center', d3.forceCenter(200, 200))
       let simulationFilename = d3
-        .forceSimulation(nodes.slice(1))
-        .force('link', d3.forceLink().links(linksNodes.slice(nodeThreads.length)).distance(10).strength(4))
+        .forceSimulation(lData)
+
+        .force('link', d3.forceLink().links(lLinks).distance(50).strength(4))
+        .force('charge', d3.forceManyBody().strength(-10))
         .stop();
       simulationFilename.tick(500);
-      _callback(nodes.slice(1), linksNodes.slice(nodeThreads.length));
+      _callback(lData, lLinks);
     }
 
+    //rewrite while function?
     function drawForceGraph(lNodes: any, lNodeLinks: any) {
-      const margin = { left: 20, top: 20, right: 20, bottom: 20 };
-      const chartWidth = width - (margin.left + margin.right);
-      const chartHeight = height - (margin.top + margin.bottom);
-      let xBorder: [any, any] = d3.extent(nodes, function (d: any) {
-        return +d.x;
-      });
-      let yBorder: [any, any] = d3.extent(nodes, function (d: any) {
-        return +d.y;
-      });
-      const xScale = d3
-        .scaleLinear()
-        .domain([xBorder[0] - 50, xBorder[1] + 50])
-        .range([0, chartWidth]);
-      const yScale = d3
-        .scaleLinear()
-        .domain([yBorder[0] - 50, yBorder[1] + 50])
-        .range([chartHeight, 0]);
+      // const margin = { left: 20, top: 20, right: 20, bottom: 20 };
+      // const chartWidth = width - (margin.left + margin.right);
+      // const chartHeight = height - (margin.top + margin.bottom);
+      // let xBorder: [any, any] = d3.extent(nodes, function (d: any) {
+      //   return +d.x;
+      // });
+      // let yBorder: [any, any] = d3.extent(nodes, function (d: any) {
+      //   return +d.y;
+      // });
+      // const xScale = d3
+      //   .scaleLinear()
+      //   .domain([xBorder[0] - 50, xBorder[1] + 50])
+      //   .range([0, chartWidth]);
+      // const yScale = d3
+      //   .scaleLinear()
+      //   .domain([yBorder[0] - 50, yBorder[1] + 50])
+      //   .range([chartHeight, 0]);
       const svg = d3.select('#area');
       svg
         .selectAll('line')
@@ -206,16 +224,20 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .enter()
         .append('line')
         .attr('x1', function (d: any) {
-          return xScale(d.source.x);
+          //return xScale(d.source.x);
+          return d.source.x;
         })
         .attr('y1', function (d: any) {
-          return yScale(d.source.y);
+          //return yScale(d.source.y);
+          return d.source.y;
         })
         .attr('x2', function (d: any) {
-          return xScale(d.target.x);
+          //return xScale(d.target.x);
+          return d.target.x;
         })
         .attr('y2', function (d: any) {
-          return yScale(d.target.y);
+          //return yScale(d.target.y);
+          return d.target.y;
         })
         .attr('stroke', function (d: any) {
           return d.color;
@@ -227,10 +249,12 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .enter()
         .append('circle')
         .attr('cx', function (d: any) {
-          return xScale(d.x);
+          //return xScale(d.x);
+          return d.x;
         })
         .attr('cy', function (d: any) {
-          return yScale(d.y);
+          //return yScale(d.y);
+          return d.y;
         })
         .attr('r', function (d: any) {
           return d.r;
@@ -253,9 +277,13 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     function runSimulation() {
       addNodes(() => addLinks());
       forceSimulationThreads(drawForceGraph);
-      forceSimulationFilename(drawForceGraph);
-      console.log('nodes:', nodes[1], nodes.slice(5, 23));
-      console.log('links', linksNodes);
+      let fileNameIndex = 0;
+      for (let i = 0; i < 1; i++) {
+        fileNameIndex += nodeFileName[i].length;
+        console.log('FN I:', fileNameIndex, 'L', i);
+        forceSimulationFilename(i + 1, fileNameIndex, drawForceGraph);
+      }
+      console.log(nodesLinks);
       fixateNodes();
       sessionStorage.setItem('nodes', JSON.stringify(nodes));
     }

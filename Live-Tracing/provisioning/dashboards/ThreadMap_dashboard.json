@@ -219,7 +219,19 @@
     "from": "2023-02-22T10:00:00.000Z",
     "to": "2023-02-22T16:59:59.000Z"
   },
-  "timepicker": {},
+  "timepicker": {
+    "refresh_intervals": [
+      "0,5s",
+      "1s",
+      "2s",
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "30m"
+    ]
+  },
   "timezone": "",
   "title": "Thread Map & Drilldown",
   "uid": "Mu-IsxOVk",

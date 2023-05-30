@@ -70,7 +70,9 @@ Use panel plugins when you want to do things like visualize data returned by dat
    yarn lint:fix
    ```
 
-
+If theres the following Error while Updating
+"Cannot find type definition file for 'clean-css'.   The file is in the program because:     Entry point for implicit type library 'clean-css'"
+Remove node_modules and reinstall with yarn upgrade and yarn install
 
 ## Learn more
 

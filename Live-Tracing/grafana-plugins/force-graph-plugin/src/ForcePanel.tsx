@@ -23,6 +23,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       if (!(nodes[0].name === nodeProcess)) {
         nodes = [];
         sessionStorage.clear();
+        console.log('NODES', nodes, 'Links', nodesLinks, 'Storage', sessionStorage);
       }
     }
 
@@ -81,7 +82,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       let IndexFilenamePerThread = nodeFileName.length + 1; //helpNodes to check the filenames of each thread instead of all filenames
       for (let i = 0; i < nodeFileName.length; i++) {
         for (let j = 0; j < nodeFileName[i].length; j++) {
-          //Add Writtenbytes per filename as aditional query? => Also needed for Drilldown Filename then
+          //TODO Add writtenBytes per filename as aditional query? => Also needed for Drilldown Filename then
           //skip existing nodes
           if (
             !nodes
@@ -100,13 +101,18 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       _callback();
     }
 
-    //TODO Add actual written Bytes
-    //Add Colour to the Nodes aswell or only for links? Node Colours depending on wether node is Process/Thread/Filename => Friday!
-    function changeNodeSize(node: any, value: any) {
-      let maxNodeSize = 30;
-      let minNodeSize = 10;
-      let maxWrittenBytes = 10000; //TODO rel Wert?
-      node.writtenBytes += value; //TODO why sum?
+    function changeNodeSize(node: any) {
+      const maxNodeSize = 20;
+      const minNodeSize = 8;
+      let maxWrittenBytes = 0;
+      if (maxWrittenBytes === 0 || maxWrittenBytes < node.writtenBytes) {
+        let nodeBytes: any = [];
+        for (let i = 0; i < nodes.length; i++) {
+          nodeBytes[i] = nodes[i].writtenBytes;
+        }
+        maxWrittenBytes = Math.max(...nodeBytes);
+      }
+
       let nodeSize = node.writtenBytes / maxWrittenBytes;
       if (nodeSize >= 1) {
         node.r = maxNodeSize;
@@ -121,12 +127,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       nodesLinks.length = 0;
       //Assign Process
       let sourceT = nodes[0];
-      changeNodeSize(nodes[0], nodes[0].writtenBytes);
+      changeNodeSize(nodes[0]);
       //Assign Threads
       for (let i = 1; i < 1 + nodeThreads.length; i++) {
         let targetT = nodes[i];
-        changeNodeSize(nodes[targetT.index], nodes[i].writtenBytes);
-        //TODO Change/delete Link Colour | not needed anymore? Colour by Filesystem? => Add legend?
+        changeNodeSize(nodes[targetT.index]);
+        //TODO
+        //Add Colour to the Nodes aswell and for links
+        //Node Colours gives mix of coulours or read/blue for more read/write
         let link_color = '#003f5c';
         // if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
         //   link_color = '#ef5675';
@@ -147,9 +155,12 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         let sourceFn = nodes[i + 1];
         for (let k = 0; k < nodeFileName[i].length; k++) {
           let targetFn = nodes[nodeThreads.length + 1 + j];
-          //TODO changeNodeSize
+          //TODO: uncomment as soon as written bytes per filename in query is added:
+          //changeNodeSize(targetFn.index) // might need to add nodeThreads.length
           j++;
+          //TODO
           //LinkColour Filename
+          //Link colour depending on wether last action was read or write
           nodesLinks.push({
             source: sourceFn,
             target: targetFn.index - 1,
@@ -160,15 +171,20 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     //Process and Threads
+    //.force('center', d3.forceCenter(width / 2, height / 2)) 100, -30
     function forceSimulation(_callback: () => void) {
+      // let simulationProcess = d3.forceSimulation(nodes[0]).force('center', d3.forceCenter(0, 0)).stop();
+      // simulationProcess.tick(500);
+
+      //        .force('center', d3.forceCenter(nodes[0].x + nodes[0].vx, nodes[0].y + nodes[0].vy))
       let simulationThread = d3
         .forceSimulation(nodes.slice(0, nodeThreads.length + 1))
+        .force('charge', d3.forceManyBody().strength(-300))
         .force('link', d3.forceLink().links(nodesLinks.slice(0, nodeThreads.length)).distance(200).strength(4))
-        .force('charge', d3.forceManyBody().strength(-200))
         .stop();
       simulationThread.tick(500);
 
-      //TODO simply this
+      //TODO simplify
       let fileNameIndex = 0;
       for (let i = 0; i < nodeThreads.length; i++) {
         fileNameIndex += nodeFileName[i].length;
@@ -177,9 +193,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         const lLinks = nodesLinks.slice(nodeThreads.length, nodeThreads.length + fileNameIndex);
         let simulationFilename = d3
           .forceSimulation(lData)
-
-          .force('link', d3.forceLink().links(lLinks).distance(75).strength(4))
           .force('charge', d3.forceManyBody().strength(-30))
+          .force('link', d3.forceLink().links(lLinks).distance(75).strength(4))
           .stop();
         simulationFilename.tick(500);
       }
@@ -187,6 +202,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     //Add scaling for r?
+
     function drawForceGraph() {
       const margin = { left: 20, top: 20, right: 20, bottom: 20 };
       const chartWidth = width - (margin.left + margin.right);
@@ -250,6 +266,50 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .style('fill', '#888888');
     }
 
+    //TODO Add function to draw mouseover/data
+    function addMouseOver() {}
+
+    //function without scaling
+    // function drawForceGraph2() {
+    //   const svg = d3.select('#area');
+    //   svg
+    //     .selectAll('line')
+    //     .data(nodesLinks)
+    //     .enter()
+    //     .append('line')
+    //     .attr('x1', function (d: any) {
+    //       return d.source.x;
+    //     })
+    //     .attr('y1', function (d: any) {
+    //       return d.source.y;
+    //     })
+    //     .attr('x2', function (d: any) {
+    //       return d.target.x;
+    //     })
+    //     .attr('y2', function (d: any) {
+    //       return d.target.y;
+    //     })
+    //     .attr('stroke', function (d: any) {
+    //       return d.color;
+    //     })
+    //     .attr('stroke-width', 1.5);
+    //   svg
+    //     .selectAll('circle')
+    //     .data(nodes)
+    //     .enter()
+    //     .append('circle')
+    //     .attr('cx', function (d: any) {
+    //       return d.x;
+    //     })
+    //     .attr('cy', function (d: any) {
+    //       return d.y;
+    //     })
+    //     .attr('r', function (d: any) {
+    //       return d.r;
+    //     })
+    //     .style('fill', '#888888');
+    // }
+
     //Can be removed if session storage is used?
     function fixateNodes() {
       if (addingNodes === true) {
@@ -265,7 +325,9 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     function runSimulation() {
       addNodes(() => addLinks());
       forceSimulation(drawForceGraph);
+      addMouseOver();
       fixateNodes();
+      //Add Links to sS?
       sessionStorage.setItem('nodes', JSON.stringify(nodes));
     }
 
@@ -279,9 +341,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       runSimulation();
     }
 
-    console.log(nodes, nodesLinks);
     //No old Data for testing purposes | Remove for final tests!
-    sessionStorage.clear();
+    //sessionStorage.clear();
   }, [options, data, height, width]);
   return (
     <div className="App">

@@ -171,40 +171,33 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     //Process and Threads
-    //.force('center', d3.forceCenter(width / 2, height / 2)) 100, -30
     function forceSimulation(_callback: () => void) {
-      // let simulationProcess = d3.forceSimulation(nodes[0]).force('center', d3.forceCenter(0, 0)).stop();
-      // simulationProcess.tick(500);
-
-      //        .force('center', d3.forceCenter(nodes[0].x + nodes[0].vx, nodes[0].y + nodes[0].vy))
+      //Draw Threads and Process
       let simulationThread = d3
         .forceSimulation(nodes.slice(0, nodeThreads.length + 1))
-        .force('charge', d3.forceManyBody().strength(-300))
-        .force('link', d3.forceLink().links(nodesLinks.slice(0, nodeThreads.length)).distance(200).strength(4))
+        .force('charge', d3.forceManyBody().strength(-200))
+        .force('link', d3.forceLink().links(nodesLinks.slice(0, nodeThreads.length)).distance(100).strength(4))
         .stop();
       simulationThread.tick(500);
 
-      //TODO simplify
-      let fileNameIndex = 0;
-      for (let i = 0; i < nodeThreads.length; i++) {
-        fileNameIndex += nodeFileName[i].length;
-        const otherThreads = Array.from({ length: nodeThreads.length - 1 }, () => []);
-        const lData = [nodes[i], ...otherThreads].concat(nodes.slice(nodeThreads.length + 1));
-        const lLinks = nodesLinks.slice(nodeThreads.length, nodeThreads.length + fileNameIndex);
-        let simulationFilename = d3
-          .forceSimulation(lData)
-          .force('charge', d3.forceManyBody().strength(-30))
-          .force('link', d3.forceLink().links(lLinks).distance(75).strength(4))
-          .stop();
-        simulationFilename.tick(500);
-      }
+      //Draw Filenames
+      const otherThreads = Array.from({ length: nodeThreads.length - 1 }, () => []);
+      const lData = [nodes.slice(0, nodeThreads.length + 1), ...otherThreads].concat(
+        nodes.slice(nodeThreads.length + 1)
+      );
+      const lLinks = nodesLinks.slice(nodeThreads.length);
+      let simulationFilename = d3
+        .forceSimulation(lData)
+        .force('charge', d3.forceManyBody().strength(-40))
+        .force('link', d3.forceLink().links(lLinks).distance(50).strength(4))
+        .stop();
+      simulationFilename.tick(500);
+
       _callback();
     }
 
-    //Add scaling for r?
-
     function drawForceGraph() {
-      const margin = { left: 20, top: 20, right: 20, bottom: 20 };
+      const margin = { left: 20, top: 10, right: 20, bottom: 10 };
       const chartWidth = width - (margin.left + margin.right);
       const chartHeight = height - (margin.top + margin.bottom);
       let xBorder: [any, any] = d3.extent(nodes, function (d: any) {
@@ -215,11 +208,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       });
       const xScale = d3
         .scaleLinear()
-        .domain([xBorder[0] - 50, xBorder[1] + 50])
+        .domain([xBorder[0] - 30, xBorder[1] + 30])
         .range([0, chartWidth]);
       const yScale = d3
         .scaleLinear()
-        .domain([yBorder[0] - 50, yBorder[1] + 50])
+        .domain([yBorder[0] - 15, yBorder[1] + 15])
         .range([chartHeight, 0]);
       const svg = d3.select('#area');
       svg
@@ -229,19 +222,15 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .append('line')
         .attr('x1', function (d: any) {
           return xScale(d.source.x);
-          //return d.source.x;
         })
         .attr('y1', function (d: any) {
           return yScale(d.source.y);
-          //return d.source.y;
         })
         .attr('x2', function (d: any) {
           return xScale(d.target.x);
-          //return d.target.x;
         })
         .attr('y2', function (d: any) {
           return yScale(d.target.y);
-          //return d.target.y;
         })
         .attr('stroke', function (d: any) {
           return d.color;
@@ -254,11 +243,9 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .append('circle')
         .attr('cx', function (d: any) {
           return xScale(d.x);
-          //return d.x;
         })
         .attr('cy', function (d: any) {
           return yScale(d.y);
-          //return d.y;
         })
         .attr('r', function (d: any) {
           return d.r;
@@ -268,47 +255,6 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
     //TODO Add function to draw mouseover/data
     function addMouseOver() {}
-
-    //function without scaling
-    // function drawForceGraph2() {
-    //   const svg = d3.select('#area');
-    //   svg
-    //     .selectAll('line')
-    //     .data(nodesLinks)
-    //     .enter()
-    //     .append('line')
-    //     .attr('x1', function (d: any) {
-    //       return d.source.x;
-    //     })
-    //     .attr('y1', function (d: any) {
-    //       return d.source.y;
-    //     })
-    //     .attr('x2', function (d: any) {
-    //       return d.target.x;
-    //     })
-    //     .attr('y2', function (d: any) {
-    //       return d.target.y;
-    //     })
-    //     .attr('stroke', function (d: any) {
-    //       return d.color;
-    //     })
-    //     .attr('stroke-width', 1.5);
-    //   svg
-    //     .selectAll('circle')
-    //     .data(nodes)
-    //     .enter()
-    //     .append('circle')
-    //     .attr('cx', function (d: any) {
-    //       return d.x;
-    //     })
-    //     .attr('cy', function (d: any) {
-    //       return d.y;
-    //     })
-    //     .attr('r', function (d: any) {
-    //       return d.r;
-    //     })
-    //     .style('fill', '#888888');
-    // }
 
     //Can be removed if session storage is used?
     function fixateNodes() {
@@ -342,7 +288,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     //No old Data for testing purposes | Remove for final tests!
-    //sessionStorage.clear();
+    sessionStorage.clear();
   }, [options, data, height, width]);
   return (
     <div className="App">

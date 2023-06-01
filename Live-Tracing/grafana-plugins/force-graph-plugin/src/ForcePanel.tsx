@@ -28,6 +28,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     function addNodes(_callback: any) {
+      //TODO Node Colours gives mix of coulours or read/blue for more read/write
       let nodeNumber = nodes.length;
       //Find Index of Process
       for (let i = 0; i < data.series.length / 2; i++) {
@@ -134,19 +135,19 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         changeNodeSize(nodes[targetT.index]);
         //TODO
         //Add Colour to the Nodes aswell and for links
-        //Node Colours gives mix of coulours or read/blue for more read/write
-        let link_color = '#003f5c';
+        //Link colour depending on wether last action was read or write
+        let link_colour = '#003f5c';
         // if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
-        //   link_color = '#ef5675';
+        //   link_colour = '#ef5675';
         // } else if (data.series[i].fields[1].labels?.functionname === 'write') {
-        //   link_color = '#ffa600';
+        //   link_colour = '#ffa600';
         // } else if (data.series[i].fields[1].labels?.functionname === 'writev') {
-        //   link_color = '#ff0000';
+        //   link_colour = '#ff0000';
         // }
         nodesLinks.push({
           source: sourceT.index,
           target: targetT.index,
-          color: link_color,
+          colour: link_colour,
         });
       }
       //Assign Filesystem
@@ -164,7 +165,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           nodesLinks.push({
             source: sourceFn,
             target: targetFn.index - 1,
-            color: '#000fff',
+            colour: '#000fff',
           });
         }
       }
@@ -215,6 +216,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .domain([yBorder[0] - 15, yBorder[1] + 15])
         .range([chartHeight, 0]);
       const svg = d3.select('#area');
+      const backgroundTooltip = d3
+        .select('#area')
+        .append('rect')
+        .attr('class', 'tooltip-background')
+        .style('opacity', 0);
+      const textTooltip = d3.select('#area').append('text').attr('class', 'tooltip-text').style('opacity', 0);
+
+      //Draw Links
       svg
         .selectAll('line')
         .data(nodesLinks)
@@ -233,9 +242,10 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           return yScale(d.target.y);
         })
         .attr('stroke', function (d: any) {
-          return d.color;
+          return d.colour;
         })
         .attr('stroke-width', 1.5);
+      //Draw Nodes
       svg
         .selectAll('circle')
         .data(nodes)
@@ -250,11 +260,36 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .attr('r', function (d: any) {
           return d.r;
         })
-        .style('fill', '#888888');
+        .style('fill', '#888888')
+        .on('mouseover', function (d) {
+          d3.select(this).transition().duration(50).attr('opacity', '.85');
+          backgroundTooltip.transition().duration(50).style('opacity', 1);
+          textTooltip.transition().duration(50).style('opacity', 1);
+          backgroundTooltip
+            .attr('x', xScale(d.x) + 15)
+            .attr('y', yScale(d.y) - 40)
+            .attr('width', d.name.length * 10)
+            .attr('height', '25')
+            .attr('rx', '3')
+            .attr('fill', '#888888'); //replace with d.colour when colour is implemented
+          //TODO Add textwrap (with tspan?)
+          textTooltip
+            .attr('x', xScale(d.x) + 20)
+            .attr('y', yScale(d.y) - 20)
+            .attr('font-family', 'Arial')
+            .attr('font-size', '15')
+            .attr('fill', 'white')
+            .html(d.name);
+        })
+        .on('mouseout', function (d) {
+          d3.select(this).transition().duration(50).attr('opacity', '1');
+          backgroundTooltip.transition().duration(50).style('opacity', 0);
+          textTooltip.transition().duration(50).style('opacity', 0);
+        });
+      //Put Tooltip in the front
+      backgroundTooltip.raise();
+      textTooltip.raise();
     }
-
-    //TODO Add function to draw mouseover/data
-    function addMouseOver() {}
 
     //Can be removed if session storage is used?
     function fixateNodes() {
@@ -271,7 +306,6 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     function runSimulation() {
       addNodes(() => addLinks());
       forceSimulation(drawForceGraph);
-      addMouseOver();
       fixateNodes();
       //Add Links to sS?
       sessionStorage.setItem('nodes', JSON.stringify(nodes));

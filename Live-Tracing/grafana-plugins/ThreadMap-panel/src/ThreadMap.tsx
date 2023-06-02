@@ -3,20 +3,22 @@ import { PanelProps } from '@grafana/data';
 import { PanelOptions } from 'options';
 import _ from 'lodash';
 import { CustomScrollbar } from '@grafana/ui'; //npnmistall @grafana/ui
+import * as d3 from 'd3';
 
 interface ThreadMapPanelProps extends PanelProps<PanelOptions> {}
 
 export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width, height}) => {
-  var ProcessIDArrCss = new Array   //Css Daten für Grafana
-  var ProcessColour = new Array     //Farbe Auslastung Prozesse
-  var ThreadIDArrCss = new Array    //Css Daten für Grafana
-  var ThreadColour = new Array      //Farbe der Auslastung Threads
-  var Colours = new Array           //Anzahl möglicher Farben
+  var ProcessIDArrCss = new Array   //CSS Process
+  var ProcessColour = new Array     
+  var ThreadIDArrCss = new Array    //Css Threads
+  var ThreadColour = new Array      
+  var Colours = new Array           //Possible Colour Amount
   var FilesystemValue = new Array
-  var ThreadBufferCss = new Array
-  var DataLength = 0                //Datenlänge libiotrace ohne filesystem
+  var FilesystemCss = new Array
+  var DataLength = 0                //Datalength libiotrace w/o filesystem
+  var TooltipData : any = []
 
-  //Anzahl echter Datenpunkte
+  //Amount Threads (written)
   if(DataLength == 0) {
     for (let i = 0; i < data.series.length; i++) { 
       if ((data.series[i].fields[1] !== undefined) && (data.series[i].refId === "Written Bytes")) {
@@ -25,14 +27,14 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     }
   }
 
-  //Färbung der Anhand deren Auslastung
+  //Coloring based on amonut written bytes
   Colours = ColourSteps(DataLength)
   const ColAssig = ColourAssignment(Colours, DataLength)
   ThreadColour = ColAssig[0]?.[0]
   ProcessColour = ColAssig[1]
   FilesystemValue = FilesystemAssignment()
 
-  //Generieren der Css-Daten für alle Prozesse & Threads
+  //Generate CSS-data for process & threads
   let j = 0, xShift = 0
   for (let i = 0;i < DataLength; i++) {
     if(ProcessColour[i] !== undefined) 
@@ -43,7 +45,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     let yPlacement = 0, tShift = 0
     for (let bufferCnt = 0; bufferCnt < FilesystemValue[i].length; bufferCnt++) {
       yPlacement = bufferCnt - (5*tShift)
-      ThreadBufferCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, FilesystemValue[i][bufferCnt])
+      FilesystemCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, FilesystemValue[i][bufferCnt])
       j++
       if ((yPlacement > 3) && (bufferCnt+1 < data.series[i].fields[1].values.length) ) {
         xShift++
@@ -51,6 +53,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       }
     }
   }
+
+  //Call Tooltip
+  drawTooltip()
 
   //Assign min/max values to default Options
   let minVal: number, maxVal: number
@@ -64,7 +69,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
   }
   let minValLength = (minVal.toString().length) * 11
 
-  //Funktionen
+  //functions
   function ColourSteps(lDdatalength: any)
   {
     let Colour = new Array
@@ -72,7 +77,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     Colour[0] = '#00ff00'
 
     for (let i = 1; i < (lDdatalength); i++) {
-      if(i < (lDdatalength/2)) { //Grün #00FF00 bis Gelb #FFFF00
+      if(i < (lDdatalength/2)) { //green #00FF00 to yellow #FFFF00
         if ((i*step) < 16) {
           Colour[i] = '#0' + (i*step).toString(16).substring(0,1) + 'ff00'
         }
@@ -80,7 +85,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         Colour[i] = '#' + (i*step).toString(16).substring(0,2) + 'ff00'
         }
       } 
-      else { //Gelb #FFFF00 bis Rot #FF0000 
+      else { //yellow #FFFF00 to red #FF0000 
         if (((i-lDdatalength/2)*step) >= 239) {
           Colour[i] = '#ff0' + (255-((i-lDdatalength/2)*step)).toString(16).substring(0,1) + '00'
         }
@@ -168,7 +173,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       }
       return[ReturnColour, min, max]
     }
-    //MinMax hier nur für Threads zurückgegeben
+    //Return Min/Max only for Threads
     return[ReturnColourThreads, ReturnColourProcess[0]]
   }
 
@@ -203,64 +208,90 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     return(lOutputFs)
   }
 
+  function drawTooltip() {
+    const svg = d3.select('#area').select('g');
+    const backgroundTooltip = d3
+        .select('#area')
+        .append('rect')
+        .attr('class', 'tooltip-background')
+        .style('opacity', 0);
+      const textTooltip = d3.select('#area').append('text').attr('class', 'tooltip-text').style('opacity', 0);
+    //Process
+    svg
+    .selectAll('circle')
+      .data(TooltipData)
+      .enter()
+      .on('mouseover', function (d) {
+        d3.select(this).transition().duration(50).attr('opacity', '.85');
+        backgroundTooltip.transition().duration(50).style('opacity', 1);
+        textTooltip.transition().duration(50).style('opacity', 1);
+        backgroundTooltip
+          .attr('x', d.x + 15)
+          .attr('y', d.y - 40)
+          .attr('width', d.name.length * 10)
+          .attr('height', '25')
+          .attr('rx', '3')
+          .attr('fill', '#888888');
+        textTooltip
+          .attr('x', d.x + 20)
+          .attr('y', d.y - 20)
+          .attr('font-family', 'Arial')
+          .attr('font-size', '15')
+          .attr('fill', 'white')
+          .html(d.name);
+      })
+      .on('mouseout', function (d) {
+        d3.select(this).transition().duration(50).attr('opacity', '1');
+        backgroundTooltip.transition().duration(50).style('opacity', 0);
+        textTooltip.transition().duration(50).style('opacity', 0);
+      });
+
+  }
+
   function BuildPanelProcess(i: number, lxShift: number,Colour: any)
   {
     return (
-    //horizontal
-    <g>
-    <rect x={(5+160*(i+lxShift))} y={(50)} width={135} height={50} rx='10' fill={Colour}/>
-    <text x={(10+160*(i+lxShift))} y= {(90)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
-    <rect x={(160*(i+lxShift)-3)} y={(0)} width={3} height={height-150} fill='black'/>
+    <g className = "Process">
+    <circle cx={(15+20*(i+lxShift))} cy={60} r='8' fill={Colour}/>
+    {/* <text x={(10+160*(i+lxShift))} y= {(90)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text> */}
+    <rect x={(20*(i+lxShift)+3)} y={(40)} width={2} height={height-200} fill='#353535'/>
     </g>
-
-    //vertikal
-    // <g>
-    // <rect x={(10)} y={(55*i)} width={135} height={50} rx='10' fill = {Colour} />
-    // <text x={(15)} y= {(40+55*i)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
-    // </g>
     )
   }
 
   function BuildPanelThread(i: number, lxShift: number,Colour: any)
   {
     return(
-    //horizontal
-    <g>
-    <rect x={(5+160*(i+lxShift))} y={(170)} width={135} height={50} rx='10' fill={Colour}/>
-    <text x={(10+160*(i+lxShift))} y= {(210)} fontFamily='Arial' fontSize='20' fill='black'>{data.series[i].fields[1].labels?.thread}</text>
+    <g className = "Thread">
+    <circle cx={(15+20*(i+lxShift))} cy={140}  r='6' fill={Colour}/>
+    {/* <text x={(10+160*(i+lxShift))} y= {210} fontFamily='Arial' fontSize='20' fill='black'>{data.series[i].fields[1].labels?.thread}</text> */}
     </g>
-
-    //vertikal
-    // <g>
-    // <rect x={(195)} y={(55*i)} width={135} height={50} rx='10' fill={Colour}/>
-    // <text x={(200)} y= {(40+55*i)} fontFamily='Arial' fontSize='30' fill='black'>{data.series[i].fields[1].labels?.processid}</text>
-    // </g>
     )
   }
 
   function BuildPanelThreadBuffer_FileSystem(i: number, yPlacement: number, lxShift : number, lFilesystemValue: any)
   {
     return(
-      //horizontal
-      <g>
-        <text x={(20+160*(i+lxShift))} y= {(311+30*yPlacement)} fontFamily='Arial' fontSize='14' fill='white'>{lFilesystemValue}</text>
+      <g className = "Filesystem">
+        <text x={(20+40*(i+lxShift))} y= {(311+30*yPlacement)} fontFamily='Arial' fontSize='14' fill='white'>{lFilesystemValue}</text>
       </g>
     )
   }
 
+  //Put text into onmousehover?
   return(
     <div>
       <CustomScrollbar>
-        <svg width={(DataLength+xShift)*160} height={height-100}>
-          <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>ProzessID:</text>
-          <text x={(5)} y= {(150)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>ThreadID:</text>
-          <text x={(5)} y= {(270)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Filesystem:</text>
+        <svg id="area" width={(DataLength+xShift)*20+20} height={height-100}>
+          <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Prozess:</text>
+          <text x={(5)} y= {(110)} fontFamily='Arial' fontSize='18' fill='White' fontWeight='bold'>Threads:</text>
+          {/* <text x={(5)} y= {(270)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Filesystem:</text> */}
           {ProcessIDArrCss}
           {ThreadIDArrCss}
-          {ThreadBufferCss}
+          {/* {FilesystemCss} */}
         </svg>
       </CustomScrollbar>
-      <svg width={(DataLength+xShift)*150}>
+      <svg width={(DataLength+xShift)*40}>
         <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written bytes Threads: (Min / Max)</text>
         <rect x={(5)} y={(50)} width={20} height={20} rx='10' fill='#00FF00'/>
         <text x={(30)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{minVal}</text>

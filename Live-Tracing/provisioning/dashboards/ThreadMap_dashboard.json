@@ -28,24 +28,11 @@
   "liveNow": false,
   "panels": [
     {
-      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
-      },
-      "id": 10,
-      "panels": [],
-      "title": "Anwahl",
-      "type": "row"
-    },
-    {
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 1
       },
       "id": 6,
       "title": "ThreadMap & Drilldown",
@@ -58,10 +45,10 @@
       },
       "description": "Anzeige von Prozessen und deren Threads\n(inkl. Auslastung)",
       "gridPos": {
-        "h": 16,
+        "h": 10,
         "w": 24,
         "x": 0,
-        "y": 2
+        "y": 1
       },
       "id": 8,
       "targets": [
@@ -83,7 +70,7 @@
           "refId": "Filesystem"
         }
       ],
-      "title": "ThreadMap Panel",
+      "title": "ThreadMap",
       "type": "hse-testpluginsr-panel"
     },
     {
@@ -144,7 +131,7 @@
         "h": 11,
         "w": 12,
         "x": 0,
-        "y": 18
+        "y": 11
       },
       "id": 2,
       "options": {
@@ -181,7 +168,7 @@
         "h": 11,
         "w": 12,
         "x": 12,
-        "y": 15
+        "y": 11
       },
       "id": 12,
       "targets": [

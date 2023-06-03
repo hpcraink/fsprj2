@@ -9,15 +9,13 @@ interface ThreadMapPanelProps extends PanelProps<PanelOptions> {}
 
 export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width, height}) => {
   useEffect(() => {
-    //var ProcessIDArrCss = new Array   //CSS Process
     var ProcessColour = new Array     
-    //var ThreadIDArrCss = new Array    //Css Threads
     var ThreadColour = new Array      
     var Colours = new Array           //Possible Colour Amount
-    //var FilesystemValue = new Array
-    //var FilesystemCss = new Array
+    var FilesystemValue = new Array
     var DataLength = 0                //Datalength libiotrace w/o filesystem
-    var MapData : any = []
+    var MapData: any = []
+    var SepparatorData: any = []
 
     //Amount Threads (written)
     if(DataLength == 0) {
@@ -33,35 +31,19 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     const ColAssig = ColourAssignment(Colours, DataLength)
     ThreadColour = ColAssig[0]?.[0]
     ProcessColour = ColAssig[1]
-    //FilesystemValue = FilesystemAssignment()
+    FilesystemValue = FilesystemAssignment()
 
-    //Generate CSS-data for process & threads
-    //let j = 0
-    let xShift = 0, k = 0
+    //Generate Data for process, threads and filesystem
+    let k = 0
     for (let i = 0;i < DataLength; i++) {
       if(ProcessColour[i] !== undefined) 
       {
-        BuildPanelProcess(i, k, xShift, ProcessColour[i])
-        k++
-        
+        BuildPanelProcess(i, k, ProcessColour[i])
+        k++        
       }
-      BuildPanelThread(i, k, xShift, ThreadColour[i])
+      BuildPanelThread(i, k, ThreadColour[i])
       k++
-      //Filesystem
-      // let yPlacement = 0, tShift = 0
-      // for (let bufferCnt = 0; bufferCnt < FilesystemValue[i].length; bufferCnt++) {
-      //   yPlacement = bufferCnt - (5*tShift)
-      //   FilesystemCss[j] = BuildPanelThreadBuffer_FileSystem(i, yPlacement, xShift, FilesystemValue[i][bufferCnt])
-      //   j++
-      //   if ((yPlacement > 3) && (bufferCnt+1 < data.series[i].fields[1].values.length) ) {
-      //     xShift++
-      //     tShift++
-      //   }
-      // }
     }
-
-    //Call Tooltip
-    drawThreadMap()
 
     //Assign min/max values to default Options
     let minVal: number, maxVal: number
@@ -74,7 +56,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       maxVal = options.ThreadMapColor.max
     }
     let minValLength = (minVal.toString().length) * 11
-console.log(minVal,maxVal,minValLength)
+
+    drawThreadMap()
+
     //functions
     function ColourSteps(lDdatalength: any)
     {
@@ -183,51 +167,124 @@ console.log(minVal,maxVal,minValLength)
       return[ReturnColourThreads, ReturnColourProcess[0]]
     }
 
-    //function FilesystemAssignment() {
-      // //Transfer traced_filename to local var
-      // var lTracedFilename = new Array
-      // let lOutputFs: any[][] = [[]];
-      // for (let i = 0; i < data.series.length-DataLength; i++) {
-      //   lTracedFilename[i] = data.series[i+DataLength].fields[1].values
-      // }
+    function FilesystemAssignment() {
+      //Transfer traced_filename to local var
+      var lTracedFilename = new Array
+      let lOutputFs: any[][] = [[]];
+      for (let i = 0; i < data.series.length-DataLength; i++) {
+        lTracedFilename[i] = data.series[i+DataLength].fields[1].values
+      }
       
       //convert filename to filesystem
-    //   for (let i = 0; i < lTracedFilename.length; i++) {
-    //     const lFileSystem: string[] = [];
-    //     for (let j = 0; j < lTracedFilename[i].buffer.length; j++) {
-    //       const pathSegments = lTracedFilename[i].buffer[j].split("/");
-    //       if (pathSegments[1] !== undefined) {
-    //         if(!lFileSystem.includes(pathSegments[1])) {
-    //           lFileSystem.push(pathSegments[1])
-    //         }
-    //       }
-    //       else {
-    //         if (!lFileSystem.includes(pathSegments[0])) {
-    //         lFileSystem.push(pathSegments[0])
-    //         }
-    //       }
-    //     }
-    //     lOutputFs.push(lFileSystem)
-    //   }
-    //   //delete first Element
-    //   lOutputFs.shift();
-    //   return(lOutputFs)
-    // }
+      for (let i = 0; i < lTracedFilename.length; i++) {
+        const lFileSystem: string[] = [];
+        for (let j = 0; j < lTracedFilename[i].buffer.length; j++) {
+          const pathSegments = lTracedFilename[i].buffer[j].split("/");
+          if (pathSegments[1] !== undefined) {
+            if(!lFileSystem.includes(pathSegments[1])) {
+              lFileSystem.push(pathSegments[1])
+            }
+          }
+          else {
+            if (!lFileSystem.includes(pathSegments[0])) {
+            lFileSystem.push(pathSegments[0])
+            }
+          }
+        }
+        lOutputFs.push(lFileSystem)
+      }
+      //delete first Element
+      lOutputFs.shift();
+      return(lOutputFs)
+    }
 
+    function BuildPanelProcess(i: number, k: number, Colour: any) {
+      //Affiliated Threads
+      let lThreads: any[] = []
+      let j = i
+      while(data.series[i].fields[1].labels?.processid === data.series[j].fields[1].labels?.processid) {
+          lThreads.push(data.series[j].fields[1].labels?.thread)
+          j++
+      }
+      //Add Process
+      MapData.push(
+        {
+          index: k,
+          prefix: 'ProzessID: ',
+          name: data.series[i].fields[1].labels?.processid,
+          affiliatedPrefix: 'Threads:',
+          affiliated: lThreads,
+          cx:(15+20*i),
+          cy: 60,
+          r: 8,
+          colour: Colour,
+          class: "Process"
+        }
+      )
+      //Add Separator
+      SepparatorData.push(
+        {
+          x: (20*i+3),
+          y: 40,
+          width: 2,
+          height: height - 175,
+          colour: '#353535'
+        }
+      )
+    }
+
+    function BuildPanelThread(i: number, k: number, Colour: any) {
+      MapData.push(
+        {
+          index: k,
+          prefix: 'ThreadID: ',
+          name: data.series[i].fields[1].labels?.thread,
+          affiliatedPrefix: 'Filesystems:',
+          affiliated: FilesystemValue[i],
+          cx:(15+20*i),
+          cy: 140,
+          r: 6,
+          colour: Colour,
+          class: "Thread"
+        }
+      )
+    }
+    
     function drawThreadMap() {
-      const svg = d3.select('#ThreadMapMain');
+      const svgTM = d3.select('#ThreadMapMain');
       const backgroundTooltip = d3
           .select('#ThreadMapMain')
           .append('rect')
-          .attr('class', 'tooltip-background')
+          .attr('class', 'tooltip-background-tm')
           .style('opacity', 0);
-      const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text').style('opacity', 0);
+      const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text-tm').style('opacity', 0);
       const ProcessIDForceGraph = d3.select('#ThreadMapMain').append('text').attr('class', 'Forcegraph').attr('ProcessID', 'select').style('opacity', 0);
       //Adjust width
       d3.select('#ThreadMapMain')
-      .attr('width', (DataLength+xShift)*20+20);
-      //Draw
-      svg
+      .attr('width', DataLength*20+20);
+      //Draw Separator
+      svgTM
+      .selectAll('rect')
+        .data(SepparatorData)
+        .enter()
+        .append('rect')
+        .attr('x', function (d: any) {
+          return d.x;
+        })
+        .attr('y', function (d: any) {
+          return d.y;
+        })
+        .attr('width', function (d: any) {
+          return d.width;
+        })
+        .attr('height', function (d: any) {
+          return d.height;
+        })
+        .style('fill', function (d: any) {
+          return d.colour;
+        })
+      //Draw ThreadMap
+      svgTM
       .selectAll('circle')
         .data(MapData)
         .enter()
@@ -254,25 +311,78 @@ console.log(minVal,maxVal,minValLength)
           d3.select(this).transition().duration(50).attr('opacity', '.85');
           backgroundTooltip.transition().duration(50).style('opacity', 1);
           textTooltip.transition().duration(50).style('opacity', 1);
+          //Position of Tooltip, default topright
+          let xtspan = 0
+          if((d.cx + 20 +(d.name.length+ d.prefix.length) * 8) <= (DataLength*20+20) && (d.cy - 40) >= 0 ) {
+            backgroundTooltip
+              .attr('x', d.cx + 15)
+              .attr('y', d.cy - 40 )
+            textTooltip
+              .attr('x', d.cx + 20)
+              .attr('y', d.cy - 20)           
+            //move Tooltip up
+            if((d.cy -40 + (d.affiliated.length+2)* 20) + 4 >= (height-100)) {
+              backgroundTooltip
+              .attr('y', d.cy - 40 - ((d.cy -40 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+              textTooltip
+                .attr('y', d.cy - 20 - ((d.cy -40 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+            }
+            xtspan = d.cx + 20
+          }
+          //Tooltip bottomleft
+          else {
+            backgroundTooltip
+              .attr('x', d.cx - 15 - (d.name.length+ d.prefix.length) * 8)
+              .attr('y', d.cy + 10)
+            textTooltip
+              .attr('x', d.cx - 12 - (d.name.length+ d.prefix.length) * 8)
+              .attr('y', d.cy + 30)
+            //move Tooltip up
+            if((d.cy + 10 + (d.affiliated.length+2)* 20) + 4 >= (height-100)) {
+              backgroundTooltip
+              .attr('y', d.cy  + 10 - ((d.cy + 10 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+              textTooltip
+                .attr('y', d.cy + 30 - ((d.cy + 10 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+            }
+            xtspan = d.cx - 12 - (d.name.length+ d.prefix.length) * 8
+          }
           backgroundTooltip
-            .attr('x', d.cx + 15)
-            .attr('y', d.cy - 40)
-            .attr('width', d.name.length * 10)
-            .attr('height', '25')
-            .attr('rx', '3')
-            .attr('fill', d.colour);
+            .attr('width', (d.name.length+ d.prefix.length) * 8 + 3)
+            .attr('height', (d.affiliated.length+2)* 20 + 4)
+            .attr('rx', 3)
+            .attr('fill', '#535353'); //circle colour or neutral? d.colour
           textTooltip
-            .attr('x', d.cx + 20)
-            .attr('y', d.cy - 20)
             .attr('font-family', 'Arial')
-            .attr('font-size', '15')
-            .attr('fill', 'black')
-            .html(d.name);
+            .attr('font-size', 15)
+            .attr('fill', 'white')
+            .append('tspan')
+              .text(d.prefix + d.name)
+              .style('font-weight', 'bold')
+            .append('tspan')
+              .text(d.affiliatedPrefix)
+              .style('font-weight', 'normal')
+              .attr('x', xtspan)
+              .attr('dy', '1.4em')
+          for (let i = 0; i < d.affiliated.length; i++) {
+            textTooltip
+              .append('tspan')
+              .text(d.affiliated[i])
+              .attr('x', xtspan)
+              .attr('dy', '1.2em');              
+          }
+          //Put Tooltip in the front
+          backgroundTooltip.raise();
+          textTooltip.raise();
         })
         .on('mouseout', function (d) {
           d3.select(this).transition().duration(50).attr('opacity', '1');
           backgroundTooltip.transition().duration(50).style('opacity', 0);
           textTooltip.transition().duration(50).style('opacity', 0);
+          //remove old hover
+          textTooltip.selectAll('tspan').remove();
+          //Put Tooltip in the back
+          backgroundTooltip.lower();
+          textTooltip.lower();
         })
         .on('click', function(d) {
           if(d.class === "Process") {
@@ -280,64 +390,55 @@ console.log(minVal,maxVal,minValLength)
           .attr('ProcessID', d.name)
           }
         });
-        //Put Tooltip in the front
-        backgroundTooltip.raise();
-        textTooltip.raise();
+        //Style MinMax Display
+        const svgMinMax = d3.select('#ThreadMapMinMax')
+        const drawminVal = d3.select('#ThreadMapMinMax').append('text').attr('class', 'minValue')
+        const drawminValColour = d3.select('#ThreadMapMinMax').append('circle').attr('class', 'minValue')
+        const drawmaxVal = d3.select('#ThreadMapMinMax').append('text').attr('class', 'maxValue')
+        const drawmaxValColour = d3.select('#ThreadMapMinMax').append('circle').attr('class', 'maxValue')
+        svgMinMax
+          .attr('width', DataLength*40)
+        drawminVal
+          .attr('x', 30)
+          .attr('y', 67)
+          .attr('font-family','Arial')
+          .attr('font-size', 20)
+          .attr('fill', 'White')
+          .attr('font-weight', 'bold')
+          .html(minVal.toString())
+        drawminValColour
+          .attr('cx', 15)
+          .attr('cy', 60)
+          .attr('r', 10)
+          .style('fill', '#00FF00')
+        drawmaxVal
+          .attr('x', 84 + minValLength)
+          .attr('y', 67)
+          .attr('font-family','Arial')
+          .attr('font-size', 20)
+          .attr('fill', 'White')
+          .attr('font-weight', 'bold')
+          .html(maxVal.toString())
+        drawmaxValColour
+          .attr('cx', 69 + minValLength)
+          .attr('cy', 60)
+          .attr('r', 10)
+          .style('fill', '#FF0000')
     }
-
-    function BuildPanelProcess(i: number, k: number, lxShift: number,Colour: any) {
-      MapData.push(
-        {
-          index: k,
-          name: data.series[i].fields[1].labels?.processid,
-          cx:(15+20*(i+lxShift)),
-          cy: 60,
-          r: 8,
-          colour: Colour,
-          class: "Process"
-        }
-      )
-    }
-
-    function BuildPanelThread(i: number, k: number, lxShift: number,Colour: any) {
-      MapData.push(
-        {
-          index: k,
-          name: data.series[i].fields[1].labels?.thread,
-          cx:(15+20*(i+lxShift)),
-          cy: 140,
-          r: 6,
-          colour: Colour,
-          class: "Thread"
-        }
-      )
-    }
-
-    // function BuildPanelThreadBuffer_FileSystem(i: number, yPlacement: number, lxShift : number, lFilesystemValue: any)
-    // {
-    //   return(
-    //     <g className = "Filesystem">
-    //       <text x={(20+40*(i+lxShift))} y= {(311+30*yPlacement)} fontFamily='Arial' fontSize='14' fill='white'>{lFilesystemValue}</text>
-    //     </g>
-    //   )
-    // }
+    
   }, [options, data, height, width]);
 
   return(
     <div>
       <CustomScrollbar>
         <svg id="ThreadMapMain" height={height-100}>
-          <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Prozess:</text>
+          <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Process:</text>
           <text x={(5)} y= {(110)} fontFamily='Arial' fontSize='18' fill='White' fontWeight='bold'>Threads:</text>
         </svg>
       </CustomScrollbar>
-      {/* <svg id="ThreadMapMinMax" width={(DataLength+xShift)*40}>
-        <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written bytes Threads: (Min / Max)</text>
-        <rect x={(5)} y={(50)} width={20} height={20} rx='10' fill='#00FF00'/>
-        <text x={(30)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{minVal}</text>
-        <rect x={(59 + minValLength)} y={(50)} width={20} height={20} rx='10' fill='#FF0000'/>         
-        <text x={(84 + minValLength)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{maxVal}</text>
-      </svg> */}
+      <svg id="ThreadMapMinMax">
+        <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written bytes threads: (min / max)</text>
+      </svg>
       </div>
   )
 }

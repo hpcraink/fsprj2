@@ -22,7 +22,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       d3.select('#ThreadMapMain').select('text[class="Forcegraph"').attr('ProcessID') === 'select'
     ) {
       d3.select('#area').selectAll('*').remove();
-      d3.select('p').text('Select Process in ThreadMap and refresh dashboard');
+      d3.select('p').text('Select process in ThreadMap and refresh dashboard');
       return;
     } else {
       //Get Process from ThreadMap
@@ -232,9 +232,9 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       const backgroundTooltip = d3
         .select('#area')
         .append('rect')
-        .attr('class', 'tooltip-background')
+        .attr('class', 'tooltip-background-fg')
         .style('opacity', 0);
-      const textTooltip = d3.select('#area').append('text').attr('class', 'tooltip-text').style('opacity', 0);
+      const textTooltip = d3.select('#area').append('text').attr('class', 'tooltip-text-fg').style('opacity', 0);
 
       //Draw Links
       svg
@@ -281,7 +281,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           backgroundTooltip
             .attr('x', xScale(d.x) + 15)
             .attr('y', yScale(d.y) - 40)
-            .attr('width', d.name.length * 10)
+            .attr('width', d.name.length * 8)
             .attr('height', '25')
             .attr('rx', '3')
             .attr('fill', '#888888'); //replace with d.colour when colour is implemented

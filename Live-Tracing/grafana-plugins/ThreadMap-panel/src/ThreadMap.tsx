@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PanelProps } from '@grafana/data';
 import { PanelOptions } from 'options';
 import _ from 'lodash';
@@ -8,7 +8,7 @@ import * as d3 from 'd3';
 interface ThreadMapPanelProps extends PanelProps<PanelOptions> {}
 
 export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width, height}) => {
-  //useEffect(() => {
+  useEffect(() => {
     //var ProcessIDArrCss = new Array   //CSS Process
     var ProcessColour = new Array     
     //var ThreadIDArrCss = new Array    //Css Threads
@@ -41,11 +41,11 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     for (let i = 0;i < DataLength; i++) {
       if(ProcessColour[i] !== undefined) 
       {
-        BuildPanel(i, k, xShift, ProcessColour[i], 8, 60)
+        BuildPanelProcess(i, k, xShift, ProcessColour[i])
         k++
         
       }
-      BuildPanel(i, k, xShift, ThreadColour[i], 6, 140)
+      BuildPanelThread(i, k, xShift, ThreadColour[i])
       k++
       //Filesystem
       // let yPlacement = 0, tShift = 0
@@ -61,7 +61,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     }
 
     //Call Tooltip
-    drawTooltip()
+    drawThreadMap()
 
     //Assign min/max values to default Options
     let minVal: number, maxVal: number
@@ -74,7 +74,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       maxVal = options.ThreadMapColor.max
     }
     let minValLength = (minVal.toString().length) * 11
-
+console.log(minVal,maxVal,minValLength)
     //functions
     function ColourSteps(lDdatalength: any)
     {
@@ -214,14 +214,18 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     //   return(lOutputFs)
     // }
 
-    function drawTooltip() {
+    function drawThreadMap() {
       const svg = d3.select('#ThreadMapMain');
       const backgroundTooltip = d3
           .select('#ThreadMapMain')
           .append('rect')
           .attr('class', 'tooltip-background')
           .style('opacity', 0);
-        const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text').style('opacity', 0);
+      const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text').style('opacity', 0);
+      const ProcessIDForceGraph = d3.select('#ThreadMapMain').append('text').attr('class', 'Forcegraph').attr('ProcessID', 'select').style('opacity', 0);
+      //Adjust width
+      d3.select('#ThreadMapMain')
+      .attr('width', (DataLength+xShift)*20+20);
       //Draw
       svg
       .selectAll('circle')
@@ -236,6 +240,12 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         })
         .attr('r', function (d: any) {
           return d.r;
+        })
+        .attr('class', function (d: any) {
+          return d.class;
+        })
+        .attr('name', function (d: any) {
+          return d.name;
         })
         .style('fill', function (d: any) {
           return d.colour;
@@ -263,22 +273,42 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           d3.select(this).transition().duration(50).attr('opacity', '1');
           backgroundTooltip.transition().duration(50).style('opacity', 0);
           textTooltip.transition().duration(50).style('opacity', 0);
+        })
+        .on('click', function(d) {
+          if(d.class === "Process") {
+          ProcessIDForceGraph
+          .attr('ProcessID', d.name)
+          }
         });
         //Put Tooltip in the front
         backgroundTooltip.raise();
         textTooltip.raise();
     }
 
-    function BuildPanel(i: number, k: number, lxShift: number,Colour: any, r: number, cy: number)
-    {
+    function BuildPanelProcess(i: number, k: number, lxShift: number,Colour: any) {
+      MapData.push(
+        {
+          index: k,
+          name: data.series[i].fields[1].labels?.processid,
+          cx:(15+20*(i+lxShift)),
+          cy: 60,
+          r: 8,
+          colour: Colour,
+          class: "Process"
+        }
+      )
+    }
+
+    function BuildPanelThread(i: number, k: number, lxShift: number,Colour: any) {
       MapData.push(
         {
           index: k,
           name: data.series[i].fields[1].labels?.thread,
           cx:(15+20*(i+lxShift)),
-          cy: cy,
-          r: r,
-          colour: Colour
+          cy: 140,
+          r: 6,
+          colour: Colour,
+          class: "Thread"
         }
       )
     }
@@ -291,26 +321,23 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     //     </g>
     //   )
     // }
-  //}, [options, data, height, width]);
+  }, [options, data, height, width]);
 
-  //Put text into onmousehover?
   return(
     <div>
       <CustomScrollbar>
-        <svg id="ThreadMapMain" width={(DataLength+xShift)*20+20} height={height-100}>
+        <svg id="ThreadMapMain" height={height-100}>
           <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Prozess:</text>
           <text x={(5)} y= {(110)} fontFamily='Arial' fontSize='18' fill='White' fontWeight='bold'>Threads:</text>
-          {/* <text x={(5)} y= {(270)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Filesystem:</text> */}
-          {/* {FilesystemCss} */}
         </svg>
       </CustomScrollbar>
-      <svg id="ThreadMapMinMax" width={(DataLength+xShift)*40}>
+      {/* <svg id="ThreadMapMinMax" width={(DataLength+xShift)*40}>
         <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written bytes Threads: (Min / Max)</text>
         <rect x={(5)} y={(50)} width={20} height={20} rx='10' fill='#00FF00'/>
         <text x={(30)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{minVal}</text>
         <rect x={(59 + minValLength)} y={(50)} width={20} height={20} rx='10' fill='#FF0000'/>         
         <text x={(84 + minValLength)} y= {(67)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>{maxVal}</text>
-      </svg>
+      </svg> */}
       </div>
   )
 }

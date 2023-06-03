@@ -11,10 +11,23 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     let addingNodes = false;
     let nodesLinks: any = [];
     let ProcessIndex = 0;
-    //Get Nodeprocess from Plugin Settings
-    let nodeProcess: any = options.ProcessID.toString();
+    let nodeProcess: any;
     let nodeThreads: any = [];
     let nodeFileName: any = [];
+    //Check if ThreadMap is already built
+    let selectNode = document.querySelector('#ThreadMapMain');
+
+    if (
+      selectNode === null ||
+      d3.select('#ThreadMapMain').select('text[class="Forcegraph"').attr('ProcessID') === 'select'
+    ) {
+      d3.select('#area').selectAll('*').remove();
+      d3.select('p').text('Select Process in ThreadMap and refresh dashboard');
+      return;
+    } else {
+      //Get Process from ThreadMap
+      nodeProcess = d3.select('#ThreadMapMain').select('text[class="Forcegraph"').attr('ProcessID');
+    }
 
     //Get old Nodes
     if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {

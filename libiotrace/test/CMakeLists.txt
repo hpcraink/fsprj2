@@ -536,6 +536,31 @@ if (WITH_UNIT_TESTS)
 
     ##########################################################################################################
 
+    if(WITH_MPI_IO)
+        # whitelist should look like (without initial "# " per line):
+        # MPI_File_open
+        # MPI_File_seek
+        # MPI_File_write
+        # MPI_File_close
+
+        # test with: rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace.so mpi_file_io_2 10
+        # test with: rm mpi_file_io.txt && mpirun -np 4 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x LD_PRELOAD=../src/libiotrace.so mpi_file_io_2 10
+        add_executable(mpi_file_io_2 mpi_file_io_2.c)
+        target_link_libraries(mpi_file_io_2 PRIVATE ${TESTS_LINK_OPTIONS})
+
+        find_package(OpenMP)
+
+        # test with: rm mpi_file_io.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x IOTRACE_WHITELIST=./whitelist -x LD_PRELOAD=../src/libiotrace.so mpi_file_io_2 10
+        add_executable(mpi_file_io_2_openmp mpi_file_io_2.c)
+        target_compile_options(mpi_file_io_2_openmp PRIVATE "-DWANT_OPENMP")
+        target_link_libraries(mpi_file_io_2_openmp PRIVATE ${TESTS_LINK_OPTIONS})
+        if(OpenMP_C_FOUND)
+            target_link_libraries(mpi_file_io_2_openmp PUBLIC OpenMP::OpenMP_C)
+        endif()
+    endif()
+
+    ##########################################################################################################
+
     if(WITH_POSIX_IO)
         # test with: IOTRACE_LOG_NAME=clone_test1 LD_PRELOAD=../src/libiotrace.so ./clone_shared
         add_executable(clone_shared clone.c)

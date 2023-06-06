@@ -99,11 +99,17 @@ echo "worker nodes: ${WORK_NODES}"
 
 export PATH="$PWD:$PATH"
 
+# remove ib0 address
+rm -f ${GLOBAL_TMP_DIR}/ib0_${TEST_NAME}
+
 # start influxDB
-tmux new-session -d -s "runsondbnode" srun -N 1 -n 1 -w $DBNODE --pty /bin/bash -c "export PATH="${PATH}" && runsondbnode.sh ${TEST_NAME} ${INFLUXDB_DIR} ${GLOBAL_TMP_DIR}"
+bash -c "srun -N 1 -n 1 -w $DBNODE bash -c \"export PATH="${PATH}" && runsondbnode.sh ${TEST_NAME} ${INFLUXDB_DIR} ${GLOBAL_TMP_DIR}\"" &
 echo "influxDB starting on node ${DBNODE}"
+
 # wait until influxDB is started
-sleep 30
+until [ -e ${GLOBAL_TMP_DIR}/ib0_${TEST_NAME} ]; do
+    sleep 10
+done
 
 # read ib0 address written by runsondbnode.sh
 while IFS= read -r line; do

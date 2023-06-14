@@ -388,9 +388,14 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           if(d.class === "Process") {
           ProcessIDForceGraph
           .attr('ProcessID', d.name)
+          //Add Hover?
+          //d3.select(this).attr('stroke', 'blue').attr('stroke-width', 2);
           }
         });
         //Style MinMax Display
+        //remove old min max
+        d3.select('#minValueText').remove();
+        d3.select('#maxValueText').remove();
         const svgMinMax = d3.select('#ThreadMapMinMax')
         const drawminVal = d3.select('#ThreadMapMinMax').append('text').attr('class', 'minValue')
         const drawminValColour = d3.select('#ThreadMapMinMax').append('circle').attr('class', 'minValue')
@@ -399,6 +404,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         svgMinMax
           .attr('width', DataLength*40)
         drawminVal
+          .attr('id', 'minValueText')
           .attr('x', 30)
           .attr('y', 67)
           .attr('font-family','Arial')
@@ -412,6 +418,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           .attr('r', 10)
           .style('fill', '#00FF00')
         drawmaxVal
+          .attr('id', 'maxValueText')
           .attr('x', 84 + minValLength)
           .attr('y', 67)
           .attr('font-family','Arial')

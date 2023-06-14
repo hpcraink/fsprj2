@@ -292,6 +292,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           d3.select(this).transition().duration(50).attr('opacity', '.85');
           backgroundTooltip.transition().duration(50).style('opacity', 1);
           textTooltip.transition().duration(50).style('opacity', 1);
+          let xposTTBL = 33;
           //Split Name if to long
           let widthname: any,
             lengthname: any,
@@ -303,7 +304,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             widthname = 50 * 8 + 3;
             lengthname = (d.affiliated.length + 2 + nameTT.length) * 20 + 4;
           } else {
-            widthname = d.name.length * 8 + 33;
+            widthname = d.name.length * 8 + xposTTBL;
             lengthname = (d.affiliated.length + 3) * 20 + 4;
             nameTT[0] = d.name;
           }
@@ -329,8 +330,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           }
           //Tooltip bottomleft
           else {
-            backgroundTooltip.attr('x', xpos - 15 - nameTT[0].length * 8).attr('y', ypos + 10);
-            textTooltip.attr('x', xpos - 12 - nameTT[0].length * 8).attr('y', yScale(d.y) + 30);
+            backgroundTooltip.attr('x', xpos - 15 - nameTT[0].length * 8 - xposTTBL).attr('y', ypos + 10);
+            textTooltip.attr('x', xpos - 12 - nameTT[0].length * 8 - xposTTBL).attr('y', yScale(d.y) + 30);
             //move Tooltip up
             if (ypos + 10 + (d.affiliated.length + 2) * 20 + 4 >= height - 100) {
               backgroundTooltip.attr(
@@ -342,7 +343,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
                 ypos + 30 - (ypos + 10 + (d.affiliated.length + nameTT.length + 2) * 20 + 4 - height)
               );
             }
-            xtspan = xpos - 12 - nameTT[0].length * 8;
+            xtspan = xpos - 12 - nameTT[0].length * 8 - xposTTBL;
           }
           backgroundTooltip.attr('width', widthname).attr('height', lengthname).attr('rx', 3).attr('fill', '#535353');
           textTooltip.attr('font-family', 'Arial').attr('font-size', 15).attr('fill', 'white');

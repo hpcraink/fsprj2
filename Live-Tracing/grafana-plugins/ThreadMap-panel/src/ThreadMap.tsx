@@ -20,7 +20,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     //Amount Threads (written)
     if(DataLength == 0) {
       for (let i = 0; i < data.series.length; i++) { 
-        if ((data.series[i].fields[1] !== undefined) && (data.series[i].refId === "Written Bytes")) {
+        if ((data.series[i].fields[1] !== undefined) && (data.series[i].refId === "Written Bytes" || data.series[i].refId === "Read Bytes")) {
           DataLength++
         }
       }
@@ -212,7 +212,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           index: k,
           prefix: 'ProzessID: ',
           name: data.series[i].fields[1].labels?.processid,
-          wrbytes: 'Written Bytes: ' + writtenBytes,
+          wrbytes: 'Written & read Bytes: ' + writtenBytes,
           affiliatedPrefix: 'Threads:',
           affiliated: lThreads,
           cx:(15+20*i),
@@ -240,7 +240,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           index: k,
           prefix: 'ThreadID: ',
           name: data.series[i].fields[1].labels?.thread,
-          wrbytes: 'Written Bytes: ' + data.series[i].fields[1].values.get(0),
+          wrbytes: 'Written & read Bytes: ' + data.series[i].fields[1].values.get(0),
           affiliatedPrefix: 'Filesystems:',
           affiliated: FilesystemValue[i],
           cx:(15+20*i),
@@ -324,13 +324,21 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
               .attr('y', d.cy - 40 )
             textTooltip
               .attr('x', d.cx + 20)
-              .attr('y', d.cy - 20)           
+              .attr('y', d.cy - 24)           
             //move Tooltip up
             if((d.cy -40 + (d.affiliated.length+3)* 20) + 4 >= (height-100)) {
-              backgroundTooltip
-                .attr('y', d.cy - 40 - ((d.cy -40 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
+              if((d.cy - (d.affiliated.length+3)* 20 + 4) < 0) {
+                backgroundTooltip
+                .attr('y', 0)
               textTooltip
-                .attr('y', d.cy - 20 - ((d.cy -40 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
+                .attr('y', 20)
+              }
+              else {
+              backgroundTooltip
+                .attr('y', d.cy - (d.affiliated.length+3)* 20 + 4)
+              textTooltip
+                .attr('y', d.cy - (d.affiliated.length+2)* 20)
+              }
             }
             xtspan = d.cx + 20
           }
@@ -341,25 +349,25 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
               .attr('y', d.cy + 10)
             textTooltip
               .attr('x', d.cx - 12 - bckgrndTT * 8)
-              .attr('y', d.cy + 30)
+              .attr('y', d.cy + 26)
             //move Tooltip up
             if((d.cy + 10 + (d.affiliated.length+3)* 20) + 4 >= (height-100)) {
               backgroundTooltip
               .attr('y', d.cy  + 10 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
               textTooltip
-                .attr('y', d.cy + 30 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
+                .attr('y', d.cy + 26 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
             }
             xtspan = d.cx - 12 - bckgrndTT * 8
           }
           //(d.name.length+ d.prefix.length) * 8 + 3
           backgroundTooltip
-            .attr('width', bckgrndTT * 8 + 3)
-            .attr('height', (d.affiliated.length+3)* 20 + 4)
+            .attr('width', bckgrndTT * 6 + 3)
+            .attr('height', (d.affiliated.length+3)* 16 + 4)
             .attr('rx', 3)
             .attr('fill', '#535353'); //circle colour or neutral? d.colour
           textTooltip
             .attr('font-family', 'Arial')
-            .attr('font-size', 15)
+            .attr('font-size', 12)
             .attr('fill', 'white')
             .append('tspan')
               .text(d.prefix + d.name)
@@ -457,7 +465,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         </svg>
       </CustomScrollbar>
       <svg id="ThreadMapMinMax">
-        <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written bytes threads: (min / max)</text>
+        <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Colour by written & read bytes threads: (min / max)</text>
       </svg>
       </div>
   )

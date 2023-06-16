@@ -114,7 +114,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
               index: nodeNumber,
               prefix: 'Filename: ',
               name: nodeFileName[i][j],
-              affiliatedPrefix: 'Amount Read/Write: ',
+              affiliatedPrefix: 'Amount Read/Write:  ',
               affiliated: '-empty-', //Todo Count Read and Write
               r: 5,
               writtenBytes: 0,
@@ -292,27 +292,26 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           d3.select(this).transition().duration(50).attr('opacity', '.85');
           backgroundTooltip.transition().duration(50).style('opacity', 1);
           textTooltip.transition().duration(50).style('opacity', 1);
-          let xposTTBL = 33;
           //Split Name if to long
-          let widthname: any,
-            lengthname: any,
+          let lengthname: any,
             nameTT: any = [];
           if (d.name.length >= 50) {
             for (let i = 0; i <= d.name.length / 50; i++) {
               nameTT[i] = d.name.substring(i * 50, i * 50 + 50);
             }
-            widthname = 50 * 8 + 3;
             lengthname = (d.affiliated.length + 2 + nameTT.length) * 20 + 4;
           } else {
-            widthname = d.name.length * 8 + xposTTBL;
             lengthname = (d.affiliated.length + 3) * 20 + 4;
             nameTT[0] = d.name;
           }
+          //Define width of backgrounTooltip
+          //Check for longest Element
+          let bckgrndTT = Math.max(d.prefix.length, nameTT[0].length, d.affiliatedPrefix.length, d.affiliated.length);
           //Position of Tooltip, default topright
           let xtspan = 0,
             xpos = this.cx.animVal.value,
             ypos = this.cy.animVal.value;
-          if (xpos + 20 + nameTT[0].length * 8 <= width && ypos - 40 >= 0) {
+          if (xpos + 20 + bckgrndTT * 8 <= width && ypos - 40 >= 0) {
             backgroundTooltip.attr('x', xpos + 15).attr('y', ypos - 40);
             textTooltip.attr('x', xpos + 20).attr('y', ypos - 20);
             //move Tooltip up
@@ -330,8 +329,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           }
           //Tooltip bottomleft
           else {
-            backgroundTooltip.attr('x', xpos - 15 - nameTT[0].length * 8 - xposTTBL).attr('y', ypos + 10);
-            textTooltip.attr('x', xpos - 12 - nameTT[0].length * 8 - xposTTBL).attr('y', yScale(d.y) + 30);
+            backgroundTooltip.attr('x', xpos - 15 - bckgrndTT * 8).attr('y', ypos + 10);
+            textTooltip.attr('x', xpos - 12 - bckgrndTT * 8).attr('y', yScale(d.y) + 30);
             //move Tooltip up
             if (ypos + 10 + (d.affiliated.length + 2) * 20 + 4 >= height - 100) {
               backgroundTooltip.attr(
@@ -343,27 +342,36 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
                 ypos + 30 - (ypos + 10 + (d.affiliated.length + nameTT.length + 2) * 20 + 4 - height)
               );
             }
-            xtspan = xpos - 12 - nameTT[0].length * 8 - xposTTBL;
+            xtspan = xpos - 12 - bckgrndTT * 8;
           }
-          backgroundTooltip.attr('width', widthname).attr('height', lengthname).attr('rx', 3).attr('fill', '#535353');
+          backgroundTooltip
+            .attr('width', bckgrndTT * 7 + 30)
+            .attr('height', lengthname)
+            .attr('rx', 3)
+            .attr('fill', '#535353');
           textTooltip.attr('font-family', 'Arial').attr('font-size', 15).attr('fill', 'white');
           textTooltip.append('tspan').text(d.prefix).style('font-weight', 'bold');
           for (let i = 0; i < nameTT.length; i++) {
             textTooltip
               .append('tspan')
               .text(nameTT[i])
-              .style('font-weight', 'bold')
+              .style('font-weight', 'normal')
               .attr('x', xtspan)
               .attr('dy', '1.2em');
           }
           textTooltip
             .append('tspan')
             .text(d.affiliatedPrefix)
-            .style('font-weight', 'normal')
+            .style('font-weight', 'bold')
             .attr('x', xtspan)
             .attr('dy', '1.4em');
           for (let i = 0; i < d.affiliated.length; i++) {
-            textTooltip.append('tspan').text(d.affiliated[i]).attr('x', xtspan).attr('dy', '1.2em');
+            textTooltip
+              .append('tspan')
+              .text(d.affiliated[i])
+              .attr('x', xtspan)
+              .attr('dy', '1.2em')
+              .style('font-weight', 'normal');
           }
           //Put Tooltip in the front
           backgroundTooltip.raise();

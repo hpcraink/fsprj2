@@ -38,7 +38,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     for (let i = 0;i < DataLength; i++) {
       if(ProcessColour[i] !== undefined) 
       {
-        BuildPanelProcess(i, k, ProcessColour[i])
+        BuildPanelProcess(i, k, ProcessColour[i], ColAssig[2][i])
         k++        
       }
       BuildPanelThread(i, k, ThreadColour[i])
@@ -164,7 +164,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         return[ReturnColour, min, max]
       }
       //Return Min/Max only for Threads
-      return[ReturnColourThreads, ReturnColourProcess[0]]
+      return[ReturnColourThreads, ReturnColourProcess[0], ProcessHeatValue]
     }
 
     function FilesystemAssignment() {
@@ -198,7 +198,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       return(lOutputFs)
     }
 
-    function BuildPanelProcess(i: number, k: number, Colour: any) {
+    function BuildPanelProcess(i: number, k: number, Colour: any, writtenBytes: any) {
       //Affiliated Threads
       let lThreads: any[] = []
       let j = i
@@ -212,6 +212,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           index: k,
           prefix: 'ProzessID: ',
           name: data.series[i].fields[1].labels?.processid,
+          wrbytes: 'Written Bytes: ' + writtenBytes,
           affiliatedPrefix: 'Threads:',
           affiliated: lThreads,
           cx:(15+20*i),
@@ -239,6 +240,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           index: k,
           prefix: 'ThreadID: ',
           name: data.series[i].fields[1].labels?.thread,
+          wrbytes: 'Written Bytes: ' + data.series[i].fields[1].values.get(0),
           affiliatedPrefix: 'Filesystems:',
           affiliated: FilesystemValue[i],
           cx:(15+20*i),
@@ -311,9 +313,12 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           d3.select(this).transition().duration(50).attr('opacity', '.85');
           backgroundTooltip.transition().duration(50).style('opacity', 1);
           textTooltip.transition().duration(50).style('opacity', 1);
+          //Define width of backgrounTooltip
+          //Check for longest Element
+          let bckgrndTT = Math.max((d.prefix.length + d.name.length), d.wrbytes.length)
           //Position of Tooltip, default topright
           let xtspan = 0
-          if((d.cx + 20 +(d.name.length+ d.prefix.length) * 8) <= (DataLength*20+20) && (d.cy - 40) >= 0 ) {
+          if((d.cx + 20 + bckgrndTT * 8) <= (DataLength*20+20) && (d.cy - 40) >= 0 ) {
             backgroundTooltip
               .attr('x', d.cx + 15)
               .attr('y', d.cy - 40 )
@@ -321,34 +326,35 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
               .attr('x', d.cx + 20)
               .attr('y', d.cy - 20)           
             //move Tooltip up
-            if((d.cy -40 + (d.affiliated.length+2)* 20) + 4 >= (height-100)) {
+            if((d.cy -40 + (d.affiliated.length+3)* 20) + 4 >= (height-100)) {
               backgroundTooltip
-              .attr('y', d.cy - 40 - ((d.cy -40 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+                .attr('y', d.cy - 40 - ((d.cy -40 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
               textTooltip
-                .attr('y', d.cy - 20 - ((d.cy -40 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+                .attr('y', d.cy - 20 - ((d.cy -40 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
             }
             xtspan = d.cx + 20
           }
           //Tooltip bottomleft
           else {
             backgroundTooltip
-              .attr('x', d.cx - 15 - (d.name.length+ d.prefix.length) * 8)
+              .attr('x', d.cx - 15 - bckgrndTT * 8)
               .attr('y', d.cy + 10)
             textTooltip
-              .attr('x', d.cx - 12 - (d.name.length+ d.prefix.length) * 8)
+              .attr('x', d.cx - 12 - bckgrndTT * 8)
               .attr('y', d.cy + 30)
             //move Tooltip up
-            if((d.cy + 10 + (d.affiliated.length+2)* 20) + 4 >= (height-100)) {
+            if((d.cy + 10 + (d.affiliated.length+3)* 20) + 4 >= (height-100)) {
               backgroundTooltip
-              .attr('y', d.cy  + 10 - ((d.cy + 10 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+              .attr('y', d.cy  + 10 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
               textTooltip
-                .attr('y', d.cy + 30 - ((d.cy + 10 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
+                .attr('y', d.cy + 30 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
             }
-            xtspan = d.cx - 12 - (d.name.length+ d.prefix.length) * 8
+            xtspan = d.cx - 12 - bckgrndTT * 8
           }
+          //(d.name.length+ d.prefix.length) * 8 + 3
           backgroundTooltip
-            .attr('width', (d.name.length+ d.prefix.length) * 8 + 3)
-            .attr('height', (d.affiliated.length+2)* 20 + 4)
+            .attr('width', bckgrndTT * 8 + 3)
+            .attr('height', (d.affiliated.length+3)* 20 + 4)
             .attr('rx', 3)
             .attr('fill', '#535353'); //circle colour or neutral? d.colour
           textTooltip
@@ -359,10 +365,15 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
               .text(d.prefix + d.name)
               .style('font-weight', 'bold')
             .append('tspan')
-              .text(d.affiliatedPrefix)
+              .text(d.wrbytes)
               .style('font-weight', 'normal')
               .attr('x', xtspan)
               .attr('dy', '1.4em')
+            .append('tspan')
+              .text(d.affiliatedPrefix)
+              .style('font-weight', 'normal')
+              .attr('x', xtspan)
+              .attr('dy', '1.2em')
           for (let i = 0; i < d.affiliated.length; i++) {
             textTooltip
               .append('tspan')
@@ -388,8 +399,10 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           if(d.class === "Process") {
           ProcessIDForceGraph
           .attr('ProcessID', d.name)
-          //Add Hover?
-          //d3.select(this).attr('stroke', 'blue').attr('stroke-width', 2);
+          //Remove old highlight
+          d3.selectAll('circle').attr('stroke', null);
+          //Add Highliting
+          d3.select(this).attr('stroke', 'blue').attr('stroke-width', 2);
           }
         });
         //Style MinMax Display

@@ -41,33 +41,122 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
     }
 
     function addNodes(_callback: any) {
-      //TODO Node Colours gives mix of coulours or read/blue for more read/write
       let nodeNumber = nodes.length;
-      //Find Index of Process
-      for (let i = 0; i < data.series.length / 2; i++) {
-        if (data.series[i].fields[1].labels?.processid === nodeProcess) {
-          ProcessIndex = i;
-          break;
-        }
-      }
+      let attributeFileName: any = [];
       //find all related threads and filenames | data.series.length/2 for second query
       let ctrFilename = 0;
-      while (data.series[ProcessIndex].fields[1].labels?.processid === nodeProcess) {
-        nodeThreads.push(data.series[ProcessIndex].fields[1].labels?.thread);
-        nodeFileName.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
-        nodeFileName[ctrFilename] = nodeFileName[ctrFilename].buffer;
-        ProcessIndex++;
-        ctrFilename++;
+      let writeNodes: any[] = [];
+      let readNodes: any[] = [];
+      //Add Write
+      if (options.UseWrite) {
+        //Find Index of Process
+        for (let i = 0; i < data.series.length / 2; i++) {
+          if (data.series[i].fields[1].labels?.processid === nodeProcess) {
+            ProcessIndex = i;
+            break;
+          }
+        }
+        while (data.series[ProcessIndex].fields[1].labels?.processid === nodeProcess) {
+          //Add Filter
+          if (options.UseFilterFilename) {
+            let lFileName: any = [];
+            let nFN: any = [];
+            //Write
+            lFileName.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
+            for (let i = 0; i < lFileName[0].buffer.length; i++) {
+              if (lFileName[0].buffer[i].includes(options.FilterFilename)) {
+                nFN.push(lFileName[0].buffer[i]);
+              }
+            }
+            writeNodes.push(nFN);
+          }
+          //Get everything
+          else {
+            //Write
+            let lWrite: any = [];
+            lWrite.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
+            writeNodes[ctrFilename] = lWrite[0].buffer;
+          }
+          nodeThreads.push(data.series[ProcessIndex].fields[1].labels?.thread);
+          ProcessIndex++;
+          ctrFilename++;
+        }
+      }
+
+      //Add Read
+      if (options.UseRead) {
+        //Find Index
+        const startRead = data.series.findIndex((series) => series.refId === 'Read Bytes');
+        for (let i = startRead; i < data.series.length / 2; i++) {
+          if (data.series[i].fields[1].labels?.processid === nodeProcess) {
+            ProcessIndex = i;
+            break;
+          }
+        }
+        while (data.series[ProcessIndex].fields[1].labels?.processid === nodeProcess) {
+          //Add Filter
+          if (options.UseFilterFilename) {
+            let lFileName: any = [];
+            let nFN: any = [];
+            //Read
+            lFileName.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
+            for (let i = 0; i < lFileName[0].buffer.length; i++) {
+              if (lFileName[0].buffer[i].includes(options.FilterFilename)) {
+                nFN.push(lFileName[0].buffer[i]);
+              }
+            }
+            readNodes.push(nFN);
+          }
+          //Get everything
+          else {
+            //Read
+            let lRead: any = [];
+            lRead.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
+            readNodes[ctrFilename] = lRead[0].buffer;
+          }
+          //Check if Thread already there
+          if (!nodeThreads.includes(data.series[ProcessIndex].fields[1].labels?.thread)) {
+            nodeThreads.push(data.series[ProcessIndex].fields[1].labels?.thread);
+          }
+          ProcessIndex++;
+          ctrFilename++;
+        }
+      }
+
+      //Assign nodeFileName
+      if (options.UseWrite && options.UseRead) {
+        for (let i = 0; i < writeNodes.length; i++) {
+          nodeFileName[i] = writeNodes[i].concat(readNodes[i]);
+        }
+        //Add Attribute read or write
+        for (let i = 0; i < writeNodes.length; i++) {
+          attributeFileName = attributeFileName.concat(Array(writeNodes[i].length).fill('Write'));
+        }
+        for (let i = 0; i < readNodes.length; i++) {
+          attributeFileName = attributeFileName.concat(Array(readNodes[i].length).fill('Read'));
+        }
+        console.log(attributeFileName);
+      } else if (options.UseWrite) {
+        nodeFileName = writeNodes;
+        for (let i = 0; i < writeNodes.length; i++) {
+          attributeFileName = attributeFileName.concat(Array(writeNodes[i].length).fill('Write'));
+        }
+      } else if (options.UseRead) {
+        nodeFileName = readNodes;
+        for (let i = 0; i < readNodes.length; i++) {
+          attributeFileName = attributeFileName.concat(Array(readNodes[i].length).fill('Read'));
+        }
       }
 
       //Node for Process, skip existing nodes
       if (!nodes.map((a: any) => a.name).includes(nodeProcess)) {
+        //TODO Node Colours gives mix of coulours or read/blue for more read/write
         nodes.push({
           index: nodeNumber,
           prefix: 'ProzessID: ',
           name: nodeProcess,
-          affiliatedPrefix: 'Threads:',
-          affiliated: '-empty-', //TODO Add Threads (read from ThreadMap?)
+          affiliatedPrefix: 'Amount Read/Write: ',
+          affiliated: '-empty-', //TODO Add sum
           r: 10,
           writtenBytes: data.series[ProcessIndex - nodeThreads.length].fields[1].values.get(0),
         });
@@ -84,12 +173,13 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             .map((a: any) => a.name)
             .includes(nodeThreads[i])
         ) {
+          //TODO Node Colours gives mix of coulours or read/blue for more read/write
           nodes.push({
             index: nodeNumber,
             prefix: 'ThreadID: ',
             name: nodeThreads[i],
-            affiliatedPrefix: 'Filesystems:',
-            affiliated: '-empty-', //Todo Add Filenames from Forcegraph
+            affiliatedPrefix: 'Amount Read/Write: ',
+            affiliated: '-empty-', //Todo Add sum
             r: 5,
             writtenBytes: data.series[ProcessIndex - nodeThreads.length + i].fields[1].values.get(0),
           });
@@ -102,8 +192,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       let IndexFilenamePerThread = nodeFileName.length + 1; //helpNodes to check the filenames of each thread instead of all filenames
       for (let i = 0; i < nodeFileName.length; i++) {
         for (let j = 0; j < nodeFileName[i].length; j++) {
-          //TODO Add writtenBytes per filename as aditional query? => Also needed for Drilldown Filename then
-          //skip existing nodes
+          //TODO Node Colours gives mix of coulours or read/blue for more read/write
+
           if (
             !nodes
               .slice(IndexFilenamePerThread, IndexFilenamePerThread + nodeFileName[i].length)
@@ -114,7 +204,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
               index: nodeNumber,
               prefix: 'Filename: ',
               name: nodeFileName[i][j],
-              affiliatedPrefix: 'Amount Read/Write:  ',
+              affiliatedPrefix: 'Amount Read/Write: ',
               affiliated: '-empty-', //Todo Count Read and Write
               r: 5,
               writtenBytes: 0,
@@ -161,7 +251,6 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         let targetT = nodes[i];
         changeNodeSize(nodes[targetT.index]);
         //TODO
-        //Add Colour to the Nodes aswell and for links
         //Link colour depending on wether last action was read or write
         let link_colour = '#003f5c';
         // if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
@@ -178,13 +267,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         });
       }
       //Assign Filesystem
-      let j = 0;
+      let j = 1;
       for (let i = 0; i < nodeThreads.length; i++) {
         let sourceFn = nodes[i + 1];
         for (let k = 0; k < nodeFileName[i].length; k++) {
-          let targetFn = nodes[nodeThreads.length + 1 + j];
-          //TODO: uncomment as soon as written bytes per filename in query is added:
-          //changeNodeSize(targetFn.index) // might need to add nodeThreads.length
+          let targetFn = nodes[nodeThreads.length + j];
           j++;
           //TODO
           //LinkColour Filename
@@ -419,7 +506,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       runSimulation();
     }
 
-    //No old Data for testing purposes | Remove for final tests!
+    //No old Data for testing purposes | TODO: Remove & Fix(?) for final tests!
     sessionStorage.clear();
   }, [options, data, height, width]);
   return (

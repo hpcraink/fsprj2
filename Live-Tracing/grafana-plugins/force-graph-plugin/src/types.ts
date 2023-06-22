@@ -1,8 +1,16 @@
+//options are used for the manual configuartion of the ThreadMap, also in module
+
+//Options to Panel
 export interface PanelOptions {
-  ProcessID: number;
+  UseFilterFilename: any;
+  FilterFilename: string;
+  UseWrite: any;
+  UseRead: any;
 }
 
 export const defaultPanelOptions: PanelOptions = {
-  //Make usefull defaultoption, get default value from Drilldown Filename? => How?
-  ProcessID: 1952952,
+  UseFilterFilename: true,
+  FilterFilename: 'pfs',
+  UseWrite: true,
+  UseRead: true,
 };

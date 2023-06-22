@@ -152,7 +152,7 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "  from(bucket: \"hsebucket_fileres\")\r\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n    |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n    |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"write\" or r[\"functionname\"] == \"writev\")\r\n    |> keep(columns: [\"thread\", \"processid\", \"_value\"])\r\n    |> distinct()\r\n    |> map(fn: (r) => ({ r with TracedFilenameWrite: r._value}))\r\n    |> drop(columns: [\"_value\"])\r\n    |> yield(name: \"q1\")\r\n",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n    |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n    |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n    |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"write\" or r[\"functionname\"] == \"writev\")\r\n    |> keep(columns: [\"thread\", \"processid\", \"_value\"])\r\n    |> distinct()\r\n    |> map(fn: (r) => ({ r with TracedFilenameWrite: r._value}))\r\n    |> drop(columns: [\"_value\"])\r\n    |> yield(name: \"q1\")\r\n",
           "refId": "Written Filename"
         }
       ],
@@ -213,7 +213,7 @@
             "uid": "P951FEA4DE68E13C5"
           },
           "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fread\" or r[\"functionname\"] == \"read\")\r\n  |> keep(columns: [\"thread\", \"processid\", \"_value\"])\r\n  |> distinct()\r\n  |> map(fn: (r) => ({ r with TracedFilenameRead: r._value}))\r\n  |> drop(columns: [\"_value\"])\r\n  |> yield(name: \"q2\")",
-          "refId": "A"
+          "refId": "Read Filename"
         }
       ],
       "title": "Filename Read",
@@ -237,7 +237,7 @@
             "type": "influxdb",
             "uid": "_uciXaf4z"
           },
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n|> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n|> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n|> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n|> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n|> group(columns: [\"thread\", \"processid\"])\r\n|> aggregateWindow(every: inf, fn: sum, createEmpty: false)\r\n|> yield(name: \"sum\")",
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"write\" or r[\"functionname\"] == \"writev\")\r\n  |> group(columns: [\"thread\", \"processid\"])\r\n  |> aggregateWindow(every: inf, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
           "refId": "Written Bytes"
         },
         {
@@ -246,8 +246,26 @@
             "uid": "_uciXaf4z"
           },
           "hide": false,
-          "query": "from(bucket: \"hsebucket_fileres\")\r\n|> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n|> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n|> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n|> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"writev\" or r[\"functionname\"] == \"write\")\r\n|> group(columns: [\"thread\", \"processid\"])\r\n|> aggregateWindow(every: inf, column:\"_value\", fn:distinct, createEmpty: false)\r\n|>yield(name: \"distinct\")",
-          "refId": "Filename"
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_read_bytes\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fread\" or r[\"functionname\"] == \"read\")\r\n  |> group(columns: [\"thread\", \"processid\"])\r\n  |> aggregateWindow(every: inf, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "refId": "Read Bytes"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "hide": false,
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fwrite\" or r[\"functionname\"] == \"write\" or r[\"functionname\"] == \"writev\")\r\n  |> group(columns: [\"thread\", \"processid\"])\r\n  |> aggregateWindow(every: inf, column:\"_value\", fn:distinct, createEmpty: false)\r\n  |>yield(name: \"distinct\")",
+          "refId": "Filename Write"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "_uciXaf4z"
+          },
+          "hide": false,
+          "query": "from(bucket: \"hsebucket_fileres\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"fread\" or r[\"functionname\"] == \"read\")\r\n  |> group(columns: [\"thread\", \"processid\"])\r\n  |> aggregateWindow(every: inf, column:\"_value\", fn:distinct, createEmpty: false)\r\n  |>yield(name: \"distinct\")",
+          "refId": "Filename Read"
         }
       ],
       "title": "Drill Down Force Graph",

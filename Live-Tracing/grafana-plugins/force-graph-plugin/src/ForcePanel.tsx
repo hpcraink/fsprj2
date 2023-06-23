@@ -130,21 +130,20 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         }
         //Add Attribute read or write
         for (let i = 0; i < writeNodes.length; i++) {
-          attributeFileName = attributeFileName.concat(Array(writeNodes[i].length).fill('Write'));
+          attributeFileName[i] = Array(writeNodes[i].length).fill('Write');
         }
         for (let i = 0; i < readNodes.length; i++) {
-          attributeFileName = attributeFileName.concat(Array(readNodes[i].length).fill('Read'));
+          attributeFileName[i] = attributeFileName[i].concat(Array(readNodes[i].length).fill('Read'));
         }
-        console.log(attributeFileName);
       } else if (options.UseWrite) {
         nodeFileName = writeNodes;
         for (let i = 0; i < writeNodes.length; i++) {
-          attributeFileName = attributeFileName.concat(Array(writeNodes[i].length).fill('Write'));
+          attributeFileName[i] = Array(writeNodes[i].length).fill('Write');
         }
       } else if (options.UseRead) {
         nodeFileName = readNodes;
         for (let i = 0; i < readNodes.length; i++) {
-          attributeFileName = attributeFileName.concat(Array(readNodes[i].length).fill('Read'));
+          attributeFileName[i] = Array(readNodes[i].length).fill('Read');
         }
       }
 
@@ -156,9 +155,11 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           prefix: 'ProzessID: ',
           name: nodeProcess,
           affiliatedPrefix: 'Amount Read/Write: ',
-          affiliated: '-empty-', //TODO Add sum
+          affiliated: 'Read: ', //TODO Add numbers
+          affiliated2: 'Write: ',
           r: 10,
           writtenBytes: data.series[ProcessIndex - nodeThreads.length].fields[1].values.get(0),
+          colour: '#888888',
         });
         nodeNumber += 1;
         addingNodes = true;
@@ -173,15 +174,30 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             .map((a: any) => a.name)
             .includes(nodeThreads[i])
         ) {
-          //TODO Node Colours gives mix of coulours or read/blue for more read/write
+          //Assign Colour
+          let nodeColour: any;
+          //Amount Read/Write
+          let amountReadWrite: any = [0, 0];
+          for (let j = 0; j < attributeFileName[i].length; j++) {
+            if (attributeFileName[i][j] !== undefined) {
+              if (attributeFileName[i][j] === 'Read') {
+                amountReadWrite[0]++;
+              } else if (attributeFileName[i][j] === 'Write') {
+                amountReadWrite[1]++;
+              }
+            }
+          }
+          nodeColour = ColourMix(amountReadWrite);
           nodes.push({
             index: nodeNumber,
             prefix: 'ThreadID: ',
             name: nodeThreads[i],
-            affiliatedPrefix: 'Amount Read/Write: ',
-            affiliated: '-empty-', //Todo Add sum
+            affiliatedPrefix: 'File Access: ',
+            affiliated: 'Read: ' + amountReadWrite[0],
+            affiliated2: 'Write: ' + amountReadWrite[1],
             r: 5,
             writtenBytes: data.series[ProcessIndex - nodeThreads.length + i].fields[1].values.get(0),
+            colour: nodeColour,
           });
           nodeNumber += 1;
           addingNodes = true;
@@ -192,22 +208,36 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       let IndexFilenamePerThread = nodeFileName.length + 1; //helpNodes to check the filenames of each thread instead of all filenames
       for (let i = 0; i < nodeFileName.length; i++) {
         for (let j = 0; j < nodeFileName[i].length; j++) {
-          //TODO Node Colours gives mix of coulours or read/blue for more read/write
-
+          //TODO mark double filenames as write/read in affiliated (do with mpi test)
           if (
             !nodes
               .slice(IndexFilenamePerThread, IndexFilenamePerThread + nodeFileName[i].length)
               .map((a: any) => a.name)
               .includes(nodeFileName[i][j])
           ) {
+            //Assign Colour
+            let nodeColour: any;
+            //Amount Read/Write
+            let amountReadWrite: any = [0, 0];
+            //for (let i = 0; i < lReadWrite.length; i++) { //use for later for more complex tests
+            if (attributeFileName[i][j] === 'Read') {
+              amountReadWrite[0]++;
+            } else if (attributeFileName[i][j] === 'Write') {
+              amountReadWrite[1]++;
+            }
+            //}
+            nodeColour = ColourMix(amountReadWrite);
+            //Push nodes
             nodes.push({
               index: nodeNumber,
               prefix: 'Filename: ',
               name: nodeFileName[i][j],
-              affiliatedPrefix: 'Amount Read/Write: ',
-              affiliated: '-empty-', //Todo Count Read and Write
+              affiliatedPrefix: 'File Access: ',
+              affiliated: 'Read: ' + amountReadWrite[0],
+              affiliated2: 'Write: ' + amountReadWrite[1],
               r: 5,
               writtenBytes: 0,
+              colour: nodeColour,
             });
             nodeNumber += 1;
             addingNodes = true;
@@ -251,7 +281,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         let targetT = nodes[i];
         changeNodeSize(nodes[targetT.index]);
         //TODO
-        //Link colour depending on wether last action was read or write
+        //Link colour depending on wether last action was read or write? => Needed for Threads?
         let link_colour = '#003f5c';
         // if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
         //   link_colour = '#ef5675';
@@ -279,9 +309,33 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           nodesLinks.push({
             source: sourceFn,
             target: targetFn.index - 1,
-            colour: '#000fff',
+            colour: targetFn.colour,
           });
         }
+      }
+    }
+
+    //Colourmix
+    function ColourMix(lAmountReadWrite: any) {
+      //Colour selection
+      let colourNode: string;
+      let RdWrtPercentage = 0;
+      //Check for 0
+      if (!(lAmountReadWrite[0] === 0 && lAmountReadWrite[1] === 0)) {
+        if (lAmountReadWrite[1] === 0 && lAmountReadWrite[0] !== 0) {
+          //onlyread
+          RdWrtPercentage = 1;
+        } else if (lAmountReadWrite[1] !== 0) {
+          //only writes & mixed
+          RdWrtPercentage = lAmountReadWrite[0] / lAmountReadWrite[1];
+        }
+        //build mixture of those Read = #323264, Write = #643232
+        let redprop = (32 + 100 * (1 - RdWrtPercentage)).toString(16).substring(0, 2);
+        let blueprop = (32 + 132 * RdWrtPercentage).toString(16).substring(0, 2);
+        colourNode = '#' + redprop + '20' + blueprop;
+        return colourNode;
+      } else {
+        return '#888888';
       }
     }
 
@@ -374,7 +428,9 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         .attr('r', function (d: any) {
           return d.r;
         })
-        .style('fill', '#888888')
+        .attr('fill', function (d: any) {
+          return d.colour;
+        })
         .on('mouseover', function (d) {
           d3.select(this).transition().duration(50).attr('opacity', '.85');
           backgroundTooltip.transition().duration(50).style('opacity', 1);
@@ -386,9 +442,9 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             for (let i = 0; i <= d.name.length / 50; i++) {
               nameTT[i] = d.name.substring(i * 50, i * 50 + 50);
             }
-            lengthname = (d.affiliated.length + 2 + nameTT.length) * 20 + 4;
+            lengthname = (4 + nameTT.length) * 20 + 4; //d.affiliated.length + 2
           } else {
-            lengthname = (d.affiliated.length + 3) * 20 + 4;
+            lengthname = 5 * 20 + 4; //d.affiliated.length + 3
             nameTT[0] = d.name;
           }
           //Define width of backgrounTooltip
@@ -402,14 +458,15 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             backgroundTooltip.attr('x', xpos + 15).attr('y', ypos - 40);
             textTooltip.attr('x', xpos + 20).attr('y', ypos - 20);
             //move Tooltip up
-            if (ypos - 40 + (d.affiliated.length + 2) * 20 + 4 >= height - 100) {
+            if (ypos - 40 + 3 * 20 + 4 >= height - 100) {
+              //d.affiliated.length +
               backgroundTooltip.attr(
                 'y',
-                ypos - 40 - (ypos - 40 + (d.affiliated.length + nameTT.length + 2) * 20 + 4 - height)
+                ypos - 40 - (ypos - 40 + (nameTT.length + 4) * 20 + 4 - height) //d.affiliated.length +
               );
               textTooltip.attr(
                 'y',
-                ypos - 20 - (ypos - 40 + (d.affiliated.length + nameTT.length + 2) * 20 + 4 - height)
+                ypos - 20 - (ypos - 40 + (nameTT.length + 4) * 20 + 4 - height) //d.affiliated.length +
               );
             }
             xtspan = xpos + 20;
@@ -419,14 +476,15 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             backgroundTooltip.attr('x', xpos - 15 - bckgrndTT * 8).attr('y', ypos + 10);
             textTooltip.attr('x', xpos - 12 - bckgrndTT * 8).attr('y', yScale(d.y) + 30);
             //move Tooltip up
-            if (ypos + 10 + (d.affiliated.length + 2) * 20 + 4 >= height - 100) {
+            if (ypos + 10 + 3 * 20 + 4 >= height - 100) {
+              //d.affiliated.length +
               backgroundTooltip.attr(
                 'y',
-                ypos + 10 - (ypos + 10 + (d.affiliated.length + nameTT.length + 2) * 20 + 4 - height)
+                ypos + 10 - (ypos + 10 + (nameTT.length + 4) * 20 + 4 - height) //d.affiliated.length +
               );
               textTooltip.attr(
                 'y',
-                ypos + 30 - (ypos + 10 + (d.affiliated.length + nameTT.length + 2) * 20 + 4 - height)
+                ypos + 30 - (ypos + 10 + (nameTT.length + 4) * 20 + 4 - height) //d.affiliated.length +
               );
             }
             xtspan = xpos - 12 - bckgrndTT * 8;
@@ -451,15 +509,18 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             .text(d.affiliatedPrefix)
             .style('font-weight', 'bold')
             .attr('x', xtspan)
-            .attr('dy', '1.4em');
-          for (let i = 0; i < d.affiliated.length; i++) {
-            textTooltip
-              .append('tspan')
-              .text(d.affiliated[i])
-              .attr('x', xtspan)
-              .attr('dy', '1.2em')
-              .style('font-weight', 'normal');
-          }
+            .attr('dy', '1.4em')
+            .append('tspan')
+            .text(d.affiliated)
+            .attr('x', xtspan)
+            .attr('dy', '1.2em')
+            .style('font-weight', 'normal')
+            .append('tspan')
+            .text(d.affiliated2)
+            .attr('x', xtspan)
+            .attr('dy', '1.2em')
+            .style('font-weight', 'normal');
+
           //Put Tooltip in the front
           backgroundTooltip.raise();
           textTooltip.raise();

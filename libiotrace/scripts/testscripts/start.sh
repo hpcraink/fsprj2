@@ -22,6 +22,13 @@ test_mem="90000mb"
 test_time="00:10:00"
 test_name="3_nodes_mpi_file_io"
 
+#test_script="./mpi_file_io_random.sh"
+#test_nodes=3
+#test_processes_per_worker=2
+#test_mem="90000mb"
+#test_time="00:20:00"
+#test_name="3_nodes_mpi_file_io_random"
+
 mkdir -p $test_dir
 
 module purge

@@ -3,10 +3,27 @@ import { PanelOptions, defaultPanelOptions } from './types';
 import { ForceFeedbackPanel } from './ForcePanel';
 
 export const plugin = new PanelPlugin<PanelOptions>(ForceFeedbackPanel).setPanelOptions((builder) => {
-  return builder.addNumberInput({
-    path: 'ProcessID',
-    name: 'Add the ProcessID for Drilldown below:',
-    description: 'Plugin will show Process with related Threads and the Filenames in which the threads write',
-    defaultValue: defaultPanelOptions.ProcessID,
-  });
+  return builder
+    .addBooleanSwitch({
+      path: 'UseFilterFilename',
+      name: 'Warning:',
+      description: 'Not using the filter may lead to a messy/unreadable Forcegraph due to too many Datapoints.',
+      defaultValue: defaultPanelOptions.UseFilterFilename,
+    })
+    .addTextInput({
+      path: 'FilterFilename',
+      name: 'Only show Filenames containing:',
+      description: 'Plugin will show Process with related Threads and Filenames',
+      defaultValue: defaultPanelOptions.FilterFilename,
+    })
+    .addBooleanSwitch({
+      path: 'UseWrite',
+      name: 'Show written Data.',
+      defaultValue: defaultPanelOptions.UseWrite,
+    })
+    .addBooleanSwitch({
+      path: 'UseRead',
+      name: 'Show read Data.',
+      defaultValue: defaultPanelOptions.UseRead,
+    });
 });

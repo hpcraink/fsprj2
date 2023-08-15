@@ -252,18 +252,24 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       )
     }
     
-    function drawThreadMap() {
-      const svgTM = d3.select('#ThreadMapMain');
-      const backgroundTooltip = d3
-          .select('#ThreadMapMain')
-          .append('rect')
-          .attr('class', 'tooltip-background-tm')
-          .style('opacity', 0);
-      const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text-tm').style('opacity', 0);
-      const ProcessIDForceGraph = d3.select('#ThreadMapMain').append('text').attr('class', 'Forcegraph').attr('ProcessID', 'select').style('opacity', 0);
+function drawThreadMap() {
+  const svgTM = d3.select('#ThreadMapMain');
+  const backgroundTooltip = d3
+      .select('#ThreadMapMain')
+      .append('rect')
+      .attr('class', 'tooltip-background-tm')
+      .style('opacity', 0);
+  const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text-tm').style('opacity', 0);
+  const ProcessIDForceGraph = d3.select('#ThreadMapMain').append('text').attr('class', 'Forcegraph').attr('ProcessID', 'select').style('opacity', 0);
       //Adjust width
+      if (DataLength*20+20 < width) {
+        d3.select('#ThreadMapMain')
+        .attr('width', width);
+      }
+      else {
       d3.select('#ThreadMapMain')
       .attr('width', DataLength*20+20);
+      }
       //Draw Separator
       svgTM
       .selectAll('rect')
@@ -318,7 +324,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           let bckgrndTT = Math.max((d.prefix.length + d.name.length), d.wrbytes.length)
           //Position of Tooltip, default topright
           let xtspan = 0
-          if((d.cx + 20 + bckgrndTT * 8) <= (DataLength*20+20) && (d.cy - 40) >= 0 ) {
+          if((d.cx + 20 + bckgrndTT * 8) <= width && (d.cy - 40) >= 0 ) {
             backgroundTooltip
               .attr('x', d.cx + 15)
               .attr('y', d.cy - 40 )
@@ -345,10 +351,10 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           //Tooltip bottomleft
           else {
             backgroundTooltip
-              .attr('x', d.cx - 15 - bckgrndTT * 8)
+              .attr('x', d.cx - 5 - bckgrndTT * 7)
               .attr('y', d.cy + 10)
             textTooltip
-              .attr('x', d.cx - 12 - bckgrndTT * 8)
+              .attr('x', d.cx - 2 - bckgrndTT * 7)
               .attr('y', d.cy + 26)
             //move Tooltip up
             if((d.cy + 10 + (d.affiliated.length+3)* 20) + 4 >= (height-100)) {
@@ -357,7 +363,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
               textTooltip
                 .attr('y', d.cy + 26 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
             }
-            xtspan = d.cx - 12 - bckgrndTT * 8
+            xtspan = d.cx - 2 - bckgrndTT * 7
           }
           //(d.name.length+ d.prefix.length) * 8 + 3
           backgroundTooltip

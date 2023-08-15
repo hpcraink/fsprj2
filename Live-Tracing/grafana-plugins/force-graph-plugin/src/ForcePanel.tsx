@@ -29,14 +29,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       nodeProcess = d3.select('#ThreadMapMain').select('text[class="Forcegraph"').attr('ProcessID');
     }
 
-    //Get old Nodes
+    //Get old Nodes & Links
     if (JSON.parse(sessionStorage.getItem('nodes')!) !== null) {
       nodes = JSON.parse(sessionStorage.getItem('nodes')!);
+      nodesLinks = JSON.parse(sessionStorage.getItem('links')!);
       //If PID changes, dont use old nodes => clear sessionStorage
       if (!(nodes[0].name === nodeProcess)) {
         nodes = [];
         sessionStorage.clear();
-        console.log('NODES', nodes, 'Links', nodesLinks, 'Storage', sessionStorage);
       }
     }
 
@@ -165,44 +165,44 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         addingNodes = true;
       }
 
-      //Get all Threads of the Process
-      for (let i = 0; i < nodeThreads.length; i++) {
-        //Check for existing nodes w/o ProcessNode, skip existing nodes
-        if (
-          !nodes
-            .slice(1)
-            .map((a: any) => a.name)
-            .includes(nodeThreads[i])
-        ) {
-          //Assign Colour
-          let nodeColour: any;
-          //Amount Read/Write
-          let amountReadWrite: any = [0, 0];
-          for (let j = 0; j < attributeFileName[i].length; j++) {
-            if (attributeFileName[i][j] !== undefined) {
-              if (attributeFileName[i][j] === 'Read') {
-                amountReadWrite[0]++;
-              } else if (attributeFileName[i][j] === 'Write') {
-                amountReadWrite[1]++;
-              }
+    //Get all Threads of the Process
+    for (let i = 0; i < nodeThreads.length; i++) {
+      //Check for existing nodes w/o ProcessNode, skip existing nodes
+      if (
+        !nodes
+          .slice(1)
+          .map((a: any) => a.name)
+          .includes(nodeThreads[i])
+      ) {
+        //Assign Colour
+        let nodeColour: any;
+        //Amount Read/Write
+        let amountReadWrite: any = [0, 0];
+        for (let j = 0; j < attributeFileName[i].length; j++) {
+          if (attributeFileName[i][j] !== undefined) {
+            if (attributeFileName[i][j] === 'Read') {
+              amountReadWrite[0]++;
+            } else if (attributeFileName[i][j] === 'Write') {
+              amountReadWrite[1]++;
             }
           }
-          nodeColour = ColourMix(amountReadWrite);
-          nodes.push({
-            index: nodeNumber,
-            prefix: 'ThreadID: ',
-            name: nodeThreads[i],
-            affiliatedPrefix: 'File Access: ',
-            affiliated: 'Read: ' + amountReadWrite[0],
-            affiliated2: 'Write: ' + amountReadWrite[1],
-            r: 5,
-            writtenBytes: data.series[ProcessIndex - nodeThreads.length + i].fields[1].values.get(0),
-            colour: nodeColour,
-          });
-          nodeNumber += 1;
-          addingNodes = true;
         }
+        nodeColour = ColourMix(amountReadWrite);
+        nodes.push({
+          index: nodeNumber,
+          prefix: 'ThreadID: ',
+          name: nodeThreads[i],
+          affiliatedPrefix: 'File Access: ',
+          affiliated: 'Read: ' + amountReadWrite[0],
+          affiliated2: 'Write: ' + amountReadWrite[1],
+          r: 5,
+          writtenBytes: data.series[ProcessIndex - nodeThreads.length + i].fields[1].values.get(0),
+          colour: nodeColour,
+        });
+        nodeNumber += 1;
+        addingNodes = true;
       }
+    }
 
       //Get all traced_filenames for each process
       let IndexFilenamePerThread = nodeFileName.length + 1; //helpNodes to check the filenames of each thread instead of all filenames
@@ -283,13 +283,6 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         //TODO
         //Link colour depending on wether last action was read or write? => Needed for Threads?
         let link_colour = '#003f5c';
-        // if (data.series[i].fields[1].labels?.functionname === 'fwrite') {
-        //   link_colour = '#ef5675';
-        // } else if (data.series[i].fields[1].labels?.functionname === 'write') {
-        //   link_colour = '#ffa600';
-        // } else if (data.series[i].fields[1].labels?.functionname === 'writev') {
-        //   link_colour = '#ff0000';
-        // }
         nodesLinks.push({
           source: sourceT.index,
           target: targetT.index,
@@ -311,59 +304,59 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             target: targetFn.index - 1,
             colour: targetFn.colour,
           });
-        }
-      }
     }
+  }
+}
 
-    //Colourmix
-    function ColourMix(lAmountReadWrite: any) {
-      //Colour selection
-      let colourNode: string;
-      let RdWrtPercentage = 0;
-      //Check for 0
-      if (!(lAmountReadWrite[0] === 0 && lAmountReadWrite[1] === 0)) {
-        if (lAmountReadWrite[1] === 0 && lAmountReadWrite[0] !== 0) {
-          //onlyread
-          RdWrtPercentage = 1;
-        } else if (lAmountReadWrite[1] !== 0) {
-          //only writes & mixed
-          RdWrtPercentage = lAmountReadWrite[0] / lAmountReadWrite[1];
-        }
-        //build mixture of those Read = #323264, Write = #643232
-        let redprop = (32 + 100 * (1 - RdWrtPercentage)).toString(16).substring(0, 2);
-        let blueprop = (32 + 132 * RdWrtPercentage).toString(16).substring(0, 2);
-        colourNode = '#' + redprop + '20' + blueprop;
-        return colourNode;
-      } else {
-        return '#888888';
-      }
+//Colourmix
+function ColourMix(lAmountReadWrite: any) {
+  //Colour selection
+  let colourNode: string;
+  let RdWrtPercentage = 0;
+  //Check for 0
+  if (!(lAmountReadWrite[0] === 0 && lAmountReadWrite[1] === 0)) {
+    if (lAmountReadWrite[1] === 0 && lAmountReadWrite[0] !== 0) {
+      //onlyread
+      RdWrtPercentage = 1;
+    } else if (lAmountReadWrite[1] !== 0) {
+      //only writes & mixed
+      RdWrtPercentage = lAmountReadWrite[0] / lAmountReadWrite[1];
     }
+    //build mixture of those Read = #323264, Write = #643232
+    let redprop = (32 + 100 * (1 - RdWrtPercentage)).toString(16).substring(0, 2);
+    let blueprop = (32 + 132 * RdWrtPercentage).toString(16).substring(0, 2);
+    colourNode = '#' + redprop + '20' + blueprop;
+    return colourNode;
+  } else {
+    return '#888888';
+  }
+}
 
-    //Process and Threads
-    function forceSimulation(_callback: () => void) {
-      //Draw Threads and Process
-      let simulationThread = d3
-        .forceSimulation(nodes.slice(0, nodeThreads.length + 1))
-        .force('charge', d3.forceManyBody().strength(-200))
-        .force('link', d3.forceLink().links(nodesLinks.slice(0, nodeThreads.length)).distance(100).strength(4))
-        .stop();
-      simulationThread.tick(500);
+//Process and Threads
+function forceSimulation(_callback: () => void) {
+  //Draw Threads and Process
+  let simulationThread = d3
+    .forceSimulation(nodes.slice(0, nodeThreads.length + 1))
+    .force('charge', d3.forceManyBody().strength(-200))
+    .force('link', d3.forceLink().links(nodesLinks.slice(0, nodeThreads.length)).distance(100).strength(4))
+    .stop();
+  simulationThread.tick(500);
 
-      //Draw Filenames
-      const otherThreads = Array.from({ length: nodeThreads.length - 1 }, () => []);
-      const lData = [nodes.slice(0, nodeThreads.length + 1), ...otherThreads].concat(
-        nodes.slice(nodeThreads.length + 1)
-      );
-      const lLinks = nodesLinks.slice(nodeThreads.length);
-      let simulationFilename = d3
-        .forceSimulation(lData)
-        .force('charge', d3.forceManyBody().strength(-40))
-        .force('link', d3.forceLink().links(lLinks).distance(50).strength(4))
-        .stop();
-      simulationFilename.tick(500);
+  //Draw Filenames
+  const otherThreads = Array.from({ length: nodeThreads.length - 1 }, () => []);
+  const lData = [nodes.slice(0, nodeThreads.length + 1), ...otherThreads].concat(
+    nodes.slice(nodeThreads.length + 1)
+  );
+  const lLinks = nodesLinks.slice(nodeThreads.length);
+  let simulationFilename = d3
+    .forceSimulation(lData)
+    .force('charge', d3.forceManyBody().strength(-40))
+    .force('link', d3.forceLink().links(lLinks).distance(50).strength(4))
+    .stop();
+  simulationFilename.tick(500);
 
-      _callback();
-    }
+  _callback();
+}
 
     function drawForceGraph() {
       const margin = { left: 20, top: 10, right: 20, bottom: 10 };
@@ -549,13 +542,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       }
     }
 
-    function runSimulation() {
-      addNodes(() => addLinks());
-      forceSimulation(drawForceGraph);
-      fixateNodes();
-      //Add Links to sS?
-      sessionStorage.setItem('nodes', JSON.stringify(nodes));
-    }
+function runSimulation() {
+  addNodes(() => addLinks());
+  forceSimulation(drawForceGraph);
+  fixateNodes();
+  //Add Links to sS?
+  sessionStorage.setItem('nodes', JSON.stringify(nodes));
+  sessionStorage.setItem('links', JSON.stringify(nodesLinks));
+}
 
     if (data.series.length === 0) {
       d3.select('#area').selectAll('*').remove();

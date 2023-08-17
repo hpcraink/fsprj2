@@ -4,6 +4,8 @@
 export interface PanelOptions {
   UseFilterFilename: any;
   FilterFilename: string;
+  UseNegativeFilterFilename: any;
+  NegFilterFilename: string;
   UseWrite: any;
   UseRead: any;
 }
@@ -11,6 +13,8 @@ export interface PanelOptions {
 export const defaultPanelOptions: PanelOptions = {
   UseFilterFilename: true,
   FilterFilename: 'pfs',
+  UseNegativeFilterFilename: false,
+  NegFilterFilename: '',
   UseWrite: true,
   UseRead: true,
 };

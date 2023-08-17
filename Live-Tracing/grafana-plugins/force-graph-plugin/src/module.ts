@@ -7,14 +7,25 @@ export const plugin = new PanelPlugin<PanelOptions>(ForceFeedbackPanel).setPanel
     .addBooleanSwitch({
       path: 'UseFilterFilename',
       name: 'Warning:',
-      description: 'Not using the filter may lead to a messy/unreadable Forcegraph due to too many Datapoints.',
+      description: 'Not using the filter a lead to a messy/unreadable Forcegraph due to too many Datapoints.',
       defaultValue: defaultPanelOptions.UseFilterFilename,
     })
     .addTextInput({
       path: 'FilterFilename',
       name: 'Only show Filenames containing:',
-      description: 'Plugin will show Process with related Threads and Filenames',
+      description: "Plugin will show Process with related Threads and Filenames. Split Inputs with ','.",
       defaultValue: defaultPanelOptions.FilterFilename,
+    })
+    .addBooleanSwitch({
+      path: 'UseNegativeFilterFilename',
+      name: '',
+      defaultValue: defaultPanelOptions.UseNegativeFilterFilename,
+    })
+    .addTextInput({
+      path: 'NegFilterFilename',
+      name: 'Filter Filenames containing:',
+      description: "Plugin will show Process with related Threads and Filenames. Split Inputs with ','.",
+      defaultValue: defaultPanelOptions.NegFilterFilename,
     })
     .addBooleanSwitch({
       path: 'UseWrite',

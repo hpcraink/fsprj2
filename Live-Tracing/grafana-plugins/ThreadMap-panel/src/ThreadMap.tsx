@@ -57,6 +57,11 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     }
     let minValLength = (minVal.toString().length) * 11
 
+    //Call Filter
+    if(options.UseFileSystemFinder) {
+      FileSystemFinder();
+    }
+
     drawThreadMap()
 
     //functions
@@ -86,7 +91,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       }
       return(Colour)
     }
-    
+
     function ColourAssignment(Colour: any, lDatalength: any) {
       let ctrTpP = 0
       var ThreadHeatValue: any[] = []
@@ -247,12 +252,22 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           cy: 140,
           r: 6,
           colour: Colour,
-          class: "Thread"
+          class: "Thread",
+          stroke: ''
         }
       )
     }
     
-function drawThreadMap() {
+    function FileSystemFinder() {
+      for (let i = 0; i < MapData.length; i++) {
+        if (MapData[i].affiliated.includes(options.FileSystemFinder)) {
+          MapData[i].stroke = 'pink';
+        }       
+      }
+      console.log(MapData)
+    }
+
+    function drawThreadMap() {
   const svgTM = d3.select('#ThreadMapMain');
   const backgroundTooltip = d3
       .select('#ThreadMapMain')
@@ -315,6 +330,11 @@ function drawThreadMap() {
         .style('fill', function (d: any) {
           return d.colour;
         })
+        .attr('stroke', function (d: any) {
+          return d.stroke;     
+        })
+        .attr('stroke-width', 2)
+
         .on('mouseover', function (d) {
           d3.select(this).transition().duration(50).attr('opacity', '.85');
           backgroundTooltip.transition().duration(50).style('opacity', 1);
@@ -414,11 +434,24 @@ function drawThreadMap() {
           ProcessIDForceGraph
           .attr('ProcessID', d.name)
           //Remove old highlight
-          d3.selectAll('circle').attr('stroke', null);
+          d3.selectAll('circle')
+          .filter(function() {return d3.select(this).attr('r') === '8';})
+          .attr('stroke', null);
           //Add Highliting
           d3.select(this).attr('stroke', 'blue').attr('stroke-width', 2);
           }
         });
+        //Highlight Threads with filtered Filenames
+        //Remove old highlight
+        d3.selectAll('circle')
+          .filter(function() {return d3.select(this).attr('r') === '6';})
+          .attr('stroke', null);
+        d3.selectAll('circle')
+        .filter(function() {return d3.select(this).attr('r') === '6';})
+        .attr('stroke', function (d: any) {
+            return d.stroke;     
+        })
+        .attr('stroke-width', 2)
         //Style MinMax Display
         //remove old min max
         d3.select('#minValueText').remove();

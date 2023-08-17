@@ -3,8 +3,10 @@
 //Options to Panel
 export interface PanelOptions {
     UseMinMaxBoolean: any;
-    ThreadMapColor: { min: any; max: any; }
-    SortThreadMapBy: [string, string, string]
+    ThreadMapColor: { min: any; max: any; };
+    SortThreadMapBy: [string, string, string];
+    UseFileSystemFinder: any;
+    FileSystemFinder: string;
 }
  
 export const defaultPanelOptions: PanelOptions = {
@@ -17,5 +19,7 @@ export const defaultPanelOptions: PanelOptions = {
         'default',
         'MaxBytes',
         'Filesystem'
-    ]
+    ],
+    UseFileSystemFinder: false,
+    FileSystemFinder: 'pfs',
 };

@@ -44,5 +44,18 @@ export const plugin = new PanelPlugin<PanelOptions>(ThreadMap).setPanelOptions(b
     category,
     showIf: (config) => config.UseMinMaxBoolean
     })
+    .addBooleanSwitch({
+      path: 'UseFileSystemFinder',
+      name: 'Activate FileSystemFinder',
+      defaultValue: defaultPanelOptions.UseFileSystemFinder,
+      category,
+    })
+    .addTextInput({
+      path: 'FileSystemFinder',
+      name: 'FileSystemFinder:',
+      description: '',
+      defaultValue: defaultPanelOptions.FileSystemFinder,
+      category,
+    })
 
 })

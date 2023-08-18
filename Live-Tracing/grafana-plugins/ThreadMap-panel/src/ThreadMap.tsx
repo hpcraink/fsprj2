@@ -33,18 +33,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     ProcessColour = ColAssig[1]
     FilesystemValue = FilesystemAssignment()
 
-    //Generate Data for process, threads and filesystem
-    let k = 0
-    for (let i = 0;i < DataLength; i++) {
-      if(ProcessColour[i] !== undefined) 
-      {
-        BuildPanelProcess(i, k, ProcessColour[i], ColAssig[2][i])
-        k++        
-      }
-      BuildPanelThread(i, k, ThreadColour[i])
-      k++
-    }
-
     //Assign min/max values to default Options
     let minVal: number, maxVal: number
     if (options.UseMinMaxBoolean === false) {
@@ -56,6 +44,18 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
       maxVal = options.ThreadMapColor.max
     }
     let minValLength = (minVal.toString().length) * 11
+
+    //Generate Data for process, threads and filesystem
+    let k = 0
+    for (let i = 0;i < DataLength; i++) {
+      if(ProcessColour[i] !== undefined) 
+      {
+        BuildPanelProcess(i, k, ProcessColour[i], ColAssig[2][i])
+        k++        
+      }
+      BuildPanelThread(i, k, ThreadColour[i])
+      k++
+    }
 
     //Call Filter
     if(options.UseFileSystemFinder) {
@@ -153,7 +153,12 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         else{
           for (; ((HeatValue[j] >= (options.ThreadMapColor.min+test*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength))) || HeatValue[j] < options.ThreadMapColor.min) && (j < HeatValue.length);) { 
             if ((HeatValue[j] <= (options.ThreadMapColor.min+(test+1)*((options.ThreadMapColor.max-options.ThreadMapColor.min)/DataLength))) || (HeatValue[j] >= options.ThreadMapColor.max)){
-              ReturnColour[j] = Colour[test]
+              if (HeatValue[j] >= options.ThreadMapColor.max) {
+                ReturnColour[j] = Colour[(Colour.length-1)]
+              }
+              else {
+                ReturnColour[j] = Colour[test]  
+              }
               j++
               test = 0
               //Skip for PID
@@ -264,18 +269,21 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           MapData[i].stroke = 'pink';
         }       
       }
-      console.log(MapData)
     }
 
     function drawThreadMap() {
-  const svgTM = d3.select('#ThreadMapMain');
-  const backgroundTooltip = d3
+      //Redraw if new Min/Max Vals are specified
+      //if (condition) {
+        d3.select('#ThreadMapMain').selectAll('*').remove();
+      //}
+      const svgTM = d3.select('#ThreadMapMain');
+      const backgroundTooltip = d3
       .select('#ThreadMapMain')
       .append('rect')
       .attr('class', 'tooltip-background-tm')
       .style('opacity', 0);
-  const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text-tm').style('opacity', 0);
-  const ProcessIDForceGraph = d3.select('#ThreadMapMain').append('text').attr('class', 'Forcegraph').attr('ProcessID', 'select').style('opacity', 0);
+      const textTooltip = d3.select('#ThreadMapMain').append('text').attr('class', 'tooltip-text-tm').style('opacity', 0);
+      const ProcessIDForceGraph = d3.select('#ThreadMapMain').append('text').attr('class', 'Forcegraph').attr('ProcessID', 'select').style('opacity', 0);
       //Adjust width
       if (DataLength*20+20 < width) {
         d3.select('#ThreadMapMain')
@@ -456,6 +464,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
         //remove old min max
         d3.select('#minValueText').remove();
         d3.select('#maxValueText').remove();
+        d3.select('#maxValueColour').remove();
         const svgMinMax = d3.select('#ThreadMapMinMax')
         const drawminVal = d3.select('#ThreadMapMinMax').append('text').attr('class', 'minValue')
         const drawminValColour = d3.select('#ThreadMapMinMax').append('circle').attr('class', 'minValue')
@@ -487,6 +496,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           .attr('font-weight', 'bold')
           .html(maxVal.toString())
         drawmaxValColour
+          .attr('id', 'maxValueColour')
           .attr('cx', 69 + minValLength)
           .attr('cy', 60)
           .attr('r', 10)

@@ -273,7 +273,7 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
 
     function drawThreadMap() {
       //Redraw if new Min/Max Vals are specified
-      //if (condition) {
+      //if (oldMin !== newMin || oldMax !== newMax) {
         d3.select('#ThreadMapMain').selectAll('*').remove();
       //}
       const svgTM = d3.select('#ThreadMapMain');
@@ -501,6 +501,24 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
           .attr('cy', 60)
           .attr('r', 10)
           .style('fill', '#FF0000')
+        const ProcessText = d3.select('#ThreadMapMain').append('text')
+        ProcessText
+          .attr('x', 5)
+          .attr('y', 30)
+          .attr('font-family','Arial')
+          .attr('font-size', 20)
+          .attr('fill', 'White')
+          .attr('font-weight', 'bold')
+          .html('Process:')
+          const ThreadText = d3.select('#ThreadMapMain').append('text')
+          ThreadText
+            .attr('x', 5)
+            .attr('y', 110)
+            .attr('font-family','Arial')
+            .attr('font-size', 18)
+            .attr('fill', 'White')
+            .attr('font-weight', 'bold')
+            .html('Threads:')
     }
     
   }, [options, data, height, width]);
@@ -509,8 +527,6 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
     <div>
       <CustomScrollbar>
         <svg id="ThreadMapMain" height={height-100}>
-          <text x={(5)} y= {(30)} fontFamily='Arial' fontSize='20' fill='White' fontWeight='bold'>Process:</text>
-          <text x={(5)} y= {(110)} fontFamily='Arial' fontSize='18' fill='White' fontWeight='bold'>Threads:</text>
         </svg>
       </CustomScrollbar>
       <svg id="ThreadMapMinMax">

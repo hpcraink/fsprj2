@@ -47,6 +47,8 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       let ctrFilename = 0;
       let writeNodes: any[] = [];
       let readNodes: any[] = [];
+      let ThreadsRead = 0;
+      let ThreadsWrite = 0;
       //Add Write
       if (options.UseWrite) {
         //Find Index of Process
@@ -62,18 +64,30 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             //Split filter
             var FilterWrite = options.FilterFilename.split(',');
             let lFileName: any = [];
-            let nFN: any = [];
+            let nFNWrite: any = [];
             //Write
             lFileName.push(data.series[ProcessIndex + data.series.length / 2].fields[1].values);
             for (let i = 0; i < lFileName[0].buffer.length; i++) {
               for (let j = 0; j < FilterWrite.length; j++) {
                 if (lFileName[0].buffer[i].includes(FilterWrite[j])) {
-                  nFN.push(lFileName[0].buffer[i]);
+                  nFNWrite.push(lFileName[0].buffer[i]);
                   j = FilterWrite.length;
                 }
               }
             }
-            writeNodes.push(nFN);
+            if (options.UseNegativeFilterFilename) {
+              var NegFilterWrite = options.NegFilterFilename.split(',');
+              for (let k = 0; k < nFNWrite.length; k++) {
+                for (let j = 0; j < NegFilterWrite.length; j++) {
+                  if (nFNWrite[k].includes(NegFilterWrite[j])) {
+                    nFNWrite.splice(k, 1);
+                    j = NegFilterWrite.length;
+                    k--;
+                  }
+                }
+              }
+            }
+            writeNodes.push(nFNWrite);
           }
           //Get everything
           else {
@@ -112,6 +126,19 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
                 if (lFileName[0].buffer[i].includes(Filters[j])) {
                   nFN.push(lFileName[0].buffer[i]);
                   j = Filters.length;
+                }
+              }
+            }
+
+            if (options.UseNegativeFilterFilename) {
+              var NegFilterRead = options.NegFilterFilename.split(',');
+              for (let k = 0; k < nFN.length; k++) {
+                for (let j = 0; j < NegFilterRead.length; j++) {
+                  if (nFN[k].includes(NegFilterRead[j])) {
+                    nFN.splice(k, 1);
+                    k--;
+                    j = NegFilterRead.length;
+                  }
                 }
               }
             }
@@ -159,13 +186,12 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
 
       //Node for Process, skip existing nodes
       if (!nodes.map((a: any) => a.name).includes(nodeProcess)) {
-        //TODO Node Colours gives mix of coulours or read/blue for more read/write
         nodes.push({
           index: nodeNumber,
           prefix: 'ProzessID: ',
           name: nodeProcess,
           affiliatedPrefix: 'Amount Read/Write: ',
-          affiliated: 'Read: ', //TODO Add numbers
+          affiliated: 'Read: ',
           affiliated2: 'Write: ',
           r: 10,
           writtenBytes: data.series[ProcessIndex - nodeThreads.length].fields[1].values.get(0),
@@ -198,6 +224,10 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
             }
           }
           nodeColour = ColourMix(amountReadWrite);
+          //Get Sum of all Thread
+          ThreadsRead += amountReadWrite[0];
+          ThreadsWrite += amountReadWrite[1];
+
           nodes.push({
             index: nodeNumber,
             prefix: 'ThreadID: ',
@@ -225,6 +255,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
               .map((a: any) => a.name)
               .includes(nodeFileName[i][j])
           ) {
+            console.log(i, j);
             //Assign Colour
             let nodeColour: any;
             //Amount Read/Write
@@ -255,6 +286,14 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
         }
         IndexFilenamePerThread += nodeFileName[i].length;
       }
+
+      //Assign Read & Write and Colour to Process
+      nodes[0].affiliated = 'Read: ' + ThreadsRead;
+      nodes[0].affiliated2 = 'Write: ' + ThreadsWrite;
+      let ProcessColour: any = [];
+      ProcessColour[0] = ThreadsRead;
+      ProcessColour[1] = ThreadsWrite;
+      nodes[0].colour = ColourMix(ProcessColour);
 
       _callback();
     }
@@ -328,7 +367,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
           RdWrtPercentage = 1;
         } else if (lAmountReadWrite[1] !== 0) {
           //only writes & mixed
-          RdWrtPercentage = lAmountReadWrite[0] / lAmountReadWrite[1];
+          RdWrtPercentage = lAmountReadWrite[0] / (lAmountReadWrite[1] + lAmountReadWrite[0]);
         }
         //build mixture of those Read = #323264, Write = #643232
         let redprop = (32 + 100 * (1 - RdWrtPercentage)).toString(16).substring(0, 2);
@@ -569,7 +608,7 @@ export const ForceFeedbackPanel: React.FC<Props> = ({ options, data, width, heig
       runSimulation();
     }
 
-    //No old Data for testing purposes | TODO: Remove & Fix(?) for final tests!
+    //No old Data for testing purposes
     sessionStorage.clear();
   }, [options, data, height, width]);
   return (

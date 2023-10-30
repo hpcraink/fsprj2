@@ -273,9 +273,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
 
     function drawThreadMap() {
       //Redraw if new Min/Max Vals are specified
-      //if (oldMin !== newMin || oldMax !== newMax) {
+      if ((options.ThreadMapColor.min !== ColAssig[0]?.[1]) || (options.ThreadMapColor.max !== ColAssig[0]?.[2])) {
         d3.select('#ThreadMapMain').selectAll('*').remove();
-      //}
+      }
       const svgTM = d3.select('#ThreadMapMain');
       const backgroundTooltip = d3
       .select('#ThreadMapMain')
@@ -387,9 +387,9 @@ export const ThreadMap: React.FC<ThreadMapPanelProps> = ({ options, data, width,
             //move Tooltip up
             if((d.cy + 10 + (d.affiliated.length+3)* 20) + 4 >= (height-100)) {
               backgroundTooltip
-              .attr('y', d.cy  + 10 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
+              .attr('y', d.cy  + 10 - ((d.cy + 20 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
               textTooltip
-                .attr('y', d.cy + 26 - ((d.cy + 20 + (d.affiliated.length+3)* 20 + 4) - (height-100)))
+                .attr('y', d.cy + 26 - ((d.cy + 20 + (d.affiliated.length+2)* 20 + 4) - (height-100)))
             }
             xtspan = d.cx - 2 - bckgrndTT * 7
           }

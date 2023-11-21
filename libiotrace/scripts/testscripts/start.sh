@@ -20,6 +20,16 @@ elif [[ "$test_script" = "mpi_file_io" ]]; then
     test_time="00:10:00"
     test_name="3_nodes_mpi_file_io"
 
+
+elif [[ "$test_script" = "mpi_file_io_2" ]]; then
+    
+    test_script="./mpi_file_io_2.sh"
+    test_nodes=3
+    test_processes_per_worker=40
+    test_mem="90000mb"
+    test_time="00:10:00"
+    test_name="3_nodes_mpi_file_io"
+
 elif [[ "$test_script" = "mpi_file_io" ]]; then
 
     test_script="./mpi_file_io_random.sh"

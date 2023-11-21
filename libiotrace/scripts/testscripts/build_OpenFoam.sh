@@ -9,8 +9,9 @@ OPENMPI_VERSION="4.1"
 git clone --depth 1 https://github.com/OpenFOAM/OpenFOAM-${OPENFOAM_VERSION}.git
 git clone --depth 1 https://github.com/OpenFOAM/ThirdParty-${OPENFOAM_VERSION}.git
 
-# load modules
+# check if module command is available
 if command -v module &> /dev/null; then
+    # load modules
     module load compiler/gnu/${GCC_VERSION}
     module load mpi/openmpi/${OPENMPI_VERSION}
 fi
@@ -18,6 +19,7 @@ fi
 # source environment
 source ./OpenFOAM-${OPENFOAM_VERSION}/etc/bashrc
 
+# check if module command is available
 if command -v module &> /dev/null; then
     # workaround: OpenFOAMs /etc/bashrc writes /usr/lib64 to
     # LD_LIBRARY_PATH prior to the openmpi directories; to

@@ -1,0 +1,18 @@
+base_path="/home/es/es_es/<username>/<path>"
+
+test_gcc_version="12.1"
+test_mpi_version="4.1"
+
+test_openfoam_dir="${base_path}/OpenFoam/OpenFOAM-10"
+test_influx_dir="${base_path}/influxdb2-2.0.6-linux-amd64"
+test_dir="${base_path}/scripts"
+
+test_processes_per_worker=16
+batch_queue_name=dev_multiple
+
+# Options for test_script:
+# openFOAM_motorBike
+# mpi_file_io
+# mpi_file_io_2
+# mpi_file_io_random
+test_script="mpi_file_io"

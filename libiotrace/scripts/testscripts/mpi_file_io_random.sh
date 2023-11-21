@@ -3,7 +3,7 @@ iterations=1000
 timeBetweenFileCreateMin=0
 timeBetweenFileCreateMax=10                
 threadMin=1        
-threadMax=3F        
+threadMax=3        
 fileCountMin=10        
 fileCountMax=100        
 readMin=1        
@@ -11,7 +11,7 @@ readMax=1024
 writeMin=1        
 writeMax=1024
 
-IOTRACE_LOG_NAME=mpi_file_io_test1
+IOTRACE_LOG_NAME=mpi_file_io_random
 IOTRACE_DATABASE_IP=$1
 IOTRACE_DATABASE_PORT=8086
 IOTRACE_INFLUX_ORGANIZATION=hse

@@ -47,3 +47,5 @@ rm -f $IOTRACE_LOG_NAME*
 /usr/bin/time -o $file -a -f "without_libiotrace\t$i$format" mpirun -N ${7} -H ${5} -np $processes -x OMP_NUM_THREADS=$threads $PWD/$TESTNAME $TESTARGUMENTS
 
 done
+
+rm -f mpi_file_io.txt

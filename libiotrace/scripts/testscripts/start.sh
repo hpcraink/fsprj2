@@ -32,12 +32,12 @@ elif [[ "$test_script" = "mpi_file_io_2" ]]; then
 
 elif [[ "$test_script" = "mpi_file_io" ]]; then
 
-    test_script="./mpi_file_io_random.sh"
+    test_script="./posix_file_io_random.sh"
     test_nodes=3
     test_processes_per_worker=2
     test_mem="90000mb"
     test_time="00:20:00"
-    test_name="3_nodes_mpi_file_io_random"
+    test_name="3_nodes_posix_file_io_random"
 
 else
     echo "Test Script >$test_script< not found."

@@ -46,7 +46,7 @@ tbd.
 tbd.
 ### mpi_file_io_2
 tbd.
-### mpi_file_io_random
+### posix_file_io_random
 tbd.
 
 

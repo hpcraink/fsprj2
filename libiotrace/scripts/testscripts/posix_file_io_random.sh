@@ -11,14 +11,14 @@ readMax=1024
 writeMin=1        
 writeMax=1024
 
-IOTRACE_LOG_NAME=mpi_file_io_random
+IOTRACE_LOG_NAME=posix_file_io_random
 IOTRACE_DATABASE_IP=$1
 IOTRACE_DATABASE_PORT=8086
 IOTRACE_INFLUX_ORGANIZATION=hse
 IOTRACE_INFLUX_BUCKET=hsebucket
 IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng==
 LD_PRELOAD=../../build/src/libiotrace.so
-TESTNAME=../../build/test/mpi_file_io_random_openmp
+TESTNAME=../../build/testposix_file_io_random_openmp
 TESTARGUMENTS="-v -i$iterations -c$timeBetweenFileCreateMin -C$timeBetweenFileCreateMax -t$threadMin -T$threadMax -f$fileCountMin -F$fileCountMax -r$readMin -R$readMax -w$writeMin -W$writeMax"
 TMP_FILES="mpi_file_random_*"
 

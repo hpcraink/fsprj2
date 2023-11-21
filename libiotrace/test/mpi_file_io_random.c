@@ -90,7 +90,7 @@ int randBeetween(int min, int max) {
 
 // ARGS PARSER
 
-const char *argp_program_version ="mpi_file_io_random 1.0";
+const char *argp_program_version ="posix_file_io_random 1.0";
 const char *argp_program_bug_address = "@hs-esslingen.de";
 struct arguments {            
   int verbose;              
@@ -107,7 +107,7 @@ struct arguments {
   int writeMax;              
 };
 
-static char doc[] ="mpi_file_io_random -- A program to generate Random FILE IO.";
+static char doc[] ="posix_file_io_random -- A program to generate Random FILE IO.";
 
 static struct argp_option options[] = {
   {"verbose"                  , 'v', 0            , OPTION_ARG_OPTIONAL, "Produce verbose output (Default: false)", 0},

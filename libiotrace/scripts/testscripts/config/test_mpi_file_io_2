@@ -1,0 +1,42 @@
+# dependencies
+test_source_configs=("gcc_mpi")
+test_source=()
+test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
+
+# libiotrace
+test_libiotrace_cmake_options=(
+-DALL_WRAPPERS_ACTIVE=OFF
+-DENABLE_FILESYSTEM_METADATA=OFF
+-DENABLE_OUTPUT=INFLUXDB
+-DENABLE_REMOTE_CONTROL=OFF
+-DFILENAME_RESOLUTION_ENABLED=OFF
+-DLOGGING=OFF
+-DLOG_WRAPPER_TIME=OFF
+-DREALTIME=ON
+-DSENDING=ON
+-DWITH_ALLOC=OFF
+-DWITH_DL_IO=OFF
+-DWITH_MPI_IO=ON
+-DWITH_POSIX_AIO=OFF
+-DWITH_POSIX_IO=OFF
+-DWITH_STD_IO=OFF
+)
+
+# slurm
+test_nodes=3
+test_processes_per_worker=40
+test_mem="90000mb"
+test_time="00:10:00"
+test_queue_name="dev_multiple"
+
+# test script
+test_script="./mpi_file_io.sh"
+export test_program="${test_build_test_dir}/mpi_file_io_openmp"
+export test_iterations=20
+export test_threads=1
+export test_number_of_writes=10
+
+# output
+test_name="3_nodes_mpi_file_io_2"
+export IOTRACE_LOG_NAME=mpi_file_io_2_test1
+export performance_data_file=performance_test

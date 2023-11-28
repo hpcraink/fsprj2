@@ -1,62 +1,116 @@
 #!/bin/bash
 
-source ./config
+config_dir="config"
+config_file="config"
 
-if [ "$test_script" = "openFOAM_motorBike" ]; then
-    
-    test_script="./openFOAM_motorBike.sh"
-    test_nodes=3
-    test_processes_per_worker=16
-    test_mem="90000mb"
-    test_time="00:10:00"
-    test_name="3_nodes_motorBike"
-
-elif [[ "$test_script" = "mpi_file_io" ]]; then
-    
-    test_script="./mpi_file_io.sh"
-    test_nodes=3
-    test_processes_per_worker=40
-    test_mem="90000mb"
-    test_time="00:10:00"
-    test_name="3_nodes_mpi_file_io"
-
-
-elif [[ "$test_script" = "mpi_file_io_2" ]]; then
-    
-    test_script="./mpi_file_io_2.sh"
-    test_nodes=3
-    test_processes_per_worker=40
-    test_mem="90000mb"
-    test_time="00:10:00"
-    test_name="3_nodes_mpi_file_io"
-
-elif [[ "$test_script" = "mpi_file_io" ]]; then
-
-    test_script="./posix_file_io_random.sh"
-    test_nodes=3
-    test_processes_per_worker=2
-    test_mem="90000mb"
-    test_time="00:20:00"
-    test_name="3_nodes_posix_file_io_random"
-
+# can only be executed from libiotrace testscript subdir
+echo "check if script resides in subdir of libiotrace"
+libiotrace_CMakeLists_txt="$(dirname "$0")/../../CMakeLists.txt"
+if [ -f ${libiotrace_CMakeLists_txt} ]; then
+    if ! grep -q "project(libiotrace" "${libiotrace_CMakeLists_txt}"; then
+        echo "${libiotrace_CMakeLists_txt} does not contain libiotrace project declaration"
+    fi
 else
-    echo "Test Script >$test_script< not found."
-    exit 1
+    echo "${libiotrace_CMakeLists_txt} not found"
+    exit
 fi
+echo "    passed"
 
 
-mkdir -p $test_dir
+# source base config file
+echo "source base config file"
+base_config="$(dirname "$0")/${config_dir}/${config_file}"
+if [ -f ${base_config} ]; then
+    source ${base_config}
+else
+    echo "base config file ${base_config} does not exist"
+    exit
+fi
+echo "    done"
 
+# source specific test case config file
+echo "source specific test case config file"
+test_case_config="${test_config_dir}/${test_config}"
+if [ -f ${test_case_config} ]; then
+    source ${test_case_config}
+else
+    echo "test config file ${test_case_config} does not exist"
+    exit
+fi
+echo "    done"
+
+# source additional config files
+echo "source additional config files"
+for source_config in "${test_source_configs[@]}"
+do
+    test_source_config="${test_config_dir}/${source_config}"
+    if [ -f ${test_source_config} ]; then
+        source ${test_source_config}
+    else
+        echo "config file ${test_source_config} does not exist"
+        exit
+    fi
+done
+echo "    done"
+
+# source specific test case config file again
+# to correctly expand variables set by additional config files
+echo "source specific test case config file again"
+source ${test_case_config}
+echo "    done"
+
+# create test dir (for tmp and output files)
+echo "create test dir"
+mkdir -p ${test_dir}
+echo "    done"
+
+# load modules
+echo "load modules"
 module purge
-module load compiler/gnu/${test_gcc_version}
-module load mpi/openmpi/${test_mpi_version}
+for module in "${test_modules[@]}"
+do
+    module load ${module}
+done
+echo "    done"
 
-# load and initialize openFOAM
-source ${test_openfoam_dir}/etc/bashrc
+# source test environment (e.g. openFOAM)
+echo "source test environment"
+for source_file in "${test_source[@]}"
+do
+    source ${source_file}
+done
+echo "    done"
 
-module purge
-module load compiler/gnu/${test_gcc_version}
-module load mpi/openmpi/${test_mpi_version}
+echo "reload modules"
+if (( ${#test_source[@]} != 0 )); then
+    # workaround: OpenFOAMs /etc/bashrc writes /usr/lib64 to
+    # LD_LIBRARY_PATH prior to the openmpi directories; to
+    # set the openmpi directories in front of the /usr/lib64
+    # a reload of the openmpi module is necessary
+    module purge
+    for module in "${test_modules[@]}"
+    do
+        module load ${module}
+    done
+fi
+echo "    done"
 
+# create libiotrace build dir
+echo "create libiotrace build dir"
+libiotrace_build_dir=${test_libiotrace_build}
+mkdir -p "${libiotrace_build_dir}"
+echo "    done"
 
-sbatch -p $batch_queue_name -N ${test_nodes} --mem=${test_mem} -t ${test_time} libiotracetest.sh ${test_script} ${test_name} ${test_influx_dir} ${test_dir} ${test_openfoam_dir} ${test_processes_per_worker}
+# build libiotrace in subshell (doesn't change current working dir of shell)
+echo "build libiotrace"
+(
+    cmake_lists=$(realpath "$(dirname "$0")/../../")
+    cd ${libiotrace_build_dir}
+    cmake "${cmake_lists}" "${test_libiotrace_cmake_options[@]}"
+    make
+)
+echo "    done"
+
+echo "start sbatch"
+sbatch -p ${test_queue_name} -N ${test_nodes} --mem=${test_mem} -t ${test_time} $(dirname "$0")/manage_db_and_worker_nodes.sh ${test_script_dir}/${test_script} ${test_name} ${test_influx_dir} ${test_dir} ${test_processes_per_worker}
+echo "    done"

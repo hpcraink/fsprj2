@@ -1,0 +1,50 @@
+# dependencies
+test_source_configs=("gcc_mpi")
+test_source=()
+test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
+
+# libiotrace
+test_libiotrace_cmake_options=(
+-DALL_WRAPPERS_ACTIVE=ON
+-DENABLE_FILESYSTEM_METADATA=OFF
+-DENABLE_OUTPUT=INFLUXDB
+-DENABLE_REMOTE_CONTROL=OFF
+-DFILENAME_RESOLUTION_ENABLED=OFF
+-DLOGGING=OFF
+-DLOG_WRAPPER_TIME=OFF
+-DREALTIME=ON
+-DSENDING=ON
+-DWITH_ALLOC=OFF
+-DWITH_DL_IO=OFF
+-DWITH_MPI_IO=OFF
+-DWITH_POSIX_AIO=OFF
+-DWITH_POSIX_IO=ON
+-DWITH_STD_IO=OFF
+)
+
+# slurm
+test_nodes=3
+test_processes_per_worker=2
+test_mem="90000mb"
+test_time="00:20:00"
+test_queue_name="dev_multiple"
+
+# test script
+test_script="./posix_file_io_random.sh"
+export test_program="${test_build_test_dir}/posix_file_io_random_openmp"
+export test_iterations=20
+export test_time_between_file_create_min=0
+export test_time_between_file_create_max=10
+export test_thread_min=1
+export test_thread_max=3
+export test_file_count_min=10
+export test_file_count_max=100
+export test_read_min=1
+export test_read_max=1024
+export test_write_min=1
+export test_write_max=1024
+export test_tmp_files="mpi_file_random_*"
+
+# output
+test_name="3_nodes_posix_file_io_random"
+export IOTRACE_LOG_NAME=posix_file_io_random

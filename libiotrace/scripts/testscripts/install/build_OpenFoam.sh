@@ -1,13 +1,28 @@
 #!/bin/bash
 
-OPENFOAM_VERSION=10
-GCC_VERSION="12.1"
-OPENMPI_VERSION="4.1"
+openfoam_config="$(dirname "$0")/../config/openfoam"
+if [ -f ${openfoam_config} ]; then
+    source ${openfoam_config}
+else
+    echo "file ${openfoam_config} does not exist"
+    exit
+fi
 
+gcc_mpi_config="$(dirname "$0")/../config/gcc_mpi"
+if [ -f ${gcc_mpi_config} ]; then
+    source ${gcc_mpi_config}
+else
+    echo "file ${gcc_mpi_config} does not exist"
+    exit
+fi
 
 # download sources
-git clone --depth 1 https://github.com/OpenFOAM/OpenFOAM-${OPENFOAM_VERSION}.git
-git clone --depth 1 https://github.com/OpenFOAM/ThirdParty-${OPENFOAM_VERSION}.git
+if ! [ -d OpenFOAM-${OPENFOAM_VERSION} ]; then
+    git clone --depth 1 ${OPENFOAM_URL}/OpenFOAM-${OPENFOAM_VERSION}.git
+fi
+if ! [ -d ThirdParty-${OPENFOAM_VERSION} ]; then
+    git clone --depth 1 ${OPENFOAM_URL}/ThirdParty-${OPENFOAM_VERSION}.git
+fi
 
 # check if module command is available
 if command -v module &> /dev/null; then
@@ -31,8 +46,8 @@ if command -v module &> /dev/null; then
 fi
 
 # compile ThirdParty software
-# no linger necessary: OpenFOAM Allwmake calls ThirdParty Allwmake
-#icd ThirdParty-${OPENFOAM_VERSION}
+# no longer necessary: OpenFOAM Allwmake calls ThirdParty Allwmake
+#cd ThirdParty-${OPENFOAM_VERSION}
 #./Allwmake
 #cd ..
 

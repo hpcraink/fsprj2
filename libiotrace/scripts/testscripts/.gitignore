@@ -1,3 +1,4 @@
-config
+config/config
 slurm-*.out
 whitelist
+performance_test

@@ -1,0 +1,23 @@
+base_path="/home/es/es_es/es_pkoester/test_libiotrace_script"
+
+tests="./tests"
+test_config="./config"
+
+# source influxdb config file
+influxdb_config="$(dirname "$0")/${config_dir}/influxdb"
+if [ -f ${influxdb_config} ]; then
+    source ${influxdb_config}
+else
+    echo "influxdb config file ${influxdb_config} does not exist"
+    exit
+fi
+
+test_influx_dir="${base_path}/${INFLUXDB_NAME}"
+test_dir="${base_path}/scripts"
+
+# Options for test_script:
+# test_openFOAM_motorBike
+# test_mpi_file_io
+# test_mpi_file_io_2
+# test_posix_file_io_random
+test_script="test_mpi_file_io"

@@ -1,69 +1,73 @@
 # Testscases
 
-## Setup BWUniCluster
+## Quick Start Guide
 
-### Install OpenFoam
-
-1. Run `build_OpenFoam.sh` from target directory
-
-### Install InfluxDB
-
-1. Run `build_InfluxDB.sh` from target directory
-
-or
-
-1. Download `influxdb2-2.0.6-linux-amd64.tar.gz`
+1. ssh to bwUniCluster
 
 ```shell
-wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.0.6-linux-amd64.tar.gz
+ssh es_<user id>@bwunicluster.scc.kit.edu
 ```
-2. Unpack `influxdb2-2.0.6-linux-amd64.tar.gz`
+
+2. clone libiotrace
 
 ```shell
-tar –xvzf influxdb2-2.0.6-linux-amd64.tar.gz
+mkdir <libiotrace dir>
+cd <libiotrace dir>
+git clone https://github.com/hpcraink/fsprj2.git
 ```
 
-### Setup Test Variables 
-
-1. Copy `config.sample` to `config`
+3. create test directory
 
 ```shell
-cp config.sample config
+mkdir <test dir>
+cd <test dir>
+./<libiotrace dir>/libiotrace/scripts/testscripts/install/build_and_configure_all.sh
 ```
+Installs InfluxDB and OpenFOAM.
+Configures `<libiotrace dir>/libiotrace/scripts/testscripts/config/config`, so it points to `<test dir>`.
+Preferable use tmux or screen for this command (command will run for more than one hour).
 
-2. Change config to own values
+4. choose a test to run
 
+All files in `<libiotrace dir>/libiotrace/scripts/testscripts/config/`
+starting with `test_` are usable test configurations.
+Choose one and change the value of the variable `test_config`
+in the file `<libiotrace dir>/libiotrace/scripts/testscripts/config/config`
+to the name of the choosen test configuration file.
 
-## Run Tests
+5. run the test
 
-Run `start.sh`
+```shell
+cd <test dir>
+./<libiotrace dir>/libiotrace/scripts/testscripts/start.sh
+```
+Configures and builds libiotrace.
+Starts the test case with the build libiotrace as sbatch.
 
+6. connect to InfluxDB
 
-## Overview 
-### openFOAM_motorBike
+`squeue` and `squeue --start` show if the sbatch job already runs.
+If the job has started a slurm log is written to `<test dir>`.
+
+The `ib0 address of influxDB` from the slurm log can be used to connect to the InfluxDB.
+A new ssh connection with port forwarding is needed:
+```shell
+ssh -L8086:<ib0 address of influxDB>:8086 es_<user id>@bwunicluster.scc.kit.edu
+```
+Now the InfluxDB is available at `http://localhost:8086/`.
+
+## Overview Testcases
+## test_openFOAM_motorBike
 tbd.
-### mpi_file_io
+### test_mpi_file_io
 tbd.
-### mpi_file_io_2
+### test_mpi_file_io_2
 tbd.
-### posix_file_io_random
+### test_posix_file_io_random
 tbd.
-
 
 ## Local Setup
 
 ### Restore InfluxDB Dump
 
 tbd.
-
-### Connect to InfluxDB
-
-Connet to Login Node, with Portforwording to DBNODE
-
-```shell
-ssh -L8086:DBNODE-IP:8086 MY_LOGIN@bwunicluster.scc.kit.edu
-```
-=> DBNODE-IP from Slurm-Log
-
-
-

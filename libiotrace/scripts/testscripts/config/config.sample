@@ -15,7 +15,7 @@ do
     fi
 done
 
-test_openfoam_dir="${base_path}/OpenFoam/OpenFOAM-${OPENFOAM_VERSION}"
+test_openfoam_dir="${base_path}/OpenFOAM-${OPENFOAM_VERSION}"
 test_influx_dir="${base_path}/${INFLUXDB_NAME}"
 test_dir="${base_path}/scripts"
 test_libiotrace_build="${base_path}/libiotrace_build"

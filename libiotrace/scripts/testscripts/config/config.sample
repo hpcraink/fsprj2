@@ -1,5 +1,6 @@
 base_path="/home/es/es_es/<username>/<path>"
 
+export test_base_script_dir="$(dirname "$0")"
 test_script_dir="$(dirname "$0")/tests"
 test_config_dir="$(dirname "$0")/config"
 

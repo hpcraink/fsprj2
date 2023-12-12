@@ -53,6 +53,12 @@ do
 done
 echo "    done"
 
+# source base config file again
+# to correctly expand variables set by additional config files
+echo "source base config file again"
+source ${base_config}
+echo "    done"
+
 # source specific test case config file again
 # to correctly expand variables set by additional config files
 echo "source specific test case config file again"
@@ -109,6 +115,21 @@ echo "build libiotrace"
     cmake "${cmake_lists}" "${test_libiotrace_cmake_options[@]}"
     make
 )
+echo "    done"
+
+echo "load and decompress data"
+for file_url in "${test_file_url[@]}"
+do
+    file_url=(${file_url})
+    echo ${file_url[0]}
+    echo ${file_url[1]}
+    wget -nc -O ${file_url[1]} ${file_url[0]}
+done
+for file_zip in "${test_unzip_files[@]}"
+do
+    echo ${file_zip}
+    unzip -n ${file_zip}
+done
 echo "    done"
 
 echo "start sbatch"

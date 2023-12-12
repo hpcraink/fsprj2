@@ -1,5 +1,5 @@
 # dependencies
-test_source_configs=("gcc_mpi" "openfoam_org_7")
+test_source_configs=("influxdb" "gcc_mpi" "openfoam_org_7")
 test_source=("${test_openfoam_dir}/etc/bashrc")
 test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
 

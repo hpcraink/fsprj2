@@ -1,7 +1,9 @@
 # dependencies
-test_source_configs=("gcc_mpi" "openfoam_com_2106")
+test_source_configs=("influxdb" "gcc_mpi" "openfoam_com_2106")
 test_source=("${test_openfoam_dir}/etc/bashrc")
 test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
+test_file_url=("https://bwsyncandshare.kit.edu/s/MQfkypzfHfmZZtM/download VirgilioRe22Pr7_Perfomance.zip")
+test_unzip_files=("VirgilioRe22Pr7_Perfomance.zip")
 
 # libiotrace
 test_libiotrace_cmake_options=(

@@ -1,5 +1,5 @@
 # dependencies
-test_source_configs=("gcc_mpi")
+test_source_configs=("influxdb" "gcc_mpi")
 test_source=()
 test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
 

@@ -1,28 +1,5 @@
 base_path="/home/es/es_es/<username>/<path>"
 
-export test_base_script_dir="$(dirname "$0")"
-test_script_dir="$(dirname "$0")/tests"
-test_config_dir="$(dirname "$0")/config"
-
-# source influxdb and openfoam config file
-for source_file in "influxdb" "openfoam"
-do
-    source_config="$(dirname "$0")/${config_dir}/${source_file}"
-    if [ -f ${source_config} ]; then
-        source ${source_config}
-    else
-        echo "config file ${source_config} does not exist"
-        exit
-    fi
-done
-
-test_openfoam_dir="${base_path}/OpenFOAM-${OPENFOAM_VERSION}"
-test_influx_dir="${base_path}/${INFLUXDB_NAME}"
-test_dir="${base_path}/scripts"
-test_libiotrace_build="${base_path}/libiotrace_build"
-export test_libiotrace_so="${test_libiotrace_build}/src/libiotrace.so"
-export test_build_test_dir="${test_libiotrace_build}/test"
-
 # Options for test_script:
 # test_openFOAM_motorBike
 # test_mpi_file_io
@@ -31,3 +8,14 @@ export test_build_test_dir="${test_libiotrace_build}/test"
 # test_openFOAM_VirgilioRe22Pr7_Perfomance_2_worker
 # test_openFOAM_VirgilioRe22Pr7_Perfomance_4_worker
 test_config="test_mpi_file_io"
+
+export test_base_script_dir="$(dirname "$0")"
+test_script_dir="$(dirname "$0")/tests"
+test_config_dir="$(dirname "$0")/config"
+
+test_openfoam_dir="${base_path}/OpenFOAM-${OPENFOAM_VERSION}"
+test_influx_dir="${base_path}/${INFLUXDB_NAME}"
+test_dir="${base_path}/scripts"
+test_libiotrace_build="${base_path}/libiotrace_build"
+export test_libiotrace_so="${test_libiotrace_build}/src/libiotrace.so"
+export test_build_test_dir="${test_libiotrace_build}/test"

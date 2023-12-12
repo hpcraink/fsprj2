@@ -28,4 +28,6 @@ export test_build_test_dir="${test_libiotrace_build}/test"
 # test_mpi_file_io
 # test_mpi_file_io_2
 # test_posix_file_io_random
+# test_openFOAM_VirgilioRe22Pr7_Perfomance_2_worker
+# test_openFOAM_VirgilioRe22Pr7_Perfomance_4_worker
 test_config="test_mpi_file_io"

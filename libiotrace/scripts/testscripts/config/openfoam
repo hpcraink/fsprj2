@@ -1,2 +1,1 @@
-OPENFOAM_VERSION=10
-OPENFOAM_URL="https://github.com/OpenFOAM"
+openfoam_config_file="openfoam_org_7" 

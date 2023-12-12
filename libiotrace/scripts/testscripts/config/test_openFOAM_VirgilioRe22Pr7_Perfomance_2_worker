@@ -1,5 +1,5 @@
 # dependencies
-test_source_configs=("gcc_mpi" "openfoam_org_7")
+test_source_configs=("gcc_mpi" "openfoam_com_2106")
 test_source=("${test_openfoam_dir}/etc/bashrc")
 test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
 
@@ -24,15 +24,21 @@ test_libiotrace_cmake_options=(
 
 # slurm
 test_nodes=3
-test_processes_per_worker=16
-test_mem="90000mb"
-test_time="00:10:00"
-test_queue_name="dev_multiple"
+test_processes_per_worker=40
+test_mem="249600mb"
+test_time="00:30:00"
+test_queue_name="dev_multiple_il"
 
 # test script
-test_script="./openFOAM_motorBike.sh"
-export test_end_time=2500
-export IOTRACE_WHITELIST_FUNCTIONS="# newline separated list of functions to trace
+test_script="./openFOAM_VirgilioRe22Pr7_Perfomance.sh"
+export test_source_dir="${PWD}/VirgilioRe22Pr7_Perfomance"
+export test_source_1="${test_source_dir}/1"
+export test_source_constant="${test_source_dir}/constant"
+export test_source_system="${test_source_dir}/system"
+export test_end_time=1.005
+# newline separated list of functions to trace
+#export IOTRACE_WHITELIST_FUNCTIONS=""
+export IOTRACE_WHITELIST_FUNCTIONS="
 read
 pread
 pread64
@@ -64,5 +70,5 @@ vfscanf
 vfwscanf"
 
 # output
-test_name="3_nodes_motorBike"
-export IOTRACE_LOG_NAME=openFOAM_motorBike_test1
+test_name="3_nodes_VirgilioRe22Pr7_Perfomance"
+export IOTRACE_LOG_NAME=openFOAM_VirgilioRe22Pr7_Perfomance_test1

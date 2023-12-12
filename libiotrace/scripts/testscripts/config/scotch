@@ -1,0 +1,4 @@
+SCOTCH_VERSION=6.1.0
+SCOTCH_URL="https://gitlab.inria.fr/scotch"
+SCOTCH_BRANCH="v6.1.0"
+SCOTCH_CLONE_URL="--branch ${SCOTCH_BRANCH} ${SCOTCH_URL}/scotch.git scotch_${SCOTCH_VERSION}"

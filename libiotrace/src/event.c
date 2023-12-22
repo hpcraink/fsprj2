@@ -441,7 +441,7 @@ libiotrace_socket ***array) {
  *                      After function call "array" is decreased by
  *                      one element (if "socket" was in "array").
  */
-#ifdef ENABLE_REMOTE_CONTROL
+#if defined(ENABLE_REMOTE_CONTROL) || defined(IOTRACE_ENABLE_INFLUXDB)
 void delete_socket(SOCKET socket, pthread_mutex_t *lock, int *len, libiotrace_socket ***array)
 {
     void *ret;
@@ -1752,9 +1752,12 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
                             4096, 0);
                     if (1 > bytes_received) {
                         //Socket is destroyed or closed by peer
-                        //close(recv_sockets[i]);
-                        //delete_socket(recv_sockets[i]);
-                        //i--;
+                    	LOG_WARN("socket destroyed or closed by peer");
+                    	CLOSESOCKET(recv_sockets[i]->socket);
+                    	libiotrace_socket *s = recv_sockets[i];
+                    	delete_socket(recv_sockets[i]->socket, NULL, &recv_sockets_len, &recv_sockets);
+                    	CALL_REAL_ALLOC_SYNC(free)(s);
+                        i--;
                     } else {
                         enum llhttp_errno err = llhttp_execute(
                                 &(recv_sockets[i]->parser), read,

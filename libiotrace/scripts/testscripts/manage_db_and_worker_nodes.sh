@@ -64,7 +64,7 @@ export PATH="$PWD:$PATH"
 rm -f ${GLOBAL_TMP_DIR}/ib0_${TEST_NAME}
 
 # start influxDB
-bash -c "srun -N 1 -n 1 -w $DBNODE bash -c \"export PATH="${PATH}" && ${test_base_script_dir}/runs_on_db_node.sh ${TEST_NAME} ${INFLUXDB_DIR} ${GLOBAL_TMP_DIR}\"" &
+bash -c "srun -N 1 -n 1 -c ${test_processes_per_influxdb} -w $DBNODE bash -c \"export PATH="${PATH}" && ${test_base_script_dir}/runs_on_db_node.sh ${TEST_NAME} ${INFLUXDB_DIR} ${GLOBAL_TMP_DIR}\"" &
 echo "influxDB starting on node ${DBNODE}"
 
 # wait until influxDB is started

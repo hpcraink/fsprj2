@@ -345,6 +345,36 @@ static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 #  include "stracing/libiotrace/entrypoint.h"
 #endif
 
+
+
+
+/*
+ * POWER MEASUREMENT HEADER
+ */
+#ifdef ENABLE_POWER_MEASUREMENT
+
+#include "power_measurement/defines.h"
+
+void powerMeasurementInit(void);
+void powerMeasurementStep(void);
+void powerMeasurementCleanup(void);
+
+int powerMeasurementGetNumberOfMaxCPUsCount(void);
+void powerMeasurementGetCPUInfo(void);
+void powerMeasurementFreeCPUInfo(void);
+
+#ifdef  ENABLE_POWER_MEASUREMENT_RAPL
+int raplInit(int cpuFamily, int cpuModell);
+void raplCreateTask(CPUMeasurementTask *cpuMeasurementTask, unsigned int cpuId, unsigned int cpuPackageId, char *name, char *description, unsigned int offsetInFile, unsigned int type);
+void raplFree(void);
+int raplOpenFile(unsigned int offset);
+void raplMeasurement(void);
+long long raplReadMsr(int fileDescriptor, unsigned int offsetInFile);
+#endif
+#endif
+
+
+
 /**
  * Create a new libiotrace_socket.
  *
@@ -835,6 +865,81 @@ void libiotrace_set_wrapper_inactive(const char *wrapper) {
     toggle_wrapper(wrapper, 0);
 }
 
+/*
+* Writes one power_measurement_data-entry to influxdb.
+*
+* @param[in]  data power_measurement_data-entry.
+*/
+#if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_POWER_MEASUREMENT)
+void write_power_measurement_data_into_influxdb(struct power_measurement_data *data) {
+    //buffer for body
+    int body_length = libiotrace_struct_push_max_size_power_measurement_data(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
+    char body[body_length];
+    body_length = libiotrace_struct_push_power_measurement_data(body, body_length, data, "");
+    if (0 > body_length)
+    {
+        LOG_ERROR_AND_DIE("libiotrace_struct_push_power_measurement_data() returned %d", body_length);
+    }
+    body_length--; /*last comma in ret*/
+    body[body_length] = '\0'; /*remove last comma*/
+
+    char short_log_name[50];
+    shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
+
+    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,device_id=0";
+    int body_labels_length = strlen(labels)
+                             + sizeof(short_log_name) /* jobname */
+                             + HOST_NAME_MAX; /* hostname */
+    char body_labels[body_labels_length];
+    snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname);
+    body_labels_length = strlen(body_labels);
+
+    u_int64_t current_time = gettime();
+    int timestamp_length = COUNT_DEC_AS_CHAR(current_time);
+    char timestamp[timestamp_length];
+#ifdef REALTIME
+    snprintf(timestamp, sizeof(timestamp), "%" PRIu64, current_time);
+#else
+    snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + current_time);
+#endif
+    timestamp_length = strlen(timestamp);
+
+    const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
+
+    const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
+                          "Host: %s:%s" LINE_BREAK
+                          "Accept: */*" LINE_BREAK
+                          "Authorization: Token %s" LINE_BREAK
+                          "Content-Length: %d" LINE_BREAK
+                          "Content-Type: application/x-www-form-urlencoded" LINE_BREAK
+                          LINE_BREAK
+                          "%s %s %s";
+    const int message_length = strlen(header)
+                               + influx_bucket_len
+                               + influx_organization_len
+                               + database_ip_len
+                               + database_port_len
+                               + influx_token_len
+                               + COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
+                               + body_labels_length
+                               + body_length
+                               + timestamp_length;
+
+    //buffer all (header + body)
+    char message[message_length + 1];
+    snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
+             content_length, body_labels, body, timestamp);
+
+    //TODO: RRefactor!!! remove
+    if (-1 == socket_peer) {
+        LOG_WARN("Open prepare_socket inwrite_power_measurement_data_into_influxdb");
+        prepare_socket();
+    }
+
+    send_data(message, socket_peer);
+}
+#endif
+
 /**
  * Writes one filesystem-entry to influxdb.
  *
@@ -858,9 +963,9 @@ void write_filesystem_into_influxdb(struct filesystem *data) {
 
     const char labels[] = "libiotrace_filesystem,jobname=%s,hostname=%s,device_id=%lu";
     int body_labels_length = strlen(labels)
-            + sizeof(short_log_name) /* jobname */
-            + HOST_NAME_MAX /* hostname */
-            + COUNT_DEC_AS_CHAR(data->device_id); /* deviceid */
+                             + sizeof(short_log_name) /* jobname */
+                             + HOST_NAME_MAX /* hostname */
+                             + COUNT_DEC_AS_CHAR(data->device_id); /* deviceid */
     char body_labels[body_labels_length];
     snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, data->device_id);
     body_labels_length = strlen(body_labels);
@@ -878,32 +983,34 @@ void write_filesystem_into_influxdb(struct filesystem *data) {
     const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
 
     const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
-            "Host: %s:%s" LINE_BREAK
-            "Accept: */*" LINE_BREAK
-            "Authorization: Token %s" LINE_BREAK
-            "Content-Length: %d" LINE_BREAK
-            "Content-Type: application/x-www-form-urlencoded" LINE_BREAK
-            LINE_BREAK
-            "%s %s %s";
+                          "Host: %s:%s" LINE_BREAK
+                          "Accept: */*" LINE_BREAK
+                          "Authorization: Token %s" LINE_BREAK
+                          "Content-Length: %d" LINE_BREAK
+                          "Content-Type: application/x-www-form-urlencoded" LINE_BREAK
+                          LINE_BREAK
+                          "%s %s %s";
     const int message_length = strlen(header)
-            + influx_bucket_len
-            + influx_organization_len
-            + database_ip_len
-            + database_port_len
-            + influx_token_len
-            + COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
-            + body_labels_length
-            + body_length
-            + timestamp_length;
+                               + influx_bucket_len
+                               + influx_organization_len
+                               + database_ip_len
+                               + database_port_len
+                               + influx_token_len
+                               + COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
+                               + body_labels_length
+                               + body_length
+                               + timestamp_length;
 
     //buffer all (header + body)
     char message[message_length + 1];
     snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
-            content_length, body_labels, body, timestamp);
+             content_length, body_labels, body, timestamp);
 
     send_data(message, socket_peer);
 }
 #endif
+
+
 
 /**
  * Prints the filesystem to a file.
@@ -1822,6 +1929,10 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
             }
 #endif
         }
+
+#ifdef ENABLE_POWER_MEASUREMENT
+        powerMeasurementStep();
+#endif
     }
 
 #ifdef ENABLE_REMOTE_CONTROL
@@ -2214,6 +2325,15 @@ void init_process() {
             }
 #endif
 
+#ifdef ENABLE_POWER_MEASUREMENT
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER INIT MEASUREMENT 1111\n", 45);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+        powerMeasurementInit();
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER INIT MEASUREMENT 2222\n", 45);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+#endif
+
+
         /* at this point all preparations necessary for a wrapper call
          * are done: set corresponding flag */
         init_done = 1;
@@ -2473,6 +2593,10 @@ void free_memory(struct basic *data) {
 #if defined(IOTRACE_ENABLE_LOGFILE) || defined(IOTRACE_ENABLE_INFLUXDB) || defined(ENABLE_REMOTE_CONTROL)
 void cleanup_process(void) {
     event_cleanup_done = 1;
+
+#ifdef ENABLE_POWER_MEASUREMENT
+    powerMeasurementCleanup();
+#endif
 
 #ifdef IOTRACE_ENABLE_LOGFILE
 
@@ -2991,3 +3115,471 @@ int WRAP(pthread_create)(pthread_t *restrict thread,
     WRAP_END(data, pthread_create)
     return ret;
 }
+
+/*
+ * POWER MEASUREMENT
+ */
+
+#ifdef ENABLE_POWER_MEASUREMENT
+
+// cpu-family: 85 = Intel | 23 = AMD
+// cpu-model for Intel: 85
+// cpu-model for AMD: 113
+
+CpuInfo *cpuInfo = NULL;
+uint64_t lastTime = 0;
+char printBuffer[BUFSIZ];
+
+void powerMeasurementInit(void) {
+
+    lastTime = gettime();
+
+    int cpuFamily = 23;
+    int cpuModel = 113;
+
+    powerMeasurementGetCPUInfo();
+
+#ifdef  ENABLE_POWER_MEASUREMENT_RAPL
+    raplInit(cpuFamily, cpuModel);
+#endif
+
+
+}
+
+void powerMeasurementStep(void) {
+
+
+
+    uint64_t diff = gettime() - lastTime;
+    if (diff > 1000000000) {
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER MEASUREMENT TEXT\n", 41);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+        sprintf(printBuffer, "---------- %19lu - %5d\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", diff, socket_peer);
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 39);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+#ifdef  ENABLE_POWER_MEASUREMENT_RAPL
+        raplMeasurement();
+#endif
+        lastTime = gettime();
+    }
+}
+
+void powerMeasurementCleanup(void) {
+
+#ifdef  ENABLE_POWER_MEASUREMENT_RAPL
+    raplFree();
+#endif
+    powerMeasurementFreeCPUInfo();
+}
+// CPU INFOs
+
+int powerMeasurementGetNumberOfMaxCPUsCount(void) {
+    FILE *file;
+    int numRead;
+    int nrCPUs = 1;
+
+    file = CALL_REAL_POSIX_SYNC(fopen)("/sys/devices/system/cpu/kernel_max", "r");
+    if (file == NULL) {
+        return 99; //nrCPUs;
+    }
+    numRead = CALL_REAL_POSIX_SYNC(fscanf)(file, "%d", &nrCPUs);
+    CALL_REAL_POSIX_SYNC(fclose)(file);
+
+    if (numRead == 1) {
+        nrCPUs++;
+    } else {
+        nrCPUs = 1;
+    }
+    return nrCPUs;
+}
+
+void powerMeasurementGetCPUInfo(void) {
+    int package, strErr, num_read;
+    char filename[BUFSIZ];
+    FILE *cpuPhysicalPackageId;
+    int maxCPUCount = powerMeasurementGetNumberOfMaxCPUsCount();
+
+
+    cpuInfo = (CpuInfo *) CALL_REAL_ALLOC_SYNC(calloc)(1, sizeof(CpuInfo));
+    cpuInfo->cpuPackages = CALL_REAL_ALLOC_SYNC(calloc)(maxCPUCount, sizeof(CpuPackage));
+
+    for (int i = 0; i < maxCPUCount; ++i) {
+        cpuInfo->cpuPackages[i].id = -1;
+        cpuInfo->cpuPackages[i].numberCPUCount = 0;
+        cpuInfo->cpuPackages[i].cpuIds = NULL;;
+    }
+
+
+    for (int cpuId = 0; cpuId < maxCPUCount; ++cpuId) {
+        strErr = snprintf(filename, BUFSIZ, "/sys/devices/system/cpu/cpu%d/topology/physical_package_id", cpuId);
+        filename[BUFSIZ - 1] = 0;
+        if (strErr > BUFSIZ) {
+            return;
+        };
+
+        cpuPhysicalPackageId = CALL_REAL_POSIX_SYNC(fopen)(filename, "r");
+        if (cpuPhysicalPackageId == NULL) {
+            break;
+        }
+        num_read = CALL_REAL_POSIX_SYNC(fscanf)(cpuPhysicalPackageId, "%d", &package);
+        CALL_REAL_POSIX_SYNC(fclose)(cpuPhysicalPackageId);
+
+        if (num_read != 1) {
+            sprintf(printBuffer,"Error by reading CPU Physical Package Number from CPUId [Read Count: %4d]: %4d\n", num_read, cpuId);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, strlen(printBuffer));
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+            return;
+        }
+        sprintf(printBuffer,"INFO CPU Package (CPU %d): %d \n", cpuId, package);
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, strlen(printBuffer));
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+        cpuInfo->cpuCount++;
+
+        if (cpuInfo->cpuPackages[package].id == -1) {
+            cpuInfo->cpuPackages[package].cpuIds = CALL_REAL_ALLOC_SYNC(calloc)(maxCPUCount, sizeof(unsigned int));
+            cpuInfo->packageCount++;
+        }
+        cpuInfo->cpuPackages[package].id = package;
+        cpuInfo->cpuPackages[package].cpuIds[cpuInfo->cpuPackages[package].numberCPUCount] = cpuId;
+        cpuInfo->cpuPackages[package].numberCPUCount += 1;
+    }
+
+    sprintf(printBuffer,"[INFO] Total Count CPU: %u | Packages: %u \n", cpuInfo->cpuCount, cpuInfo->packageCount);
+    CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, strlen(printBuffer));
+    CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+    for (unsigned  int i = 0; i < cpuInfo->packageCount; ++i) {
+        sprintf(printBuffer,"[INFO] Package %d CPUs: %u => ", cpuInfo->cpuPackages[i].id, cpuInfo->cpuPackages[i].numberCPUCount);
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, strlen(printBuffer));
+
+        for (unsigned int pos = 0; pos < cpuInfo->cpuPackages[i].numberCPUCount; ++pos) {
+            sprintf(printBuffer,"%u, ", cpuInfo->cpuPackages[i].cpuIds[pos]);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, strlen(printBuffer));
+        }
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "\n", 1);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+    }
+}
+
+void powerMeasurementFreeCPUInfo(void) {
+
+    for (unsigned int i = 0; i < cpuInfo->packageCount; ++i) {
+        CALL_REAL_ALLOC_SYNC(free)((void*)cpuInfo->cpuPackages[i].cpuIds);
+    }
+    CALL_REAL_ALLOC_SYNC(free)(cpuInfo->cpuPackages);
+    CALL_REAL_ALLOC_SYNC(free)(cpuInfo);
+}
+
+//RAPL
+
+#ifdef  ENABLE_POWER_MEASUREMENT_RAPL
+
+
+FileState *fd_array = NULL;
+CPUMeasurementTask *cpuMeasurementTasks = NULL;
+int cpuMeasurementTasksCount = 0;
+unsigned int cpuCount = 0;
+
+int raplInit(int cpuFamily, int cpuModell) {
+
+    cpuCount = cpuInfo->cpuCount;
+    fd_array = CALL_REAL_ALLOC_SYNC(calloc)(cpuCount, sizeof(FileState));
+    if (fd_array == NULL) {
+        return -1;
+    }
+
+
+    // Setup CPU Values by cpuFamily and cpuModell
+
+    int power_divisor, time_divisor;
+    int cpu_energy_divisor, dram_energy_divisor;
+    unsigned int msr_rapl_power_unit;
+    unsigned int msr_pkg_energy_status, msr_pp0_energy_status;
+
+    int package_avail = 0;
+    int dram_avail = 0;
+    int pp0_avail = 0;
+    int pp1_avail = 0;
+    int psys_avail = 0;
+    int different_units = 0;
+
+    if (cpuFamily == CPU_INTEL) {
+        if (cpuModell == 85) {
+            package_avail = 1;
+            pp0_avail = 0;
+            pp1_avail = 0;
+            dram_avail = 1;
+            psys_avail = 0;
+            different_units = 1;
+        }
+    } else if (cpuFamily == CPU_AMD) {
+        if (cpuModell == 113) {
+            package_avail = 1;
+            pp0_avail = 1;        // Doesn't work on EPYC?
+            pp1_avail = 0;
+            dram_avail = 0;
+            psys_avail = 0;
+            different_units = 0;
+        }
+    }
+
+    if (package_avail == 0) {
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "ERROR: CPU not supported\n", 25);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+        return -1;
+    }
+
+    //Open all Files
+
+    for (unsigned int i = 0; i < cpuCount; ++i) {
+        if (raplOpenFile(i) == -1) {
+            sprintf(printBuffer,"ERROR: Cann't Open CPU File with ID: %3u\n", i);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 41);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+            return -1;
+        }
+    }
+
+    // Create Tasks For every CPU (PAPI use only for packet)
+
+    int taskCount = ((package_avail * cpuCount) +
+                     (pp0_avail * cpuCount) +
+                     (pp1_avail * cpuCount) +
+                     (dram_avail * cpuCount) +
+                     (psys_avail * cpuCount)) * 2;
+
+    if (cpuFamily == CPU_INTEL) {
+        taskCount += (4 * cpuCount) * 2;
+    }
+
+    cpuMeasurementTasks = CALL_REAL_ALLOC_SYNC(calloc)(taskCount, sizeof(CPUMeasurementTask));
+
+    //Set cpuFamily Values
+
+    if (cpuFamily == CPU_INTEL) {
+        msr_rapl_power_unit = MSR_INTEL_RAPL_POWER_UNIT;
+        msr_pkg_energy_status = MSR_INTEL_PKG_ENERGY_STATUS;
+        msr_pp0_energy_status = MSR_INTEL_PP0_ENERGY_STATUS;
+    } else if (cpuFamily == CPU_AMD) {
+        msr_rapl_power_unit = MSR_AMD_RAPL_POWER_UNIT;
+        msr_pkg_energy_status = MSR_AMD_PKG_ENERGY_STATUS;
+        msr_pp0_energy_status = MSR_AMD_PP0_ENERGY_STATUS;
+    }
+
+
+
+    sprintf(printBuffer,"TASK COUNT %3d \n", taskCount);
+    CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 16);
+    CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+    //CPU Info
+
+    for (unsigned int cpuPackage = 0; cpuPackage < cpuInfo->packageCount; ++cpuPackage) {
+        for (unsigned int cpuPos = 0; cpuPos < cpuInfo->cpuPackages[cpuPackage].numberCPUCount; ++cpuPos) {
+            const unsigned int cpuId = cpuInfo->cpuPackages[cpuPackage].cpuIds[cpuPos];
+
+            int fd = raplOpenFile(cpuId);
+            long long result = raplReadMsr(fd, msr_rapl_power_unit);
+
+            power_divisor = 1 << ((result >> POWER_UNIT_OFFSET) & POWER_UNIT_MASK);
+            cpu_energy_divisor = 1 << ((result >> ENERGY_UNIT_OFFSET) & ENERGY_UNIT_MASK);
+            time_divisor = 1 << ((result >> TIME_UNIT_OFFSET) & TIME_UNIT_MASK);
+
+            /* Note! On Haswell-EP DRAM energy is fixed at 15.3uJ	*/
+            /* see https://lkml.org/lkml/2015/3/20/582		*/
+            /* Knights Landing is the same */
+            /* so is Broadwell-EP */
+            if (different_units) {
+                dram_energy_divisor = 1 << 16;
+            } else {
+                dram_energy_divisor = cpu_energy_divisor;
+            }
+
+            sprintf(printBuffer,"[ %2d | %2u ] \n", cpuInfo->cpuPackages[cpuPackage].id, cpuId);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 13);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+            sprintf(printBuffer,"Power units = %.3fW | \n", 1.0 / power_divisor);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 34);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+            sprintf(printBuffer,"CPU Energy units = %.8fJ | \n", 1.0 / cpu_energy_divisor);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 32);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+            sprintf(printBuffer,"DRAM Energy units = %.8fJ | \n", 1.0 / dram_energy_divisor);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 20+8+5);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+            sprintf(printBuffer,"Time units = %.8fs \n", 1.0 / time_divisor);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 13+8+3);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+        }
+    }
+
+    //Create Task
+    for (unsigned int cpuPackage = 0; cpuPackage < cpuInfo->packageCount; ++cpuPackage) {
+        const unsigned int cpuPackageId = cpuInfo->cpuPackages[cpuPackage].id;
+
+        for (unsigned int cpuPos = 0; cpuPos < cpuInfo->cpuPackages[cpuPackage].numberCPUCount; ++cpuPos) {
+            const unsigned int cpuId = cpuInfo->cpuPackages[cpuPackage].cpuIds[cpuPos];
+
+            if (package_avail) {
+                raplCreateTask(&cpuMeasurementTasks[cpuMeasurementTasksCount++], cpuId, cpuPackageId, "package_avail_0",
+                               "PACKAGE_ENERGY_CNT",
+                               msr_pkg_energy_status, PACKAGE_ENERGY_CNT);
+                raplCreateTask(&cpuMeasurementTasks[cpuMeasurementTasksCount++], cpuId, cpuPackageId, "package_avail_1",
+                               "PACKAGE_ENERGY",
+                               msr_pkg_energy_status, PACKAGE_ENERGY);
+            }
+            if (pp1_avail) {
+                raplCreateTask(&cpuMeasurementTasks[cpuMeasurementTasksCount++], cpuId, cpuPackageId, "pp1_avail",
+                               "MSR_PP1_ENERGY_STATUS",
+                               msr_pkg_energy_status, MSR_PP1_ENERGY_STATUS);
+            }
+            if (dram_avail) {
+                raplCreateTask(&cpuMeasurementTasks[cpuMeasurementTasksCount++], cpuId, cpuPackageId, "dram_avail",
+                               "MSR_DRAM_ENERGY_STATUS",
+                               msr_pkg_energy_status, MSR_DRAM_ENERGY_STATUS);
+            }
+            if (psys_avail) {
+                raplCreateTask(&cpuMeasurementTasks[cpuMeasurementTasksCount++], cpuId, cpuPackageId, "psys_avail",
+                               "MSR_PLATFORM_ENERGY_STATUS",
+                               msr_pkg_energy_status, MSR_PLATFORM_ENERGY_STATUS);
+            }
+            if (pp0_avail) {
+                raplCreateTask(&cpuMeasurementTasks[cpuMeasurementTasksCount++], cpuId, cpuPackageId, "pp0_avail",
+                               "msr_pp0_energy_status",
+                               msr_pkg_energy_status, msr_pp0_energy_status);
+            }
+        }
+    }
+
+    //init lastValues
+    raplMeasurement();
+
+    return 0;
+}
+
+
+void raplCreateTask(CPUMeasurementTask *cpuMeasurementTask, unsigned int cpuId, unsigned int cpuPackageId, char *name,
+                    char *description, unsigned int offsetInFile, unsigned int type) {
+
+    strncpy(cpuMeasurementTask->name, name, MAX_STR_LEN);
+    strncpy(cpuMeasurementTask->description, description, MAX_STR_LEN);
+
+    cpuMeasurementTask->offsetInFile = offsetInFile;
+    cpuMeasurementTask->type = type;
+
+    cpuMeasurementTask->cpuId = cpuId;
+    cpuMeasurementTask->cpuPackage = cpuPackageId;
+    cpuMeasurementTask->lastValue = -1;
+}
+
+void raplFree(void) {
+    for (unsigned int i = 0; i < cpuCount; ++i) {
+        CALL_REAL_POSIX_SYNC(close)(fd_array[i].fileDescriptor);
+    }
+    CALL_REAL_ALLOC_SYNC(free)(fd_array);
+}
+
+int raplOpenFile(unsigned int offset) {
+
+    int fd = 0;
+    char filename[BUFSIZ];
+
+    if (fd_array[offset].open == 0) {
+
+        sprintf(filename, "/dev/cpu/%u/msr_safe", offset);
+        fd = CALL_REAL_POSIX_SYNC(open)(filename, O_RDONLY);
+
+        if (fd < 0) {
+            sprintf(filename, "/dev/cpu/%u/msr", offset);
+            fd = CALL_REAL_POSIX_SYNC(open)(filename, O_RDONLY);
+        }
+
+        if (fd > 0) {
+            fd_array[offset].fileDescriptor = fd;
+            fd_array[offset].open = 1;
+
+            sprintf(printBuffer,"Open File %3d: %3u\n", fd, offset);
+            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 19);
+            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+        } else {
+            LOG_ERROR_AND_DIE("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /dev/cpu/*/msr'",offset, filename, fd, errno);
+        }
+    } else {
+        fd = fd_array[offset].fileDescriptor;
+    }
+
+    return fd;
+}
+
+void raplMeasurement(void) {
+    for (int i = 0; i < cpuMeasurementTasksCount; ++i) {
+        int fd = raplOpenFile(cpuMeasurementTasks[i].cpuId);
+        long long result = raplReadMsr(fd, cpuMeasurementTasks[i].offsetInFile);
+
+        if (cpuMeasurementTasks[i].lastValue == -1) {
+            cpuMeasurementTasks[i].lastValue = result;
+            continue;
+        }
+
+        sprintf(printBuffer,"[ %3u | %3u ] ", cpuMeasurementTasks[i].cpuPackage, cpuMeasurementTasks[i].cpuId);
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 14);
+        sprintf(printBuffer,"%25s - %25s -> %10lld -> %10lld\n", cpuMeasurementTasks[i].name, cpuMeasurementTasks[i].description, result, result - cpuMeasurementTasks[i].lastValue);
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 25 + 3 + 25 + 4 + 10 + 4+10+1);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+        CPUMeasurementTask task = cpuMeasurementTasks[i];
+
+
+        long long diffValue = 0;
+
+        if (result > task.lastValue) {
+            diffValue = result - task.lastValue;
+        } else {
+            diffValue = result  + (0x100000000 - task.lastValue);
+        }
+
+        struct power_measurement_data data = {
+                gettime(),
+                getpid(),
+                (int)task.cpuPackage,
+                (int)task.cpuId,
+                task.name,
+                task.description,
+                (int)task.type,
+                diffValue,
+                result,
+        };
+        write_power_measurement_data_into_influxdb(&data);
+
+        cpuMeasurementTasks[i].lastValue = result;
+    }
+}
+
+long long raplReadMsr(int fileDescriptor, unsigned int offsetInFile) {
+
+    u_int64_t data;
+
+    ssize_t readsize = CALL_REAL_POSIX_SYNC(pread)(fileDescriptor, &data, sizeof(data), offsetInFile);
+
+    if (fileDescriptor < 0 || readsize != sizeof data) {
+        sprintf(printBuffer,"\n ERROR: Can't read value (%3u) from File: %3d -> %10ld/%10lu \n", offsetInFile, fileDescriptor, readsize,sizeof(data));
+        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 50 + 3 + 20);
+        CALL_REAL_POSIX_SYNC(fflush)(stdout);
+        return -1;
+    }
+
+    return (long long) data & 0xFFFFFFFF;
+}
+
+#endif
+#endif
+/*
+
+    CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER INIT TEXT\n", 33);
+    CALL_REAL_POSIX_SYNC(fflush)(stdout);
+
+    CALL_REAL_ALLOC_SYNC(free)(cpuInfo);
+*/

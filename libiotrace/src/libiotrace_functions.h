@@ -35,4 +35,8 @@ int libiotrace_struct_print_filesystem(char* buf, size_t size, struct filesystem
 size_t libiotrace_struct_push_max_size_filesystem(size_t prefix_length);
 size_t libiotrace_struct_push_filesystem(char* libiotrace_struct_buffer_to_post, size_t libiotrace_struct_length_of_buffer_to_post, struct filesystem *libiotrace_struct_data, const char* prefix);
 
+
+size_t libiotrace_struct_push_max_size_power_measurement_data(size_t prefix_length);
+size_t libiotrace_struct_push_power_measurement_data(char* libiotrace_struct_buffer_to_post, size_t libiotrace_struct_length_of_buffer_to_post, struct power_measurement_data *libiotrace_struct_data, const char* prefix);
+
 #endif /* LIBIOTRACE_INCLUDE_FUNCTION_H */

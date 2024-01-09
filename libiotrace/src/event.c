@@ -809,43 +809,43 @@ void prepare_socket(void) {
 }
 #endif
 
-void libiotrace_start_log() {
+void libiotrace_start_log(void) {
 #ifdef IOTRACE_ENABLE_LOGFILE
     no_logging = 0;
 #endif
 }
 
-void libiotrace_end_log() {
+void libiotrace_end_log(void) {
 #ifdef IOTRACE_ENABLE_LOGFILE
     no_logging = 1;
 #endif
 }
 
-void libiotrace_start_send() {
+void libiotrace_start_send(void) {
 #ifdef IOTRACE_ENABLE_INFLUXDB
     no_sending = 0;
 #endif
 }
 
-void libiotrace_end_send() {
+void libiotrace_end_send(void) {
 #ifdef IOTRACE_ENABLE_INFLUXDB
     no_sending = 1;
 #endif
 }
 
-void libiotrace_start_stacktrace_ptr() {
+void libiotrace_start_stacktrace_ptr(void) {
     stacktrace_ptr = 1;
 }
 
-void libiotrace_end_stacktrace_ptr() {
+void libiotrace_end_stacktrace_ptr(void) {
     stacktrace_ptr = 0;
 }
 
-void libiotrace_start_stacktrace_symbol() {
+void libiotrace_start_stacktrace_symbol(void) {
     stacktrace_symbol = 1;
 }
 
-void libiotrace_end_stacktrace_symbol() {
+void libiotrace_end_stacktrace_symbol(void) {
     stacktrace_symbol = 0;
 }
 
@@ -853,7 +853,7 @@ void libiotrace_set_stacktrace_depth(int depth) {
     stacktrace_depth = depth;
 }
 
-int libiotrace_get_stacktrace_depth() {
+int libiotrace_get_stacktrace_depth(void) {
     return stacktrace_depth;
 }
 
@@ -886,7 +886,7 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
     char short_log_name[50];
     shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
 
-    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,device_id=0";
+    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,device_id=0"; //TODO: add cpu and packed als tag => alles bis auf value
     int body_labels_length = strlen(labels)
                              + sizeof(short_log_name) /* jobname */
                              + HOST_NAME_MAX; /* hostname */
@@ -930,11 +930,6 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
     snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
              content_length, body_labels, body, timestamp);
 
-    //TODO: RRefactor!!! remove
-    if (-1 == socket_peer) {
-        LOG_WARN("Open prepare_socket inwrite_power_measurement_data_into_influxdb");
-        prepare_socket();
-    }
 
     send_data(message, socket_peer);
 }
@@ -1799,6 +1794,12 @@ SOCKET prepare_control_socket(void) {
 void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
     struct timeval select_timeout;
 
+#ifdef ENABLE_POWER_MEASUREMENT
+    if (-1 == socket_peer) {
+        prepare_socket();
+    }
+#endif
+
     // Read responses from influxdb and read control messages
     while (!event_cleanup_done) {
         fd_set fd_recv_sockets;
@@ -2093,7 +2094,7 @@ char init_done = 0;
  * the process itself is running => no synchronization is needed (if a program
  * uses ctor to start threads/processes this will lead to errors).
  */
-void init_process() {
+void init_process(void) {
     int length;
 
     if (!init_done) {
@@ -2326,11 +2327,7 @@ void init_process() {
 #endif
 
 #ifdef ENABLE_POWER_MEASUREMENT
-        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER INIT MEASUREMENT 1111\n", 45);
-        CALL_REAL_POSIX_SYNC(fflush)(stdout);
         powerMeasurementInit();
-        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER INIT MEASUREMENT 2222\n", 45);
-        CALL_REAL_POSIX_SYNC(fflush)(stdout);
 #endif
 
 
@@ -3152,12 +3149,6 @@ void powerMeasurementStep(void) {
 
     uint64_t diff = gettime() - lastTime;
     if (diff > 1000000000) {
-        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER MEASUREMENT TEXT\n", 41);
-        CALL_REAL_POSIX_SYNC(fflush)(stdout);
-
-        sprintf(printBuffer, "---------- %19lu - %5d\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", diff, socket_peer);
-        CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, printBuffer, 39);
-        CALL_REAL_POSIX_SYNC(fflush)(stdout);
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
         raplMeasurement();
@@ -3276,7 +3267,6 @@ void powerMeasurementFreeCPUInfo(void) {
 //RAPL
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
-
 
 FileState *fd_array = NULL;
 CPUMeasurementTask *cpuMeasurementTasks = NULL;
@@ -3464,8 +3454,8 @@ int raplInit(int cpuFamily, int cpuModell) {
 void raplCreateTask(CPUMeasurementTask *cpuMeasurementTask, unsigned int cpuId, unsigned int cpuPackageId, char *name,
                     char *description, unsigned int offsetInFile, unsigned int type) {
 
-    strncpy(cpuMeasurementTask->name, name, MAX_STR_LEN);
-    strncpy(cpuMeasurementTask->description, description, MAX_STR_LEN);
+    strncpy(cpuMeasurementTask->name, name, MAX_STR_LEN-1);
+    strncpy(cpuMeasurementTask->description, description, MAX_STR_LEN-1);
 
     cpuMeasurementTask->offsetInFile = offsetInFile;
     cpuMeasurementTask->type = type;
@@ -3582,4 +3572,9 @@ long long raplReadMsr(int fileDescriptor, unsigned int offsetInFile) {
     CALL_REAL_POSIX_SYNC(fflush)(stdout);
 
     CALL_REAL_ALLOC_SYNC(free)(cpuInfo);
+
+    TODO:
+    - [ ] change all to Snake-case
+    - [ ] add dynamic load from CPU infos
+
 */

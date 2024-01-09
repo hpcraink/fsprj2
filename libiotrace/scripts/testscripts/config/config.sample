@@ -6,7 +6,9 @@ base_path="/home/es/es_es/<username>/<path>"
 # test_mpi_file_io_2
 # test_posix_file_io_random
 # test_openFOAM_VirgilioRe22Pr7_Perfomance_2_worker
+# test_openFOAM_VirgilioRe22Pr7_Perfomance_2_worker_measurement
 # test_openFOAM_VirgilioRe22Pr7_Perfomance_4_worker
+# test_python_simple_write
 test_config="test_mpi_file_io"
 
 export test_base_script_dir="$(dirname "$0")"

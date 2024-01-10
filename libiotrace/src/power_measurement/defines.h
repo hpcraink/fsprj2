@@ -91,29 +91,29 @@
 
 typedef struct CpuPackage {
     int id;
-    unsigned int *cpuIds;
-    unsigned int numberCPUCount;
+    unsigned int *cpu_ids;
+    unsigned int number_cpu_count;
 } CpuPackage;
 
 typedef struct CpuInfo {
-    CpuPackage *cpuPackages;
-    unsigned int cpuCount;
-    unsigned int packageCount;
+    CpuPackage *cpu_packages;
+    unsigned int cpu_count;
+    unsigned int package_count;
 } CpuInfo;
 
 typedef struct FileState {
-    int fileDescriptor;
+    int file_descriptor;
     int open;
 } FileState;
 
 typedef struct CPUMeasurementTask {
     char name[MAX_STR_LEN];
     char description[MAX_STR_LEN];
-    unsigned int offsetInFile;
+    unsigned int offset_in_file;
     unsigned int type;
 
-    unsigned int cpuPackage;
-    unsigned int cpuId;
+    unsigned int cpu_package;
+    unsigned int cpu_id;
 
-    long long lastValue;
+    long long last_measurement_value;
 } CPUMeasurementTask;

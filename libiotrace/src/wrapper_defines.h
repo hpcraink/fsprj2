@@ -221,9 +221,6 @@
                              }
 
 #ifdef IOTRACE_ENABLE_INFLUXDB
-// TODO: under- or overflow in time_diff? InfluxDB shows gigantic values instead of 0 for open_std_fd/open_std_file
-// TODO: (data.time_end and data.time_start have the same value for these two functions)
-// TODO: use "u" postfix after value for POST to InfluxDB?
 #  define CALL_WRITE_INTO_INFLUXDB(data) data.time_diff = data.time_end - data.time_start; \
                                          write_into_influxdb(&data)
 #else

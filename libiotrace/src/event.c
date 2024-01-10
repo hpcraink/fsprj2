@@ -1193,6 +1193,7 @@ void open_std_fd(int fd)
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
+    data.time_diff = data.time_end - data.time_start;
     write_into_influxdb(&data);
 #endif
     WRAP_FREE(&data)
@@ -1247,6 +1248,7 @@ void open_std_file(FILE *file)
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
+    data.time_diff = data.time_end - data.time_start;
     write_into_influxdb(&data);
 #endif
     WRAP_FREE(&data)

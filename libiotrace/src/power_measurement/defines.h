@@ -108,7 +108,6 @@ typedef struct FileState {
 
 typedef struct CPUMeasurementTask {
     char name[MAX_STR_LEN];
-    char description[MAX_STR_LEN];
     unsigned int offset_in_file;
     unsigned int type;
 

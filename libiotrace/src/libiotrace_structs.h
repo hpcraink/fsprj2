@@ -14,6 +14,7 @@
 
 #if defined(ENABLE_POWER_MEASUREMENT_RAPL) || defined(ENABLE_POWER_MEASUREMENT_POWERCAP)
 #   define ENABLE_POWER_MEASUREMENT
+//#   define ENABLE_POWER_MEASUREMENT_PER_KERN
 #endif
 
 
@@ -1162,15 +1163,16 @@ LIBIOTRACE_STRUCT_END
 #ifdef ENABLE_POWER_MEASUREMENT
 /* Power Mesurment data*/
 //TODO: Perfomance options to ignore for libiotrace_struct_push_power_measurement_data
+//TODO: Perfomance change multipy task to one LIBIOTRACE_STRUCT_STRUCT_ARRAY
 LIBIOTRACE_STRUCT_START(power_measurement_data)
   LIBIOTRACE_STRUCT_U_INT64_T(time)
   LIBIOTRACE_STRUCT_PID_T(pid)
   LIBIOTRACE_STRUCT_INT(cpu_package)
   LIBIOTRACE_STRUCT_INT(cpu_id)
   LIBIOTRACE_STRUCT_CSTRING_P(name, 100)
-  LIBIOTRACE_STRUCT_CSTRING_P(description, 100)
   LIBIOTRACE_STRUCT_INT(type)
   LIBIOTRACE_STRUCT_U_INT64_T(measurement_difference_to_last_value)
+  LIBIOTRACE_STRUCT_U_INT64_T(measurement_convert_value)
   LIBIOTRACE_STRUCT_U_INT64_T(measurement_value)
 LIBIOTRACE_STRUCT_END
 #endif

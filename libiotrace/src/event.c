@@ -359,17 +359,19 @@ void power_measurement_init(void);
 void power_measurement_step(void);
 void power_measurement_cleanup(void);
 
+void get_cpu_info(int *family, int *model);
 int power_measurement_get_number_of_max_cpu_count(void);
-void power_measurement_get_cpu_info(void);
+void power_measurement_load_cpu_info(void);
 void power_measurement_free_cpu_info(void);
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
 int rapl_init(int cpu_family, int cpu_model);
-void rapl_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, char *description, unsigned int offset_in_file, unsigned int type);
+void rapl_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, unsigned int offset_in_file, unsigned int type);
 void rapl_free(void);
 int rapl_open_file(unsigned int offset);
 void rapl_measurement(void);
 long long rapl_read_msr(int file_descriptor, unsigned int offset_in_file);
+long long rapl_convert_energy(int type, long long value);
 #endif
 #endif
 
@@ -886,19 +888,18 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
     char short_log_name[50];
     shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
 
-    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,pid=%d,cpu_package=%d,cpu_id=%d,type=%u,name=%s,description=%s";
+    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,pid=%d,cpu_package=%d,cpu_id=%d,type=%u,name=%s";
     int body_labels_length = strlen(labels)
                              + sizeof(short_log_name) /* jobname */
                              + HOST_NAME_MAX /* hostname */
                              + COUNT_DEC_AS_CHAR(data->pid) /* pid */
                              + COUNT_DEC_AS_CHAR(data->cpu_package) /* cpu_package */
                              + COUNT_DEC_AS_CHAR(data->cpu_id) /* cpu_id */
-                             + COUNT_DEC_AS_CHAR(data->cpu_id) /* cpu_id */
-                             + strlen(data->name) /* name */
-                             + strlen(data->description); /* description */
+                             + COUNT_DEC_AS_CHAR(data->type) /* type */
+                             + strlen(data->name); /* name */
 
     char body_labels[body_labels_length];
-    snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, data->pid, data->cpu_package, data->cpu_id, (uint)data->type, data->name, data->description);
+    snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, data->pid, data->cpu_package, data->cpu_id, (uint)data->type, data->name);
     body_labels_length = strlen(body_labels);
 
     u_int64_t current_time = gettime();
@@ -3138,10 +3139,12 @@ void power_measurement_init(void) {
 
     last_time = gettime();
 
-    int cpu_family = 23;
-    int cpu_model = 113;
-
-    power_measurement_get_cpu_info();
+    int cpu_family = 0;
+    int cpu_model = 0;
+    get_cpu_info(&cpu_family, &cpu_model);
+    LOG_DEBUG("cpu_family: %d  cpu_model: %d", cpu_family);
+    LOG_DEBUG("cpu_model: %d", cpu_model);
+    power_measurement_load_cpu_info();
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
     rapl_init(cpu_family, cpu_model);
@@ -3170,6 +3173,24 @@ void power_measurement_cleanup(void) {
 }
 // CPU INFOs
 
+void get_cpu_info(int *family, int *model) {
+    FILE *fp = CALL_REAL_POSIX_SYNC(fopen)("/proc/cpuinfo", "r");
+    if (fp == NULL) {
+        LOG_ERROR_AND_DIE("Error by open /proc/cpuinfo!");
+    }
+
+    char line[256];
+    while (CALL_REAL_POSIX_SYNC(fgets)(line, sizeof(line), fp) != NULL) {
+        int temp_family, temp_model;
+        if (sscanf(line, "cpu family\t: %d", &temp_family) == 1) {
+            *family = temp_family;
+        } else if (sscanf(line, "model\t\t: %d", &temp_model) == 1) {
+            *model = temp_model;
+        }
+    }
+    CALL_REAL_POSIX_SYNC(fclose)(fp);
+}
+
 int power_measurement_get_number_of_max_cpu_count(void) {
     FILE *file;
     int num_read;
@@ -3190,7 +3211,7 @@ int power_measurement_get_number_of_max_cpu_count(void) {
     return cpu_count;
 }
 
-void power_measurement_get_cpu_info(void) {
+void power_measurement_load_cpu_info(void) {
     int package, str_err, num_read;
     char filename[BUFSIZ];
     FILE *cpu_physical_package_id;
@@ -3277,7 +3298,17 @@ CPUMeasurementTask *cpu_measurement_tasks = NULL;
 int cpu_measurement_tasks_count = 0;
 unsigned int cpu_count = 0;
 
+int power_divisor, time_divisor;
+int cpu_energy_divisor, dram_energy_divisor;
+
 int rapl_init(int cpu_family, int cpu_model) {
+    switch(cpu_family) {
+        case CPU_INTEL:
+        case CPU_AMD:
+            break;
+        default:
+            LOG_ERROR_AND_DIE("CPU Family not Supported");
+    }
 
     cpu_count = cpu_info->cpu_count;
     fd_array = CALL_REAL_ALLOC_SYNC(calloc)(cpu_count, sizeof(FileState));
@@ -3288,8 +3319,7 @@ int rapl_init(int cpu_family, int cpu_model) {
 
     // Setup CPU Values by cpu_family and cpu_model
 
-    int power_divisor, time_divisor;
-    int cpu_energy_divisor, dram_energy_divisor;
+
     unsigned int msr_rapl_power_unit;
     unsigned int msr_pkg_energy_status, msr_pp0_energy_status;
 
@@ -3321,7 +3351,7 @@ int rapl_init(int cpu_family, int cpu_model) {
     }
 
     if (package_avail == 0) {
-        LOG_ERROR_AND_DIE("ERROR: CPU not supported\n");
+        LOG_ERROR_AND_DIE("ERROR: cpu_model not supported\n");
         return -1;
     }
 
@@ -3363,88 +3393,200 @@ int rapl_init(int cpu_family, int cpu_model) {
     CALL_REAL_POSIX_SYNC(fflush)(stdout);
 
     //CPU Info
+    {
+        const unsigned int cpu_id = 0;
+        int fd = rapl_open_file(cpu_id);
+        long long result = rapl_read_msr(fd, msr_rapl_power_unit);
 
-    for (unsigned int cpu_package = 0; cpu_package < cpu_info->package_count; ++cpu_package) {
-        for (unsigned int cpu_index = 0; cpu_index < cpu_info->cpu_packages[cpu_package].number_cpu_count; ++cpu_index) {
-            const unsigned int cpu_id = cpu_info->cpu_packages[cpu_package].cpu_ids[cpu_index];
+        power_divisor = 1 << ((result >> POWER_UNIT_OFFSET) & POWER_UNIT_MASK);
+        cpu_energy_divisor = 1 << ((result >> ENERGY_UNIT_OFFSET) & ENERGY_UNIT_MASK);
+        time_divisor = 1 << ((result >> TIME_UNIT_OFFSET) & TIME_UNIT_MASK);
 
-            int fd = rapl_open_file(cpu_id);
-            long long result = rapl_read_msr(fd, msr_rapl_power_unit);
-
-            power_divisor = 1 << ((result >> POWER_UNIT_OFFSET) & POWER_UNIT_MASK);
-            cpu_energy_divisor = 1 << ((result >> ENERGY_UNIT_OFFSET) & ENERGY_UNIT_MASK);
-            time_divisor = 1 << ((result >> TIME_UNIT_OFFSET) & TIME_UNIT_MASK);
-
-            /* Note! On Haswell-EP DRAM energy is fixed at 15.3uJ	*/
-            /* see https://lkml.org/lkml/2015/3/20/582		*/
-            /* Knights Landing is the same */
-            /* so is Broadwell-EP */
-            if (different_units) {
-                dram_energy_divisor = 1 << 16;
-            } else {
-                dram_energy_divisor = cpu_energy_divisor;
-            }
-
-            sprintf(print_buffer, "[ %2d | %2u ] \n", cpu_info->cpu_packages[cpu_package].id, cpu_id);
-            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 13);
-            CALL_REAL_POSIX_SYNC(fflush)(stdout);
-            sprintf(print_buffer, "Power units = %.3fW | \n", 1.0 / power_divisor);
-            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 34);
-            CALL_REAL_POSIX_SYNC(fflush)(stdout);
-            sprintf(print_buffer, "CPU Energy units = %.8fJ | \n", 1.0 / cpu_energy_divisor);
-            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 32);
-            CALL_REAL_POSIX_SYNC(fflush)(stdout);
-            sprintf(print_buffer, "DRAM Energy units = %.8fJ | \n", 1.0 / dram_energy_divisor);
-            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 20 + 8 + 5);
-            CALL_REAL_POSIX_SYNC(fflush)(stdout);
-            sprintf(print_buffer, "Time units = %.8fs \n", 1.0 / time_divisor);
-            CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 13 + 8 + 3);
-            CALL_REAL_POSIX_SYNC(fflush)(stdout);
+        /* Note! On Haswell-EP DRAM energy is fixed at 15.3uJ	*/
+        /* see https://lkml.org/lkml/2015/3/20/582		*/
+        /* Knights Landing is the same */
+        /* so is Broadwell-EP */
+        if (different_units) {
+            dram_energy_divisor = 1 << 16;
+        } else {
+            dram_energy_divisor = cpu_energy_divisor;
         }
     }
+
+    LOG_DEBUG("Power units = %.4fW | ", 1.0 / power_divisor);
+    LOG_DEBUG("CPU Energy units = %.8fJ | ", 1.0 / cpu_energy_divisor);
+    LOG_DEBUG("DRAM Energy units = %.8fJ | ", 1.0 / dram_energy_divisor);
+    LOG_DEBUG("Time units = %.8fs ", 1.0 / time_divisor);
 
     //Create Task
     for (unsigned int cpu_package = 0; cpu_package < cpu_info->package_count; ++cpu_package) {
         const unsigned int cpu_package_id = cpu_info->cpu_packages[cpu_package].id;
 
+# ifdef ENABLE_POWER_MEASUREMENT_PER_KERN
         for (unsigned int cpu_index = 0; cpu_index < cpu_info->cpu_packages[cpu_package].number_cpu_count; ++cpu_index) {
             const unsigned int cpu_id = cpu_info->cpu_packages[cpu_package].cpu_ids[cpu_index];
+# else
+            const unsigned int cpu_id = 0;
+#endif
+
+            if (cpu_family == CPU_INTEL) {
+                // "Thermal specification in counts; package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "THERMAL_SPEC_CNT",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_THERMAL_CNT);
+
+                // "Thermal specification for package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "THERMAL_SPEC_CNT",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_MINIMUM_CNT);
+
+
+                // "Minimum power in counts; package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "MINIMUM_POWER_CNT",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_MINIMUM_CNT);
+
+                // "Minimum power for package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "MINIMUM_POWER",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_MINIMUM);
+
+                // "Maximum power in counts; package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "MAXIMUM_POWER_CNT",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_MAXIMUM_CNT);
+
+                // "Maximum power for package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "MAXIMUM_POWER",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_MAXIMUM);
+
+                // "Maximum time window in counts; package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "MAXIMUM_TIME_WINDOW",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_TIME_WINDOW_CNT);
+
+                // "Maximum time window for package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "MAXIMUM_TIME_WINDOW",
+                                 MSR_PKG_POWER_INFO,
+                                 PACKAGE_TIME_WINDOW);
+            }
 
             if (package_avail) {
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++], cpu_id, cpu_package_id,
-                                 "package_avail_0",
+                // "Energy used in counts by chip package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
                                  "PACKAGE_ENERGY_CNT",
-                                 msr_pkg_energy_status, PACKAGE_ENERGY_CNT);
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++], cpu_id, cpu_package_id,
-                                 "package_avail_1",
+                                 msr_pkg_energy_status,
+                                 PACKAGE_ENERGY_CNT);
+
+                // "Energy used by chip package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
                                  "PACKAGE_ENERGY",
-                                 msr_pkg_energy_status, PACKAGE_ENERGY);
+                                 msr_pkg_energy_status,
+                                 PACKAGE_ENERGY);
             }
             if (pp1_avail) {
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++], cpu_id, cpu_package_id,
-                                 "pp1_avail",
-                                 "MSR_PP1_ENERGY_STATUS",
-                                 msr_pkg_energy_status, MSR_PP1_ENERGY_STATUS);
+                // "Energy used in counts by Power Plane 1 (Often GPU) on package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PP1_ENERGY_CNT",
+                                 MSR_PP1_ENERGY_STATUS,
+                                 PACKAGE_ENERGY_CNT);
+
+                // "Energy used by Power Plane 1 (Often GPU) on package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PP1_ENERGY",
+                                 MSR_PP1_ENERGY_STATUS,
+                                 PACKAGE_ENERGY);
+
+
             }
             if (dram_avail) {
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++], cpu_id, cpu_package_id,
-                                 "dram_avail",
-                                 "MSR_DRAM_ENERGY_STATUS",
-                                 msr_pkg_energy_status, MSR_DRAM_ENERGY_STATUS);
+                // "Energy used in counts by DRAM on package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PACKAGE_ENERGY_CNT",
+                                 MSR_DRAM_ENERGY_STATUS,
+                                 PACKAGE_ENERGY_CNT);
+
+                // "Energy used by DRAM on package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "DRAM_ENERGY",
+                                 MSR_DRAM_ENERGY_STATUS,
+                                 DRAM_ENERGY);
             }
             if (psys_avail) {
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++], cpu_id, cpu_package_id,
-                                 "psys_avail",
-                                 "MSR_PLATFORM_ENERGY_STATUS",
-                                 msr_pkg_energy_status, MSR_PLATFORM_ENERGY_STATUS);
+                // "Energy used in counts by SoC on package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PSYS_ENERGY_CNT",
+                                 MSR_PLATFORM_ENERGY_STATUS,
+                                 PACKAGE_ENERGY_CNT);
+
+
+                // "Energy used by SoC on package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PSYS_ENERGY_CNT",
+                                 MSR_PLATFORM_ENERGY_STATUS,
+                                 PLATFORM_ENERGY);
             }
             if (pp0_avail) {
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++], cpu_id, cpu_package_id,
-                                 "pp0_avail",
-                                 "msr_pp0_energy_status",
-                                 msr_pkg_energy_status, msr_pp0_energy_status);
+                // "Energy used in counts by all cores in package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PP0_ENERGY_CNT",
+                                 msr_pp0_energy_status,
+                                 PACKAGE_ENERGY_CNT);
+
+                // "Energy used by all cores in package <cpu_package_id>"
+                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                                 cpu_id,
+                                 cpu_package_id,
+                                 "PP0_ENERGY",
+                                 msr_pp0_energy_status,
+                                 PACKAGE_ENERGY);
             }
+# ifdef ENABLE_POWER_MEASUREMENT_PER_KERN
         }
+# endif
     }
 
     //init lastValues
@@ -3454,11 +3596,9 @@ int rapl_init(int cpu_family, int cpu_model) {
 }
 
 
-void rapl_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name,
-                      char *description, unsigned int offset_in_file, unsigned int type) {
+void rapl_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, unsigned int offset_in_file, unsigned int type) {
 
     strncpy(cpu_measurement_task->name, name, MAX_STR_LEN - 1);
-    strncpy(cpu_measurement_task->description, description, MAX_STR_LEN - 1);
 
     cpu_measurement_task->offset_in_file = offset_in_file;
     cpu_measurement_task->type = type;
@@ -3519,7 +3659,7 @@ void rapl_measurement(void) {
 
         sprintf(print_buffer, "[ %3u | %3u ] ", cpu_measurement_tasks[i].cpu_package, cpu_measurement_tasks[i].cpu_id);
         CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 14);
-        sprintf(print_buffer, "%25s - %25s -> %10lld -> %10lld\n", cpu_measurement_tasks[i].name, cpu_measurement_tasks[i].description, measurement_value, measurement_value - cpu_measurement_tasks[i].last_measurement_value);
+        sprintf(print_buffer, "%25s -> %10lld -> %10lld\n", cpu_measurement_tasks[i].name, measurement_value, measurement_value - cpu_measurement_tasks[i].last_measurement_value);
         CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 25 + 3 + 25 + 4 + 10 + 4 + 10 + 1);
         CALL_REAL_POSIX_SYNC(fflush)(stdout);
 
@@ -3528,28 +3668,86 @@ void rapl_measurement(void) {
 
         long long difference_to_last_value = 0;
 
-
-        if (measurement_value > task.last_measurement_value) {
-            difference_to_last_value = measurement_value - task.last_measurement_value;
-        } else {
-            difference_to_last_value = measurement_value + (0x100000000 - task.last_measurement_value);
+        if (task.type == PACKAGE_ENERGY ||
+        task.type == DRAM_ENERGY ||
+        task.type == PLATFORM_ENERGY  ||
+        task.type == PACKAGE_ENERGY_CNT) {
+            if (measurement_value > task.last_measurement_value) {
+                difference_to_last_value = measurement_value - task.last_measurement_value;
+            } else {
+                difference_to_last_value = measurement_value + (0x100000000 - task.last_measurement_value);
+            }
         }
-
         struct power_measurement_data data = {
                 gettime(),
                 getpid(),
                 (int)task.cpu_package,
                 (int)task.cpu_id,
                 task.name,
-                task.description,
                 (int)task.type,
                 difference_to_last_value,
+                rapl_convert_energy(data.type, difference_to_last_value),
                 measurement_value,
         };
         write_power_measurement_data_into_influxdb(&data);
 
         cpu_measurement_tasks[i].last_measurement_value = measurement_value;
     }
+}
+
+long long rapl_convert_energy(int type, long long value) {
+    union {
+        long long ll;
+        double fp;
+    } return_val;
+
+    return_val.ll = value;
+
+    if (type==PACKAGE_ENERGY) {
+        return_val.ll = (long long)(((double)value/cpu_energy_divisor)*1e9);
+    }
+
+    if (type==DRAM_ENERGY) {
+        return_val.ll = (long long)(((double)value/dram_energy_divisor)*1e9);
+    }
+
+    if (type==PLATFORM_ENERGY) {
+        return_val.ll = (long long)(((double)value/cpu_energy_divisor)*1e9);
+    }
+
+    if (type==PACKAGE_THERMAL) {
+        return_val.fp = (double)((value>>THERMAL_SHIFT)&POWER_INFO_UNIT_MASK)/(double)power_divisor;
+    }
+
+    if (type==PACKAGE_MINIMUM) {
+        return_val.fp = (double)((value>>MINIMUM_POWER_SHIFT)&POWER_INFO_UNIT_MASK)/(double)power_divisor;
+    }
+
+    if (type==PACKAGE_MAXIMUM) {
+        return_val.fp = (double)((value>>MAXIMUM_POWER_SHIFT)&POWER_INFO_UNIT_MASK)/(double)power_divisor;
+    }
+
+    if (type==PACKAGE_TIME_WINDOW) {
+        return_val.fp =  (double)((value>>MAXIMUM_TIME_WINDOW_SHIFT)&POWER_INFO_UNIT_MASK)/(double)time_divisor;
+    }
+
+    if (type==PACKAGE_THERMAL_CNT) {
+        return_val.ll = ((value>>THERMAL_SHIFT)&POWER_INFO_UNIT_MASK);
+    }
+
+    if (type==PACKAGE_MINIMUM_CNT) {
+        return_val.ll = ((value>>MINIMUM_POWER_SHIFT)&POWER_INFO_UNIT_MASK);
+    }
+
+    if (type==PACKAGE_MAXIMUM_CNT) {
+        return_val.ll = ((value>>MAXIMUM_POWER_SHIFT)&POWER_INFO_UNIT_MASK);
+    }
+
+    if (type==PACKAGE_TIME_WINDOW_CNT) {
+        return_val.ll = ((value>>MAXIMUM_TIME_WINDOW_SHIFT)&POWER_INFO_UNIT_MASK);
+    }
+
+    return return_val.ll;
 }
 
 long long rapl_read_msr(int file_descriptor, unsigned int offset_in_file) {
@@ -3568,14 +3766,3 @@ long long rapl_read_msr(int file_descriptor, unsigned int offset_in_file) {
 
 #endif
 #endif
-/*
-
-    CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, "---------- ICH BIN DER INIT TEXT\n", 33);
-    CALL_REAL_POSIX_SYNC(fflush)(stdout);
-
-    CALL_REAL_ALLOC_SYNC(free)(cpu_info);
-
-    TODO:
-    - [ ] add dynamic load from CPU infos
-
-*/

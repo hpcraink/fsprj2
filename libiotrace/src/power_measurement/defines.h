@@ -9,6 +9,8 @@
 #define CPU_INTEL 6
 #define CPU_AMD 23
 
+#define METHOD_RAPL 1
+#define METHOD_POWERCAP 2
 
 /***************/
 /* AMD Support */

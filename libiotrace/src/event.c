@@ -873,7 +873,7 @@ void libiotrace_set_wrapper_inactive(const char *wrapper) {
 * @param[in]  data power_measurement_data-entry.
 */
 #if defined(IOTRACE_ENABLE_INFLUXDB) && defined(ENABLE_POWER_MEASUREMENT)
-void write_power_measurement_data_into_influxdb(struct power_measurement_data *data) {
+void write_power_measurement_data_into_influxdb(struct power_measurement_data *data, int method) {
     //buffer for body
     int body_length = libiotrace_struct_push_max_size_power_measurement_data(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
     char body[body_length];
@@ -888,7 +888,7 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
     char short_log_name[50];
     shorten_log_name(short_log_name, sizeof(short_log_name), log_name, log_name_len);
 
-    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,pid=%d,cpu_package=%d,cpu_id=%d,type=%u,name=%s";
+    const char labels[] = "libiotrace_power_measurement,jobname=%s,hostname=%s,pid=%d,cpu_package=%d,cpu_id=%d,type=%u,name=%s,method=%d";
     int body_labels_length = strlen(labels)
                              + sizeof(short_log_name) /* jobname */
                              + HOST_NAME_MAX /* hostname */
@@ -896,10 +896,11 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
                              + COUNT_DEC_AS_CHAR(data->cpu_package) /* cpu_package */
                              + COUNT_DEC_AS_CHAR(data->cpu_id) /* cpu_id */
                              + COUNT_DEC_AS_CHAR(data->type) /* type */
-                             + strlen(data->name); /* name */
+                             + strlen(data->name) /* name */
+                             + COUNT_DEC_AS_CHAR(method); /* name */
 
     char body_labels[body_labels_length];
-    snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, data->pid, data->cpu_package, data->cpu_id, (uint)data->type, data->name);
+    snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, data->pid, data->cpu_package, data->cpu_id, (uint)data->type, data->name, method);
     body_labels_length = strlen(body_labels);
 
     u_int64_t current_time = gettime();
@@ -3413,6 +3414,7 @@ int rapl_init(int cpu_family, int cpu_model) {
         }
     }
 
+    //TODO: create struct send to influx
     LOG_DEBUG("Power units = %.4fW | ", 1.0 / power_divisor);
     LOG_DEBUG("CPU Energy units = %.8fJ | ", 1.0 / cpu_energy_divisor);
     LOG_DEBUG("DRAM Energy units = %.8fJ | ", 1.0 / dram_energy_divisor);
@@ -3689,7 +3691,7 @@ void rapl_measurement(void) {
                 rapl_convert_energy(data.type, difference_to_last_value),
                 measurement_value,
         };
-        write_power_measurement_data_into_influxdb(&data);
+        write_power_measurement_data_into_influxdb(&data, METHOD_RAPL);
 
         cpu_measurement_tasks[i].last_measurement_value = measurement_value;
     }

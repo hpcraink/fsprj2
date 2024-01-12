@@ -358,6 +358,7 @@ static const long FNRES_MAX_FNMAP_MAX_FNAMES = 10000;
 void power_measurement_init(void);
 void power_measurement_step(void);
 void power_measurement_cleanup(void);
+void power_measurement_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, unsigned int offset_in_file, unsigned int type);
 
 void get_cpu_info(int *family, int *model);
 int power_measurement_get_number_of_max_cpu_count(void);
@@ -366,13 +367,21 @@ void power_measurement_free_cpu_info(void);
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
 int rapl_init(int cpu_family, int cpu_model);
-void rapl_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, unsigned int offset_in_file, unsigned int type);
 void rapl_free(void);
 int rapl_open_file(unsigned int offset);
 void rapl_measurement(void);
 long long rapl_read_msr(int file_descriptor, unsigned int offset_in_file);
 long long rapl_convert_energy(int type, long long value);
 #endif
+
+#ifdef  ENABLE_POWER_MEASUREMENT_POWERCAP
+int powercap_init(int cpu_family, int cpu_model);
+void powercap_free(void);
+void powercap_measurement(void);
+int powercap_open_file(unsigned int offset);
+long  long powercap_read_msr(int file_descriptor);
+#endif
+
 #endif
 
 
@@ -3143,7 +3152,7 @@ void power_measurement_init(void) {
     int cpu_family = 0;
     int cpu_model = 0;
     get_cpu_info(&cpu_family, &cpu_model);
-    LOG_DEBUG("cpu_family: %d  cpu_model: %d", cpu_family);
+    LOG_DEBUG("cpu_family: %d ", cpu_family);
     LOG_DEBUG("cpu_model: %d", cpu_model);
     power_measurement_load_cpu_info();
 
@@ -3151,7 +3160,9 @@ void power_measurement_init(void) {
     rapl_init(cpu_family, cpu_model);
 #endif
 
-
+#ifdef  ENABLE_POWER_MEASUREMENT_POWERCAP
+    powercap_init(cpu_family, cpu_model);
+#endif
 }
 
 void power_measurement_step(void) {
@@ -3161,6 +3172,10 @@ void power_measurement_step(void) {
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
         rapl_measurement();
 #endif
+
+#ifdef  ENABLE_POWER_MEASUREMENT_POWERCAP
+        powercap_measurement();
+#endif
         last_time = gettime();
     }
 }
@@ -3169,6 +3184,9 @@ void power_measurement_cleanup(void) {
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
     rapl_free();
+#endif
+#ifdef  ENABLE_POWER_MEASUREMENT_POWERCAP
+    powercap_free();
 #endif
     power_measurement_free_cpu_info();
 }
@@ -3290,13 +3308,26 @@ void power_measurement_free_cpu_info(void) {
     CALL_REAL_ALLOC_SYNC(free)(cpu_info);
 }
 
+void power_measurement_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, unsigned int offset_in_file, unsigned int type) {
+
+    strncpy(cpu_measurement_task->name, name, MAX_STR_LEN - 1);
+
+    cpu_measurement_task->offset_in_file = offset_in_file;
+    cpu_measurement_task->type = type;
+
+    cpu_measurement_task->cpu_id = cpu_id;
+    cpu_measurement_task->cpu_package = cpu_package_id;
+    cpu_measurement_task->last_measurement_value = -1;
+}
+
+
 //RAPL
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
 
-FileState *fd_array = NULL;
-CPUMeasurementTask *cpu_measurement_tasks = NULL;
-int cpu_measurement_tasks_count = 0;
+FileState *rapl_fd_array = NULL;
+CPUMeasurementTask *rapl_cpu_measurement_tasks = NULL;
+int rapl_cpu_measurement_tasks_count = 0;
 unsigned int cpu_count = 0;
 
 int power_divisor, time_divisor;
@@ -3312,8 +3343,8 @@ int rapl_init(int cpu_family, int cpu_model) {
     }
 
     cpu_count = cpu_info->cpu_count;
-    fd_array = CALL_REAL_ALLOC_SYNC(calloc)(cpu_count, sizeof(FileState));
-    if (fd_array == NULL) {
+    rapl_fd_array = CALL_REAL_ALLOC_SYNC(calloc)(cpu_count, sizeof(FileState));
+    if (rapl_fd_array == NULL) {
         return -1;
     }
 
@@ -3376,7 +3407,7 @@ int rapl_init(int cpu_family, int cpu_model) {
         task_count += (4 * cpu_count) * 2;
     }
 
-    cpu_measurement_tasks = CALL_REAL_ALLOC_SYNC(calloc)(task_count, sizeof(CPUMeasurementTask));
+    rapl_cpu_measurement_tasks = CALL_REAL_ALLOC_SYNC(calloc)(task_count, sizeof(CPUMeasurementTask));
 
     //Set cpu_family Values
     if (cpu_family == CPU_INTEL) {
@@ -3433,7 +3464,7 @@ int rapl_init(int cpu_family, int cpu_model) {
 
             if (cpu_family == CPU_INTEL) {
                 // "Thermal specification in counts; package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "THERMAL_SPEC_CNT",
@@ -3441,7 +3472,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_THERMAL_CNT);
 
                 // "Thermal specification for package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "THERMAL_SPEC_CNT",
@@ -3450,7 +3481,7 @@ int rapl_init(int cpu_family, int cpu_model) {
 
 
                 // "Minimum power in counts; package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "MINIMUM_POWER_CNT",
@@ -3458,7 +3489,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_MINIMUM_CNT);
 
                 // "Minimum power for package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "MINIMUM_POWER",
@@ -3466,7 +3497,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_MINIMUM);
 
                 // "Maximum power in counts; package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "MAXIMUM_POWER_CNT",
@@ -3474,7 +3505,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_MAXIMUM_CNT);
 
                 // "Maximum power for package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "MAXIMUM_POWER",
@@ -3482,7 +3513,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_MAXIMUM);
 
                 // "Maximum time window in counts; package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "MAXIMUM_TIME_WINDOW",
@@ -3490,7 +3521,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_TIME_WINDOW_CNT);
 
                 // "Maximum time window for package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "MAXIMUM_TIME_WINDOW",
@@ -3500,7 +3531,7 @@ int rapl_init(int cpu_family, int cpu_model) {
 
             if (package_avail) {
                 // "Energy used in counts by chip package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PACKAGE_ENERGY_CNT",
@@ -3508,7 +3539,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_ENERGY_CNT);
 
                 // "Energy used by chip package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PACKAGE_ENERGY",
@@ -3517,7 +3548,7 @@ int rapl_init(int cpu_family, int cpu_model) {
             }
             if (pp1_avail) {
                 // "Energy used in counts by Power Plane 1 (Often GPU) on package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PP1_ENERGY_CNT",
@@ -3525,7 +3556,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_ENERGY_CNT);
 
                 // "Energy used by Power Plane 1 (Often GPU) on package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PP1_ENERGY",
@@ -3536,7 +3567,7 @@ int rapl_init(int cpu_family, int cpu_model) {
             }
             if (dram_avail) {
                 // "Energy used in counts by DRAM on package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PACKAGE_ENERGY_CNT",
@@ -3544,7 +3575,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_ENERGY_CNT);
 
                 // "Energy used by DRAM on package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "DRAM_ENERGY",
@@ -3553,7 +3584,7 @@ int rapl_init(int cpu_family, int cpu_model) {
             }
             if (psys_avail) {
                 // "Energy used in counts by SoC on package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PSYS_ENERGY_CNT",
@@ -3562,7 +3593,7 @@ int rapl_init(int cpu_family, int cpu_model) {
 
 
                 // "Energy used by SoC on package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PSYS_ENERGY_CNT",
@@ -3571,7 +3602,7 @@ int rapl_init(int cpu_family, int cpu_model) {
             }
             if (pp0_avail) {
                 // "Energy used in counts by all cores in package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PP0_ENERGY_CNT",
@@ -3579,7 +3610,7 @@ int rapl_init(int cpu_family, int cpu_model) {
                                  PACKAGE_ENERGY_CNT);
 
                 // "Energy used by all cores in package <cpu_package_id>"
-                rapl_create_task(&cpu_measurement_tasks[cpu_measurement_tasks_count++],
+                power_measurement_create_task(&rapl_cpu_measurement_tasks[rapl_cpu_measurement_tasks_count++],
                                  cpu_id,
                                  cpu_package_id,
                                  "PP0_ENERGY",
@@ -3597,24 +3628,11 @@ int rapl_init(int cpu_family, int cpu_model) {
     return 0;
 }
 
-
-void rapl_create_task(CPUMeasurementTask *cpu_measurement_task, unsigned int cpu_id, unsigned int cpu_package_id, char *name, unsigned int offset_in_file, unsigned int type) {
-
-    strncpy(cpu_measurement_task->name, name, MAX_STR_LEN - 1);
-
-    cpu_measurement_task->offset_in_file = offset_in_file;
-    cpu_measurement_task->type = type;
-
-    cpu_measurement_task->cpu_id = cpu_id;
-    cpu_measurement_task->cpu_package = cpu_package_id;
-    cpu_measurement_task->last_measurement_value = -1;
-}
-
 void rapl_free(void) {
     for (unsigned int i = 0; i < cpu_count; ++i) {
-        CALL_REAL_POSIX_SYNC(close)(fd_array[i].file_descriptor);
+        CALL_REAL_POSIX_SYNC(close)(rapl_fd_array[i].file_descriptor);
     }
-    CALL_REAL_ALLOC_SYNC(free)(fd_array);
+    CALL_REAL_ALLOC_SYNC(free)(rapl_fd_array);
 }
 
 int rapl_open_file(unsigned int offset) {
@@ -3622,7 +3640,7 @@ int rapl_open_file(unsigned int offset) {
     int fd = 0;
     char filename[BUFSIZ];
 
-    if (fd_array[offset].open == 0) {
+    if (rapl_fd_array[offset].open == 0) {
 
         sprintf(filename, "/dev/cpu/%u/msr_safe", offset);
         fd = CALL_REAL_POSIX_SYNC(open)(filename, O_RDONLY);
@@ -3633,8 +3651,8 @@ int rapl_open_file(unsigned int offset) {
         }
 
         if (fd > 0) {
-            fd_array[offset].file_descriptor = fd;
-            fd_array[offset].open = 1;
+            rapl_fd_array[offset].file_descriptor = fd;
+            rapl_fd_array[offset].open = 1;
 
             sprintf(print_buffer, "Open File %3d: %3u\n", fd, offset);
             CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 19);
@@ -3643,29 +3661,29 @@ int rapl_open_file(unsigned int offset) {
             LOG_ERROR_AND_DIE("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /dev/cpu/*/msr'",offset, filename, fd, errno);
         }
     } else {
-        fd = fd_array[offset].file_descriptor;
+        fd = rapl_fd_array[offset].file_descriptor;
     }
 
     return fd;
 }
 
 void rapl_measurement(void) {
-    for (int i = 0; i < cpu_measurement_tasks_count; ++i) {
-        int fd = rapl_open_file(cpu_measurement_tasks[i].cpu_id);
-        long long measurement_value = rapl_read_msr(fd, cpu_measurement_tasks[i].offset_in_file);
+    for (int i = 0; i < rapl_cpu_measurement_tasks_count; ++i) {
+        int fd = rapl_open_file(rapl_cpu_measurement_tasks[i].cpu_id);
+        long long measurement_value = rapl_read_msr(fd, rapl_cpu_measurement_tasks[i].offset_in_file);
 
-        if (cpu_measurement_tasks[i].last_measurement_value == -1) {
-            cpu_measurement_tasks[i].last_measurement_value = measurement_value;
+        if (rapl_cpu_measurement_tasks[i].last_measurement_value == -1) {
+            rapl_cpu_measurement_tasks[i].last_measurement_value = measurement_value;
             continue;
         }
 
-        sprintf(print_buffer, "[ %3u | %3u ] ", cpu_measurement_tasks[i].cpu_package, cpu_measurement_tasks[i].cpu_id);
+        sprintf(print_buffer, "[ %3u | %3u ] ", rapl_cpu_measurement_tasks[i].cpu_package, rapl_cpu_measurement_tasks[i].cpu_id);
         CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 14);
-        sprintf(print_buffer, "%25s -> %10lld -> %10lld\n", cpu_measurement_tasks[i].name, measurement_value, measurement_value - cpu_measurement_tasks[i].last_measurement_value);
+        sprintf(print_buffer, "%25s -> %10lld -> %10lld\n", rapl_cpu_measurement_tasks[i].name, measurement_value, measurement_value - rapl_cpu_measurement_tasks[i].last_measurement_value);
         CALL_REAL_POSIX_SYNC(write)(STDOUT_FILENO, print_buffer, 25 + 3 + 25 + 4 + 10 + 4 + 10 + 1);
         CALL_REAL_POSIX_SYNC(fflush)(stdout);
 
-        CPUMeasurementTask task = cpu_measurement_tasks[i];
+        CPUMeasurementTask task = rapl_cpu_measurement_tasks[i];
 
 
         long long difference_to_last_value = 0;
@@ -3693,7 +3711,7 @@ void rapl_measurement(void) {
         };
         write_power_measurement_data_into_influxdb(&data, METHOD_RAPL);
 
-        cpu_measurement_tasks[i].last_measurement_value = measurement_value;
+        rapl_cpu_measurement_tasks[i].last_measurement_value = measurement_value;
     }
 }
 
@@ -3765,6 +3783,267 @@ long long rapl_read_msr(int file_descriptor, unsigned int offset_in_file) {
 
     return (long long) data & 0xFFFFFFFF;
 }
+
+#endif
+
+//POWERCAP
+#ifdef  ENABLE_POWER_MEASUREMENT_POWERCAP
+
+static char pwoercap_file_path_array[POWERCAP_MAX_COUNTERS][MAX_STR_LEN];
+FileState powercap_fd_array[POWERCAP_MAX_COUNTERS];
+CPUMeasurementTask powercap_cpu_measurement_tasks[POWERCAP_MAX_COUNTERS];
+int powercap_cpu_measurement_tasks_count = 0;
+
+static char read_buff[MAX_STR_LEN];
+// static char write_buff[MAX_STR_LEN];
+static long long max_pkg_energy_count;
+static long long max_component_energy_count;
+
+int powercap_init(int cpu_family, int cpu_model) {
+    switch(cpu_family) {
+        case CPU_INTEL:
+        case CPU_AMD:
+            break;
+        default:
+            LOG_ERROR_AND_DIE("CPU Family not Supported-> cpu_family: %d, cpu_model: %d", cpu_family, cpu_model );
+    }
+
+    long unsigned int str_err;
+    char event_path[MAX_STR_LEN];
+    char events_dir[MAX_STR_LEN];
+
+    for (unsigned int cpu_package = 0; cpu_package < cpu_info->package_count; ++cpu_package) {
+        const unsigned int cpu_package_id = cpu_info->cpu_packages[cpu_package].id;
+
+        // Find the directory corresponding to the socket number.  There may be other top-level entries in there
+        // besides packages, such as "psys", that mess up the numbering, so we conduct an exhaustive search.
+        int s_dir, found = 0;
+
+        for(s_dir = 0; ; s_dir++) {
+            str_err = snprintf(event_path, sizeof(event_path), "/sys/class/powercap/intel-rapl:%d/%s", s_dir, pkg_sys_names[PKG_NAME]);
+            event_path[sizeof(event_path)-1]=0;
+            if (str_err > sizeof(event_path)) {
+                LOG_ERROR_AND_DIE("overflow in path name");
+            };
+
+            int event_fd;
+            event_fd = CALL_REAL_POSIX_SYNC(open)(event_path, pkg_sys_flags[PKG_NAME]);
+            if (event_fd == -1) {
+                break;
+            }
+
+            int sz = CALL_REAL_POSIX_SYNC(pread)(event_fd, read_buff, MAX_STR_LEN, 0);
+            read_buff[sz] = '\0';
+            CALL_REAL_POSIX_SYNC(close)(event_fd);
+
+            if (strncmp(read_buff, "package-", strlen("package-")) == 0 && strtol(read_buff + strlen("package-"), NULL, 10) == cpu_package_id) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found) { continue; }
+
+
+
+        str_err=snprintf(events_dir, sizeof(events_dir), "/sys/class/powercap/intel-rapl:%d/", s_dir);
+        events_dir[sizeof(events_dir)-1]=0;
+        if (str_err > sizeof(event_path)) {
+            LOG_ERROR_AND_DIE("overflow in path name in events_dir");
+        };
+
+        // open directory to make sure it exists
+        DIR *events = opendir(events_dir);
+        if (events == NULL) { continue; }
+        closedir(events);
+
+        // loop through pkg events and create powercap event entries
+        for (int event_id = 0; event_id < PKG_NUM_EVENTS; event_id++) {
+
+            /*
+            if (pkg_events[event_id] == PKG_NAME) {
+                continue;
+            }
+            */
+
+            // compose string to individual event
+            str_err=snprintf(event_path, sizeof(event_path), "%s%s", events_dir, pkg_sys_names[event_id]);
+            event_path[sizeof(event_path)-1]=0;
+            if (str_err > sizeof(event_path)) {
+                LOG_ERROR_AND_DIE("overflow in path name in event_path");
+            };
+
+            // not a valid pkg event path so continue
+            if (access(event_path, R_OK) == -1) { continue; }
+
+            str_err=snprintf(read_buff, MAX_STR_LEN, "%s:ZONE_%u", pkg_event_names[event_id], cpu_package_id);
+            read_buff[sizeof(read_buff)-1]=0;
+            power_measurement_create_task(&powercap_cpu_measurement_tasks[powercap_cpu_measurement_tasks_count],
+                                          0,
+                                          cpu_package_id,
+                                          read_buff,
+                                          event_id, /*offset in pkg_sys_flags, pkg_sys_names or pkg_event_names array*/
+                                          pkg_events[event_id]
+            );
+            snprintf(pwoercap_file_path_array[powercap_cpu_measurement_tasks_count], MAX_STR_LEN, "%s", event_path);
+            powercap_open_file(powercap_cpu_measurement_tasks_count);
+
+            if(powercap_cpu_measurement_tasks[powercap_cpu_measurement_tasks_count].type == PKG_MAX_ENERGY_RANGE) {
+                int fd = powercap_open_file(powercap_cpu_measurement_tasks_count);
+                int sz = CALL_REAL_POSIX_SYNC(pread)(fd, read_buff, MAX_STR_LEN, 0);
+                read_buff[sz] = '\0';
+                max_pkg_energy_count = atoll(read_buff);
+            }
+
+            powercap_cpu_measurement_tasks_count++;
+        }
+
+
+        // reset component count for each socket
+
+        for (int sub_zone_id = 0; sub_zone_id < COMPONENT_NUM_EVENTS; ++sub_zone_id) {
+            str_err=snprintf(events_dir, sizeof(events_dir), "/sys/class/powercap/intel-rapl:%d:%d/", s_dir, sub_zone_id);
+            events_dir[sizeof(events_dir)-1]=0;
+            if (str_err > sizeof(event_path)) {
+                LOG_ERROR_AND_DIE("overflow in path name in events_dir");
+            };
+
+            // open directory to make sure it exists
+            events = opendir(events_dir);
+            if (events == NULL) { continue; }
+            closedir(events);
+
+
+            // loop through pkg events and create powercap event entries
+            for (int event_id = 0; event_id < COMPONENT_NUM_EVENTS; event_id++) {
+
+                // compose string to individual event
+                str_err=snprintf(event_path, sizeof(event_path), "%s%s", events_dir, component_sys_names[event_id]);
+                event_path[sizeof(event_path)-1]=0;
+                if (str_err > sizeof(event_path)) {
+                    LOG_ERROR_AND_DIE("overflow in path name in event_path");
+                };
+
+
+                // not a valid pkg event path so continue
+                if (access(event_path, R_OK) == -1) { continue; }
+
+                str_err=snprintf(read_buff, MAX_STR_LEN, "%s:ZONE_%u_SUBZONE_%d", component_event_names[event_id], cpu_package_id, sub_zone_id);
+                read_buff[sizeof(event_path)-1]=0;
+                if (str_err > sizeof(event_path)) {
+                    LOG_ERROR_AND_DIE("overflow in path name in read_buff");
+                };
+
+                power_measurement_create_task(&powercap_cpu_measurement_tasks[powercap_cpu_measurement_tasks_count],
+                                              sub_zone_id,
+                                              cpu_package_id,
+                                              read_buff,
+                                              event_id, /*offset in pkg_sys_flags, pkg_sys_names or pkg_event_names array*/
+                                              component_events[event_id]
+                );
+                snprintf(pwoercap_file_path_array[powercap_cpu_measurement_tasks_count], MAX_STR_LEN, "%s", event_path);
+                powercap_open_file(powercap_cpu_measurement_tasks_count);
+
+
+                if(powercap_cpu_measurement_tasks[powercap_cpu_measurement_tasks_count].type == COMPONENT_MAX_ENERGY_RANGE) {
+                    int fd = powercap_open_file(powercap_cpu_measurement_tasks_count);
+                    int sz = CALL_REAL_POSIX_SYNC(pread)(fd, read_buff, MAX_STR_LEN, 0);
+                    read_buff[sz] = '\0';
+                    max_component_energy_count = atoll(read_buff);
+                }
+
+                powercap_cpu_measurement_tasks_count++;
+            }
+        }
+    }
+    //init lastValues
+    powercap_measurement();
+    return 0;
+}
+
+void powercap_free(void) {
+    for (int event_id = 0; event_id < powercap_cpu_measurement_tasks_count; ++event_id) {
+        CALL_REAL_POSIX_SYNC(close)(powercap_fd_array[event_id].file_descriptor);
+    }
+}
+void powercap_measurement(void) {
+    for (int event_id = 0; event_id < powercap_cpu_measurement_tasks_count; ++event_id) {
+        CPUMeasurementTask task = powercap_cpu_measurement_tasks[event_id];
+
+        long long measurement_value = powercap_read_msr(powercap_open_file(event_id));
+
+        if (powercap_cpu_measurement_tasks[event_id].last_measurement_value == -1) {
+            powercap_cpu_measurement_tasks[event_id].last_measurement_value = measurement_value;
+            continue;
+        }
+
+        long long difference_to_last_value = 0;
+
+        if (task.type == PKG_ENERGY ||
+            task.type == COMPONENT_ENERGY) {
+            if(measurement_value < task.last_measurement_value) {
+                if(task.type == PKG_ENERGY ) {
+                    difference_to_last_value = measurement_value + (max_pkg_energy_count - task.last_measurement_value);
+                } else if(task.type == COMPONENT_ENERGY ) {
+                    difference_to_last_value = measurement_value + (max_component_energy_count - task.last_measurement_value);
+
+                } else {
+                    difference_to_last_value = measurement_value + (0x100000000 - task.last_measurement_value);
+                }
+            }
+            else if (measurement_value > task.last_measurement_value) {
+                difference_to_last_value = measurement_value - task.last_measurement_value;
+            }
+        }
+
+        LOG_DEBUG("TASK: %40s -> %15lld => %15lld", task.name,measurement_value, difference_to_last_value);
+
+        struct power_measurement_data data = {
+                gettime(),
+                getpid(),
+                (int)task.cpu_package,
+                (int)task.cpu_id,
+                task.name,
+                (int)task.type,
+                (difference_to_last_value*1000), // convert from mJ to ??
+                0,
+                measurement_value,
+        };
+        write_power_measurement_data_into_influxdb(&data, METHOD_POWERCAP);
+
+        powercap_cpu_measurement_tasks[event_id].last_measurement_value = measurement_value;
+
+    }
+}
+
+int powercap_open_file(unsigned int offset) {
+    int fd = 0;
+    if (powercap_fd_array[offset].open == 0) {
+        fd = CALL_REAL_POSIX_SYNC(open)(pwoercap_file_path_array[offset], O_SYNC|component_sys_flags[powercap_cpu_measurement_tasks[offset].offset_in_file]);
+        if (fd > 0) {
+            powercap_fd_array[offset].file_descriptor = fd;
+            powercap_fd_array[offset].open = 1;
+
+            LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, pwoercap_file_path_array[offset]);
+        } else {
+            LOG_ERROR_AND_DIE("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /sys/class/powercap/intel-rapl:<package_id>/'", offset,pwoercap_file_path_array[offset] , fd, errno);
+        }
+    } else {
+        fd = powercap_fd_array[offset].file_descriptor;
+    }
+
+    return fd;
+}
+
+
+long long powercap_read_msr(int file_descriptor) {
+    int sz = CALL_REAL_POSIX_SYNC(pread)(file_descriptor, read_buff, MAX_STR_LEN, 0);
+    read_buff[sz] = '\0';
+
+    return atoll(read_buff);
+}
+
+
+
 
 #endif
 #endif

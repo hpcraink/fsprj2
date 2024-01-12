@@ -12,6 +12,8 @@
 #define METHOD_RAPL 1
 #define METHOD_POWERCAP 2
 
+// RAPL
+
 /***************/
 /* AMD Support */
 /***************/
@@ -118,3 +120,46 @@ typedef struct CPUMeasurementTask {
 
     long long last_measurement_value;
 } CPUMeasurementTask;
+
+
+//Powercap
+
+
+// package events
+#define PKG_ENERGY                  0
+#define PKG_MAX_ENERGY_RANGE        1
+#define PKG_MAX_POWER_A             2
+#define PKG_POWER_LIMIT_A           3
+#define PKG_TIME_WINDOW_A           4
+#define PKG_MAX_POWER_B             5
+#define PKG_POWER_LIMIT_B           6
+#define PKG_TIME_WINDOW_B           7
+#define PKG_ENABLED                 8
+#define PKG_NAME                    9
+
+#define PKG_NUM_EVENTS              10
+static int   pkg_events[PKG_NUM_EVENTS]        = {PKG_ENERGY, PKG_MAX_ENERGY_RANGE, PKG_MAX_POWER_A, PKG_POWER_LIMIT_A, PKG_TIME_WINDOW_A, PKG_MAX_POWER_B, PKG_POWER_LIMIT_B, PKG_TIME_WINDOW_B, PKG_ENABLED, PKG_NAME};
+static char *pkg_event_names[PKG_NUM_EVENTS]   = {"ENERGY_UJ", "MAX_ENERGY_RANGE_UJ", "MAX_POWER_A_UW", "POWER_LIMIT_A_UW", "TIME_WINDOW_A_US", "MAX_POWER_B_UW", "POWER_LIMIT_B_UW", "TIME_WINDOW_B", "ENABLED", "NAME"};
+static char *pkg_sys_names[PKG_NUM_EVENTS]     = {"energy_uj", "max_energy_range_uj", "constraint_0_max_power_uw", "constraint_0_power_limit_uw", "constraint_0_time_window_us", "constraint_1_max_power_uw", "constraint_1_power_limit_uw", "constraint_1_time_window_us", "enabled", "name"};
+static mode_t   pkg_sys_flags[PKG_NUM_EVENTS]  = {O_RDONLY, O_RDONLY, O_RDONLY, O_RDWR, O_RDONLY, O_RDONLY, O_RDWR, O_RDONLY, O_RDONLY, O_RDONLY};
+
+
+// POWERCAP
+
+#define COMPONENT_ENERGY            10
+#define COMPONENT_MAX_ENERGY_RANGE  11
+#define COMPONENT_MAX_POWER_A       12
+#define COMPONENT_POWER_LIMIT_A     13
+#define COMPONENT_TIME_WINDOW_A     14
+#define COMPONENT_ENABLED           15
+#define COMPONENT_NAME              16
+
+#define COMPONENT_NUM_EVENTS        7
+static int   component_events[COMPONENT_NUM_EVENTS]      = {COMPONENT_ENERGY, COMPONENT_MAX_ENERGY_RANGE, COMPONENT_MAX_POWER_A, COMPONENT_POWER_LIMIT_A, COMPONENT_TIME_WINDOW_A, COMPONENT_ENABLED, COMPONENT_NAME};
+static char *component_event_names[COMPONENT_NUM_EVENTS] = {"ENERGY_UJ", "MAX_ENERGY_RANGE_UJ", "MAX_POWER_A_UW", "POWER_LIMIT_A_UW", "TIME_WINDOW_A_US", "ENABLED", "NAME"};
+static char *component_sys_names[COMPONENT_NUM_EVENTS]         = {"energy_uj", "max_energy_range_uj", "constraint_0_max_power_uw", "constraint_0_power_limit_uw", "constraint_0_time_window_us", "enabled", "name"};
+static mode_t   component_sys_flags[COMPONENT_NUM_EVENTS]      = {O_RDONLY, O_RDONLY, O_RDONLY, O_RDWR, O_RDONLY, O_RDONLY, O_RDONLY};
+
+#define POWERCAP_MAX_COUNTERS (2 * (PKG_NUM_EVENTS + (3 * COMPONENT_NUM_EVENTS)))
+
+

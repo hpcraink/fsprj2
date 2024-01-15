@@ -25,7 +25,7 @@ test_libiotrace_cmake_options=(
 )
 
 # slurm
-test_nodes=3
+test_nodes=2
 test_processes_per_worker=64
 export test_network_interface=ib0
 #export test_network_interface=eno2np1

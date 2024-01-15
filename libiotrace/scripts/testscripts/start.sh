@@ -19,7 +19,12 @@ echo "    passed"
 
 # source base config file
 echo "source base config file"
-base_config="$(dirname "$0")/${config_dir}/${config_file}"
+if [ -f ./${config_dir}/${config_file} ]; then
+    # config in current working dir has highest priority
+    base_config="./${config_dir}/${config_file}"
+else
+    base_config="$(dirname "$0")/${config_dir}/${config_file}"
+fi
 if [ -f ${base_config} ]; then
     source ${base_config}
 else

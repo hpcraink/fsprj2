@@ -1193,6 +1193,7 @@ void open_std_fd(int fd)
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
+    data.time_diff = data.time_end - data.time_start;
     write_into_influxdb(&data);
 #endif
     WRAP_FREE(&data)
@@ -1247,6 +1248,7 @@ void open_std_file(FILE *file)
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
+    data.time_diff = data.time_end - data.time_start;
     write_into_influxdb(&data);
 #endif
     WRAP_FREE(&data)
@@ -1358,8 +1360,11 @@ void send_data(const char *message, SOCKET socket) {
 #ifdef IOTRACE_ENABLE_INFLUXDB
 int url_callback_responses(llhttp_t *parser, const char *at ATTRIBUTE_UNUSED, size_t length ATTRIBUTE_UNUSED) {
     if (parser->status_code != 204) {
-        LOG_WARN("unknown status (%d) in response from influxdb",
-                parser->status_code);
+    	char status_buffer[length + 1];
+    	memcpy(status_buffer, at, length);
+    	status_buffer[length] = '\0';
+        LOG_WARN("unknown status (%d) in response from influxdb: %s",
+                parser->status_code, status_buffer);
     } else {
         //LOG_WARN("known status (%d) in response from influxdb", parser->status_code);
     }
@@ -1505,7 +1510,8 @@ void write_metadata_into_influxdb(void)
             + sizeof(short_log_name) /* jobname */
             + HOST_NAME_MAX /* hostname */
             + COUNT_DEC_AS_CHAR(pid) + 1 /* processid with sign */
-            + COUNT_DEC_AS_CHAR(tid) + 1; /* thread with sign */
+            + COUNT_DEC_AS_CHAR(tid) + 1 /* thread with sign */
+            ;
     char body_labels[body_labels_length];
     snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, pid, tid);
     body_labels_length = strlen(body_labels);
@@ -2404,17 +2410,59 @@ void write_into_influxdb(struct basic *data) {
     shorten_log_name(short_log_name, sizeof(short_log_name), log_name,
             log_name_len);
 
-    const char labels[] =
-            "libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s";
+#ifdef FILENAME_RESOLUTION_ENABLED
+    const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s,filename=%s";
+#else
+    const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s";
+#endif
     int body_labels_length = strlen(labels) + sizeof(short_log_name) /* jobname */
-    + HOST_NAME_MAX /* hostname */
-    + COUNT_DEC_AS_CHAR(data->pid) + 1 /* processid with sign */
-    + COUNT_DEC_AS_CHAR(data->tid) + 1 /* thread with sign */
-    + MAX_FUNCTION_NAME; /* functionname */
+            + HOST_NAME_MAX /* hostname */
+            + COUNT_DEC_AS_CHAR(data->pid) + 1 /* processid with sign */
+            + COUNT_DEC_AS_CHAR(data->tid) + 1 /* thread with sign */
+            + MAX_FUNCTION_NAME /* functionname */
+#ifdef FILENAME_RESOLUTION_ENABLED
+			+ FILENAME_MAX /* filename */
+#endif
+	        ;
     char body_labels[body_labels_length];
+#ifdef FILENAME_RESOLUTION_ENABLED
+    char filename[FILENAME_MAX * 2];
+    if (0 == strnlen(data->traced_filename, FILENAME_MAX)) {
+    	strncpy(filename, "unknown", FILENAME_MAX - 1);
+    } else {
+    	int l = 0;
+    	for (int i = 0; i < FILENAME_MAX - 1; i++, l++) {
+    		if ('\0' == data->traced_filename[i]) {
+    			break;
+    		}
+    		switch(data->traced_filename[i]) {
+			case ',':
+				filename[l++] = '\\';
+				filename[l] = ',';
+				break;
+			case '=':
+				filename[l++] = '\\';
+				filename[l] = '=';
+				break;
+			case ' ':
+				filename[l++] = '\\';
+				filename[l] = ' ';
+				break;
+			default:
+				filename[l] = data->traced_filename[i];
+			}
+    	}
+    	filename[l] = '\0';
+    }
+	snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
+			data->hostname, data->pid, data->tid,
+			data->function_name,
+			filename);
+#else
     snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
             data->hostname, data->pid, data->tid,
             data->function_name);
+#endif
     body_labels_length = strlen(body_labels);
 
     int timestamp_length = COUNT_DEC_AS_CHAR(data->time_end);
@@ -2427,7 +2475,7 @@ void write_into_influxdb(struct basic *data) {
 #endif
     timestamp_length = strlen(timestamp);
 
-    const int content_length = body_labels_length + 1 /*space*/+ body_length + 1 /*space*/
+    const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/
             + timestamp_length;
 
     const char header[] =

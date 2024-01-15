@@ -30,6 +30,8 @@ services:
       - ./influx-data:/var/lib/influxdb2
       #Save the Backup of OpenFoam Test to docker
       - ./testbackup:/backup
+    #environment:
+      #- INFLUXD_LOG_LEVEL=debug
 
   # WARNING: Required for setting up influxdb instance (!! therefore, must run at first initial startup of influxdb instance !!)
   influxdb_cli:

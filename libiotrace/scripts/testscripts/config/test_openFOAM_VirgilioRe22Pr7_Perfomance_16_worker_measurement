@@ -25,11 +25,11 @@ test_libiotrace_cmake_options=(
 )
 
 # slurm
-test_nodes=3
+test_nodes=17
 test_processes_per_worker=64
 export test_network_interface=ib0
 #export test_network_interface=eno2np1
-export test_processes_per_influxdb=80
+export test_processes_per_influxdb=10
 test_mem="249600mb"
 test_time="05:00:00"
 test_queue_name="multiple_il"

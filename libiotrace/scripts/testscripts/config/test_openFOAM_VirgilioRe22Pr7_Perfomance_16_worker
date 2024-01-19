@@ -25,23 +25,20 @@ test_libiotrace_cmake_options=(
 )
 
 # slurm
-test_nodes=3
+test_nodes=17
 test_processes_per_worker=64
-export test_network_interface=ib0
-#export test_network_interface=eno2np1
-export test_processes_per_influxdb=80
+export test_processes_per_influxdb=60
 test_mem="249600mb"
-test_time="05:00:00"
+test_time="00:30:00"
 test_queue_name="multiple_il"
 
 # test script
-test_script="./openFOAM_VirgilioRe22Pr7_Perfomance_measurement.sh"
+test_script="./openFOAM_VirgilioRe22Pr7_Perfomance.sh"
 export test_source_dir="${PWD}/VirgilioRe22Pr7_Perfomance"
 export test_source_1="${test_source_dir}/1"
 export test_source_constant="${test_source_dir}/constant"
 export test_source_system="${test_source_dir}/system"
 export test_end_time=1.001
-export test_iterations=20
 # newline separated list of functions to trace
 #export IOTRACE_WHITELIST_FUNCTIONS=""
 export IOTRACE_WHITELIST_FUNCTIONS="
@@ -78,4 +75,3 @@ vfwscanf"
 # output
 test_name="3_nodes_VirgilioRe22Pr7_Perfomance"
 export IOTRACE_LOG_NAME=openFOAM_VirgilioRe22Pr7_Perfomance_test1
-export performance_data_file=${PWD}/performance_test

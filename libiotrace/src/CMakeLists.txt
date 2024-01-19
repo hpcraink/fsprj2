@@ -150,6 +150,8 @@ check_symbol_exists(clone "sched.h" HAVE_CLONE)
 check_symbol_exists(dirfd "dirent.h" HAVE_DIRFD)
 check_symbol_exists(sendmmsg "sys/socket.h" HAVE_SENDMMSG)
 check_symbol_exists(recvmmsg "sys/socket.h" HAVE_RECVMMSG)
+check_symbol_exists(lstat "sys/stat.h" HAVE_LSTAT)
+check_symbol_exists(fstatat "sys/stat.h" HAVE_FSTATAT)
 check_symbol_exists(memrchr "string.h" HAVE_MEMRCHR)
 
 check_symbol_exists(execvpe "unistd.h" HAVE_EXECVPE)

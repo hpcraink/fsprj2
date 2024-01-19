@@ -1,5 +1,9 @@
 /**
  * TODOS:
+ *  - create functions from each case?
+ *  	=> call functions direct from wrappers to get rid of function name hashing in python,
+ *  		the switch case statements and the gotos
+ *  - resolve relative path
  *  - Remove memory-mappings after `fork`
  *    - Save `mmap` mapping type (`MAP_SHARED` flag) in struct (requires changing `CASE_MMAP`)
  *    - Implement `CASE_MADVISE`
@@ -128,6 +132,29 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
     SWITCH_FCTNAME(extracted_fctname) {
 
     /* --- Functions relevant for tracing + traceable --- */
+    	case CASE_FSTATAT:
+    	{
+    		struct fstatat_function *fstatat_function_data = ((struct fstatat_function*)ioevent_ptr->__function_data);
+    		if(fstatat_function_data->flags.at_empty_path && '\0' == fstatat_function_data->file_name[0])
+    		{
+    			// fstatat behaves like fstat
+    			goto case_like_fstat;
+    		} else {
+    			// fstatat behaves like stat
+    			goto case_like_stat;
+    		}
+    	}
+    	case CASE_STAT:
+    	case_like_stat:
+    	case CASE_LSTAT:
+    	{
+
+    		const char* const extracted_fname = get_file_name_from_ioevent_function_data(ioevent_ptr);
+
+    		SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, extracted_fname);
+
+    		return rtn_status;
+    	}
         case CASE_OPEN_STD_FD:
         case CASE_OPEN_STD_FILE:
             SET_TRACED_FNAME_FOR_IOEVENT(ioevent_ptr, FNAME_SPECIFIER_STD);
@@ -386,6 +413,8 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
 
 
         case_fcntl_no_dup:
+        case CASE_FSTAT:
+        case_like_fstat:
         case CASE_READ:
         case CASE_WRITE:
         case CASE_READV:
@@ -605,6 +634,12 @@ static void create_fnmap_key_using_vals(file_handle_type_t type, void* id_ptr, s
 }
 
 static void create_fnmap_key_using_ioevent_file_type(struct basic *ioevent_ptr, fnmap_key_t *new_key_ptr) {
+	if (NULL != ioevent_ptr->__function_data &&
+			__void_p_enum_function_data_fstatat_function == ioevent_ptr->__void_p_enum_function_data) {
+		create_fnmap_key_using_vals(F_DESCRIPTOR,
+									&((struct fstatat_function *) ioevent_ptr->__function_data)->file_descriptor, 0, new_key_ptr);
+		return;
+	}
     switch(ioevent_ptr->__void_p_enum_file_type) {
         case __void_p_enum_file_type_file_descriptor:
             create_fnmap_key_using_vals(F_DESCRIPTOR,
@@ -736,6 +771,9 @@ static void create_fnmap_key_using_ioevent_function_data(struct basic* ioevent_p
                                         0, new_key1_ptr);
             return;
 
+        case __void_p_enum_function_data_stat_function:
+        case __void_p_enum_function_data_fstat_function:
+        case __void_p_enum_function_data_fstatat_function:
         case __void_p_enum_function_data_fork_function:
         case __void_p_enum_function_data_open_function:
         case __void_p_enum_function_data_openat_function:
@@ -796,6 +834,12 @@ static void create_fnmap_key_using_ioevent_function_data(struct basic* ioevent_p
 
 static const char* get_file_name_from_ioevent_function_data(struct basic* ioevent_ptr) {
     switch(ioevent_ptr->__void_p_enum_function_data) {
+    	case __void_p_enum_function_data_stat_function:
+    		return ((struct stat_function*)ioevent_ptr->__function_data)->file_name;
+
+    	case __void_p_enum_function_data_fstatat_function:
+    	    return ((struct fstatat_function*)ioevent_ptr->__function_data)->file_name;
+
         case __void_p_enum_function_data_open_function:
             return ((struct open_function*)ioevent_ptr->__function_data)->file_name;
 
@@ -816,6 +860,7 @@ static const char* get_file_name_from_ioevent_function_data(struct basic* ioeven
             return ((struct dlmopen_function*)ioevent->__function_data)->file_name;
 #endif
 
+        case __void_p_enum_function_data_fstat_function:
         case __void_p_enum_function_data_fork_function:
         case __void_p_enum_function_data_fdopen_function:
         case __void_p_enum_function_data_information_function:

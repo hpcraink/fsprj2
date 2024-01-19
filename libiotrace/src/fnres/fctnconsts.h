@@ -58,6 +58,10 @@ static uint64_t hash_string(const char *str) {
 #define CASE___OPEN64 0x1ae6bfc40e68bf
 #define CASE___OPEN_2 0x1ae6bfc40e6e06
 #define CASE___OPEN64_2 0x726f95c1014ba0f0
+#define CASE_STAT 0x17c9e1981
+#define CASE_FSTAT 0x310f75cd87
+#define CASE_LSTAT 0x310fe2608d
+#define CASE_FSTATAT 0xd0b2c41f583c
 #define CASE_EPOLL_CREATE 0xd13de43412238a74
 #define CASE_EPOLL_CREATE1 0xf8fa6ab65694d925
 #define CASE_EVENTFD 0xd0b27d1c4751

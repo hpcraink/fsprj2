@@ -14,6 +14,7 @@
 #include <sys/uio.h>
 #include <sys/mman.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "wrapper_defines.h"
 
 BEGIN_C_DECLS
@@ -194,6 +195,15 @@ REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vl
 #  endif
 #endif
 
+REAL_TYPE int REAL(stat)(const char *pathname, struct stat *statbuf) REAL_INIT;
+REAL_TYPE int REAL(fstat)(int fd, struct stat *statbuf) REAL_INIT;
+#ifdef HAVE_LSTAT
+REAL_TYPE int REAL(lstat)(const char *pathname, struct stat *statbuf) REAL_INIT;
+#endif
+#ifdef HAVE_FSTATAT
+REAL_TYPE int REAL(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_INIT;
+#endif
+
 //inotify_add_watch
 //inotify_rm_watch
 //int getpt ( void )
@@ -202,7 +212,7 @@ REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vl
 //ToDo: fcntl64
 //ToDo: readlink, readlinkat
 //ToDo: ioctl (I_SENDFD and I_RECVFD for sending/receiving file descriptor)
-//ToDo: stat, stat64, fstat, fstat64, lstat, lstat64, statfs
+//ToDo: statfs, fstatfs
 //ToDo: statvfs, fstatvfs
 //ToDo: chown, fchown
 //ToDo: umask, getumask
@@ -220,7 +230,6 @@ REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vl
 //ToDo: ssize_t sendfile(int out_fd, int in_fd, off_t *offset, size_t count);
 //ToDo: ssize_t splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out, size_t len, unsigned int flags);
 //ToDo: ssize_t tee(int fd_in, int fd_out, size_t len, unsigned int flags); ???
-//ToDo: fstat, stat, lstat, fstatat, fstatfs
 //ToDo: truncate, ftruncate
 //ToDo: mknod, mkdir, link, symlink, rename, unlink, rmdir
 //ToDo: chown, chmod, utime, utimensat

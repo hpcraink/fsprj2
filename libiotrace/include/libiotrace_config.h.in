@@ -356,6 +356,12 @@
 /* Define to 1 if system supports recvmmsg(). */
 #cmakedefine HAVE_RECVMMSG 1
 
+/* Define to 1 if system supports lstat(). */
+#cmakedefine HAVE_LSTAT 1
+
+/* Define to 1 if system supports fstatat(). */
+#cmakedefine HAVE_FSTATAT 1
+
 /* Define to 1 if system supports aio_read64(). */
 #cmakedefine HAVE_AIO_READ64 1
 

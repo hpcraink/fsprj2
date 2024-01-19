@@ -241,6 +241,14 @@ WRAPPER_NAME(sendmmsg)
 #ifdef HAVE_RECVMMSG
 WRAPPER_NAME(recvmmsg)
 #endif
+WRAPPER_NAME(stat)
+WRAPPER_NAME(fstat)
+#ifdef HAVE_LSTAT
+WRAPPER_NAME(lstat)
+#endif
+#ifdef HAVE_FSTATAT
+WRAPPER_NAME(fstatat)
+#endif
 
 WRAPPER_NAME(fopen)
 #ifdef HAVE_FOPEN64

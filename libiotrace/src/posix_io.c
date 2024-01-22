@@ -221,12 +221,16 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *m
 REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_DEFINITION_INIT;
 #endif
 #endif
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__xstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(stat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstat)(int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fstat)(int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
 #ifdef HAVE_LSTAT
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__lxstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(lstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
 #endif
 #ifdef HAVE_FSTATAT
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
 #endif
 
@@ -4044,6 +4048,47 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 }
 #endif
 
+int WRAP(__xstat)(const char *pathname, struct stat *statbuf)
+{
+	int ret;
+	struct basic data;
+	struct stat_function stat_function_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, stat_function,
+			stat_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	stat_function_data.file_name = pathname;
+
+	CALL_REAL_FUNCTION_RET(data, ret, stat, pathname, statbuf)
+
+	if (-1 == ret)
+	{
+		data.return_state = error;
+		stat_function_data.type = unknown_stat_file_type;
+		stat_function_data.id.device_id = 0;
+		stat_function_data.id.inode_nr = 0;
+		stat_function_data.size = 0;
+		stat_function_data.blocksize = 0;
+		stat_function_data.allocated_512B_blocks = 0;
+	}
+	else
+	{
+		data.return_state = ok;
+		stat_function_data.type = get_stat_file_type(statbuf->st_mode);
+		stat_function_data.id.device_id = statbuf->st_dev;
+		stat_function_data.id.inode_nr = statbuf->st_ino;
+		stat_function_data.size = statbuf->st_size;
+		stat_function_data.blocksize = statbuf->st_blksize;
+		stat_function_data.allocated_512B_blocks = statbuf->st_blocks;
+	}
+
+	WRAP_END(data, stat)
+	return ret;
+}
+
 int WRAP(stat)(const char *pathname, struct stat *statbuf)
 {
 	int ret;
@@ -4082,6 +4127,45 @@ int WRAP(stat)(const char *pathname, struct stat *statbuf)
 	}
 
 	WRAP_END(data, stat)
+	return ret;
+}
+
+int WRAP(__fxstat)(int fd, struct stat *statbuf)
+{
+	int ret;
+	struct basic data;
+	struct file_descriptor file_descriptor_data;
+	struct fstat_function fstat_function_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fstat_function,
+			fstat_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	file_descriptor_data.descriptor = fd;
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
+	        file_descriptor_data)
+
+	CALL_REAL_FUNCTION_RET(data, ret, fstat, fd, statbuf)
+
+	if (-1 == ret)
+	{
+		data.return_state = error;
+		fstat_function_data.type = unknown_stat_file_type;
+		fstat_function_data.size = 0;
+		fstat_function_data.blocksize = 0;
+		fstat_function_data.allocated_512B_blocks = 0;
+	}
+	else
+	{
+		data.return_state = ok;
+		fstat_function_data.type = get_stat_file_type(statbuf->st_mode);
+		fstat_function_data.size = statbuf->st_size;
+		fstat_function_data.blocksize = statbuf->st_blksize;
+		fstat_function_data.allocated_512B_blocks = statbuf->st_blocks;
+	}
+
+	WRAP_END(data, fstat)
 	return ret;
 }
 
@@ -4125,6 +4209,47 @@ int WRAP(fstat)(int fd, struct stat *statbuf)
 }
 
 #ifdef HAVE_LSTAT
+int WRAP(__lxstat)(const char *pathname, struct stat *statbuf)
+{
+	int ret;
+	struct basic data;
+	struct stat_function stat_function_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, stat_function,
+			stat_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	stat_function_data.file_name = pathname;
+
+	CALL_REAL_FUNCTION_RET(data, ret, lstat, pathname, statbuf)
+
+	if (-1 == ret)
+	{
+		data.return_state = error;
+		stat_function_data.type = unknown_stat_file_type;
+		stat_function_data.id.device_id = 0;
+		stat_function_data.id.inode_nr = 0;
+		stat_function_data.size = 0;
+		stat_function_data.blocksize = 0;
+		stat_function_data.allocated_512B_blocks = 0;
+	}
+	else
+	{
+		data.return_state = ok;
+		stat_function_data.type = get_stat_file_type(statbuf->st_mode);
+		stat_function_data.id.device_id = statbuf->st_dev;
+		stat_function_data.id.inode_nr = statbuf->st_ino;
+		stat_function_data.size = statbuf->st_size;
+		stat_function_data.blocksize = statbuf->st_blksize;
+		stat_function_data.allocated_512B_blocks = statbuf->st_blocks;
+	}
+
+	WRAP_END(data, lstat)
+	return ret;
+}
+
 int WRAP(lstat)(const char *pathname, struct stat *statbuf)
 {
 	int ret;
@@ -4168,6 +4293,49 @@ int WRAP(lstat)(const char *pathname, struct stat *statbuf)
 #endif
 
 #ifdef HAVE_FSTATAT
+int WRAP(__fxstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags)
+{
+	int ret;
+	struct basic data;
+	struct fstatat_function fstatat_function_data;
+	WRAP_START(data)
+
+	get_basic(&data);
+	LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, fstatat_function,
+			fstatat_function_data)
+	POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
+	fstatat_function_data.file_name = pathname;
+	fstatat_function_data.file_descriptor = dirfd;
+	get_fstatat_flags(flags, &fstatat_function_data.flags);
+
+	CALL_REAL_FUNCTION_RET(data, ret, fstatat, dirfd, pathname, statbuf, flags)
+
+	if (-1 == ret)
+	{
+		data.return_state = error;
+		fstatat_function_data.type = unknown_stat_file_type;
+		fstatat_function_data.id.device_id = 0;
+		fstatat_function_data.id.inode_nr = 0;
+		fstatat_function_data.size = 0;
+		fstatat_function_data.blocksize = 0;
+		fstatat_function_data.allocated_512B_blocks = 0;
+	}
+	else
+	{
+		data.return_state = ok;
+		fstatat_function_data.type = get_stat_file_type(statbuf->st_mode);
+		fstatat_function_data.id.device_id = statbuf->st_dev;
+		fstatat_function_data.id.inode_nr = statbuf->st_ino;
+		fstatat_function_data.size = statbuf->st_size;
+		fstatat_function_data.blocksize = statbuf->st_blksize;
+		fstatat_function_data.allocated_512B_blocks = statbuf->st_blocks;
+	}
+
+	WRAP_END(data, fstatat)
+	return ret;
+}
+
 int WRAP(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags)
 {
 	int ret;

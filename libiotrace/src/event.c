@@ -975,7 +975,7 @@ void print_filesystem(void)
         strcpy(mount_point, filesystem_entry_ptr->mnt_dir);
         // get mounted directory, not the mount point in parent filesystem
         strcpy(mount_point + ret, "/./");
-        ret = stat(mount_point, &stat_data);
+        ret = CALL_REAL_POSIX_SYNC(stat)(mount_point, &stat_data);
         if (-1 == ret)
         {
             filesystem_data.device_id = 0;
@@ -1035,7 +1035,7 @@ void get_file_id(int fd, struct file_id *data) {
         data->device_id = 0;
         data->inode_nr = 0;
     } else {
-        ret = fstat(fd, &stat_data);
+        ret = CALL_REAL_POSIX_SYNC(fstat)(fd, &stat_data);
         if (0 > ret) {
             LOG_ERROR_AND_DIE("fstat() returned %d with errno=%d", ret, errno);
         }
@@ -1057,7 +1057,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data) {
     struct stat stat_data;
     int ret;
 
-    ret = stat(filename, &stat_data);
+    ret = CALL_REAL_POSIX_SYNC(stat)(filename, &stat_data);
     if (0 > ret) {
         LOG_ERROR_AND_DIE("stat() returned %d with errno=%d", ret, errno);
     }
@@ -1913,7 +1913,7 @@ void read_whitelist(void) {
         LOG_ERROR_AND_DIE("open() failed, errno=%d", errno);
     }
 
-    ret = fstat(fd, &statbuf);
+    ret = CALL_REAL_POSIX_SYNC(fstat)(fd, &statbuf);
     if (-1 == ret) {
         LOG_ERROR_AND_DIE("fstat() failed, errno=%d", errno);
     }
@@ -1936,7 +1936,7 @@ void read_whitelist(void) {
             LOG_ERROR_AND_DIE("read() failed, errno=%d", errno);
         } else if (0 == ret) {
             // signal interrupt of file changed?
-            if (-1 == fstat(fd, &statbuf)) {
+            if (-1 == CALL_REAL_POSIX_SYNC(fstat)(fd, &statbuf)) {
                 LOG_ERROR_AND_DIE("fstat() failed, errno=%d", errno);
             }
             if (file_len != statbuf.st_size) {

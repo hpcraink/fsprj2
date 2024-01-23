@@ -91,4 +91,27 @@ function (CheckCompilerAttributes)
         }
     "  HAVE_RECVMMSG_CONST_TIMESPEC)
     # message ("HAVE_RECVMMSG_CONST_TIMESPEC: ${HAVE_RECVMMSG_CONST_TIMESPEC}")
+    
+    check_c_source_compiles ("
+        #include <sys/stat.h>
+        #include <assert.h>
+
+        extern int __xstat(int ver, const char *pathname, struct stat *statbuf);
+
+        int main(void) {
+            return 0;
+        }
+    "  HAVE___XSTAT)
+    # message ("HAVE___XSTAT: ${HAVE___XSTAT}")
+
+    check_c_source_compiles ("
+        #include <sys/stat.h>
+
+        extern int __fxstat(int ver, int fd, struct stat *statbuf);
+
+        int main(void) {
+            return 0;
+        }
+    "  HAVE___FXSTAT)
+    # message ("HAVE___FXSTAT: ${HAVE___FXSTAT}")
 endfunction ()

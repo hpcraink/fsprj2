@@ -562,6 +562,12 @@
 /* Define to 1 if parameter type timespec for function recvmmsg is const. */
 #cmakedefine HAVE_RECVMMSG_CONST_TIMESPEC 1
 
+/* Define to 1 if function __XSTAT exists during link time. */
+#cmakedefine HAVE___XSTAT 1
+
+/* Define to 1 if function __FXSTAT exists during link time. */
+#cmakedefine HAVE___FXSTAT 1
+
 /* Define to 1 if limits.h has HOST_NAME_MAX. */
 #cmakedefine HAVE_HOST_NAME_MAX 1
 

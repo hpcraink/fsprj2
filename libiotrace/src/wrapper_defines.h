@@ -55,6 +55,15 @@
 #  define CALL_REAL_POSIX_SYNC(function) function
 #endif
 
+#if defined(HAVE___XSTAT) && defined(_STAT_VER_LINUX)
+#  define stat(pathname, statbuf) __stat(pathname, statbuf)
+#  define __stat(pathname, statbuf) __xstat(_STAT_VER_LINUX, pathname, statbuf)
+#endif
+#if defined(HAVE___FXSTAT) && defined(_STAT_VER_LINUX)
+#  define fstat(fd, statbuf) __fstat(fd, statbuf)
+#  define __fstat(fd, statbuf) __fxstat(_STAT_VER_LINUX, fd, statbuf)
+#endif
+
 #ifdef WITH_ALLOC
 #  define CALL_REAL_ALLOC_SYNC(function) CALL_REAL(function)
 #else

@@ -221,16 +221,16 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *m
 REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_DEFINITION_INIT;
 #endif
 #endif
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__xstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__xstat)(int ver, const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(stat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstat)(int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstat)(int ver, int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fstat)(int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
 #ifdef HAVE_LSTAT
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__lxstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__lxstat)(int ver, const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(lstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
 #endif
 #ifdef HAVE_FSTATAT
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
 #endif
 
@@ -4048,7 +4048,7 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 }
 #endif
 
-int WRAP(__xstat)(const char *pathname, struct stat *statbuf)
+int WRAP(__xstat)(int ver, const char *pathname, struct stat *statbuf)
 {
 	int ret;
 	struct basic data;
@@ -4062,7 +4062,7 @@ int WRAP(__xstat)(const char *pathname, struct stat *statbuf)
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 	stat_function_data.file_name = pathname;
 
-	CALL_REAL_FUNCTION_RET(data, ret, stat, pathname, statbuf)
+	CALL_REAL_FUNCTION_RET(data, ret, __xstat, ver, pathname, statbuf)
 
 	if (-1 == ret)
 	{
@@ -4130,7 +4130,7 @@ int WRAP(stat)(const char *pathname, struct stat *statbuf)
 	return ret;
 }
 
-int WRAP(__fxstat)(int fd, struct stat *statbuf)
+int WRAP(__fxstat)(int ver, int fd, struct stat *statbuf)
 {
 	int ret;
 	struct basic data;
@@ -4146,7 +4146,7 @@ int WRAP(__fxstat)(int fd, struct stat *statbuf)
 	LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_descriptor,
 	        file_descriptor_data)
 
-	CALL_REAL_FUNCTION_RET(data, ret, fstat, fd, statbuf)
+	CALL_REAL_FUNCTION_RET(data, ret, __fxstat, ver, fd, statbuf)
 
 	if (-1 == ret)
 	{
@@ -4209,7 +4209,7 @@ int WRAP(fstat)(int fd, struct stat *statbuf)
 }
 
 #ifdef HAVE_LSTAT
-int WRAP(__lxstat)(const char *pathname, struct stat *statbuf)
+int WRAP(__lxstat)(int ver, const char *pathname, struct stat *statbuf)
 {
 	int ret;
 	struct basic data;
@@ -4223,7 +4223,7 @@ int WRAP(__lxstat)(const char *pathname, struct stat *statbuf)
 	LIBIOTRACE_STRUCT_SET_VOID_P_NULL(data, file_type)
 	stat_function_data.file_name = pathname;
 
-	CALL_REAL_FUNCTION_RET(data, ret, lstat, pathname, statbuf)
+	CALL_REAL_FUNCTION_RET(data, ret, __lxstat, ver, pathname, statbuf)
 
 	if (-1 == ret)
 	{
@@ -4293,7 +4293,7 @@ int WRAP(lstat)(const char *pathname, struct stat *statbuf)
 #endif
 
 #ifdef HAVE_FSTATAT
-int WRAP(__fxstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags)
+int WRAP(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *statbuf, int flags)
 {
 	int ret;
 	struct basic data;
@@ -4309,7 +4309,7 @@ int WRAP(__fxstatat)(int dirfd, const char *pathname, struct stat *statbuf, int 
 	fstatat_function_data.file_descriptor = dirfd;
 	get_fstatat_flags(flags, &fstatat_function_data.flags);
 
-	CALL_REAL_FUNCTION_RET(data, ret, fstatat, dirfd, pathname, statbuf, flags)
+	CALL_REAL_FUNCTION_RET(data, ret, __fxstatat, ver, dirfd, pathname, statbuf, flags)
 
 	if (-1 == ret)
 	{

@@ -70,6 +70,7 @@ sed -i -r "s:^SimuEnd\t\t100;:SimuEnd         ${test_end_time};:" "${3}/${2}/sys
 # define libiotrace and necessary environment variables for use with and without mpirun
 LIBIOTRACE_WITH_ENV="IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP IOTRACE_DATABASE_PORT=$IOTRACE_INFLUX_PORT IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN LD_PRELOAD=$IOTRACE_LD_PRELOAD"
 MPI_LIBIOTRACE_WITH_ENV="-x "${LIBIOTRACE_WITH_ENV// / -x }
+MPI_LIBIOTRACE_WITH_ENV_STRACE="-E "${LIBIOTRACE_WITH_ENV// / -E }
 
 # start test
 echo "    start test"
@@ -81,3 +82,5 @@ echo "        running buoyantPimpleFoam"
 #cd ${3}/${2}/ && mpirun -N ${6} -H ${4} -np ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} buoyantFoam < /dev/null > log.buoyantFoam 2>&1
 echo "            cd ${3}/${2}/ && mpirun -H ${4} -np ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} buoyantPimpleFoam -parallel < /dev/null > log.buoyantPimpleFoam 2>&1"
 cd ${3}/${2}/ && mpirun -N ${6} -H ${4} -np ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} buoyantPimpleFoam -parallel < /dev/null > log.buoyantPimpleFoam 2>&1
+#cd ${3}/${2}/ && mpirun -N ${6} -H ${4} -np ${PROCESS_COUNT} strace --follow-forks -o "strace_$(hostname)" ${MPI_LIBIOTRACE_WITH_ENV_STRACE} buoyantPimpleFoam -parallel < /dev/null > log.buoyantPimpleFoam 2>&1
+#cd ${3}/${2}/ && valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes --trace-children=yes mpirun -N ${6} -H ${4} -np ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} buoyantPimpleFoam -parallel < /dev/null > log.buoyantPimpleFoam 2>&1

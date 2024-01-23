@@ -133,6 +133,7 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
 
     /* --- Functions relevant for tracing + traceable --- */
     	case CASE_FSTATAT:
+    	case CASE___FXSTATAT:
     	{
     		struct fstatat_function *fstatat_function_data = ((struct fstatat_function*)ioevent_ptr->__function_data);
     		if(fstatat_function_data->flags.at_empty_path && '\0' == fstatat_function_data->file_name[0])
@@ -145,8 +146,10 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
     		}
     	}
     	case CASE_STAT:
+    	case CASE___XSTAT:
     	case_like_stat:
     	case CASE_LSTAT:
+    	case CASE___LXSTAT:
     	{
 
     		const char* const extracted_fname = get_file_name_from_ioevent_function_data(ioevent_ptr);
@@ -414,6 +417,7 @@ int fnres_trace_ioevent(struct basic *ioevent_ptr) {
 
         case_fcntl_no_dup:
         case CASE_FSTAT:
+        case CASE___FXSTAT:
         case_like_fstat:
         case CASE_READ:
         case CASE_WRITE:

@@ -44,6 +44,7 @@ FUNCTION_NAMES = [
     "__open", "__open64", "__open_2", "__open64_2",                      # Hardened functions (`-D_FORTIFY_SOURCE=2`)
 
     "stat", "fstat", "lstat", "fstatat",
+    "__xstat", "__fxstat", "__lxstat", "__fxstatat",
 
     # - Pseudo-files -
     "epoll_create", "epoll_create1",

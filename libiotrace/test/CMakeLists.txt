@@ -122,14 +122,6 @@ if (WITH_UNIT_TESTS)
             "-Wl,-wrap=recvmsg"
             "-Wl,-wrap=sendmmsg"
             "-Wl,-wrap=recvmmsg"
-            "-Wl,-wrap=__xstat"
-            "-Wl,-wrap=__fxstat"
-            "-Wl,-wrap=__lxstat"
-            "-Wl,-wrap=__fxstatat"
-            "-Wl,-wrap=stat"
-            "-Wl,-wrap=fstat"
-            "-Wl,-wrap=lstat"
-            "-Wl,-wrap=fstatat"
             "-Wl,-wrap=fopen"
             "-Wl,-wrap=fopen64"
             "-Wl,-wrap=freopen"
@@ -226,6 +218,46 @@ if (WITH_UNIT_TESTS)
             "-Wl,-wrap=vfork"
             "-Wl,-wrap=clone"
         )
+        if(HAVE___XSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__xstat"
+            )
+        endif()
+        if(HAVE___FXSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__fxstat"
+            )
+        endif()
+        if(HAVE___LXSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__lxstat"
+            )
+        endif()
+        if(HAVE___FXSTATAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__fxstatat"
+            )
+        endif()
+        if(HAVE_STAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=stat"
+            )
+        endif()
+        if(HAVE_FSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=fstat"
+            )
+        endif()
+        if(HAVE_LSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=lstat"
+            )
+        endif()
+        if(HAVE_FSTATAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=fstatat"
+            )
+        endif()
     endif()
 
     if(WITH_POSIX_AIO)

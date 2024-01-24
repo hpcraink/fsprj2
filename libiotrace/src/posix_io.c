@@ -221,17 +221,33 @@ REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *m
 REAL_DEFINITION_TYPE int REAL_DEFINITION(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, int flags, struct timespec *timeout) REAL_DEFINITION_INIT;
 #endif
 #endif
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__xstat)(int ver, const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+#ifdef HAVE_STAT_IN_LIBC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(stat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstat)(int ver, int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___XSTAT_IN_LIBC
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__xstat)(int ver, const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE_FSTAT_IN_LIBC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fstat)(int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
+#endif
+#ifdef HAVE___FXSTAT_IN_LIBC
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstat)(int ver, int fd, struct stat *statbuf) REAL_DEFINITION_INIT;
+#endif
 #ifdef HAVE_LSTAT
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__lxstat)(int ver, const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+#  ifdef HAVE_LSTAT_IN_LIBC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(lstat)(const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+#  endif
+#  ifdef HAVE___LXSTAT_IN_LIBC
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__lxstat)(int ver, const char *pathname, struct stat *statbuf) REAL_DEFINITION_INIT;
+#  endif
 #endif
 #ifdef HAVE_FSTATAT
-REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
+#  ifdef HAVE_FSTATAT_IN_LIBC
 REAL_DEFINITION_TYPE int REAL_DEFINITION(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
+#  endif
+#  ifdef HAVE___FXSTATAT_IN_LIBC
+REAL_DEFINITION_TYPE int REAL_DEFINITION(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_DEFINITION_INIT;
+#  endif
 #endif
 
 /* POSIX and GNU extension stream */
@@ -4048,6 +4064,7 @@ int WRAP(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 }
 #endif
 
+#ifdef HAVE___XSTAT_IN_LIBC
 int WRAP(__xstat)(int ver, const char *pathname, struct stat *statbuf)
 {
 	int ret;
@@ -4088,7 +4105,9 @@ int WRAP(__xstat)(int ver, const char *pathname, struct stat *statbuf)
 	WRAP_END(data, stat)
 	return ret;
 }
+#endif
 
+#ifdef HAVE_STAT_IN_LIBC
 int WRAP(stat)(const char *pathname, struct stat *statbuf)
 {
 	int ret;
@@ -4129,7 +4148,9 @@ int WRAP(stat)(const char *pathname, struct stat *statbuf)
 	WRAP_END(data, stat)
 	return ret;
 }
+#endif
 
+#ifdef HAVE___FXSTAT_IN_LIBC
 int WRAP(__fxstat)(int ver, int fd, struct stat *statbuf)
 {
 	int ret;
@@ -4168,7 +4189,9 @@ int WRAP(__fxstat)(int ver, int fd, struct stat *statbuf)
 	WRAP_END(data, fstat)
 	return ret;
 }
+#endif
 
+#ifdef HAVE_FSTAT_IN_LIBC
 int WRAP(fstat)(int fd, struct stat *statbuf)
 {
 	int ret;
@@ -4207,8 +4230,10 @@ int WRAP(fstat)(int fd, struct stat *statbuf)
 	WRAP_END(data, fstat)
 	return ret;
 }
+#endif
 
 #ifdef HAVE_LSTAT
+#  ifdef HAVE___LXSTAT_IN_LIBC
 int WRAP(__lxstat)(int ver, const char *pathname, struct stat *statbuf)
 {
 	int ret;
@@ -4249,7 +4274,9 @@ int WRAP(__lxstat)(int ver, const char *pathname, struct stat *statbuf)
 	WRAP_END(data, lstat)
 	return ret;
 }
+#  endif
 
+#  ifdef HAVE_LSTAT_IN_LIBC
 int WRAP(lstat)(const char *pathname, struct stat *statbuf)
 {
 	int ret;
@@ -4290,9 +4317,11 @@ int WRAP(lstat)(const char *pathname, struct stat *statbuf)
 	WRAP_END(data, lstat)
 	return ret;
 }
+#  endif
 #endif
 
 #ifdef HAVE_FSTATAT
+#  ifdef HAVE___FXSTATAT_IN_LIBC
 int WRAP(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *statbuf, int flags)
 {
 	int ret;
@@ -4335,7 +4364,9 @@ int WRAP(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *stat
 	WRAP_END(data, fstatat)
 	return ret;
 }
+#  endif
 
+#  ifdef HAVE_FSTATAT_IN_LIBC
 int WRAP(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags)
 {
 	int ret;
@@ -4378,6 +4409,7 @@ int WRAP(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int fla
 	WRAP_END(data, fstatat)
 	return ret;
 }
+#  endif
 #endif
 
 FILE *WRAP(fopen)(const char *filename, const char *opentype)

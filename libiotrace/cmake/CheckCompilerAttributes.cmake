@@ -1,5 +1,6 @@
 function (CheckCompilerAttributes)
     include (CheckCSourceCompiles)
+    include (CheckLibraryExists)
 
     check_c_source_compiles ("
         extern char * strcpy(char * dst, const char * src);
@@ -114,4 +115,23 @@ function (CheckCompilerAttributes)
         }
     "  HAVE___FXSTAT)
     # message ("HAVE___FXSTAT: ${HAVE___FXSTAT}")
+    
+    find_library(LIBC_PATH c)
+    # message ("LIBC_PATH: ${LIBC_PATH}")
+    CHECK_LIBRARY_EXISTS(c "stat" "${LIBC_PATH}" HAVE_STAT_IN_LIBC)
+    CHECK_LIBRARY_EXISTS(c "fstat" "${LIBC_PATH}" HAVE_FSTAT_IN_LIBC)
+    CHECK_LIBRARY_EXISTS(c "lstat" "${LIBC_PATH}" HAVE_LSTAT_IN_LIBC)
+    CHECK_LIBRARY_EXISTS(c "fstatat" "${LIBC_PATH}" HAVE_FSTATAT_IN_LIBC)
+    # message ("HAVE_STAT_IN_LIBC: ${HAVE_STAT_IN_LIBC}")
+    # message ("HAVE_FSTAT_IN_LIBC: ${HAVE_FSTAT_IN_LIBC}")
+    # message ("HAVE_LSTAT_IN_LIBC: ${HAVE_LSTAT_IN_LIBC}")
+    # message ("HAVE_FSTATAT_IN_LIBC: ${HAVE_FSTATAT_IN_LIBC}")
+    CHECK_LIBRARY_EXISTS(c "__xstat" "${LIBC_PATH}" HAVE___XSTAT_IN_LIBC)
+    CHECK_LIBRARY_EXISTS(c "__fxstat" "${LIBC_PATH}" HAVE___FXSTAT_IN_LIBC)
+    CHECK_LIBRARY_EXISTS(c "__lxstat" "${LIBC_PATH}" HAVE___LXSTAT_IN_LIBC)
+    CHECK_LIBRARY_EXISTS(c "__fxstatat" "${LIBC_PATH}" HAVE___FXSTATAT_IN_LIBC)
+    # message ("HAVE___XSTAT_IN_LIBC: ${HAVE___XSTAT_IN_LIBC}")
+    # message ("HAVE___FXSTAT_IN_LIBC: ${HAVE___FXSTAT_IN_LIBC}")
+    # message ("HAVE___LXSTAT_IN_LIBC: ${HAVE___LXSTAT_IN_LIBC}")
+    # message ("HAVE___FXSTATAT_IN_LIBC: ${HAVE___FXSTATAT_IN_LIBC}")
 endfunction ()

@@ -662,6 +662,12 @@ if (WITH_UNIT_TESTS)
         # test with: `IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace.so ./alloc_s_brk`
         add_executable(alloc_s_brk alloc_s_brk.c)
     endif()
+    
+    ##########################################################################################################
+
+    add_executable(dlsym dlsym.c)
+    target_compile_options(dlsym PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(dlsym PRIVATE "-ldl")
 
     ##########################################################################################################
 

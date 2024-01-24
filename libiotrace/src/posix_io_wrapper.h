@@ -241,17 +241,33 @@ WRAPPER_NAME(sendmmsg)
 #ifdef HAVE_RECVMMSG
 WRAPPER_NAME(recvmmsg)
 #endif
-WRAPPER_NAME(__xstat)
+#ifdef HAVE_STAT_IN_LIBC
 WRAPPER_NAME(stat)
-WRAPPER_NAME(__fxstat)
+#endif
+#ifdef HAVE___XSTAT_IN_LIBC
+WRAPPER_NAME(__xstat)
+#endif
+#ifdef HAVE_FSTAT_IN_LIBC
 WRAPPER_NAME(fstat)
+#endif
+#ifdef HAVE___FXSTAT_IN_LIBC
+WRAPPER_NAME(__fxstat)
+#endif
 #ifdef HAVE_LSTAT
-WRAPPER_NAME(__lxstat)
+#  ifdef HAVE_LSTAT_IN_LIBC
 WRAPPER_NAME(lstat)
+#  endif
+#  ifdef HAVE___LXSTAT_IN_LIBC
+WRAPPER_NAME(__lxstat)
+#  endif
 #endif
 #ifdef HAVE_FSTATAT
-WRAPPER_NAME(__fxstatat)
+#  ifdef HAVE_FSTATAT_IN_LIBC
 WRAPPER_NAME(fstatat)
+#  endif
+#  ifdef HAVE___FXSTATAT_IN_LIBC
+WRAPPER_NAME(__fxstatat)
+#  endif
 #endif
 
 WRAPPER_NAME(fopen)

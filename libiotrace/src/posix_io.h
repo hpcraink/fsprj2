@@ -197,17 +197,33 @@ REAL_TYPE int REAL(recvmmsg)(int sockfd, struct mmsghdr *msgvec, unsigned int vl
 
 /* __xstat, __fxstat, __lxstat and __fxstatat needed for older glibc versions:
  * stat, fstat, lstat and fstatat can be wrapping macros for the __*x* versions */
+#ifdef HAVE_STAT_IN_LIBC
 REAL_TYPE int REAL(stat)(const char *pathname, struct stat *statbuf) REAL_INIT;
+#endif
+#ifdef HAVE___XSTAT_IN_LIBC
 REAL_TYPE int REAL(__xstat)(int ver, const char *pathname, struct stat *statbuf) REAL_INIT;
+#endif
+#ifdef HAVE_FSTAT_IN_LIBC
 REAL_TYPE int REAL(fstat)(int fd, struct stat *statbuf) REAL_INIT;
+#endif
+#ifdef HAVE___FXSTAT_IN_LIBC
 REAL_TYPE int REAL(__fxstat)(int ver, int fd, struct stat *statbuf) REAL_INIT;
+#endif
 #ifdef HAVE_LSTAT
+#  ifdef HAVE_LSTAT_IN_LIBC
 REAL_TYPE int REAL(lstat)(const char *pathname, struct stat *statbuf) REAL_INIT;
+#  endif
+#  ifdef HAVE___LXSTAT_IN_LIBC
 REAL_TYPE int REAL(__lxstat)(int ver, const char *pathname, struct stat *statbuf) REAL_INIT;
+#  endif
 #endif
 #ifdef HAVE_FSTATAT
+#  ifdef HAVE_FSTATAT_IN_LIBC
 REAL_TYPE int REAL(fstatat)(int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_INIT;
+#  endif
+#  ifdef HAVE___FXSTATAT_IN_LIBC
 REAL_TYPE int REAL(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *statbuf, int flags) REAL_INIT;
+#  endif
 #endif
 
 //inotify_add_watch

@@ -57,17 +57,17 @@
 
 #if defined(HAVE___XSTAT) && defined(_STAT_VER_LINUX)
 #  define libiotrace_stat(pathname, statbuf) __libiotrace_stat(pathname, statbuf)
-#  define __libiotrace_stat(pathname, statbuf) __xstat(_STAT_VER_LINUX, pathname, statbuf)
+#  define __libiotrace_stat(pathname, statbuf) CALL_REAL_POSIX_SYNC(__xstat)(_STAT_VER_LINUX, pathname, statbuf)
 #else
 #  define libiotrace_stat(pathname, statbuf) __libiotrace_stat(pathname, statbuf)
-#  define __libiotrace_stat(pathname, statbuf) stat(pathname, statbuf)
+#  define __libiotrace_stat(pathname, statbuf) CALL_REAL_POSIX_SYNC(stat)(pathname, statbuf)
 #endif
 #if defined(HAVE___FXSTAT) && defined(_STAT_VER_LINUX)
 #  define libiotrace_fstat(fd, statbuf) __libiotrace_fstat(fd, statbuf)
-#  define __libiotrace_fstat(fd, statbuf) __fxstat(_STAT_VER_LINUX, fd, statbuf)
+#  define __libiotrace_fstat(fd, statbuf) CALL_REAL_POSIX_SYNC(__fxstat)(_STAT_VER_LINUX, fd, statbuf)
 #else
 #  define libiotrace_fstat(fd, statbuf) __libiotrace_fstat(fd, statbuf)
-#  define __libiotrace_fstat(fd, statbuf) fstat(fd, statbuf)
+#  define __libiotrace_fstat(fd, statbuf) CALL_REAL_POSIX_SYNC(fstat)(fd, statbuf)
 #endif
 
 #ifdef WITH_ALLOC

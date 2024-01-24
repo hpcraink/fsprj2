@@ -1,6 +1,6 @@
 function (CheckCompilerAttributes)
     include (CheckCSourceCompiles)
-    include (CheckLibraryExists)
+    include (CheckCSourceRuns)
 
     check_c_source_compiles ("
         extern char * strcpy(char * dst, const char * src);
@@ -116,22 +116,123 @@ function (CheckCompilerAttributes)
     "  HAVE___FXSTAT)
     # message ("HAVE___FXSTAT: ${HAVE___FXSTAT}")
     
-    find_library(LIBC_PATH c)
-    # message ("LIBC_PATH: ${LIBC_PATH}")
-    CHECK_LIBRARY_EXISTS(c "stat" "${LIBC_PATH}" HAVE_STAT_IN_LIBC)
-    CHECK_LIBRARY_EXISTS(c "fstat" "${LIBC_PATH}" HAVE_FSTAT_IN_LIBC)
-    CHECK_LIBRARY_EXISTS(c "lstat" "${LIBC_PATH}" HAVE_LSTAT_IN_LIBC)
-    CHECK_LIBRARY_EXISTS(c "fstatat" "${LIBC_PATH}" HAVE_FSTATAT_IN_LIBC)
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"stat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_STAT_IN_LIBC)
     # message ("HAVE_STAT_IN_LIBC: ${HAVE_STAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"fstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_FSTAT_IN_LIBC)
     # message ("HAVE_FSTAT_IN_LIBC: ${HAVE_FSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"lstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_LSTAT_IN_LIBC)
     # message ("HAVE_LSTAT_IN_LIBC: ${HAVE_LSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"fstatat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_FSTATAT_IN_LIBC)
     # message ("HAVE_FSTATAT_IN_LIBC: ${HAVE_FSTATAT_IN_LIBC}")
-    CHECK_LIBRARY_EXISTS(c "__xstat" "${LIBC_PATH}" HAVE___XSTAT_IN_LIBC)
-    CHECK_LIBRARY_EXISTS(c "__fxstat" "${LIBC_PATH}" HAVE___FXSTAT_IN_LIBC)
-    CHECK_LIBRARY_EXISTS(c "__lxstat" "${LIBC_PATH}" HAVE___LXSTAT_IN_LIBC)
-    CHECK_LIBRARY_EXISTS(c "__fxstatat" "${LIBC_PATH}" HAVE___FXSTATAT_IN_LIBC)
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__xstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___XSTAT_IN_LIBC)
     # message ("HAVE___XSTAT_IN_LIBC: ${HAVE___XSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__fxstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___FXSTAT_IN_LIBC)
     # message ("HAVE___FXSTAT_IN_LIBC: ${HAVE___FXSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__lxstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___LXSTAT_IN_LIBC)
     # message ("HAVE___LXSTAT_IN_LIBC: ${HAVE___LXSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__fxstatat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___FXSTATAT_IN_LIBC)
     # message ("HAVE___FXSTATAT_IN_LIBC: ${HAVE___FXSTATAT_IN_LIBC}")
 endfunction ()

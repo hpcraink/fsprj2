@@ -4102,7 +4102,7 @@ int WRAP(__xstat)(int ver, const char *pathname, struct stat *statbuf)
 		stat_function_data.allocated_512B_blocks = statbuf->st_blocks;
 	}
 
-	WRAP_END(data, stat)
+	WRAP_END(data, __xstat)
 	return ret;
 }
 #endif
@@ -4186,7 +4186,7 @@ int WRAP(__fxstat)(int ver, int fd, struct stat *statbuf)
 		fstat_function_data.allocated_512B_blocks = statbuf->st_blocks;
 	}
 
-	WRAP_END(data, fstat)
+	WRAP_END(data, __fxstat)
 	return ret;
 }
 #endif
@@ -4271,7 +4271,7 @@ int WRAP(__lxstat)(int ver, const char *pathname, struct stat *statbuf)
 		stat_function_data.allocated_512B_blocks = statbuf->st_blocks;
 	}
 
-	WRAP_END(data, lstat)
+	WRAP_END(data, __lxstat)
 	return ret;
 }
 #  endif
@@ -4361,7 +4361,7 @@ int WRAP(__fxstatat)(int ver, int dirfd, const char *pathname, struct stat *stat
 		fstatat_function_data.allocated_512B_blocks = statbuf->st_blocks;
 	}
 
-	WRAP_END(data, fstatat)
+	WRAP_END(data, __fxstatat)
 	return ret;
 }
 #  endif

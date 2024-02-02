@@ -1328,6 +1328,7 @@ void send_data(const char *message, SOCKET socket) {
             } else {
                 LOG_ERROR_AND_DIE("send() returned %d, errno: %d, socket: %d", bytes_sent,
                         errno, socket);
+
             }
         } else {
             if ((size_t)bytes_sent < bytes_to_send) {
@@ -2215,9 +2216,9 @@ void init_process() {
 #endif
 
 #ifdef IOTRACE_ENABLE_INFLUXDB
-            if (-1 == socket_peer) {
-                    prepare_socket();
-            }
+        if (-1 == socket_peer) {
+            prepare_socket();
+        }
 #endif
 
         /* at this point all preparations necessary for a wrapper call
@@ -2392,8 +2393,9 @@ void write_into_influxdb(struct basic *data) {
     }
 
     if (-1 == socket_peer) {
-                prepare_socket();
-        }
+    	LOG_WARN("write_into_influxdb called before thread was initialized (new socket: %d).", socket_peer);
+        prepare_socket();
+    }
 
     //buffer for body
     int body_length = libiotrace_struct_push_max_size_basic(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
@@ -2465,18 +2467,24 @@ void write_into_influxdb(struct basic *data) {
 #endif
     body_labels_length = strlen(body_labels);
 
+#ifdef WRITE_INFLUX_TIMESTAMP
     int timestamp_length = COUNT_DEC_AS_CHAR(data->time_end);
     char timestamp[timestamp_length];
-#ifdef REALTIME
+#  ifdef REALTIME
     snprintf(timestamp, sizeof(timestamp), "%" PRIu64, data->time_end);
-#else
+#  else
     snprintf(timestamp, sizeof(timestamp), "%" PRIu64,
             system_start_time + data->time_end);
-#endif
+#  endif
     timestamp_length = strlen(timestamp);
+#endif
 
-    const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/
-            + timestamp_length;
+    const int content_length = body_labels_length + 1 /*space*/ + body_length
+#ifdef WRITE_INFLUX_TIMESTAMP
+    		 + 1 /*space*/ + timestamp_length;
+#else
+    		;
+#endif
 
     const char header[] =
             "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
@@ -2486,17 +2494,32 @@ void write_into_influxdb(struct basic *data) {
             "Content-Length: %d" LINE_BREAK
             "Content-Type: application/x-www-form-urlencoded" LINE_BREAK
             LINE_BREAK
-            "%s %s %s";
+			"%s %s"
+#ifdef WRITE_INFLUX_TIMESTAMP
+    		" %s";
+#else
+    		;
+#endif
     const int message_length = strlen(header) + influx_bucket_len
             + influx_organization_len + database_ip_len + database_port_len
             + influx_token_len + COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
-            + body_labels_length + body_length + timestamp_length;
+            + body_labels_length + body_length
+#ifdef WRITE_INFLUX_TIMESTAMP
+			+ timestamp_length;
+#else
+    		;
+#endif
 
     //buffer all (header + body)
     char message[message_length + 1];
     snprintf(message, sizeof(message), header, influx_bucket,
             influx_organization, database_ip, database_port, influx_token,
-            content_length, body_labels, body, timestamp);
+            content_length, body_labels, body
+#ifdef WRITE_INFLUX_TIMESTAMP
+    		, timestamp);
+#else
+    		);
+#endif
 
     send_data(message, socket_peer);
 }

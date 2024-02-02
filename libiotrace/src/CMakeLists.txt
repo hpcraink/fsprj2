@@ -453,6 +453,10 @@ set(ENABLE_OUTPUT_VALUES "LOGFILE_AND_INFLUXDB;LOGFILE;INFLUXDB")
 set_property(CACHE ENABLE_OUTPUT PROPERTY STRINGS ${ENABLE_OUTPUT_VALUES})
 list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
 
+option (WRITE_INFLUX_TIMESTAMP "send function end time to influxdb" ON)
+if(WRITE_INFLUX_TIMESTAMP)
+    list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DWRITE_INFLUX_TIMESTAMP=${WRITE_INFLUX_TIMESTAMP})
+endif()
 
 # Let the user chose the gettime functionality
 # XXX Instead of hard-coding these settings, they should be chosen dependent on availability...

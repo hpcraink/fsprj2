@@ -2413,9 +2413,9 @@ void write_into_influxdb(struct basic *data) {
             log_name_len);
 
 #ifdef FILENAME_RESOLUTION_ENABLED
-    const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s,filename=%s";
+    const char labels[] = "libiotrace,filename=%s,functionname=%s,hostname=%s,jobname=%s,processid=%d,thread=%d";
 #else
-    const char labels[] = "libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s";
+    const char labels[] = "libiotrace,functionname=%s,hostname=%s,jobname=%s,processid=%d,thread=%d";
 #endif
     int body_labels_length = strlen(labels) + sizeof(short_log_name) /* jobname */
             + HOST_NAME_MAX /* hostname */
@@ -2456,14 +2456,22 @@ void write_into_influxdb(struct basic *data) {
     	}
     	filename[l] = '\0';
     }
-	snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
-			data->hostname, data->pid, data->tid,
+	snprintf(body_labels, sizeof(body_labels), labels,
+			filename,
 			data->function_name,
-			filename);
+			data->hostname,
+			short_log_name,
+			data->pid,
+			data->tid
+			);
 #else
-    snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
-            data->hostname, data->pid, data->tid,
-            data->function_name);
+    snprintf(body_labels, sizeof(body_labels), labels,
+			data->function_name,
+			data->hostname,
+			short_log_name,
+			data->pid,
+			data->tid
+			);
 #endif
     body_labels_length = strlen(body_labels);
 

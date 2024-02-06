@@ -7,7 +7,7 @@ rm -f ~/${INFLUXDB_CACHE}/configs
 cp -r ${2} $TMP
 mkdir $TMP/${INFLUXDB_CACHE}
 # configure and start the infuxDB
-cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=$TMP/${INFLUXDB_CACHE}/influxd.bolt --engine-path=$TMP/${INFLUXDB_CACHE}/engine &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=$TMP/${INFLUXDB_CACHE}/influxd.bolt --engine-path=$TMP/${INFLUXDB_CACHE}/engine --storage-wal-fsync-delay=60s &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
 
 # get local ip
 #ifconfig

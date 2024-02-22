@@ -1,6 +1,6 @@
 #!/bin/bash
 IOTRACE_DATABASE_IP=$1
-IOTRACE_WHITELIST=./whitelist
+IOTRACE_WHITELIST="${PWD}/whitelist"
 LD_PRELOAD=${test_libiotrace_so}
 TESTNAME=${test_program}
 TESTARGUMENTS=$test_number_of_writes
@@ -9,6 +9,16 @@ format="\t%E\t%U\t%S\t%D\t%K\t%M"
 
 processes=$(( ${5} * ${6} ))
 echo "    process count: ${processes}"
+
+# --- changing into target directory - change here ---
+#cd $TMP
+#cd /run/user/968698
+
+# --- helpful output into slurm-log
+echo "---------"
+pwd
+echo "iterations: $test_iterations" 
+echo "---------"
 
 rm -f ${performance_data_file}
 rm -f $IOTRACE_WHITELIST
@@ -24,6 +34,7 @@ for ((i = 0; i < test_iterations; i += 1)); do
 done
 echo "    with libiotrace and active wrapper: done"
 
+: <<'END'
 # test with libiotrace and empty whitelist
 echo -e "">$IOTRACE_WHITELIST
 for ((i = 0; i < test_iterations; i += 1)); do
@@ -40,6 +51,7 @@ for ((i = 0; i < test_iterations; i += 1)); do
     /usr/bin/time -o ${performance_data_file} -a -f "without_libiotrace\t$i$format" mpirun -N ${6} -H ${4} -np $processes -x OMP_NUM_THREADS=$test_threads $TESTNAME $TESTARGUMENTS
 done
 echo "    without libiotrace: done"
+END
 
 rm -f $IOTRACE_WHITELIST
 rm -f mpi_file_io.txt

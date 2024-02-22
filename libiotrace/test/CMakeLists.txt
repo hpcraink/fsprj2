@@ -481,6 +481,11 @@ if (WITH_UNIT_TESTS)
     endif()
 
     if(WITH_MPI_IO)
+        add_executable(MPI_parallel_IO_Posix MPI_parallel_IO_Posix.c)
+        target_link_libraries(MPI_parallel_IO_Posix PRIVATE ${TESTS_LINK_OPTIONS})
+    endif()
+
+    if(WITH_MPI_IO)
         # test with: mpirun -np 4 -x IOTRACE_LOG_NAME=MPI_read_test3 -x LD_PRELOAD=../src/libiotrace.so ./MPI_parallel_read
         add_executable(MPI_parallel_read MPI_parallel_read.c)
         target_link_libraries(MPI_parallel_read PRIVATE ${TESTS_LINK_OPTIONS})

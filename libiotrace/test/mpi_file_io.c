@@ -15,6 +15,10 @@
 #include "mpi.h"
 #include "omp.h"
 
+const char OUTPUTFILE[] = "mpi_file_io.txt";
+//const char OUTPUTFILE[] = "$TMP/mpi_file_io.txt";
+// const char OUTPUTFILE[] = "/run/user/968698/mpi_file_io.txt";
+
 // #define WANT_OPENMP
 // #define WANT_CLEAR_CACHES
 #ifdef WANT_CLEAR_CACHES
@@ -133,7 +137,7 @@ int main (int argc, char * argv[]) {
 #pragma omp master
         {
 #       endif
-            MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, "mpi_file_io.txt", MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+            MPI_CHECK(MPI_File_open(MPI_COMM_WORLD, OUTPUTFILE, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
             // MPI_CHECK(MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, "native", MPI_INFO_NULL));
 #       ifdef WANT_OPENMP
         }
@@ -198,7 +202,7 @@ int main (int argc, char * argv[]) {
 
     // Check the file size using POSIX calls.
     struct stat file_stat;
-    stat ("mpi_file_io.txt", &file_stat);
+    stat (OUTPUTFILE, &file_stat);
     off_t expected_size = (off_t)max_iterations * comm_size * thread_num * sizeof(int);
     if (file_stat.st_size != expected_size)  {
         fprintf(stderr, "ERROR: expected file size to be %lld Bytes but instead file size is %lld Bytes.\n", (long long int) expected_size, (long long int) file_stat.st_size);

@@ -6,15 +6,20 @@
 #define LOGFILE 1
 #define INFLUXDB 2
 
-//TODO: remove
 #undef ENABLE_POWER_MEASUREMENT_RAPL
-#undef ENABLE_POWER_MEASUREMENT_POWERCAP
 #define ENABLE_POWER_MEASUREMENT_RAPL
+
+#undef ENABLE_POWER_MEASUREMENT_POWERCAP
 #define ENABLE_POWER_MEASUREMENT_POWERCAP
+
 
 #if defined(ENABLE_POWER_MEASUREMENT_RAPL) || defined(ENABLE_POWER_MEASUREMENT_POWERCAP)
 #   define ENABLE_POWER_MEASUREMENT
 //#   define ENABLE_POWER_MEASUREMENT_PER_KERN
+
+#   ifndef POWER_MEASUREMENT_INTERVAL
+#       define POWER_MEASUREMENT_INTERVAL 1000000000 // 1 second
+#   endif
 #endif
 
 
@@ -1162,7 +1167,7 @@ LIBIOTRACE_STRUCT_END
 
 #ifdef ENABLE_POWER_MEASUREMENT
 /* Power Mesurment data*/
-//TODO: Perfomance options to ignore for libiotrace_struct_push_power_measurement_data
+//TODO: Perfomance options to ignore for libiotrace_struct_push_power_measurement_data by add Parameter to ignore values to send to influx
 //TODO: Perfomance change multipy task to one LIBIOTRACE_STRUCT_STRUCT_ARRAY
 LIBIOTRACE_STRUCT_START(power_measurement_data)
   LIBIOTRACE_STRUCT_U_INT64_T(time)

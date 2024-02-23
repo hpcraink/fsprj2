@@ -91,7 +91,7 @@
 #define DRAM_ENERGY        10
 #define PLATFORM_ENERGY        11
 
-#endif //POWERMEASUREMENT_DEFINES_H
+
 
 typedef struct CpuPackage {
     int id;
@@ -121,6 +121,8 @@ typedef struct CPUMeasurementTask {
     long long last_measurement_value;
 } CPUMeasurementTask;
 
+
+#ifdef ENABLE_POWER_MEASUREMENT_POWERCAP
 
 //Powercap
 
@@ -160,6 +162,8 @@ static char *component_event_names[COMPONENT_NUM_EVENTS] = {"ENERGY_UJ", "MAX_EN
 static char *component_sys_names[COMPONENT_NUM_EVENTS]         = {"energy_uj", "max_energy_range_uj", "constraint_0_max_power_uw", "constraint_0_power_limit_uw", "constraint_0_time_window_us", "enabled", "name"};
 static mode_t   component_sys_flags[COMPONENT_NUM_EVENTS]      = {O_RDONLY, O_RDONLY, O_RDONLY, O_RDWR, O_RDONLY, O_RDONLY, O_RDONLY};
 
-#define POWERCAP_MAX_COUNTERS (2 * (PKG_NUM_EVENTS + (3 * COMPONENT_NUM_EVENTS)))
+#define POWERCAP_MAX_COUNTERS (3 * (PKG_NUM_EVENTS + (3 * COMPONENT_NUM_EVENTS)))
 
+#endif
 
+#endif //POWERMEASUREMENT_DEFINES_H

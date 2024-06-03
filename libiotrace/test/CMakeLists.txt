@@ -622,7 +622,7 @@ if (WITH_UNIT_TESTS)
 
     ##########################################################################################################
 
-    if(WITH_MPI_IO)
+    if(WITH_MPI_IO && WITH_POSIX_IO)
         # whitelist should look like (without initial "# " per line):
         # MPI_File_open
         # MPI_File_seek

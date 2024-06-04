@@ -3434,7 +3434,16 @@ int rapl_init(int cpu_family, int cpu_model) {
     int different_units = 0;
 
     if (cpu_family == CPU_INTEL) {
-        if (cpu_model == 85) {
+        if (cpu_model == 45) {
+            /* SandyBridge-EP */
+            package_avail = 1;
+            pp0_avail = 1;
+            pp1_avail = 0;
+            dram_avail = 1;
+            psys_avail = 0;
+            different_units = 0;
+        } else if (cpu_model == 85) {
+            /* Skylake-X */
             package_avail = 1;
             pp0_avail = 0;
             pp1_avail = 0;

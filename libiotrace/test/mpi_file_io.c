@@ -192,9 +192,6 @@ int main (int argc, char * argv[]) {
 
         for (int i = 0; i < max_iterations; i++) {
             MPI_Status status;
-            // The value encodes a "unique" id per thread, so
-            // maximum of threads allowed is 1000 to be able to distinguish.
-            int val = (comm_rank * 1000) + thread_me;
             
             MPI_Offset pos = (i * comm_size * thread_num + comm_rank * thread_num + thread_me) * WANT_NUM_WRITE;
             DEBUG(printf ("Rank:%d Thread:%d writing to pos:%lld\n", comm_rank, thread_num, pos));

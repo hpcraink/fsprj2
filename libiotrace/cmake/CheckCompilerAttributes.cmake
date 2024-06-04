@@ -1,5 +1,6 @@
 function (CheckCompilerAttributes)
     include (CheckCSourceCompiles)
+    include (CheckCSourceRuns)
 
     check_c_source_compiles ("
         extern char * strcpy(char * dst, const char * src);
@@ -91,4 +92,147 @@ function (CheckCompilerAttributes)
         }
     "  HAVE_RECVMMSG_CONST_TIMESPEC)
     # message ("HAVE_RECVMMSG_CONST_TIMESPEC: ${HAVE_RECVMMSG_CONST_TIMESPEC}")
+    
+    check_c_source_compiles ("
+        #include <sys/stat.h>
+        #include <assert.h>
+
+        extern int __xstat(int ver, const char *pathname, struct stat *statbuf);
+
+        int main(void) {
+            return 0;
+        }
+    "  HAVE___XSTAT)
+    # message ("HAVE___XSTAT: ${HAVE___XSTAT}")
+
+    check_c_source_compiles ("
+        #include <sys/stat.h>
+
+        extern int __fxstat(int ver, int fd, struct stat *statbuf);
+
+        int main(void) {
+            return 0;
+        }
+    "  HAVE___FXSTAT)
+    # message ("HAVE___FXSTAT: ${HAVE___FXSTAT}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"stat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_STAT_IN_LIBC)
+    # message ("HAVE_STAT_IN_LIBC: ${HAVE_STAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"fstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_FSTAT_IN_LIBC)
+    # message ("HAVE_FSTAT_IN_LIBC: ${HAVE_FSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"lstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_LSTAT_IN_LIBC)
+    # message ("HAVE_LSTAT_IN_LIBC: ${HAVE_LSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"fstatat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE_FSTATAT_IN_LIBC)
+    # message ("HAVE_FSTATAT_IN_LIBC: ${HAVE_FSTATAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__xstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___XSTAT_IN_LIBC)
+    # message ("HAVE___XSTAT_IN_LIBC: ${HAVE___XSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__fxstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___FXSTAT_IN_LIBC)
+    # message ("HAVE___FXSTAT_IN_LIBC: ${HAVE___FXSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__lxstat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___LXSTAT_IN_LIBC)
+    # message ("HAVE___LXSTAT_IN_LIBC: ${HAVE___LXSTAT_IN_LIBC}")
+    
+    check_c_source_runs ("
+        #include <dlfcn.h>
+        #include <stddef.h>
+
+        int main(void) {
+            void *ret = dlsym(RTLD_DEFAULT, \"__fxstatat\");
+            if (NULL == ret) {
+                return 1;
+        } else {
+                return 0;
+            }
+        }
+    "  HAVE___FXSTATAT_IN_LIBC)
+    # message ("HAVE___FXSTATAT_IN_LIBC: ${HAVE___FXSTATAT_IN_LIBC}")
 endfunction ()

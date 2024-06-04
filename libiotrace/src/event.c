@@ -1095,7 +1095,7 @@ void print_filesystem(void)
         strcpy(mount_point, filesystem_entry_ptr->mnt_dir);
         // get mounted directory, not the mount point in parent filesystem
         strcpy(mount_point + ret, "/./");
-        ret = stat(mount_point, &stat_data);
+        ret = libiotrace_stat(mount_point, &stat_data);
         if (-1 == ret)
         {
             filesystem_data.device_id = 0;
@@ -1155,7 +1155,7 @@ void get_file_id(int fd, struct file_id *data) {
         data->device_id = 0;
         data->inode_nr = 0;
     } else {
-        ret = fstat(fd, &stat_data);
+        ret = libiotrace_fstat(fd, &stat_data);
         if (0 > ret) {
             LOG_ERROR_AND_DIE("fstat() returned %d with errno=%d", ret, errno);
         }
@@ -1177,7 +1177,7 @@ void get_file_id_by_path(const char *filename, struct file_id *data) {
     struct stat stat_data;
     int ret;
 
-    ret = stat(filename, &stat_data);
+    ret = libiotrace_stat(filename, &stat_data);
     if (0 > ret) {
         LOG_ERROR_AND_DIE("stat() returned %d with errno=%d", ret, errno);
     }
@@ -1313,6 +1313,7 @@ void open_std_fd(int fd)
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
+    data.time_diff = data.time_end - data.time_start;
     write_into_influxdb(&data);
 #endif
     WRAP_FREE(&data)
@@ -1367,6 +1368,7 @@ void open_std_file(FILE *file)
     }
 #endif
 #ifdef IOTRACE_ENABLE_INFLUXDB
+    data.time_diff = data.time_end - data.time_start;
     write_into_influxdb(&data);
 #endif
     WRAP_FREE(&data)
@@ -1446,6 +1448,7 @@ void send_data(const char *message, SOCKET socket) {
             } else {
                 LOG_ERROR_AND_DIE("send() returned %d, errno: %d, socket: %d", bytes_sent,
                         errno, socket);
+
             }
         } else {
             if ((size_t)bytes_sent < bytes_to_send) {
@@ -1478,8 +1481,11 @@ void send_data(const char *message, SOCKET socket) {
 #ifdef IOTRACE_ENABLE_INFLUXDB
 int url_callback_responses(llhttp_t *parser, const char *at ATTRIBUTE_UNUSED, size_t length ATTRIBUTE_UNUSED) {
     if (parser->status_code != 204) {
-        LOG_WARN("unknown status (%d) in response from influxdb",
-                parser->status_code);
+    	char status_buffer[length + 1];
+    	memcpy(status_buffer, at, length);
+    	status_buffer[length] = '\0';
+        LOG_WARN("unknown status (%d) in response from influxdb: %s",
+                parser->status_code, status_buffer);
     } else {
         //LOG_WARN("known status (%d) in response from influxdb", parser->status_code);
     }
@@ -1625,7 +1631,8 @@ void write_metadata_into_influxdb(void)
             + sizeof(short_log_name) /* jobname */
             + HOST_NAME_MAX /* hostname */
             + COUNT_DEC_AS_CHAR(pid) + 1 /* processid with sign */
-            + COUNT_DEC_AS_CHAR(tid) + 1; /* thread with sign */
+            + COUNT_DEC_AS_CHAR(tid) + 1 /* thread with sign */
+            ;
     char body_labels[body_labels_length];
     snprintf(body_labels, sizeof(body_labels), labels, short_log_name, hostname, pid, tid);
     body_labels_length = strlen(body_labels);
@@ -1878,7 +1885,7 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
                             4096, 0);
                     if (1 > bytes_received) {
                         //Socket is destroyed or closed by peer
-                    	LOG_WARN("socket destroyed or closed by peer");
+                    	LOG_DEBUG("socket destroyed or closed by peer");
                     	CLOSESOCKET(recv_sockets[i]->socket);
                     	libiotrace_socket *s = recv_sockets[i];
                     	delete_socket(recv_sockets[i]->socket, NULL, &recv_sockets_len, &recv_sockets);
@@ -2037,7 +2044,7 @@ void read_whitelist(void) {
         LOG_ERROR_AND_DIE("open() failed, errno=%d", errno);
     }
 
-    ret = fstat(fd, &statbuf);
+    ret = libiotrace_fstat(fd, &statbuf);
     if (-1 == ret) {
         LOG_ERROR_AND_DIE("fstat() failed, errno=%d", errno);
     }
@@ -2060,7 +2067,7 @@ void read_whitelist(void) {
             LOG_ERROR_AND_DIE("read() failed, errno=%d", errno);
         } else if (0 == ret) {
             // signal interrupt of file changed?
-            if (-1 == fstat(fd, &statbuf)) {
+            if (-1 == libiotrace_fstat(fd, &statbuf)) {
                 LOG_ERROR_AND_DIE("fstat() failed, errno=%d", errno);
             }
             if (file_len != statbuf.st_size) {
@@ -2339,9 +2346,9 @@ void init_process(void) {
 #endif
 
 #ifdef IOTRACE_ENABLE_INFLUXDB
-            if (-1 == socket_peer) {
-                    prepare_socket();
-            }
+        if (-1 == socket_peer) {
+            prepare_socket();
+        }
 #endif
 
 #ifdef ENABLE_POWER_MEASUREMENT
@@ -2521,8 +2528,9 @@ void write_into_influxdb(struct basic *data) {
     }
 
     if (-1 == socket_peer) {
-                prepare_socket();
-        }
+    	LOG_WARN("write_into_influxdb called before thread was initialized (new socket: %d).", socket_peer);
+        prepare_socket();
+    }
 
     //buffer for body
     int body_length = libiotrace_struct_push_max_size_basic(0) + 1; /* +1 for trailing null character (function build by macros; gives length of body to send) */
@@ -2539,31 +2547,87 @@ void write_into_influxdb(struct basic *data) {
     shorten_log_name(short_log_name, sizeof(short_log_name), log_name,
             log_name_len);
 
-    const char labels[] =
-            "libiotrace,jobname=%s,hostname=%s,processid=%d,thread=%d,functionname=%s";
+#ifdef FILENAME_RESOLUTION_ENABLED
+    const char labels[] = "libiotrace,filename=%s,functionname=%s,hostname=%s,jobname=%s,processid=%d,thread=%d";
+#else
+    const char labels[] = "libiotrace,functionname=%s,hostname=%s,jobname=%s,processid=%d,thread=%d";
+#endif
     int body_labels_length = strlen(labels) + sizeof(short_log_name) /* jobname */
-    + HOST_NAME_MAX /* hostname */
-    + COUNT_DEC_AS_CHAR(data->pid) + 1 /* processid with sign */
-    + COUNT_DEC_AS_CHAR(data->tid) + 1 /* thread with sign */
-    + MAX_FUNCTION_NAME; /* functionname */
+            + HOST_NAME_MAX /* hostname */
+            + COUNT_DEC_AS_CHAR(data->pid) + 1 /* processid with sign */
+            + COUNT_DEC_AS_CHAR(data->tid) + 1 /* thread with sign */
+            + MAX_FUNCTION_NAME /* functionname */
+#ifdef FILENAME_RESOLUTION_ENABLED
+			+ FILENAME_MAX /* filename */
+#endif
+	        ;
     char body_labels[body_labels_length];
-    snprintf(body_labels, sizeof(body_labels), labels, short_log_name,
-            data->hostname, data->pid, data->tid,
-            data->function_name);
+#ifdef FILENAME_RESOLUTION_ENABLED
+    char filename[FILENAME_MAX * 2];
+    if (0 == strnlen(data->traced_filename, FILENAME_MAX)) {
+    	strncpy(filename, "unknown", FILENAME_MAX - 1);
+    } else {
+    	int l = 0;
+    	for (int i = 0; i < FILENAME_MAX - 1; i++, l++) {
+    		if ('\0' == data->traced_filename[i]) {
+    			break;
+    		}
+    		switch(data->traced_filename[i]) {
+			case ',':
+				filename[l++] = '\\';
+				filename[l] = ',';
+				break;
+			case '=':
+				filename[l++] = '\\';
+				filename[l] = '=';
+				break;
+			case ' ':
+				filename[l++] = '\\';
+				filename[l] = ' ';
+				break;
+			default:
+				filename[l] = data->traced_filename[i];
+			}
+    	}
+    	filename[l] = '\0';
+    }
+	snprintf(body_labels, sizeof(body_labels), labels,
+			filename,
+			data->function_name,
+			data->hostname,
+			short_log_name,
+			data->pid,
+			data->tid
+			);
+#else
+    snprintf(body_labels, sizeof(body_labels), labels,
+			data->function_name,
+			data->hostname,
+			short_log_name,
+			data->pid,
+			data->tid
+			);
+#endif
     body_labels_length = strlen(body_labels);
 
+#ifdef WRITE_INFLUX_TIMESTAMP
     int timestamp_length = COUNT_DEC_AS_CHAR(data->time_end);
     char timestamp[timestamp_length];
-#ifdef REALTIME
+#  ifdef REALTIME
     snprintf(timestamp, sizeof(timestamp), "%" PRIu64, data->time_end);
-#else
+#  else
     snprintf(timestamp, sizeof(timestamp), "%" PRIu64,
             system_start_time + data->time_end);
-#endif
+#  endif
     timestamp_length = strlen(timestamp);
+#endif
 
-    const int content_length = body_labels_length + 1 /*space*/+ body_length + 1 /*space*/
-            + timestamp_length;
+    const int content_length = body_labels_length + 1 /*space*/ + body_length
+#ifdef WRITE_INFLUX_TIMESTAMP
+    		 + 1 /*space*/ + timestamp_length;
+#else
+    		;
+#endif
 
     const char header[] =
             "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
@@ -2573,17 +2637,32 @@ void write_into_influxdb(struct basic *data) {
             "Content-Length: %d" LINE_BREAK
             "Content-Type: application/x-www-form-urlencoded" LINE_BREAK
             LINE_BREAK
-            "%s %s %s";
+			"%s %s"
+#ifdef WRITE_INFLUX_TIMESTAMP
+    		" %s";
+#else
+    		;
+#endif
     const int message_length = strlen(header) + influx_bucket_len
             + influx_organization_len + database_ip_len + database_port_len
             + influx_token_len + COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
-            + body_labels_length + body_length + timestamp_length;
+            + body_labels_length + body_length
+#ifdef WRITE_INFLUX_TIMESTAMP
+			+ timestamp_length;
+#else
+    		;
+#endif
 
     //buffer all (header + body)
     char message[message_length + 1];
     snprintf(message, sizeof(message), header, influx_bucket,
             influx_organization, database_ip, database_port, influx_token,
-            content_length, body_labels, body, timestamp);
+            content_length, body_labels, body
+#ifdef WRITE_INFLUX_TIMESTAMP
+    		, timestamp);
+#else
+    		);
+#endif
 
     send_data(message, socket_peer);
 }

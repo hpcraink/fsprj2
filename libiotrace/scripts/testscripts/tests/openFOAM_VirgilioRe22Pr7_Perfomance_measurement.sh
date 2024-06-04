@@ -35,8 +35,14 @@ case ${PROCESS_COUNT} in
     40)
         SUBDOMAINS="40 1 1"
         ;;
+    64)
+        SUBDOMAINS="64 1 1"
+        ;;
     80)
         SUBDOMAINS="80 1 1"
+        ;;
+    128)
+        SUBDOMAINS="128 1 1"
         ;;
     160)
         SUBDOMAINS="160 1 1"
@@ -44,8 +50,17 @@ case ${PROCESS_COUNT} in
     168)
         SUBDOMAINS="168 1 1"
         ;;
+    256)
+        SUBDOMAINS="256 1 1"
+        ;;
     320)
         SUBDOMAINS="320 1 1"
+        ;;
+    512)
+        SUBDOMAINS="512 1 1"
+        ;;
+    1024)
+        SUBDOMAINS="1024 1 1"
         ;;
     *)
         echo "unknown subdomain count: ${PROCESS_COUNT}"

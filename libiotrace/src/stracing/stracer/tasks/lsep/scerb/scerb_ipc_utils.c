@@ -27,7 +27,7 @@ int sm_ipc_attach_create_smo(
 
 /* Get actual length */
     struct stat stat_info;
-    RTN_VAL_WHEN_ERRNO( fstat(smo_fd, &stat_info) );
+    RTN_VAL_WHEN_ERRNO( libiotrace_fstat(smo_fd, &stat_info) );
     *shared_mem_len_ptr = stat_info.st_size;         // NOTE: What we get depends on the page size (which may be retrieved via `getconf PAGE_SIZE` or `pagesize`)
 
 /* Map it in address space of caller */
@@ -43,7 +43,7 @@ int sm_ipc_attach_create_smo(
 int sm_ipc_detach_smo(void** shared_mem_addr_ptr, char* smo_name) {
     int smo_fd = RTN_VAL_WHEN_ERRNO( shm_open(smo_name, O_RDONLY, 0) );     // NOTE: `mode` flags are required (not a variadic fct on Linux)
     struct stat stat_info;
-    RTN_VAL_WHEN_ERRNO( fstat(smo_fd, &stat_info) );
+    RTN_VAL_WHEN_ERRNO( libiotrace_fstat(smo_fd, &stat_info) );
 
     RTN_VAL_WHEN_ERRNO( munmap(*shared_mem_addr_ptr, stat_info.st_size) );
     *shared_mem_addr_ptr = NULL;

@@ -150,6 +150,8 @@ check_symbol_exists(clone "sched.h" HAVE_CLONE)
 check_symbol_exists(dirfd "dirent.h" HAVE_DIRFD)
 check_symbol_exists(sendmmsg "sys/socket.h" HAVE_SENDMMSG)
 check_symbol_exists(recvmmsg "sys/socket.h" HAVE_RECVMMSG)
+check_symbol_exists(lstat "sys/stat.h" HAVE_LSTAT)
+check_symbol_exists(fstatat "sys/stat.h" HAVE_FSTATAT)
 check_symbol_exists(memrchr "string.h" HAVE_MEMRCHR)
 
 check_symbol_exists(execvpe "unistd.h" HAVE_EXECVPE)
@@ -468,6 +470,10 @@ set(ENABLE_OUTPUT_VALUES "LOGFILE_AND_INFLUXDB;LOGFILE;INFLUXDB")
 set_property(CACHE ENABLE_OUTPUT PROPERTY STRINGS ${ENABLE_OUTPUT_VALUES})
 list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DENABLE_OUTPUT=${ENABLE_OUTPUT})
 
+option (WRITE_INFLUX_TIMESTAMP "send function end time to influxdb" ON)
+if(WRITE_INFLUX_TIMESTAMP)
+    list(APPEND LIBIOTRACE_COMPILE_OPTIONS -DWRITE_INFLUX_TIMESTAMP=${WRITE_INFLUX_TIMESTAMP})
+endif()
 
 # Let the user chose the gettime functionality
 # XXX Instead of hard-coding these settings, they should be chosen dependent on availability...

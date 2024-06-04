@@ -218,6 +218,46 @@ if (WITH_UNIT_TESTS)
             "-Wl,-wrap=vfork"
             "-Wl,-wrap=clone"
         )
+        if(HAVE___XSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__xstat"
+            )
+        endif()
+        if(HAVE___FXSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__fxstat"
+            )
+        endif()
+        if(HAVE___LXSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__lxstat"
+            )
+        endif()
+        if(HAVE___FXSTATAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=__fxstatat"
+            )
+        endif()
+        if(HAVE_STAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=stat"
+            )
+        endif()
+        if(HAVE_FSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=fstat"
+            )
+        endif()
+        if(HAVE_LSTAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=lstat"
+            )
+        endif()
+        if(HAVE_FSTATAT_IN_LIBC)
+            list(APPEND TESTS_LINK_OPTIONS_STATIC
+                "-Wl,-wrap=fstatat"
+            )
+        endif()
     endif()
 
     if(WITH_POSIX_AIO)
@@ -334,6 +374,27 @@ if (WITH_UNIT_TESTS)
         )
         target_link_libraries(read_byte_static ${TESTS_LINK_OPTIONS_STATIC})
         target_link_libraries(read_byte_static ${TESTS_LINK_OPTIONS})
+
+    endif()
+    
+    ##########################################################################################################
+
+    if(WITH_POSIX_IO)
+        # test with: IOTRACE_LOG_NAME=stat_shared_test1 LD_PRELOAD=../src/libiotrace.so ./stat_shared
+        add_executable(stat_shared stat.c)
+        target_compile_options(stat_shared PRIVATE -D_GNU_SOURCE)
+        target_link_libraries(stat_shared ${TESTS_LINK_OPTIONS})
+
+        add_library(stat_object OBJECT stat.c)
+        target_compile_options(stat_object PRIVATE -D_GNU_SOURCE)
+
+        # test with: IOTRACE_LOG_NAME=stat_static_test1 ./stat_static
+        add_executable(stat_static
+            $<TARGET_OBJECTS:stat_object>
+            $<TARGET_OBJECTS:iotrace-object>
+        )
+        target_link_libraries(stat_static ${TESTS_LINK_OPTIONS_STATIC})
+        target_link_libraries(stat_static ${TESTS_LINK_OPTIONS})
 
     endif()
 
@@ -633,6 +694,12 @@ if (WITH_UNIT_TESTS)
         # test with: `IOTRACE_LOG_NAME=alloc_s_brk_shared_test1 LD_PRELOAD=../src/libiotrace.so ./alloc_s_brk`
         add_executable(alloc_s_brk alloc_s_brk.c)
     endif()
+    
+    ##########################################################################################################
+
+    add_executable(dlsym dlsym.c)
+    target_compile_options(dlsym PRIVATE "-D_GNU_SOURCE")
+    target_link_libraries(dlsym PRIVATE "-ldl")
 
     ##########################################################################################################
 

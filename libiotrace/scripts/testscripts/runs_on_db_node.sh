@@ -7,10 +7,15 @@ rm -f ~/${INFLUXDB_CACHE}/configs
 cp -r ${2} $TMP
 mkdir $TMP/${INFLUXDB_CACHE}
 # configure and start the infuxDB
-cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=$TMP/${INFLUXDB_CACHE}/influxd.bolt --engine-path=$TMP/${INFLUXDB_CACHE}/engine &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=$TMP/${INFLUXDB_CACHE}/influxd.bolt --engine-path=$TMP/${INFLUXDB_CACHE}/engine --storage-wal-fsync-delay=60s &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+
+# get local ip
+#ifconfig
+#lshw -class network
+network_interface="${test_network_interface:-ib0}"
+influx_host_ip=$(ifconfig ${network_interface} | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
 # wait for infuxdb Startup
-influx_host_ip=$(ifconfig ib0 | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 echo "InfluxDB health IP: $influx_host_ip"
 while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' $influx_host_ip:8086/health)" != "200" ]]; do
     echo "Wait for InfluxDB health on IP: $influx_host_ip"

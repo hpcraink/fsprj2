@@ -1,0 +1,1272 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": true,
+    "panels": [
+      {
+        "collapsed": false,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 52,
+        "panels": [],
+        "title": "Overview",
+        "type": "row"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisBorderShow": false,
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "bars",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "insertNulls": false,
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "unit": "none"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 5,
+          "w": 24,
+          "x": 0,
+          "y": 1
+        },
+        "id": 41,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "table",
+            "placement": "right",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "pluginVersion": "10.2.2",
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"${field}\" and r.functionname !~ /.*_std_.*/)\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+            "refId": "A"
+          }
+        ],
+        "title": "All processes in time frame",
+        "transformations": [
+          {
+            "disabled": true,
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*jobname=\"(.+)_iotrace.log\".*",
+              "renamePattern": "$1"
+            }
+          },
+          {
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*hostname=\"(.+)\", job.*processid=\"(.+)\".*",
+              "renamePattern": "$1, PID: $2"
+            }
+          }
+        ],
+        "type": "timeseries"
+      },
+      {
+        "collapsed": false,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 6
+        },
+        "id": 54,
+        "panels": [],
+        "title": "Dynamic Drill Down - $field",
+        "type": "row"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              }
+            },
+            "decimals": 2,
+            "links": [
+              {
+                "title": "",
+                "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}﻿&﻿${bucket:queryparam}﻿&﻿${measurement:queryparam}&${field:queryparam}﻿&var-hostname=﻿${__field.labels.hostname}﻿"
+              }
+            ],
+            "mappings": [],
+            "unit": "decbytes"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 4,
+          "x": 0,
+          "y": 7
+        },
+        "id": 43,
+        "options": {
+          "displayLabels": [
+            "name",
+            "percent"
+          ],
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLegend": true,
+            "values": [
+              "percent"
+            ]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"${field}\" and r.functionname !~ /.*_std_.*/)\r\n  |> group(columns: [\"hostname\", \"_field\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+            "refId": "A"
+          }
+        ],
+        "title": "All hosts",
+        "transformations": [
+          {
+            "disabled": true,
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*jobname=\"(.+)_iotrace.log\".*",
+              "renamePattern": "$1"
+            }
+          },
+          {
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*hostname=\"(.+)\".*",
+              "renamePattern": "Host: $1"
+            }
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              }
+            },
+            "decimals": 2,
+            "links": [
+              {
+                "title": "",
+                "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${field:queryparam}&var-processid=${__field.labels.processid}"
+              }
+            ],
+            "mappings": [],
+            "noValue": "No host selected",
+            "unit": "decbytes"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 5,
+          "x": 4,
+          "y": 7
+        },
+        "id": 40,
+        "options": {
+          "displayLabels": [
+            "name",
+            "percent"
+          ],
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLegend": true,
+            "values": [
+              "percent"
+            ]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"${field}\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+            "refId": "A"
+          }
+        ],
+        "title": "Processes of host $hostname",
+        "transformations": [
+          {
+            "disabled": true,
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*jobname=\"(.+)_iotrace.log\".*",
+              "renamePattern": "$1"
+            }
+          },
+          {
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*processid=\"(.+)\".*",
+              "renamePattern": "PID: $1"
+            }
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              }
+            },
+            "decimals": 2,
+            "links": [
+              {
+                "title": "",
+                "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${processid:queryparam}&${field:queryparam}&var-thread=${__field.labels.thread}"
+              }
+            ],
+            "mappings": [],
+            "noValue": "No process in time frame selected",
+            "unit": "decbytes"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 5,
+          "x": 9,
+          "y": 7
+        },
+        "id": 42,
+        "options": {
+          "displayLabels": [
+            "name",
+            "percent"
+          ],
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLegend": true,
+            "values": [
+              "percent"
+            ]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"${field}\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\" and r.processid == \"${processid}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\", \"thread\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"last\")",
+            "refId": "Sum"
+          }
+        ],
+        "title": "Threads of process $processid",
+        "transformations": [
+          {
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*thread=\"(.+)\".*",
+              "renamePattern": "TID: $1"
+            }
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              }
+            },
+            "decimals": 2,
+            "links": [
+              {
+                "title": "",
+                "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${processid:queryparam}&${thread:queryparam}&${field:queryparam}&var-functionname=${__field.labels.functionname}"
+              }
+            ],
+            "mappings": [],
+            "noValue": "No thread selected or no field data available",
+            "unit": "decbytes"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 5,
+          "x": 14,
+          "y": 7
+        },
+        "id": 44,
+        "options": {
+          "displayLabels": [
+            "name",
+            "percent"
+          ],
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLegend": true,
+            "values": [
+              "percent"
+            ]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"${field}\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\" and r.processid == \"${processid}\" and r.jobname == \"${jobname}\" and r.thread == \"${thread}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\", \"thread\", \"functionname\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"last\")",
+            "refId": "A"
+          }
+        ],
+        "title": "Functions of thread $thread",
+        "transformations": [
+          {
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*functionname=\"(.+)\", host.*",
+              "renamePattern": "Func: $1"
+            }
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              }
+            },
+            "decimals": 2,
+            "links": [],
+            "mappings": [],
+            "noValue": "No function selected or no field data available",
+            "unit": "decbytes"
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 10,
+          "w": 5,
+          "x": 19,
+          "y": 7
+        },
+        "id": 46,
+        "options": {
+          "displayLabels": [
+            "name",
+            "percent"
+          ],
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "showLegend": true,
+            "values": [
+              "percent"
+            ]
+          },
+          "pieType": "pie",
+          "reduceOptions": {
+            "calcs": [
+              "sum"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"${field}\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\" and r.processid == \"${processid}\" and r.jobname == \"${jobname}\" and r.thread == \"${thread}\" and r.functionname == \"${functionname}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\", \"thread\", \"functionname\", \"filename\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"last\")",
+            "refId": "A"
+          }
+        ],
+        "title": "Files used by function $functionname",
+        "transformations": [
+          {
+            "id": "renameByRegex",
+            "options": {
+              "regex": ".*filename=\"(.+)\", function.*",
+              "renamePattern": "File: $1"
+            }
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "collapsed": true,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 17
+        },
+        "id": 53,
+        "panels": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "decimals": 2,
+                "links": [
+                  {
+                    "title": "",
+                    "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}﻿&﻿${bucket:queryparam}﻿&﻿${measurement:queryparam}&${field:queryparam}﻿&var-hostname=﻿${__field.labels.hostname}﻿"
+                  }
+                ],
+                "mappings": [],
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 4,
+              "x": 0,
+              "y": 18
+            },
+            "id": 47,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": [
+                  "percent"
+                ]
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "targets": [
+              {
+                "datasource": {
+                  "type": "influxdb",
+                  "uid": "P951FEA4DE68E13C5"
+                },
+                "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"time_diff\" and r.functionname !~ /.*_std_.*/)\r\n  |> group(columns: [\"hostname\", \"_field\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+                "refId": "A"
+              }
+            ],
+            "title": "Time used by hosts",
+            "transformations": [
+              {
+                "disabled": true,
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*jobname=\"(.+)_iotrace.log\".*",
+                  "renamePattern": "$1"
+                }
+              },
+              {
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*hostname=\"(.+)\".*",
+                  "renamePattern": "Host: $1"
+                }
+              }
+            ],
+            "type": "piechart"
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "decimals": 2,
+                "links": [
+                  {
+                    "title": "",
+                    "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${field:queryparam}&var-processid=${__field.labels.processid}"
+                  }
+                ],
+                "mappings": [],
+                "noValue": "No host selected",
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 5,
+              "x": 4,
+              "y": 18
+            },
+            "id": 48,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": [
+                  "percent"
+                ]
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "targets": [
+              {
+                "datasource": {
+                  "type": "influxdb",
+                  "uid": "P951FEA4DE68E13C5"
+                },
+                "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"time_diff\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: false)\r\n  |> yield(name: \"last\")",
+                "refId": "A"
+              }
+            ],
+            "title": "Time used by processes of host $hostname",
+            "transformations": [
+              {
+                "disabled": true,
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*jobname=\"(.+)_iotrace.log\".*",
+                  "renamePattern": "$1"
+                }
+              },
+              {
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*processid=\"(.+)\".*",
+                  "renamePattern": "PID: $1"
+                }
+              }
+            ],
+            "type": "piechart"
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "decimals": 2,
+                "links": [
+                  {
+                    "title": "",
+                    "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${processid:queryparam}&${field:queryparam}&var-thread=${__field.labels.thread}"
+                  }
+                ],
+                "mappings": [],
+                "noValue": "No process in time frame selected",
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 5,
+              "x": 9,
+              "y": 18
+            },
+            "id": 49,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": [
+                  "percent"
+                ]
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "targets": [
+              {
+                "datasource": {
+                  "type": "influxdb",
+                  "uid": "P951FEA4DE68E13C5"
+                },
+                "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"time_diff\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\" and r.processid == \"${processid}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\", \"thread\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"last\")",
+                "refId": "Sum"
+              }
+            ],
+            "title": "Time used by threads of process $processid",
+            "transformations": [
+              {
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*thread=\"(.+)\".*",
+                  "renamePattern": "TID: $1"
+                }
+              }
+            ],
+            "type": "piechart"
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "decimals": 2,
+                "links": [
+                  {
+                    "title": "",
+                    "url": "http://localhost:3000/d/y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a/dynamic-drill-down?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${processid:queryparam}&${thread:queryparam}&${field:queryparam}&var-functionname=${__field.labels.functionname}"
+                  }
+                ],
+                "mappings": [],
+                "noValue": "No thread selected or no field data available",
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 5,
+              "x": 14,
+              "y": 18
+            },
+            "id": 50,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": [
+                  "percent"
+                ]
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "targets": [
+              {
+                "datasource": {
+                  "type": "influxdb",
+                  "uid": "P951FEA4DE68E13C5"
+                },
+                "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"time_diff\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\" and r.processid == \"${processid}\" and r.jobname == \"${jobname}\" and r.thread == \"${thread}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\", \"thread\", \"functionname\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"last\")",
+                "refId": "A"
+              }
+            ],
+            "title": "Time used by functions of thread $thread",
+            "transformations": [
+              {
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*functionname=\"(.+)\", host.*",
+                  "renamePattern": "Func: $1"
+                }
+              }
+            ],
+            "type": "piechart"
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "P951FEA4DE68E13C5"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "palette-classic"
+                },
+                "custom": {
+                  "hideFrom": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": false
+                  }
+                },
+                "decimals": 2,
+                "links": [],
+                "mappings": [],
+                "noValue": "No function selected or no field data available",
+                "unit": "µs"
+              },
+              "overrides": []
+            },
+            "gridPos": {
+              "h": 10,
+              "w": 5,
+              "x": 19,
+              "y": 18
+            },
+            "id": 51,
+            "options": {
+              "displayLabels": [
+                "name",
+                "percent"
+              ],
+              "legend": {
+                "displayMode": "table",
+                "placement": "bottom",
+                "showLegend": true,
+                "values": [
+                  "percent"
+                ]
+              },
+              "pieType": "pie",
+              "reduceOptions": {
+                "calcs": [
+                  "sum"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "tooltip": {
+                "mode": "single",
+                "sort": "none"
+              }
+            },
+            "targets": [
+              {
+                "datasource": {
+                  "type": "influxdb",
+                  "uid": "P951FEA4DE68E13C5"
+                },
+                "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"time_diff\" and r.functionname !~ /.*_std_.*/)\r\n  |> filter(fn: (r) => r.hostname == \"${hostname}\" and r.processid == \"${processid}\" and r.jobname == \"${jobname}\" and r.thread == \"${thread}\" and r.functionname == \"${functionname}\")\r\n  |> group(columns: [\"hostname\", \"jobname\", \"processid\", \"_field\", \"thread\", \"functionname\", \"filename\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"last\")",
+                "refId": "A"
+              }
+            ],
+            "title": "Time used for files of function $functionname",
+            "transformations": [
+              {
+                "id": "renameByRegex",
+                "options": {
+                  "regex": ".*filename=\"(.+)\", function.*",
+                  "renamePattern": "File: $1"
+                }
+              }
+            ],
+            "type": "piechart"
+          }
+        ],
+        "title": "Time only Drill Down",
+        "type": "row"
+      }
+    ],
+    "refresh": "",
+    "schemaVersion": 38,
+    "tags": [],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "hsebucket",
+            "value": "hsebucket"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "buckets()",
+          "hide": 0,
+          "includeAll": false,
+          "label": "Bucket",
+          "multi": false,
+          "name": "bucket",
+          "options": [],
+          "query": "buckets()",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "libiotrace",
+            "value": "libiotrace"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"_measurement\",\r\n  predicate: (r) => true,\r\n  start: -100d\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "measurement",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"_measurement\",\r\n  predicate: (r) => true,\r\n  start: -100d\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "Baghira",
+            "value": "Baghira"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"hostname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\",\r\n  start: -100d,\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "hostname",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"hostname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\",\r\n  start: -100d,\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "99900",
+            "value": "99900"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\",\r\n  start: -100d\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "processid",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\",\r\n  start: -100d\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "mpi_file_io2024-06-14_10-59-51_iotrace.log",
+            "value": "mpi_file_io2024-06-14_10-59-51_iotrace.log"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.processid == \"${processid}\",\r\n  start: -100d\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "jobname",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.processid == \"${processid}\",\r\n  start: -100d\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "99900",
+            "value": "99900"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"thread\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.processid == \"${processid}\",\r\n  start: -100d\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "thread",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"thread\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.processid == \"${processid}\",\r\n  start: -100d\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "write",
+            "value": "write"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"functionname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.processid == \"${processid}\" and r.thread == \"${thread}\",\r\n  start: -100d\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "label": "function",
+          "multi": false,
+          "name": "functionname",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"functionname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.processid == \"${processid}\" and r.thread == \"${thread}\",\r\n  start: -100d\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": true,
+            "text": "time_diff",
+            "value": "time_diff"
+          },
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "field",
+          "options": [
+            {
+              "selected": true,
+              "text": "time_diff",
+              "value": "time_diff"
+            },
+            {
+              "selected": false,
+              "text": "function_data_written_bytes",
+              "value": "function_data_written_bytes"
+            },
+            {
+              "selected": false,
+              "text": "function_data_read_bytes",
+              "value": "function_data_read_bytes"
+            }
+          ],
+          "query": "time_diff, function_data_written_bytes, function_data_read_bytes",
+          "queryValue": "",
+          "skipUrlSync": false,
+          "type": "custom"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": [
+        "1s",
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ]
+    },
+    "timezone": "",
+    "title": "Dynamic-Drill-Down",
+    "uid": "y6ca45e4-cd6f-4bc8-a718-01fa8ec8d26a",
+    "version": 1,
+    "weekStart": ""
+  }

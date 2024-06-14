@@ -913,17 +913,24 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
     body_labels_length = strlen(body_labels);
 
     u_int64_t current_time = gettime();
+#ifdef WRITE_INFLUX_TIMESTAMP
     int timestamp_length = COUNT_DEC_AS_CHAR(current_time);
     char timestamp[timestamp_length];
-#ifdef REALTIME
+#  ifdef REALTIME
     snprintf(timestamp, sizeof(timestamp), "%" PRIu64, current_time);
-#else
-    snprintf(timestamp, sizeof(timestamp), "%" PRIu64, system_start_time + current_time);
-#endif
+#  else
+    snprintf(timestamp, sizeof(timestamp), "%" PRIu64,
+            system_start_time + data->time_end);
+#  endif
     timestamp_length = strlen(timestamp);
+#endif
 
-    const int content_length = body_labels_length + 1 /*space*/ + body_length + 1 /*space*/ + timestamp_length;
-
+    const int content_length = body_labels_length + 1 /*space*/ + body_length
+#ifdef WRITE_INFLUX_TIMESTAMP
+                               + 1 /*space*/ + timestamp_length;
+#else
+    ;
+#endif
     const char header[] = "POST /api/v2/write?bucket=%s&precision=ns&org=%s HTTP/1.1" LINE_BREAK
                           "Host: %s:%s" LINE_BREAK
                           "Accept: */*" LINE_BREAK
@@ -931,7 +938,12 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
                           "Content-Length: %d" LINE_BREAK
                           "Content-Type: application/x-www-form-urlencoded" LINE_BREAK
                           LINE_BREAK
-                          "%s %s %s";
+                          "%s %s"
+#ifdef WRITE_INFLUX_TIMESTAMP
+                          " %s";
+#else
+    ;
+#endif
     const int message_length = strlen(header)
                                + influx_bucket_len
                                + influx_organization_len
@@ -941,13 +953,21 @@ void write_power_measurement_data_into_influxdb(struct power_measurement_data *d
                                + COUNT_DEC_AS_CHAR(content_length) /* Content-Length */
                                + body_labels_length
                                + body_length
-                               + timestamp_length;
+#ifdef WRITE_INFLUX_TIMESTAMP
+                                 + timestamp_length;
+#else
+    ;
+#endif
 
     //buffer all (header + body)
     char message[message_length + 1];
     snprintf(message, sizeof(message), header, influx_bucket, influx_organization, database_ip, database_port, influx_token,
-             content_length, body_labels, body, timestamp);
-
+             content_length, body_labels, body
+#ifdef WRITE_INFLUX_TIMESTAMP
+            , timestamp);
+#else
+    );
+#endif
 
     send_data(message, socket_peer);
 }

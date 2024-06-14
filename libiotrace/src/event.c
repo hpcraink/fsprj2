@@ -3774,7 +3774,7 @@ void rapl_measurement(void) {
             continue;
         }
 
-        LOG_DEBUG("TASK: [ %3u | %3u ] %25s -> %10lld -> %10lld", rapl_cpu_measurement_tasks[i].cpu_package, rapl_cpu_measurement_tasks[i].cpu_id, rapl_cpu_measurement_tasks[i].name, measurement_value, measurement_value - rapl_cpu_measurement_tasks[i].last_measurement_value);
+        //LOG_DEBUG("TASK: [ %3u | %3u ] %25s -> %10lld -> %10lld", rapl_cpu_measurement_tasks[i].cpu_package, rapl_cpu_measurement_tasks[i].cpu_id, rapl_cpu_measurement_tasks[i].name, measurement_value, measurement_value - rapl_cpu_measurement_tasks[i].last_measurement_value);
 
         CPUMeasurementTask task = rapl_cpu_measurement_tasks[i];
 
@@ -4092,7 +4092,7 @@ void powercap_measurement(void) {
 
 
         // [cpu_package | SUBZONE ]
-        LOG_DEBUG(" [ %3u | %3u ] TASK: %40s -> %15lld => %15lld",task.cpu_package, task.cpu_id, task.name,measurement_value, difference_to_last_value);
+        //LOG_DEBUG(" [ %3u | %3u ] TASK: %40s -> %15lld => %15lld",task.cpu_package, task.cpu_id, task.name,measurement_value, difference_to_last_value);
 
 
         struct power_measurement_data data = {

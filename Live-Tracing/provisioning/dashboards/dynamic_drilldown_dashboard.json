@@ -1043,14 +1043,14 @@
         "type": "row"
       }
     ],
-    "refresh": "",
+    "refresh": false,
     "schemaVersion": 38,
     "tags": [],
     "templating": {
       "list": [
         {
           "current": {
-            "selected": false,
+            "selected": true,
             "text": "hsebucket",
             "value": "hsebucket"
           },
@@ -1120,44 +1120,21 @@
         },
         {
           "current": {
-            "selected": false,
-            "text": "99900",
-            "value": "99900"
+            "selected": true,
+            "text": "multi_shared2024-04-04_13-56-35_iotrace.log",
+            "value": "multi_shared2024-04-04_13-56-35_iotrace.log"
           },
           "datasource": {
             "type": "influxdb",
             "uid": "P951FEA4DE68E13C5"
           },
-          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\",\r\n  start: -100d\r\n)",
-          "hide": 0,
-          "includeAll": false,
-          "multi": false,
-          "name": "processid",
-          "options": [],
-          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\",\r\n  start: -100d\r\n)",
-          "refresh": 1,
-          "regex": "",
-          "skipUrlSync": false,
-          "sort": 0,
-          "type": "query"
-        },
-        {
-          "current": {
-            "selected": false,
-            "text": "mpi_file_io2024-06-14_10-59-51_iotrace.log",
-            "value": "mpi_file_io2024-06-14_10-59-51_iotrace.log"
-          },
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.processid == \"${processid}\",\r\n  start: -100d\r\n)",
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\",\r\n  start: -100d\r\n)",
           "hide": 0,
           "includeAll": false,
           "multi": false,
           "name": "jobname",
           "options": [],
-          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.processid == \"${processid}\",\r\n  start: -100d\r\n)",
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\",\r\n  start: -100d\r\n)",
           "refresh": 1,
           "regex": "",
           "skipUrlSync": false,
@@ -1167,8 +1144,31 @@
         {
           "current": {
             "selected": false,
-            "text": "99900",
-            "value": "99900"
+            "text": "19613",
+            "value": "19613"
+          },
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\",\r\n  start: -100d\r\n)",
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "name": "processid",
+          "options": [],
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\",\r\n  start: -100d\r\n)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        },
+        {
+          "current": {
+            "selected": false,
+            "text": "19613",
+            "value": "19613"
           },
           "datasource": {
             "type": "influxdb",
@@ -1189,9 +1189,9 @@
         },
         {
           "current": {
-            "selected": false,
-            "text": "write",
-            "value": "write"
+            "selected": true,
+            "text": "fread",
+            "value": "fread"
           },
           "datasource": {
             "type": "influxdb",

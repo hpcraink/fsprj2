@@ -1,0 +1,3379 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 4,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 40,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 41,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\" and r.functionname =~ /.*MPI.*/)\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid}))\r\n  |> distinct(column: \"Prozess ID\")\r\n  |> map(fn: (r) => ({\"Prozesse\": r._value}))",
+              "refId": "A"
+            }
+          ],
+          "title": "MPI-Prozesse für Job: $jobname",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 2,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 9
+          },
+          "id": 26,
+          "maxPerRow": 4,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 100
+          },
+          "pluginVersion": "10.4.2",
+          "repeat": "ProzessID",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"${ProzessID}\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\r\n  \r\n ",
+              "refId": "A"
+            }
+          ],
+          "title": "Dauer einzelner Seek & Write Funktionen Prozess $ProzessID",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "yellow",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 17
+          },
+          "id": 43,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\n  |> filter(fn: (r) => r[\"processid\"] == \"${ProzessID}\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process ${ProzessID}",
+          "type": "barchart"
+        }
+      ],
+      "title": "MPI Variable Visuals",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 17,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 2
+          },
+          "id": 16,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_parallel_iread_export\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"4044\" or r[\"processid\"] == \"4045\" or r[\"processid\"] == \"4046\" or r[\"processid\"] == \"4047\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\")\r\n  |> map(fn: (r) => ({Datei: r.filename, \"Prozess ID\": r. processid, Offset: r._value, Funktion: r.functionname}))\r\n\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "MPI Seek Offset ",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 2
+          },
+          "id": 15,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "calcs": [],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_parallel_iread_export\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"4044\" or r[\"processid\"] == \"4045\" or r[\"processid\"] == \"4046\" or r[\"processid\"] == \"4047\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_Wait\" or r[\"functionname\"] == \"MPI_File_iread\" or r[\"functionname\"] == \"MPI_File_close\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid, \"Zeit in ns\": r._value, Funktion: r.functionname, Datei: r.filename }))\r\n  |> group(columns: [\"Funktion\"])\r\n  |> mean(column: \"Zeit in ns\")\r\n  |> group()",
+              "refId": "A"
+            }
+          ],
+          "title": "Durchschnittliche Zeit aller Prozesse in MPI-Funktionen",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Zeit in ns",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 10
+          },
+          "id": 6,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_parallel_iread_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4044\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_Wait\" or r[\"functionname\"] == \"MPI_File_iread\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Function Runtime Process 4044",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Zeit in ns",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 10
+          },
+          "id": 2,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_parallel_iread_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4045\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_Wait\" or r[\"functionname\"] == \"MPI_File_iread\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Function Runtime Process 4045",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Zeit in ns",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 17
+          },
+          "id": 13,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_parallel_iread_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4046\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_Wait\" or r[\"functionname\"] == \"MPI_File_iread\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Function Runtime Process 4046",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Zeit in ns",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 17
+          },
+          "id": 14,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_parallel_iread_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4047\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_Wait\" or r[\"functionname\"] == \"MPI_File_iread\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Function Runtime Process 4047",
+          "type": "barchart"
+        }
+      ],
+      "title": "MPI Read Parallel",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 12,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Offset",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [
+                {
+                  "options": {
+                    "4656": {
+                      "color": "dark-yellow",
+                      "index": 0,
+                      "text": "Prozess 4656"
+                    },
+                    "4657": {
+                      "color": "dark-purple",
+                      "index": 1,
+                      "text": "Prozess 4657"
+                    },
+                    "4658": {
+                      "color": "green",
+                      "index": 2,
+                      "text": "Prozess 4658"
+                    },
+                    "4659": {
+                      "color": "blue",
+                      "index": 3,
+                      "text": "Prozess 4659"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Prozess ID"
+                },
+                "properties": [
+                  {
+                    "id": "custom.axisLabel",
+                    "value": ""
+                  },
+                  {
+                    "id": "custom.axisPlacement",
+                    "value": "hidden"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 42
+          },
+          "id": 22,
+          "options": {
+            "barRadius": 0.2,
+            "barWidth": 0.8,
+            "colorByField": "Prozess ID",
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "orientation": "vertical",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            },
+            "xField": "Prozess ID",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_export\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"4656\" or r[\"processid\"] == \"4657\" or r[\"processid\"] == \"4658\" or r[\"processid\"] == \"4659\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\")\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid, Offset: r._value}))\r\n  |> group()\r\n  |> sort(columns: [\"Offset\"], desc: false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Offset der Prozesse bei MPI Seek",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 2,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 42
+          },
+          "id": 23,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 100
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_export\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"4656\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\r\n  \r\n ",
+              "refId": "A"
+            }
+          ],
+          "title": "Dauer einzelner Seek & Write Funktionen Prozess 4656",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 50
+          },
+          "id": 18,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4656\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 4656",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 50
+          },
+          "id": 21,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4657\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 4657",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 57
+          },
+          "id": 28,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4658\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 4658",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 57
+          },
+          "id": 19,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_export\")\n  |> filter(fn: (r) => r[\"processid\"] == \"4659\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 4659",
+          "type": "barchart"
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "MPI File IO",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 24,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Offset",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [
+                {
+                  "options": {
+                    "5094": {
+                      "color": "dark-yellow",
+                      "index": 0,
+                      "text": "Prozess 5094"
+                    },
+                    "5095": {
+                      "color": "dark-purple",
+                      "index": 1,
+                      "text": "Prozess 5095"
+                    },
+                    "5096": {
+                      "color": "green",
+                      "index": 2,
+                      "text": "Prozess 5096"
+                    },
+                    "5097": {
+                      "color": "blue",
+                      "index": 3,
+                      "text": "Prozess 5097"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Prozess ID"
+                },
+                "properties": [
+                  {
+                    "id": "custom.axisLabel",
+                    "value": ""
+                  },
+                  {
+                    "id": "custom.axisPlacement",
+                    "value": "hidden"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 4
+          },
+          "id": 25,
+          "options": {
+            "barRadius": 0.2,
+            "barWidth": 0.8,
+            "colorByField": "Prozess ID",
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "orientation": "vertical",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            },
+            "xField": "Prozess ID",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"5094\" or r[\"processid\"] == \"5095\" or r[\"processid\"] == \"5096\" or r[\"processid\"] == \"5097\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\")\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid, Offset: r._value}))\r\n  |> group()\r\n  |> sort(columns: [\"Offset\"], desc: false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Offset der Prozesse bei MPI Seek",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 2,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 4
+          },
+          "id": 33,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 100
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"5094\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\r\n  \r\n ",
+              "refId": "A"
+            }
+          ],
+          "title": "Dauer einzelner Seek & Write Funktionen Prozess 5094",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "id": 27,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k\")\n  |> filter(fn: (r) => r[\"processid\"] == \"5094\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 5094",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 12
+          },
+          "id": 30,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k\")\n  |> filter(fn: (r) => r[\"processid\"] == \"5095\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 5095",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 29,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k\")\n  |> filter(fn: (r) => r[\"processid\"] == \"5096\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 5096",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "id": 20,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k\")\n  |> filter(fn: (r) => r[\"processid\"] == \"5096\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 4658",
+          "type": "barchart"
+        }
+      ],
+      "title": "MPI File IO 1k Error",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 31,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Offset",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [
+                {
+                  "options": {
+                    "10241": {
+                      "color": "dark-yellow",
+                      "index": 0,
+                      "text": "Prozess 10241"
+                    },
+                    "10242": {
+                      "color": "dark-purple",
+                      "index": 1,
+                      "text": "Prozess 10242"
+                    },
+                    "10244": {
+                      "color": "green",
+                      "index": 2,
+                      "text": "Prozess 10244"
+                    },
+                    "10246": {
+                      "color": "blue",
+                      "index": 3,
+                      "text": "Prozess 10246"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Prozess ID"
+                },
+                "properties": [
+                  {
+                    "id": "custom.axisLabel",
+                    "value": ""
+                  },
+                  {
+                    "id": "custom.axisPlacement",
+                    "value": "hidden"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 5
+          },
+          "id": 32,
+          "options": {
+            "barRadius": 0.2,
+            "barWidth": 0.8,
+            "colorByField": "Prozess ID",
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "orientation": "vertical",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            },
+            "xField": "Prozess ID",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"10241\" or r[\"processid\"] == \"10242\" or r[\"processid\"] == \"10244\" or r[\"processid\"] == \"10246\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\")\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid, Offset: r._value}))\r\n  |> group()\r\n  |> sort(columns: [\"Offset\"], desc: false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Offset der Prozesse bei MPI Seek",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 2,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 5
+          },
+          "id": 42,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 100
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"10241\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\r\n  \r\n ",
+              "refId": "A"
+            }
+          ],
+          "title": "Dauer einzelner Seek & Write Funktionen Prozess 10241",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "yellow",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 13
+          },
+          "id": 34,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\n  |> filter(fn: (r) => r[\"processid\"] == \"10241\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 10241",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "purple",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 13
+          },
+          "id": 37,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\n  |> filter(fn: (r) => r[\"processid\"] == \"10242\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 10242",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 36,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\n  |> filter(fn: (r) => r[\"processid\"] == \"10244\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 10244",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 20
+          },
+          "id": 35,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\n  |> filter(fn: (r) => r[\"processid\"] == \"10246\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_open\" or r[\"functionname\"] == \"MPI_File_seek\" or r[\"functionname\"] == \"MPI_File_write\" or r[\"functionname\"] == \"MPI_File_close\")\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process 10246",
+          "type": "barchart"
+        }
+      ],
+      "title": "MPI File IO 1k Updated",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 39,
+      "panels": [],
+      "title": "MPI_File_IO Timeline Seek&Write",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 14,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "group": "A",
+                  "mode": "normal"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 38,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: 2024-05-19T07:22:25.56Z, stop: 2024-06-18T07:22:25.561Z)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"10241\" or r[\"processid\"] == \"10242\" or r[\"processid\"] == \"10244\" or r[\"processid\"] == \"10246\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\") //or r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\", \"_start\", \"_stop\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_write\")\r\n  |> map(fn:(r) => ({r with \"_value\": int(v: r[\"_value\"])}))\r\n  |> group()\r\n  |> sort(columns: [\"_time\"], desc: false)\r\n  |> drop(columns: [\"_field\", \"filename\",\"functionname\", \"thread\"])\r\n  |> rename(columns: {_time: \"Zeit\", _value: \"Bytes\"})\r\n  ",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "\r\nfrom(bucket: \"hsebucket\")\r\n  |> range(start: 2024-05-19T07:22:25.56Z, stop: 2024-06-18T07:22:25.561Z)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"mpi_file_io_1k_updated\")\r\n  |> filter(fn: (r) => r[\"processid\"] == \"10241\" or r[\"processid\"] == \"10242\" or r[\"processid\"] == \"10244\" or r[\"processid\"] == \"10246\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\") //or r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\", \"_start\", \"_stop\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\")\r\n  |> map(fn:(r) => ({r with \"_value\": int(v: r[\"_value\"])}))\r\n  |> group()\r\n  |> sort(columns: [\"_time\"], desc: false)\r\n  |> drop(columns: [\"_field\", \"filename\",\"functionname\", \"thread\"])\r\n  |> rename(columns: {_time: \"Zeit\", _value: \"Offset\"})\r\n  ",
+          "refId": "B"
+        }
+      ],
+      "title": "Seek&Write Realtime for $jobname",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "mpi_file_io_1k_updated",
+          "value": "mpi_file_io_1k_updated"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\r\n  start: -100d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "jobname",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\r\n  start: -100d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and r[\"jobname\"] == \"${jobname}\",\r\n  start: -100d\r\n)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "ProzessID",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and r[\"jobname\"] == \"${jobname}\",\r\n  start: -100d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "2024-06-06T21:29:20.573Z",
+    "to": "2024-06-06T21:29:20.685Z"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1s",
+      "5s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "libiotrace2",
+  "uid": "hf9ORu1Gk2l",
+  "version": 21,
+  "weekStart": ""
+}

@@ -82,15 +82,3 @@ int main(int argc, char* argv[]) {
     MPI_Finalize();
     return 0;
 }
-
-/*
-
- With non-blocking receives you get exactly the same behavior: then the polling loop is in the MPI_Wait call.
- - https://scicomp.stackexchange.com/questions/33892/cpu-usage-when-a-mpi-rank-waits-during-a-blocking-communication
-
-
-
-
-
-
- */

@@ -194,7 +194,7 @@ int main (int argc, char * argv[]) {
             MPI_Status status;
             // The value encodes a "unique" id per thread, so
             // maximum of threads allowed is 1000 to be able to distinguish.
-            int val = (comm_rank * 1000) + thread_me;
+            // int val = (comm_rank * 1000) + thread_me;
             
             MPI_Offset pos = (i * comm_size * thread_num + comm_rank * thread_num + thread_me) * WANT_NUM_WRITE;
             DEBUG(printf ("Rank:%d Thread:%d writing to pos:%lld\n", comm_rank, thread_num, pos));
@@ -202,8 +202,8 @@ int main (int argc, char * argv[]) {
             MPI_CHECK(MPI_File_write(fh, to_write, WANT_NUM_WRITE, MPI_CHAR, &status));
 
             int count;
-            MPI_CHECK(MPI_Get_count(&status, MPI_INT, &count));
-            if (1 != count)
+            MPI_CHECK(MPI_Get_count(&status, MPI_CHAR, &count));
+            if (WANT_NUM_WRITE != count)
                 ERROR_FATAL("count is wrong", EINVAL);
 
 #           ifdef WANT_CLEAR_CACHES
@@ -236,7 +236,7 @@ int main (int argc, char * argv[]) {
     // Check the file size using POSIX calls.
     struct stat file_stat;
     stat ("mpi_file_io.txt", &file_stat);
-    off_t expected_size = (off_t)max_iterations * comm_size * thread_num * sizeof(int);
+    off_t expected_size = (off_t)max_iterations * comm_size * thread_num * WANT_NUM_WRITE;
     if (file_stat.st_size != expected_size)  {
         fprintf(stderr, "ERROR: expected file size to be %lld Bytes but instead file size is %lld Bytes.\n", (long long int) expected_size, (long long int) file_stat.st_size);
     }

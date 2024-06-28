@@ -4102,7 +4102,7 @@ void powercap_measurement(void) {
                 (int)task.cpu_id,
                 task.name,
                 (int)task.type,
-                (difference_to_last_value),
+                (difference_to_last_value/1000000), // microjoule 1 to joule 0,000001
                 0,
                 measurement_value,
         };

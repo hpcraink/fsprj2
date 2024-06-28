@@ -4018,14 +4018,14 @@ int powercap_init(int cpu_family, int cpu_model) {
                 // not a valid pkg event path so continue
                 if (access(event_path, R_OK) == -1) { continue; }
 
-                str_err=snprintf(read_buff, MAX_STR_LEN, "SUBZONE_%s", component_event_names[event_id]);
+                str_err=snprintf(read_buff, MAX_STR_LEN, "SUBZONE_%d_%s", sub_zone_id, component_event_names[event_id]);
                 read_buff[sizeof(event_path)-1]=0;
                 if (str_err > sizeof(event_path)) {
                     LOG_ERROR_AND_DIE("overflow in path name in read_buff");
                 };
 
                 power_measurement_create_task(&powercap_cpu_measurement_tasks[powercap_cpu_measurement_tasks_count],
-                                              sub_zone_id, // TODO: Zone as cpu_id
+                                              0,
                                               cpu_package_id,
                                               read_buff,
                                               event_id, /*offset in pkg_sys_flags, pkg_sys_names or pkg_event_names array*/

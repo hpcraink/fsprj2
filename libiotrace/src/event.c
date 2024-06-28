@@ -3798,7 +3798,7 @@ void rapl_measurement(void) {
                 task.name,
                 (int)task.type,
                 difference_to_last_value,
-                rapl_convert_energy(data.type, difference_to_last_value),
+                rapl_convert_energy(data.type, difference_to_last_value) / 1000000000.0, //convert von giga joule to joule
                 measurement_value,
         };
         write_power_measurement_data_into_influxdb(&data, METHOD_RAPL);

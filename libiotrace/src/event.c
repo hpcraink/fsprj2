@@ -3551,11 +3551,14 @@ int rapl_init(int cpu_family, int cpu_model) {
     for (unsigned int cpu_package = 0; cpu_package < cpu_info->package_count; ++cpu_package) {
         const unsigned int cpu_package_id = cpu_info->cpu_packages[cpu_package].id;
 
+
 # ifdef ENABLE_POWER_MEASUREMENT_RAPL_PER_CORE
         for (unsigned int cpu_index = 0; cpu_index < cpu_info->cpu_packages[cpu_package].number_cpu_count; ++cpu_index) {
             const unsigned int cpu_id = cpu_info->cpu_packages[cpu_package].cpu_ids[cpu_index];
 # else
-            const unsigned int cpu_id = 0;
+        const unsigned int cpu_id = cpu_info->cpu_packages[cpu_package].cpu_ids[0];
+        LOG_DEBUG("###### cpu_package: %u -> CPU ID: %u", cpu_package, cpu_id);
+
 #endif
 
             if (cpu_family == CPU_INTEL) {
@@ -3753,7 +3756,7 @@ int rapl_open_file(unsigned int offset) {
             rapl_fd_array[offset].file_descriptor = fd;
             rapl_fd_array[offset].open = 1;
 
-            LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, filename);
+            //LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, filename);
         } else {
             LOG_ERROR_AND_DIE("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /dev/cpu/*/msr'",offset, filename, fd, errno);
         }
@@ -4121,7 +4124,7 @@ int powercap_open_file(unsigned int offset) {
             powercap_fd_array[offset].file_descriptor = fd;
             powercap_fd_array[offset].open = 1;
 
-            LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, pwoercap_file_path_array[offset]);
+            //LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, pwoercap_file_path_array[offset]);
         } else {
             LOG_ERROR_AND_DIE("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /sys/class/powercap/intel-rapl:<package_id>/'", offset,pwoercap_file_path_array[offset] , fd, errno);
         }

@@ -48,6 +48,7 @@
 #include <fcntl.h>
 
 #include <execinfo.h>
+#include <mpi.h>
 
 #include "common/error.h"
 
@@ -3245,6 +3246,14 @@ uint64_t last_time = 0;
 char print_buffer[BUFSIZ];
 
 void power_measurement_init(void) {
+
+    LOG_DEBUG("power_measurement_init");
+
+#ifdef WITH_MPI_IO
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    LOG_DEBUG("MPI RANK: %d ", rank);
+#endif
 
     last_time = gettime();
 

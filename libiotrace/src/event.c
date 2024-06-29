@@ -3364,7 +3364,7 @@ void power_measurement_load_cpu_info(void) {
             LOG_ERROR_AND_DIE("Error by reading CPU Physical Package Number from CPUId [Read Count: %4d]: %4d", num_read, cpu_id);
             return;
         }
-        LOG_DEBUG("INFO CPU Package (CPU %d): %d", cpu_id, package);
+        //LOG_DEBUG("INFO CPU Package (CPU %d): %d", cpu_id, package);
 
         cpu_info->cpu_count++;
 
@@ -3557,7 +3557,7 @@ int rapl_init(int cpu_family, int cpu_model) {
             const unsigned int cpu_id = cpu_info->cpu_packages[cpu_package].cpu_ids[cpu_index];
 # else
         const unsigned int cpu_id = cpu_info->cpu_packages[cpu_package].cpu_ids[0];
-        LOG_DEBUG("###### cpu_package: %u -> CPU ID: %u", cpu_package, cpu_id);
+        LOG_DEBUG("Use for cpu_package %u cpi_id %u.", cpu_package, cpu_id);
 
 #endif
 
@@ -3804,7 +3804,14 @@ void rapl_measurement(void) {
                 rapl_convert_energy(data.type, difference_to_last_value) / 1000000000.0, //convert von giga joule to joule
                 measurement_value,
         };
+
+#ifdef IOTRACE_ENABLE_LOGFILE
+        //TODO: write value to file?
+        LOG_DEBUG("RAPL data: %d", data.measurement_convert_value);
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
         write_power_measurement_data_into_influxdb(&data, METHOD_RAPL);
+#endif
 
         rapl_cpu_measurement_tasks[i].last_measurement_value = measurement_value;
     }
@@ -4109,7 +4116,14 @@ void powercap_measurement(void) {
                 0,
                 measurement_value,
         };
+
+#ifdef IOTRACE_ENABLE_LOGFILE
+        //TODO: write value to file?
+        LOG_DEBUG("POWERCAP data: %d", data.measurement_convert_value);
+#endif
+#ifdef IOTRACE_ENABLE_INFLUXDB
         write_power_measurement_data_into_influxdb(&data, METHOD_POWERCAP);
+#endif
 
         powercap_cpu_measurement_tasks[event_id].last_measurement_value = measurement_value;
 

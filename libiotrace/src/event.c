@@ -3249,9 +3249,10 @@ void power_measurement_init(void) {
 
     LOG_DEBUG("power_measurement_init");
 
+//#define WITH_MPI_IO
 #ifdef WITH_MPI_IO
     int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    CALL_REAL_MPI_FUNCTION(MPI_Comm_rank)(MPI_COMM_WORLD, &rank);
     LOG_DEBUG("MPI RANK: %d ", rank);
 #endif
 

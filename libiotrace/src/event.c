@@ -3264,7 +3264,7 @@ void power_measurement_init(void) {
 #endif
 }
 
-#define WITH_MPI_IO
+//#define WITH_MPI_IO
 
 #ifdef WITH_MPI_IO
 static pthread_mutex_t mpi_init_lock;

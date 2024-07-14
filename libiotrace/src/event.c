@@ -3246,17 +3246,6 @@ uint64_t last_time = 0;
 char print_buffer[BUFSIZ];
 
 void power_measurement_init(void) {
-
-    LOG_DEBUG("power_measurement_init");
-
-
-#ifdef WITH_MPI_IO
-    int rank;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    LOG_DEBUG("MPI RANK: %d ", rank);
-#endif
-
     last_time = gettime();
 
     int cpu_family = 0;
@@ -3275,7 +3264,38 @@ void power_measurement_init(void) {
 #endif
 }
 
+//#define WITH_MPI_IO
+
+#ifdef WITH_MPI_IO
+static pthread_mutex_t mpi_init_lock;
+
+int has_mpi_init = 0;
+
+#endif
+
 void power_measurement_step(void) {
+
+#ifdef WITH_MPI_IO
+
+    if (has_mpi_init == 0) {
+        pthread_mutex_lock(&mpi_init_lock);
+            if (has_mpi_init == 0) {
+                int rank;
+
+                MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+                LOG_DEBUG("--- MPI RANK: %d ", rank);
+            }
+            has_mpi_init = 1;
+        pthread_mutex_unlock(&mpi_init_lock);
+
+
+    }
+
+
+
+#endif
+
+
     uint64_t diff = gettime() - last_time;
     if (diff > POWER_MEASUREMENT_INTERVAL) {
 

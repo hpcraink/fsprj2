@@ -3264,7 +3264,7 @@ void power_measurement_init(void) {
 #endif
 }
 
-//#define WITH_MPI_IO
+#define WITH_MPI_IO
 
 #ifdef WITH_MPI_IO
 static pthread_mutex_t mpi_init_lock;
@@ -3280,6 +3280,8 @@ void power_measurement_step(void) {
     if (has_mpi_init == 0) {
         pthread_mutex_lock(&mpi_init_lock);
             if (has_mpi_init == 0) {
+                MPI_Init(NULL, NULL);
+
                 int rank;
 
                 MPI_Comm_rank(MPI_COMM_WORLD, &rank);

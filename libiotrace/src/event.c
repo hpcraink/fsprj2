@@ -3270,6 +3270,9 @@ void power_measurement_init(void) {
 static pthread_mutex_t mpi_init_lock;
 
 int has_mpi_init = 0;
+int mpi_world_rank = -1;
+int mpi_node_rank = -1;
+MPI_Comm node_comm;
 
 #endif
 
@@ -3277,20 +3280,23 @@ void power_measurement_step(void) {
 
 #ifdef WITH_MPI_IO
     if (has_mpi_init == 0) {
-        LOG_DEBUG("Try to chck is MPI init.\n");
         int initialized = 0;
         MPI_Initialized(&initialized);
         if (!initialized) {
-            LOG_DEBUG("MPI has not init -> %d.\n", initialized);
+            LOG_DEBUG("MPI has not init, wait for inti and send all Data to Influx -> %d.\n", initialized);
         } else {
-            LOG_DEBUG("MPI has init -> %d.\n", initialized);
             pthread_mutex_lock(&mpi_init_lock);
                 if (has_mpi_init == 0) {
 
-                    int rank;
+                    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_world_rank);
+                    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &node_comm);
+                    MPI_Comm_rank(node_comm, &mpi_node_rank);
 
-                    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-                    LOG_DEBUG("--- MPI RANK: %d ", rank);
+                    if (mpi_node_rank == 0) {
+                        LOG_DEBUG("Hostname: %s, World Rank: %d\n", hostname, mpi_world_rank);
+                        LOG_DEBUG("Hostname: %s, Node Rank: %d\n", hostname, mpi_node_rank);
+                    }
+
                 }
                 has_mpi_init = 1;
             pthread_mutex_unlock(&mpi_init_lock);
@@ -3298,19 +3304,24 @@ void power_measurement_step(void) {
     }
 #endif
 
-
-    uint64_t diff = gettime() - last_time;
-    if (diff > POWER_MEASUREMENT_INTERVAL) {
+#ifdef WITH_MPI_IO
+    if (mpi_node_rank == 0) {
+#endif
+        uint64_t diff = gettime() - last_time;
+        if (diff > POWER_MEASUREMENT_INTERVAL) {
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
-        rapl_measurement();
+            rapl_measurement();
 #endif
 
 #ifdef  ENABLE_POWER_MEASUREMENT_POWERCAP
-        powercap_measurement();
+            powercap_measurement();
 #endif
-        last_time = gettime();
+            last_time = gettime();
+        }
+#ifdef WITH_MPI_IO
     }
+#endif
 }
 
 void power_measurement_cleanup(void) {

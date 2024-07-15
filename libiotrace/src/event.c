@@ -3303,9 +3303,6 @@ void power_measurement_step(void) {
     }
 #endif
 
-#ifdef WITH_MPI_IO
-    if (mpi_node_rank == 0) {
-#endif
         uint64_t diff = gettime() - last_time;
         if (diff > POWER_MEASUREMENT_INTERVAL) {
 
@@ -3318,9 +3315,6 @@ void power_measurement_step(void) {
 #endif
             last_time = gettime();
         }
-#ifdef WITH_MPI_IO
-    }
-#endif
 }
 
 void power_measurement_cleanup(void) {
@@ -4184,7 +4178,7 @@ int powercap_open_file(unsigned int offset) {
 
             //LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, pwoercap_file_path_array[offset]);
         } else {
-            LOG_ERROR_AND_DIE("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /sys/class/powercap/intel-rapl:<package_id>/'", offset,pwoercap_file_path_array[offset] , fd, errno);
+            LOG_WARN("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /sys/class/powercap/intel-rapl:<package_id>/'", offset,pwoercap_file_path_array[offset] , fd, errno);
         }
     } else {
         fd = powercap_fd_array[offset].file_descriptor;

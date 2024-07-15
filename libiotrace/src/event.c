@@ -3276,25 +3276,24 @@ int has_mpi_init = 0;
 void power_measurement_step(void) {
 
 #ifdef WITH_MPI_IO
-
     if (has_mpi_init == 0) {
-        pthread_mutex_lock(&mpi_init_lock);
-            if (has_mpi_init == 0) {
-                MPI_Init(NULL, NULL);
+        int initialized = 0;
+        MPI_Initialized(&initialized);
+        if (!initialized) {
+            LOG_DEBUG("MPI ist noch nicht initialisiert.\n");
+        } else {
+            pthread_mutex_lock(&mpi_init_lock);
+                if (has_mpi_init == 0) {
 
-                int rank;
+                    int rank;
 
-                MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-                LOG_DEBUG("--- MPI RANK: %d ", rank);
-            }
-            has_mpi_init = 1;
-        pthread_mutex_unlock(&mpi_init_lock);
-
-
+                    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+                    LOG_DEBUG("--- MPI RANK: %d ", rank);
+                }
+                has_mpi_init = 1;
+            pthread_mutex_unlock(&mpi_init_lock);
+        }
     }
-
-
-
 #endif
 
 

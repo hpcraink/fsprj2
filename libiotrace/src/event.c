@@ -3264,7 +3264,7 @@ void power_measurement_init(void) {
 #endif
 }
 
-//#define WITH_MPI_IO
+#define WITH_MPI_IO
 
 #ifdef WITH_MPI_IO
 static pthread_mutex_t mpi_init_lock;
@@ -3277,11 +3277,13 @@ void power_measurement_step(void) {
 
 #ifdef WITH_MPI_IO
     if (has_mpi_init == 0) {
+        LOG_DEBUG("Try to chck is MPI init.\n");
         int initialized = 0;
         MPI_Initialized(&initialized);
         if (!initialized) {
-            LOG_DEBUG("MPI ist noch nicht initialisiert.\n");
+            LOG_DEBUG("MPI has not init -> %d.\n", initialized);
         } else {
+            LOG_DEBUG("MPI has init -> %d.\n", initialized);
             pthread_mutex_lock(&mpi_init_lock);
                 if (has_mpi_init == 0) {
 

@@ -3278,7 +3278,7 @@ MPI_Comm node_comm;
 void power_measurement_step(void) {
 
 #ifdef WITH_MPI_IO
-    if (has_mpi_init == 0 && 1 == 0) {
+    if (has_mpi_init == 0) {
         int initialized = 0;
         MPI_Initialized(&initialized);
         if (!initialized) {
@@ -3287,9 +3287,15 @@ void power_measurement_step(void) {
             pthread_mutex_lock(&mpi_init_lock);
                 if (has_mpi_init == 0) {
 
-                    MPI_Comm_rank(MPI_COMM_WORLD, &mpi_world_rank);
-                    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &node_comm);
-                    MPI_Comm_rank(node_comm, &mpi_node_rank);
+                    if (MPI_Comm_rank(MPI_COMM_WORLD, &mpi_world_rank) != MPI_SUCCESS) {
+                        LOG_DEBUG("Error in MPI_Comm_rank: %s\n", strerror(errno));
+                    }
+                    if (MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &node_comm) != MPI_SUCCESS) {
+                        LOG_DEBUG("Error in MPI_Comm_split_type: %s\n", strerror(errno));
+                    }
+                    if (MPI_Comm_rank(node_comm, &mpi_node_rank) != MPI_SUCCESS) {
+                        LOG_DEBUG("Error in MPI_Comm_rank (node_comm): %s\n", strerror(errno));
+                    }
 
                     if (mpi_node_rank == 0) {
                         LOG_DEBUG("Hostname: %s, World Rank: %d\n", hostname, mpi_world_rank);

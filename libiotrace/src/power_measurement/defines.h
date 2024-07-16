@@ -160,7 +160,6 @@ static mode_t   pkg_sys_flags[PKG_NUM_EVENTS]  = {O_RDONLY, O_RDONLY, O_RDONLY, 
 static int   component_events[COMPONENT_NUM_EVENTS]      = {COMPONENT_ENERGY, COMPONENT_MAX_ENERGY_RANGE, COMPONENT_MAX_POWER_A, COMPONENT_POWER_LIMIT_A, COMPONENT_TIME_WINDOW_A, COMPONENT_ENABLED, COMPONENT_NAME};
 static char *component_event_names[COMPONENT_NUM_EVENTS] = {"ENERGY_UJ", "MAX_ENERGY_RANGE_UJ", "MAX_POWER_A_UW", "POWER_LIMIT_A_UW", "TIME_WINDOW_A_US", "ENABLED", "NAME"};
 static char *component_sys_names[COMPONENT_NUM_EVENTS]         = {"energy_uj", "max_energy_range_uj", "constraint_0_max_power_uw", "constraint_0_power_limit_uw", "constraint_0_time_window_us", "enabled", "name"};
-static mode_t   component_sys_flags[COMPONENT_NUM_EVENTS]      = {O_RDONLY, O_RDONLY, O_RDONLY, O_RDWR, O_RDONLY, O_RDONLY, O_RDONLY};
 
 #define POWERCAP_MAX_COUNTERS (3 * (PKG_NUM_EVENTS + (3 * COMPONENT_NUM_EVENTS)))
 

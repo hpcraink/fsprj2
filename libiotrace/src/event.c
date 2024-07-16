@@ -3285,7 +3285,7 @@ void power_measurement_step(void) {
         int initialized = 0;
         MPI_Initialized(&initialized);
         if (!initialized) {
-            LOG_DEBUG("MPI has not init, wait for init and send all Data to Influx -> %d.\n", initialized);
+            //LOG_DEBUG("MPI has not init, wait for init and send all Data to Influx -> %d.\n", initialized);
         } else {
             pthread_mutex_lock(&mpi_init_lock);
                 if (has_mpi_init == 0) {
@@ -3315,10 +3315,6 @@ void power_measurement_step(void) {
 #endif
         uint64_t diff = gettime() - last_time;
         if (diff > POWER_MEASUREMENT_INTERVAL) {
-
-#ifdef WITH_MPI_IO
-            LOG_DEBUG("RUN STEP on Hostname: %s, World Rank: %d. Node Rank: %d\n", hostname,mpi_world_rank, mpi_node_rank);
-#endif
 
 #ifdef  ENABLE_POWER_MEASUREMENT_RAPL
             rapl_measurement();

@@ -3309,6 +3309,10 @@ void power_measurement_step(void) {
     }
 #endif
 
+#ifdef WITH_MPI_IO
+    if (mpi_node_rank == 0 || mpi_node_rank == -1) {
+        LOG_DEBUG("RUN STEP on Hostname: %s, World Rank: %d. Node Rank: %d\n", hostname,mpi_world_rank, mpi_node_rank);
+#endif
         uint64_t diff = gettime() - last_time;
         if (diff > POWER_MEASUREMENT_INTERVAL) {
 
@@ -3321,6 +3325,9 @@ void power_measurement_step(void) {
 #endif
             last_time = gettime();
         }
+#ifdef WITH_MPI_IO
+    }
+#endif
 }
 
 void power_measurement_cleanup(void) {

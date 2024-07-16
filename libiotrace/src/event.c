@@ -3245,6 +3245,9 @@ CpuInfo *cpu_info = NULL;
 uint64_t last_time = 0;
 char print_buffer[BUFSIZ];
 
+//TODO: reploace if has flaot datatypes
+uint joule_scale_factor = 1e+9;  /*convert von joule to nanojoule*/
+
 void power_measurement_init(void) {
     last_time = gettime();
 
@@ -3852,7 +3855,7 @@ void rapl_measurement(void) {
                 task.name,
                 (int)task.type,
                 difference_to_last_value,
-                rapl_convert_energy(data.type, difference_to_last_value) / 1000000000.0, //convert von giga joule to joule
+                rapl_convert_energy(data.type, difference_to_last_value) / 1000000000.0 /*convert von giga joule to joule*/ * joule_scale_factor,
                 measurement_value,
         };
 
@@ -4163,7 +4166,7 @@ void powercap_measurement(void) {
                 (int)task.cpu_id,
                 task.name,
                 (int)task.type,
-                (difference_to_last_value/1000000), // microjoule 1 to joule 0,000001
+                (difference_to_last_value/1000000) /* microjoule 1 to joule 0,000001 */ * joule_scale_factor,
                 0,
                 measurement_value,
         };

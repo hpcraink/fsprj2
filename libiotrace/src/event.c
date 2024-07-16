@@ -4185,7 +4185,8 @@ void powercap_measurement(void) {
 int powercap_open_file(unsigned int offset) {
     int fd = 0;
     if (powercap_fd_array[offset].open == 0) {
-        fd = CALL_REAL_POSIX_SYNC(open)(pwoercap_file_path_array[offset], O_SYNC|component_sys_flags[powercap_cpu_measurement_tasks[offset].offset_in_file]);
+        fd = CALL_REAL_POSIX_SYNC(open)(pwoercap_file_path_array[offset], O_SYNC|O_RDONLY);
+        //fd = CALL_REAL_POSIX_SYNC(open)(pwoercap_file_path_array[offset], O_SYNC|component_sys_flags[powercap_cpu_measurement_tasks[offset].offset_in_file]);
         if (fd > 0) {
             powercap_fd_array[offset].file_descriptor = fd;
             powercap_fd_array[offset].open = 1;

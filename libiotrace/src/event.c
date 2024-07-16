@@ -3245,7 +3245,7 @@ CpuInfo *cpu_info = NULL;
 uint64_t last_time = 0;
 char print_buffer[BUFSIZ];
 
-//TODO: reploace if has flaot datatypes
+//TODO: replace if has flaot datatypes
 uint joule_scale_factor = 1e+9;  /*convert von joule to nanojoule*/
 
 void power_measurement_init(void) {
@@ -3285,11 +3285,10 @@ void power_measurement_step(void) {
         int initialized = 0;
         MPI_Initialized(&initialized);
         if (!initialized) {
-            LOG_DEBUG("MPI has not init, wait for inti and send all Data to Influx -> %d.\n", initialized);
+            LOG_DEBUG("MPI has not init, wait for init and send all Data to Influx -> %d.\n", initialized);
         } else {
             pthread_mutex_lock(&mpi_init_lock);
                 if (has_mpi_init == 0) {
-
                     if (MPI_Comm_rank(MPI_COMM_WORLD, &mpi_world_rank) != MPI_SUCCESS) {
                         LOG_DEBUG("Error in MPI_Comm_rank: %s\n", strerror(errno));
                     }
@@ -3304,7 +3303,6 @@ void power_measurement_step(void) {
                         LOG_DEBUG("Hostname: %s, World Rank: %d\n", hostname, mpi_world_rank);
                         LOG_DEBUG("Hostname: %s, Node Rank: %d\n", hostname, mpi_node_rank);
                     }
-
                 }
                 has_mpi_init = 1;
             pthread_mutex_unlock(&mpi_init_lock);
@@ -4166,7 +4164,7 @@ void powercap_measurement(void) {
                 (int)task.cpu_id,
                 task.name,
                 (int)task.type,
-                (difference_to_last_value/1000000) /* microjoule 1 to joule 0,000001 */ * joule_scale_factor,
+                (difference_to_last_value/1000000.0) /* microjoule 1 to joule 0,000001 */ * joule_scale_factor,
                 0,
                 measurement_value,
         };

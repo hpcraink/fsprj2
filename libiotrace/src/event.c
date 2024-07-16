@@ -4194,7 +4194,7 @@ int powercap_open_file(unsigned int offset) {
 
             //LOG_DEBUG("Open File %3d: %3u => %s", fd, offset, pwoercap_file_path_array[offset]);
         } else {
-            LOG_WARN("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nRUN 'chmod 666 /sys/class/powercap/intel-rapl:<package_id>/'", offset,pwoercap_file_path_array[offset] , fd, errno);
+            LOG_WARN("\n\n\n-------ERROR------\nCant open File for id: %3u\nFile: %s\nFile Descriptor: %d (%d)\nFlags: %d", offset, pwoercap_file_path_array[offset] , fd, errno, O_SYNC|component_sys_flags[powercap_cpu_measurement_tasks[offset].offset_in_file]);
         }
     } else {
         fd = powercap_fd_array[offset].file_descriptor;

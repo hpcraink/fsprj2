@@ -29,6 +29,16 @@ else
 fi
 echo "OpenFOAM installed"
 
+# install code saturne
+code_saturne_install_script="$(dirname "$0")/../install/build_code_saturne.sh"
+if [ -f ${code_saturne_install_script} ]; then
+    (source ${code_saturne_install_script})
+else
+    echo "file ${code_saturne_install_script} does not exist"
+    exit
+fi
+echo "code saturne installed"
+
 # create working dir
 working_dir="${PWD}/scripts"
 mkdir -p "${working_dir}"

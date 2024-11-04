@@ -1,5 +1,6 @@
 export INFLUXDB_CACHE=".influxdbv2"
-export INFLUXDB_NAME="influxdb2-2.0.6-linux-amd64"
+#export INFLUXDB_NAME="influxdb2-2.0.6-linux-amd64"
+export INFLUXDB_NAME="influxdb2-2.7.5-linux-amd64"
 INFLUXDB_URL="https://dl.influxdata.com/influxdb/releases"
 
 export IOTRACE_INFLUX_PORT=8086

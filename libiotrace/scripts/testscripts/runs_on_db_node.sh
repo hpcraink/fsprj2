@@ -5,9 +5,21 @@ rm -f ~/${INFLUXDB_CACHE}/configs
 
 # copy a influxDB to the local filesystem of the DB-node
 cp -r ${2} $TMP
-mkdir $TMP/${INFLUXDB_CACHE}
+CACHE="$TMP/${INFLUXDB_CACHE}"
+#CACHE="/run/user/`id -u`/${INFLUXDB_CACHE}"
+mkdir ${CACHE}
+
 # configure and start the infuxDB
-cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=$TMP/${INFLUXDB_CACHE}/influxd.bolt --engine-path=$TMP/${INFLUXDB_CACHE}/engine --storage-wal-fsync-delay=60s &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --storage-wal-fsync-delay=40ms &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --http-idle-timeout=0 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=1024 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=524288 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=2097152 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=4194304 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=8388608 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=1073741824 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+#cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
 
 # get local ip
 #ifconfig
@@ -33,8 +45,10 @@ rm -f ${3}/ib0_${1}
 echo "$influx_host_ip" &> ${3}/ib0_${1}
 
 # sleep until test finished
+TCP_MEM_FILE=${3}/$(date '+%Y-%m-%d_%H-%M')_log_TCP_mem_${1}
 until [ -e ${3}/finished_${1} ]; do
-    sleep 30
+    sleep 1
+    echo "$(date +%T),$(grep TCP /proc/net/sockstat | grep -o '[^ ]\+$')" >> ${TCP_MEM_FILE}
 done
 
 # make a backup of influsDB
@@ -42,7 +56,7 @@ cd $TMP/${INFLUXDB_NAME}/ && ./influx backup ${3}/influxdb_backup/$(date '+%Y-%m
 
 # remove influxDB
 echo "remove influxDB"
-rm -rf $TMP/${INFLUXDB_CACHE}
+rm -rf ${CACHE}
 rm -rf $TMP/${INFLUXDB_NAME}/
 
 # signal main script: influxDB backup finished

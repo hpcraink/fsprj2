@@ -1,0 +1,45 @@
+# dependencies
+test_source_configs=("influxdb" "gcc_mpi" "openfoam_com_2106")
+test_source=("${test_openfoam_dir}/etc/bashrc")
+test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
+test_file_url=("https://bwsyncandshare.kit.edu/s/MQfkypzfHfmZZtM/download VirgilioRe22Pr7_Perfomance.zip")
+test_unzip_files=("VirgilioRe22Pr7_Perfomance.zip")
+
+# libiotrace
+test_libiotrace_cmake_options=(
+-DALL_WRAPPERS_ACTIVE=ON
+-DENABLE_FILESYSTEM_METADATA=OFF
+-DENABLE_OUTPUT=INFLUXDB
+-DENABLE_REMOTE_CONTROL=OFF
+-DFILENAME_RESOLUTION_ENABLED=OFF
+-DLOGGING=OFF
+-DLOG_WRAPPER_TIME=OFF
+-DREALTIME=ON
+-DSENDING=ON
+-DWITH_ALLOC=OFF
+-DWITH_DL_IO=OFF
+-DWITH_MPI_IO=OFF
+-DWITH_POSIX_AIO=OFF
+-DWITH_POSIX_IO=ON
+-DWITH_STD_IO=OFF
+)
+
+# slurm
+test_nodes=2
+test_processes_per_worker=64
+export test_processes_per_influxdb=60
+test_mem="249600mb"
+test_time="00:30:00"
+test_queue_name="dev_multiple_il"
+
+# test script
+test_script="./openFOAM_VirgilioRe22Pr7_Perfomance_all_posix.sh"
+export test_source_dir="${PWD}/VirgilioRe22Pr7_Perfomance"
+export test_source_1="${test_source_dir}/1"
+export test_source_constant="${test_source_dir}/constant"
+export test_source_system="${test_source_dir}/system"
+export test_end_time=1.001
+
+# output
+test_name="3_nodes_VirgilioRe22Pr7_Perfomance"
+export IOTRACE_LOG_NAME=openFOAM_VirgilioRe22Pr7_Perfomance_test1

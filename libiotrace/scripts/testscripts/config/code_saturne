@@ -1,15 +1,24 @@
 CODE_SATURNE_VERSION="8.2.0"
 CODE_SATURNE_SOURCE_URL="https://codeload.github.com/code-saturne/code_saturne/tar.gz/refs/tags/v${CODE_SATURNE_VERSION}"
 CODE_SATURNE_SOURCE_FILE="code_saturne-${CODE_SATURNE_VERSION}.tar.gz"
-CODE_SATURNE_SOURCE_DIR="code_saturne-${CODE_SATURNE_VERSION}"
-CODE_SATURNE_INSTALL_DIR="code_saturne-${CODE_SATURNE_VERSION}_build"
+export CODE_SATURNE_SOURCE_DIR="code_saturne-${CODE_SATURNE_VERSION}"
+export CODE_SATURNE_INSTALL_DIR="code_saturne-${CODE_SATURNE_VERSION}_build"
 
 CODE_SATURNE_GNU_VERSION="14.1"
 CODE_SATURNE_PYTHON_VERSION="3.11"
 CODE_SATURNE_OPENMPI_VERSION="4.1"
 CODE_SATURNE_PYQT_VERSION="5.15.9"
-CODE_SATURNE_MINICONDA_VERSION="23.9.0-py3.9.15-bwHPC-channel"
+export CODE_SATURNE_MINICONDA_VERSION="23.9.0-py3.9.15-bwHPC-channel"
 
-CODE_SATURNE_CONDA_ENV=${CODE_SATURNE_INSTALL_DIR}/code_saturne_conda_env
+export CODE_SATURNE_CONDA_ENV=${CODE_SATURNE_INSTALL_DIR}/code_saturne_conda_env
 
 CODE_SATURNE_MEDFILE_URL="https://www.code-saturne.org/releases/external/"
+
+export CODE_SATURNE_STUDY_NAME="damaris_test"
+export CODE_SATURNE_CASE_NAME="case1"
+export CODE_SATURNE_MESH_FILE="mesh_cube_unit_side_64_64_2048_1.med"
+export CODE_SATURNE_RESULT_DIR="tmp"
+
+#export CODE_SATURNE_IO_METHOD="mpi collective"
+export CODE_SATURNE_IO_METHOD="mpi noncollective"
+#export CODE_SATURNE_IO_METHOD="mpi independent"

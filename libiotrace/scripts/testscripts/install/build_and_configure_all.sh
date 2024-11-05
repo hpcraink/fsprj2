@@ -39,6 +39,16 @@ else
 fi
 echo "code saturne installed"
 
+# install salome
+salome_install_script="$(dirname "$0")/../install/build_salome.sh"
+if [ -f ${salome_install_script} ]; then
+    (source ${salome_install_script})
+else
+    echo "file ${salome_install_script} does not exist"
+    exit
+fi
+echo "salome installed"
+
 # create working dir
 working_dir="${PWD}/scripts"
 mkdir -p "${working_dir}"

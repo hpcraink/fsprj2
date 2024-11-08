@@ -27,6 +27,7 @@ if [ ! -d ${CODE_SATURNE_STUDY_NAME} ]; then
     sed -i "s;<iterations>200</iterations>;<iterations>100</iterations>;g" ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}/DATA/setup.xml
     sed -i "s;<read_method>stdio serial</read_method>;<read_method>${CODE_SATURNE_IO_METHOD}</read_method>;g" ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}/DATA/setup.xml
     sed -i "s;<write_method>stdio serial</write_method>;<write_method>${CODE_SATURNE_IO_METHOD}</write_method>;g" ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}/DATA/setup.xml
+    sed -i "s;<iterations>100</iterations>;<iterations>${CODE_SATURNE_ITERATIONS}</iterations>;g" ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}/DATA/setup.xml
 fi
 
 echo "    create result directory"
@@ -35,6 +36,9 @@ export OMP_NUM_THREADS=${test_threads_per_process}
 cd ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}
 ${base_path}/${CODE_SATURNE_INSTALL_DIR}/${CODE_SATURNE_SOURCE_DIR}/arch/Linux_x86_64/bin/code_saturne run --stage --initialize --nprocs ${PROCESS_COUNT} --id ${CODE_SATURNE_RESULT_DIR}
 cd RESU/${CODE_SATURNE_RESULT_DIR}
+
+# library search path for dependencies (sourced from generated script)
+source <(grep "export LD_LIBRARY_PATH" run_solver)
 
 #####################################################
 
@@ -49,5 +53,5 @@ MPI_LIBIOTRACE_WITH_ENV="-x "${LIBIOTRACE_WITH_ENV// / -x }
 # start test
 echo "    start test"
 echo "        running cs_solver"
-mpirun -N ${6} -H ${4} -np ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} --bind-to socket ./cs_solver --trace --logp --mpi
+mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} --bind-to socket ./cs_solver --trace --logp --mpi
 

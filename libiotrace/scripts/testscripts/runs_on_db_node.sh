@@ -19,7 +19,7 @@ mkdir ${CACHE}
 #cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=8388608 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
 #cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled --storage-max-index-log-file-size=1073741824 &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
 #cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
-cd $TMP/${INFLUXDB_NAME} && ./influxd --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
+cd $TMP/${INFLUXDB_DIR} && ./${INFLUXDB_EXECUTABLE} --bolt-path=${CACHE}/influxd.bolt --engine-path=${CACHE}/engine --reporting-disabled &> ${3}/$(date '+%Y-%m-%d_%H-%M')_log_influxd_${1} &
 
 # get local ip
 #ifconfig
@@ -38,7 +38,7 @@ echo "InfluxDB health Done: $(curl -s "$influx_host_ip:8086/health")"
 
 rm -f ~/${INFLUXDB_CACHE}/configs
 # create our database in running influxdb
-cd $TMP/${INFLUXDB_NAME} && ./influx setup --bucket ${IOTRACE_INFLUX_BUCKET} -t ${IOTRACE_INFLUX_TOKEN} -o ${IOTRACE_INFLUX_ORGANIZATION} --username=${IOTRACE_INFLUX_ADMIN_USER} --password=${IOTRACE_INFLUX_PASSWORD} -f
+cd $TMP/${INFLUXDB_DIR} && ./${INFLUXDB_CLIENT_EXECUTABLE} setup --bucket ${IOTRACE_INFLUX_BUCKET} -t ${IOTRACE_INFLUX_TOKEN} -o ${IOTRACE_INFLUX_ORGANIZATION} --username=${IOTRACE_INFLUX_ADMIN_USER} --password=${IOTRACE_INFLUX_PASSWORD} -f
 
 # write the ib0 address of the influxDB to a file
 rm -f ${3}/ib0_${1}
@@ -52,12 +52,12 @@ until [ -e ${3}/finished_${1} ]; do
 done
 
 # make a backup of influsDB
-cd $TMP/${INFLUXDB_NAME}/ && ./influx backup ${3}/influxdb_backup/$(date '+%Y-%m-%d_%H-%M') -t ${IOTRACE_INFLUX_TOKEN}
+cd $TMP/${INFLUXDB_DIR}/ && ./${INFLUXDB_CLIENT_EXECUTABLE} backup ${3}/influxdb_backup/$(date '+%Y-%m-%d_%H-%M') -t ${IOTRACE_INFLUX_TOKEN}
 
 # remove influxDB
 echo "remove influxDB"
 rm -rf ${CACHE}
-rm -rf $TMP/${INFLUXDB_NAME}/
+rm -rf $TMP/${INFLUXDB_DIR}/
 
 # signal main script: influxDB backup finished
 touch ${3}/influx_saved_${1}

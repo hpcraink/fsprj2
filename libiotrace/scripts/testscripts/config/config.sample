@@ -1,4 +1,4 @@
-base_path="/home/es/es_es/<username>/<path>"
+export base_path="/home/es/es_es/<username>/<path>"
 
 # Options for test_script:
 # test_openFOAM_motorBike
@@ -9,6 +9,7 @@ base_path="/home/es/es_es/<username>/<path>"
 # test_openFOAM_VirgilioRe22Pr7_Perfomance_2_worker_measurement
 # test_openFOAM_VirgilioRe22Pr7_Perfomance_4_worker
 # test_python_simple_write
+# test_code_saturne_mesh_cube
 test_config="test_mpi_file_io"
 
 export test_base_script_dir="$(dirname "$0")"
@@ -16,7 +17,7 @@ test_script_dir="$(dirname "$0")/tests"
 test_config_dir="$(dirname "$0")/config"
 
 test_openfoam_dir="${base_path}/OpenFOAM-${OPENFOAM_VERSION}"
-test_influx_dir="${base_path}/${INFLUXDB_NAME}"
+test_influx_dir="${base_path}/${INFLUXDB_DIR}"
 test_dir="${base_path}/scripts"
 test_libiotrace_build="${base_path}/libiotrace_build"
 export test_libiotrace_so="${test_libiotrace_build}/src/libiotrace.so"

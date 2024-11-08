@@ -5,7 +5,7 @@ if [ -f ${code_saturne_config} ]; then
     source ${code_saturne_config}
 else
     echo "file ${code_saturne_config} does not exist"
-    exit
+    exit 1
 fi
 
 echo "load modules..."

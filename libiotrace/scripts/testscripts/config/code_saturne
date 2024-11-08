@@ -16,9 +16,11 @@ CODE_SATURNE_MEDFILE_URL="https://www.code-saturne.org/releases/external/"
 
 export CODE_SATURNE_STUDY_NAME="damaris_test"
 export CODE_SATURNE_CASE_NAME="case1"
-export CODE_SATURNE_MESH_FILE="mesh_cube_unit_side_64_64_2048_1.med"
+export CODE_SATURNE_MESH_FILE="mesh_cube_unit_side_64_64_2048_10.med"
 export CODE_SATURNE_RESULT_DIR="tmp"
 
-#export CODE_SATURNE_IO_METHOD="mpi collective"
-export CODE_SATURNE_IO_METHOD="mpi noncollective"
+export CODE_SATURNE_IO_METHOD="mpi collective"
+#export CODE_SATURNE_IO_METHOD="mpi noncollective"
 #export CODE_SATURNE_IO_METHOD="mpi independent"
+
+export CODE_SATURNE_ITERATIONS=200

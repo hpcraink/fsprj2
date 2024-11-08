@@ -5,18 +5,21 @@ if [ -f ${salome_config} ]; then
     source ${salome_config}
 else
     echo "file ${salome_config} does not exist"
-    exit
+    exit 1
 fi
 
-rm -rf ${SALOME_INSTALL_DIR}
-mkdir ${SALOME_INSTALL_DIR}
+#rm -rf ${SALOME_INSTALL_DIR}
+if ! [ -d ${SALOME_INSTALL_DIR} ]; then
+    mkdir ${SALOME_INSTALL_DIR}
+fi
 cd ${SALOME_INSTALL_DIR}
 
-if ! [ -f ${SALOME_TAR} ]; then
+if ! [ -f ../${SALOME_TAR} ]; then
     echo "Please download Salome for CentOS ${SALOME_ARCH} in version ${SALOME_VERSION} from ${SALOME_URL} and rename it to ${SALOME_TAR}"
+    exit 2
 else
     if ! [ -d ${SALOME_DIR} ]; then
-        tar -zxf ${SALOME_TAR};
+        tar -zxf ../${SALOME_TAR};
     fi
 fi
 
@@ -52,8 +55,9 @@ do
     z=$(echo ${dimensions} | cut -f3 -d:)
     s=$(echo ${dimensions} | cut -f4 -d:)
     if ! [ -f ${SALOME_OUTPUT_FILE_PREFIX}_${x}_${y}_${z}_${s}.med ]; then
-        ./${SALOME_MESH_CUBE_SCRIPT} -o ${SALOME_OUTPUT_FILE_PREFIX} -d . -x ${x} -y ${y} -z ${z} -s ${s}
+        $(dirname "$0")/${SALOME_MESH_CUBE_SCRIPT} -o ${SALOME_OUTPUT_FILE_PREFIX} -d . -x ${x} -y ${y} -z ${z} -s ${s}
     fi
+done
 
 if command -v module &> /dev/null; then
     module purge

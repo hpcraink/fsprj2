@@ -23,8 +23,8 @@ mkdir <test dir>
 cd <test dir>
 ./<libiotrace dir>/libiotrace/scripts/testscripts/install/build_and_configure_all.sh
 ```
-Installs InfluxDB and OpenFOAM.
-Configures `<libiotrace dir>/libiotrace/scripts/testscripts/config/config`, so it points to `<test dir>`.
+Installs InfluxDB, OpenFOAM, Code Saturne and Salome.
+Configures `<<test dir>/config/config`, so it points to `<test dir>`.
 Preferable use tmux or screen for this command (command will run for more than one hour).
 
 4. choose a test to run
@@ -32,7 +32,7 @@ Preferable use tmux or screen for this command (command will run for more than o
 All files in `<libiotrace dir>/libiotrace/scripts/testscripts/config/`
 starting with `test_` are usable test configurations.
 Choose one and change the value of the variable `test_config`
-in the file `<libiotrace dir>/libiotrace/scripts/testscripts/config/config`
+in the file `<test dir>/config/config`
 to the name of the choosen test configuration file.
 
 5. run the test

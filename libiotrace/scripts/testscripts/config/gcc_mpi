@@ -1,2 +1,2 @@
-test_gcc_version="12.1"
+test_gcc_version="14.1"
 test_mpi_version="4.1"

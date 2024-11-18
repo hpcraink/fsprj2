@@ -16,7 +16,7 @@ cd ${SALOME_INSTALL_DIR}
 
 if ! [ -f ../${SALOME_TAR} ]; then
     echo "Please download Salome for CentOS ${SALOME_ARCH} in version ${SALOME_VERSION} from ${SALOME_URL} and rename it to ${SALOME_TAR}"
-    exit 2
+    exit 3
 else
     if ! [ -d ${SALOME_DIR} ]; then
         tar -zxf ../${SALOME_TAR};

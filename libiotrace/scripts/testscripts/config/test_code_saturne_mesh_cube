@@ -1,7 +1,7 @@
 # dependencies
-test_source_configs=("influxdb" "code_saturne" "salome")
+test_source_configs=("influxdb" "code_saturne" "salome" "gcc_mpi")
 test_source=()
-test_modules=("compiler/gnu/${CODE_SATURNE_GNU_VERSION}" "mpi/openmpi/${CODE_SATURNE_OPENMPI_VERSION}")
+test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
 
 # libiotrace
 test_libiotrace_cmake_options=(

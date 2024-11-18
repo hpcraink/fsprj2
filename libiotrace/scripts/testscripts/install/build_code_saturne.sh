@@ -8,11 +8,19 @@ else
     exit 1
 fi
 
+gcc_mpi_config="$(dirname "$0")/../config/gcc_mpi"
+if [ -f ${gcc_mpi_config} ]; then
+    source ${gcc_mpi_config}
+else
+    echo "file ${gcc_mpi_config} does not exist"
+    exit 2
+fi
+
 echo "load modules..."
 if command -v module &> /dev/null; then
     module purge
-    module load compiler/gnu/${CODE_SATURNE_GNU_VERSION}
-    module load mpi/openmpi/${CODE_SATURNE_OPENMPI_VERSION}
+    module load compiler/gnu/${test_gcc_version}
+    module load mpi/openmpi/${test_mpi_version}
     module load devel/miniconda/${CODE_SATURNE_MINICONDA_VERSION}
 fi
 

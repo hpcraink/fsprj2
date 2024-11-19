@@ -1,0 +1,1431 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 108,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "links": [
+                {
+                  "title": "",
+                  "url": "http://localhost:3000/d/y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a/file-access-analysis?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&var-filename=${__field.labels.traced_filename}&var-function_data_id_device_id=${__field.labels.function_data_id_device_id}&var-function_data_id_inode_nr=${__field.labels.function_data_id_inode_nr}"
+                }
+              ],
+              "mappings": [],
+              "min": 0,
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 104,
+          "options": {
+            "displayLabels": [
+              "name"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "sum"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.2.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\" and r._field == \"category\")\r\n  |> filter(fn: (r) => r.category == \"1\" or r.category == \"2\")\r\n  |> group(columns: [\"hostname\", \"traced_filename\", \"function_data_id_device_id\", \"function_data_id_inode_nr\"])\r\n  |> count()\r\n  |> yield(name: \"last\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Optimizations per file",
+          "transformations": [
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": ".*function_data_id_device_id=\"(.+)\", function_data_id_inode_nr=\"(.+)\", hostname=\"(.+)\", traced_filename=\"(.+)\".*",
+                "renamePattern": "File: $4, Host: $3, DeviceID: $1, InodeNr: $2"
+              }
+            }
+          ],
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "links": [
+                {
+                  "title": "",
+                  "url": "http://localhost:3000/d/y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a/file-access-analysis?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${filename:queryparam}&${function_data_id_device_id:queryparam}&${function_data_id_inode_nr:queryparam}&var-file_access_identifier=${__field.labels.file_access_identifier}&var-hostname=${__field.labels.hostname}&var-processid=${__field.labels.pid}"
+                }
+              ],
+              "mappings": [],
+              "min": 0,
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "id": 105,
+          "options": {
+            "displayLabels": [
+              "name"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "sum"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "10.2.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\" and r.hostname == \"${hostname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r._field == \"category\")\r\n  |> filter(fn: (r) => r.category == \"1\" or r.category == \"2\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> count()\r\n  |> yield(name: \"last\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Select FAID of file $filename",
+          "transformations": [
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": ".*file_access_identifier=\"(.+)\".*",
+                "renamePattern": "$1"
+              }
+            }
+          ],
+          "type": "piechart"
+        }
+      ],
+      "title": "Optimizations Pie Charts",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 101,
+      "panels": [],
+      "title": "Optimizations Overview",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "title": "",
+              "url": "http://localhost:3000/d/y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a/file-access-analysis?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&var-filename=${__field.labels.traced_filename}&var-function_data_id_device_id=${__field.labels.function_data_id_device_id}&var-function_data_id_inode_nr=${__field.labels.function_data_id_inode_nr}"
+            }
+          ],
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 2
+      },
+      "id": 106,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\" and r._field == \"category\")\r\n  |> filter(fn: (r) => r.category == \"1\" or r.category == \"2\")\r\n  |> group(columns: [\"hostname\", \"traced_filename\", \"function_data_id_device_id\", \"function_data_id_inode_nr\"])\r\n  |> count()\r\n  |> yield(name: \"last\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Possible optimizations per file (click to select)",
+      "transformations": [
+        {
+          "disabled": true,
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*function_data_id_device_id=\"(.+)\", function_data_id_inode_nr=\"(.+)\", hostname=\"(.+)\", traced_filename=\"(.+)\".*",
+            "renamePattern": "File: $4, Host: $3, DeviceID: $1, InodeNr: $2"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*traced_filename=\"(.+)\".*",
+            "renamePattern": "File: $1"
+          }
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [
+            {
+              "title": "",
+              "url": "http://localhost:3000/d/y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a/file-access-analysis?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${filename:queryparam}&${function_data_id_device_id:queryparam}&${function_data_id_inode_nr:queryparam}&var-file_access_identifier=${__field.labels.file_access_identifier}&var-hostname=${__field.labels.hostname}&var-processid=${__field.labels.pid}"
+            }
+          ],
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 2
+      },
+      "id": 107,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "valueMode": "color"
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\" and r.hostname == \"${hostname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r._field == \"category\")\r\n  |> filter(fn: (r) => r.category == \"1\" or r.category == \"2\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> count()\r\n  |> yield(name: \"last\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Possible optimizations of file_access_identifiers of file $filename (click to select)",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*file_access_identifier=\"(.+)\".*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 100,
+      "panels": [],
+      "title": "Optimization Details",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisWidth": 50,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Other streams maxed"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 97,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier == \"${file_access_identifier}\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"function_name\"], valueColumn: \"_value\")\r\n  |> yield(name: \"last\")",
+          "refId": "Selected stream"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "maxValue = from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier == \"${file_access_identifier}\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> max()\r\n  |> findRecord(fn: (key) => true, idx: 0)\r\n\r\nfrom(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier != \"${file_access_identifier}\")\r\n  |> group(columns: [\"jobname\"])\r\n  |> map(fn: (r) => ({r with _value: if r._value > 0 then maxValue._value else 0}))\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"function_name\"], valueColumn: \"_value\")\r\n  |> yield(name: \"last\")",
+          "refId": "Other streams maxed"
+        }
+      ],
+      "title": "Cursor Offset of stream $file_access_identifier in file $filename compared with other streams important access times",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.+) {.*",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "disabled": true,
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*hostname=\"(.+)\", job.*processid=\"(.+)\".*",
+            "renamePattern": "$1, PID: $2"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "description": "Colorcoding of points (category): red - can't be optimized (0), green - can be optimized (1/2), orange - not defined (3)\n\nHover point for details.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds",
+            "seriesBy": "min"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "left",
+            "axisWidth": 50,
+            "barAlignment": 0,
+            "drawStyle": "points",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 15,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "noValue": "No optimization possibilities",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 3
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 98,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"category\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier == \"${file_access_identifier}\")\r\n  |> group(columns: [\"category\", \"info\", \"function\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"category\"], valueColumn: \"_value\")\r\n  |> yield(name: \"last\")",
+          "refId": "C"
+        }
+      ],
+      "title": "Possible optimizations of FAID $file_access_identifier",
+      "transformations": [
+        {
+          "disabled": true,
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.+) {.*",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*function=\"(.+)\", info=\"(.+)\"}.*",
+            "renamePattern": "$1s: $2"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 92,
+      "panels": [],
+      "title": "Detailed Job Analysis",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 21
+      },
+      "id": 93,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\")\r\n  |> group(columns: [\"traced_filename\",\"file_access_identifier\"])\r\n  |> yield(name: \"last\")",
+          "refId": "A"
+        }
+      ],
+      "title": "All file access IDs of file $filename",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*file_access_identifier=\"(.+)\", tr.*",
+            "renamePattern": "FAID: $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "links": [
+            {
+              "title": "",
+              "url": "http://localhost:3000/d/y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a/file-access-analysis?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&var-filename=${__field.labels.traced_filename}&var-function_data_id_device_id=${__field.labels.function_data_id_device_id}&var-function_data_id_inode_nr=${__field.labels.function_data_id_inode_nr}"
+            }
+          ],
+          "mappings": [],
+          "min": 0,
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 21
+      },
+      "id": 94,
+      "options": {
+        "displayLabels": [
+          "name"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\" and r._field == \"cursor_position\")\r\n  |> group(columns: [\"hostname\", \"traced_filename\", \"function_data_id_device_id\", \"function_data_id_inode_nr\"])\r\n  |> count()\r\n  |> yield(name: \"last\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Select file of job $jobname",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*function_data_id_device_id=\"(.+)\", function_data_id_inode_nr=\"(.+)\", hostname=\"(.+)\", traced_filename=\"(.+)\".*",
+            "renamePattern": "File: $4, Host: $3, DeviceID: $1, InodeNr: $2"
+          }
+        }
+      ],
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 29
+      },
+      "id": 95,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier == \"${file_access_identifier}\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"function_name\"], valueColumn: \"_value\")\r\n  |> yield(name: \"last\")",
+          "refId": "C"
+        }
+      ],
+      "title": "Cursor Offset of FAID $file_access_identifier split in functions",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.+) {.*",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "disabled": true,
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*hostname=\"(.+)\", job.*processid=\"(.+)\".*",
+            "renamePattern": "$1, PID: $2"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "links": [
+            {
+              "title": "",
+              "url": "http://localhost:3000/d/y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a/file-access-analysis?orgId=1&${__url_time_range}&${bucket:queryparam}&${measurement:queryparam}&${hostname:queryparam}&${jobname:queryparam}&${filename:queryparam}&${function_data_id_device_id:queryparam}&${function_data_id_inode_nr:queryparam}&var-file_access_identifier=${__field.labels.file_access_identifier}&var-hostname=${__field.labels.hostname}&var-processid=${__field.labels.pid}"
+            }
+          ],
+          "mappings": [],
+          "min": 0,
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 29
+      },
+      "id": 96,
+      "options": {
+        "displayLabels": [
+          "name"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r._field == \"cursor_position\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> count()\r\n  |> yield(name: \"last\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Select FAID of file $filename",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*file_access_identifier=\"(.+)\".*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Other streams maxed"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "bars"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 37
+      },
+      "id": 99,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "10.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier == \"${file_access_identifier}\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"function_name\"], valueColumn: \"_value\")\r\n  |> yield(name: \"last\")",
+          "refId": "Selected stream"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "maxValue = from(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier == \"${file_access_identifier}\")\r\n  |> group(columns: [\"file_access_identifier\"])\r\n  |> max()\r\n  |> findRecord(fn: (key) => true, idx: 0)\r\n\r\nfrom(bucket: \"${bucket}\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\" and r.file_access_identifier != \"${file_access_identifier}\")\r\n  |> group(columns: [\"jobname\"])\r\n  |> map(fn: (r) => ({r with _value: if r._value > 0 then maxValue._value else 0}))\r\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"function_name\"], valueColumn: \"_value\")\r\n  |> yield(name: \"last\")",
+          "refId": "Other streams maxed"
+        }
+      ],
+      "title": "Cursor Offset of stream $file_access_identifier in file $filename compared with other streams important access times",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "(.+) {.*",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "disabled": true,
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*hostname=\"(.+)\", job.*processid=\"(.+)\".*",
+            "renamePattern": "$1, PID: $2"
+          }
+        }
+      ],
+      "type": "timeseries"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 38,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "hsebucket",
+          "value": "hsebucket"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "buckets()",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Bucket",
+        "multi": false,
+        "name": "bucket",
+        "options": [],
+        "query": "buckets()",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "11_18_finished",
+          "value": "11_18_finished"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"_measurement\",\r\n  predicate: (r) => true,\r\n  start: -1000d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "measurement",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"_measurement\",\r\n  predicate: (r) => true,\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "multi_shared2024-04-04_14-00-17_iotrace.log",
+          "value": "multi_shared2024-04-04_14-00-17_iotrace.log"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\",\r\n  start: -1000d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "jobname",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r._field == \"cursor_position\",\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Baghira",
+          "value": "Baghira"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"hostname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\",\r\n  start: -1000d,\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "hostname",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"hostname\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.jobname == \"${jobname}\",\r\n  start: -1000d,\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "mptf_3.txt",
+          "value": "mptf_3.txt"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"traced_filename\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r._field == \"cursor_position\",\r\n  start: -1000d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "filename",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"traced_filename\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r._field == \"cursor_position\",\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "2080.0",
+          "value": "2080.0"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"function_data_id_device_id\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\",\r\n  start: -1000d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "function_data_id_device_id",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"function_data_id_device_id\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\",\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "99202.0",
+          "value": "99202.0"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"function_data_id_inode_nr\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\",\r\n  start: -1000d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "function_data_id_inode_nr",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"function_data_id_inode_nr\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\",\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Baghira_20571_0x7f0458005f90",
+          "value": "Baghira_20571_0x7f0458005f90"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"file_access_identifier\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\",\r\n  start: -1000d\r\n)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "file_access_identifier",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"file_access_identifier\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\",\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "20571",
+          "value": "20571"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"pid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\",\r\n  start: -1000d\r\n)",
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "processid",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"${bucket}\",\r\n  tag: \"pid\",\r\n  predicate: (r) => r._measurement == \"${measurement}\" and r.hostname == \"${hostname}\" and r.jobname == \"${jobname}\" and r.traced_filename == \"${filename}\" and r.function_data_id_device_id == \"${function_data_id_device_id}\" and r.function_data_id_inode_nr == \"${function_data_id_inode_nr}\",\r\n  start: -1000d\r\n)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "2024-04-04T12:00:17.785Z",
+    "to": "2024-04-04T12:03:34.817Z"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "1s",
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "File-Access-Analysis",
+  "uid": "y6u33e4-cd6f-4bc8-a718-01fa8ec8d26a",
+  "version": 16,
+  "weekStart": ""
+}

@@ -1,0 +1,64 @@
+== Optimizations Discovery
+
+This directory contains a tool for automatically discovering possible optimizations of the file accesses of a program.
+Data created by libiotrace and saved in the InfluxDB is used to analyze the file accesses of the program.
+
+The Python script looks for possible optimizations, analyzes and categorizes them.
+The retrieved and calculated optimizations are uploaded back to the InfluxDB.
+An URL with the correct variables and time frame is generated which redirects the user directly to the calculated information where the optimization possibilities can be seen in a Grafana Dashboard with additional needed information about the optimizations.
+
+=== Prerequisites
+
+* Running Docker containers for Influx and Grafana
+* Data created by link:../README.md#libiotrace[libiotrace] has to be present in the local InfluxDB
+* Python3 installed
+* InfluxDB Python library installed (`pip install influxdb-client`) 
+
+=== Usage
+==== Preparation
+
+In the bottom of link:./calculate_optimizations.py[calculate_optimizations.py] the call of `batch_all_files_of_jobname()` can be altered to process the desired jobname.
+The first mandatory parameter is the jobname of libiotrace and the second parameter is the name of the new measurement that will be created.
+Additional possible parameters are:
+* `bucket`: Name of the InfluxDB bucket from where the data to process is present; defaults to `hsebucket`
+* `measurement`: Name of the measurement the data is tagged as; defaults to `libiotrace`
+
+==== Executing
+
+----
+# Run script from this directory
+python3 calculate_optimizations.py
+----
+
+After successfully running the script, an URL to the Grafana Dashboard can be found in the output with all dashboard variables set as URL parameters, click the link to see the dashboard.
+
+==== Dashboard
+
+The JSON-file of the dashboard can be found here: link:../Live-Tracing/provisioning/dashboards/file_access_analysis.json[].
+There are some dashboard variables at the top, which can but don't need to be set manually.
+Controlling the dashboard is implemented through interactively clicking the panels, to see what you want to be shown.
+The bar charts at the top show you:
+
+* left: the count of the possible optimizations per file used by the job
+* right: the count of the possible optimizations per file access identifier on the selected file
+
+Those bars are clickable to select the desired file and file access identifier.
+The count of possible optimizations give the user an insight into what parts of the program can be optimized at which degree.
+
+The selected file access identifier is then shown in more detail in the time series diagram below.
+The function calls of the file access identifier on the selected file with their cursor offset can be seen in the panel, while all relevant function calls of all other file accesses on the same file are shown as vertical lines.
+
+In this way, the points of two function calls of the same type of the selected file access identifier are connected with a line, which is the first indicator for a possible optimization, by combing both calls into one single call.
+If there are vertical lines (indicating function calls of other file access on the same file) crossing such connected points, there is more evaluating needed to know if the repeated function call can be optimized.
+
+This evaluation is handled by the script and the results can be seen in the panel below.
+Green points show points that can be optimized and are timed between the both calls from the diagram above that can be combined to be optimized.
+Red points indicate that there is a repeated function call, but they can't be combined because a specific function call of another file access.
+
+To retreive detailed information about why or why not a repeated function call can be optimized, you can hover over the desired point in the panel.
+
+Each repeated function is categorized:
+
+* 0 - cannot be optimized (details on hover)
+* 1 - can be optimized because there are no calls between
+* 2 - can be optimized, but there are calls between (details on hover)

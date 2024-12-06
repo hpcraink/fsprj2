@@ -5,6 +5,7 @@ MPI_PATH="${MPI_PATH%/*}/../lib64/libmpi.so"
 #IOTRACE_LD_PRELOAD=${MPI_PATH}:${test_libiotrace_so}
 IOTRACE_LD_PRELOAD=${test_libiotrace_so}
 IOTRACE_WHITELIST=${3}/${2}/whitelist
+format="\t%E\t%U\t%S\t%D\t%K\t%M"
 
 PROCESS_COUNT=$(( ${5} * ${6} ))
 echo "    process count: ${PROCESS_COUNT}"
@@ -36,62 +37,49 @@ echo "    create result directory"
 rm -rf ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}/RESU/${CODE_SATURNE_RESULT_DIR}
 export OMP_NUM_THREADS=${test_threads_per_process}
 cd ${CODE_SATURNE_STUDY_NAME}/${CODE_SATURNE_CASE_NAME}
-#echo "SLURM_HOSTFILE: ${SLURM_HOSTFILE}"
-#echo "SLURM_JOB_CPUS_PER_NODE: ${SLURM_JOB_CPUS_PER_NODE}"
-#echo "SLURM_JOB_NODELIST: ${SLURM_JOB_NODELIST}"
-#echo "SLURM_JOB_NUM_NODES: ${SLURM_JOB_NUM_NODES}"
-#echo "SLURM_NPROCS: ${SLURM_NPROCS}"
-#echo "SLURM_CPUS_PER_TASK: ${SLURM_CPUS_PER_TASK}"
-#echo "SLURM_NTASKS: ${SLURM_NTASKS}"
-#echo "SLURM_STEP_NUM_TASKS: ${SLURM_STEP_NUM_TASKS}"
-#echo "OMPI_COMM_WORLD_RANK: ${OMPI_COMM_WORLD_RANK}"
-#echo "SLURM_SRUN_COMM_HOST: ${SLURM_SRUN_COMM_HOST}"
 ${base_path}/${CODE_SATURNE_INSTALL_DIR}/${CODE_SATURNE_SOURCE_DIR}/arch/Linux_x86_64/bin/code_saturne run --param DATA/setup.xml --stage --initialize --nprocs ${PROCESS_COUNT} --id ${CODE_SATURNE_RESULT_DIR}
 cd RESU/${CODE_SATURNE_RESULT_DIR}
-
-# use original solver (not the new compiled solver)
-#cp ${base_path}/${CODE_SATURNE_INSTALL_DIR}/${CODE_SATURNE_SOURCE_DIR}/arch/Linux_x86_64/libexec/code_saturne/cs_solver .
-#ldd cs_solver
 
 # library search path for dependencies (sourced from generated script)
 source <(grep "export LD_LIBRARY_PATH" run_solver)
 
 #####################################################
 
+# prepare output file
+rm -f ${performance_data_file}
+echo -e "name\ttest\treal h:m:s\tuser CPU-seconds\tsys CPU-seconds\tavg unshared data kb\tavg data+stack+text kb\tmax kb">>${performance_data_file}
+
 # prepare whitelist
 rm -f $IOTRACE_WHITELIST
-echo -e "${IOTRACE_WHITELIST_FUNCTIONS}">$IOTRACE_WHITELIST
 
 # define libiotrace and necessary environment variables for use with and without mpirun
-#LIBIOTRACE_WITH_ENV="IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP IOTRACE_DATABASE_PORT=$IOTRACE_INFLUX_PORT IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN IOTRACE_WHITELIST=$IOTRACE_WHITELIST LD_DEBUG=all LD_PRELOAD=$IOTRACE_LD_PRELOAD"
 LIBIOTRACE_WITH_ENV="IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP IOTRACE_DATABASE_PORT=$IOTRACE_INFLUX_PORT IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN IOTRACE_WHITELIST=$IOTRACE_WHITELIST LD_PRELOAD=$IOTRACE_LD_PRELOAD"
 MPI_LIBIOTRACE_WITH_ENV="-x "${LIBIOTRACE_WITH_ENV// / -x }
 
-# start test
 echo "    start test"
-echo "        running cs_solver"
-#mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} --bind-to socket ./cs_solver --trace --logp --mpi
-echo "            mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi"
-mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi
-#mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi &
-#while true
-#do
-#    echo "---------------------------------------------------------------------------------------------------------------------------------------------------------------------"
-#    #pstree -pl
-#    ##pstree -plT
-#    #lsof /home/es/es_es/es_pkoester/test_code_saturne/libiotrace_build/src/libiotrace.so
-#    #lsof /opt/bwhpc/common/mpi/openmpi/4.1.6-gnu-14.1/lib64/libmpi.so.40
-#    #ps | grep "cs_solver"
-#    #ps | grep "cs_solver" | sed 's/^[[:blank:]]*//g'
-#    #ps | grep "cs_solver" | sed 's/^[[:blank:]]*//g' | cut -d' ' -f1 -s
-#    ps | grep "cs_solver" | sed 's/^[[:blank:]]*//g' | cut -d' ' -f1 -s | while read -r line ; do
-#        lsof -p $line
-#    done
-#    sleep 1
-#done
-#IOTRACE_LOG_NAME=$IOTRACE_LOG_NAME IOTRACE_DATABASE_IP=$IOTRACE_DATABASE_IP IOTRACE_DATABASE_PORT=$IOTRACE_INFLUX_PORT IOTRACE_INFLUX_ORGANIZATION=$IOTRACE_INFLUX_ORGANIZATION IOTRACE_INFLUX_BUCKET=$IOTRACE_INFLUX_BUCKET IOTRACE_INFLUX_TOKEN=$IOTRACE_INFLUX_TOKEN IOTRACE_WHITELIST=$IOTRACE_WHITELIST LD_PRELOAD=$IOTRACE_LD_PRELOAD mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi
-#env ${LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi
-#which ./cs_solver
-#mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} --bind-to socket ltrace -f -S -c ./cs_solver --trace --logp --mpi
-#mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} --bind-to socket ltrace -f -S ./cs_solver --trace --logp --mpi
-#mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} --bind-to socket strace -f ./cs_solver --trace --logp --mpi
+
+# test with libiotrace and MPI functions in whitelist
+echo -e "${IOTRACE_WHITELIST_FUNCTIONS}">$IOTRACE_WHITELIST
+for ((i = 0; i < test_iterations; i += 1)); do
+    echo "        running cs_solver"
+    echo "            mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi"
+    /usr/bin/time -o ${performance_data_file} -a -f "mpi_active\t$i$format" mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi
+done
+echo "    with libiotrace and active wrapper: done"
+
+# test with libiotrace and empty whitelist
+echo -e "">$IOTRACE_WHITELIST
+for ((i = 0; i < test_iterations; i += 1)); do
+    echo "        running cs_solver"
+    echo "            mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi"
+    /usr/bin/time -o ${performance_data_file} -a -f "all_inactive\t$i$format" mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ${MPI_LIBIOTRACE_WITH_ENV} ./cs_solver --trace --logp --mpi
+done
+echo "    with libiotrace and inactive wrapper: done"
+
+# test without libiotrace
+for ((i = 0; i < test_iterations; i += 1)); do
+    echo "        running cs_solver"
+    echo "            mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ./cs_solver --trace --logp --mpi"
+    /usr/bin/time -o ${performance_data_file} -a -f "without_libiotrace\t$i$format" mpiexec -N ${6} -H ${4} -n ${PROCESS_COUNT} ./cs_solver --trace --logp --mpi
+done
+echo "    without libiotrace: done"

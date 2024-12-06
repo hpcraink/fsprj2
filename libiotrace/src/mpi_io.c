@@ -1289,3 +1289,41 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
     WRAP_MPI_END(data, MPI_File_set_view)
     return ret;
 }
+
+int MPI_File_get_position(MPI_File fh, MPI_Offset *offset)
+{
+    int ret;
+    struct basic data;
+    struct file_mpi file_mpi_data;
+    struct positioning_function positioning_function_data;
+
+    WRAP_MPI_START(data)
+
+    CALL_REAL_MPI_FUNCTION(MPI_File_get_position, fh, offset);
+
+    get_basic(&data);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, function_data, positioning_function, positioning_function_data);
+    POSIX_IO_SET_FUNCTION_NAME(data.function_name);
+    LIBIOTRACE_STRUCT_SET_VOID_P(data, file_type, file_mpi, file_mpi_data)
+
+    file_mpi_data.mpi_file = MPI_File_c2f(fh);
+
+    CALL_REAL_MPI_FUNCTION_RET(data, ret, MPI_File_get_position, fh, offset)
+
+    positioning_function_data.offset = *offset;
+    positioning_function_data.relative_to = beginning_of_file;
+
+    if (ret != MPI_SUCCESS)
+    {
+        data.return_state = error;
+        SET_MPI_ERROR(ret, MPI_STATUS_IGNORE)
+    }
+    else
+    {
+        data.return_state = ok;
+    }
+
+    WRAP_MPI_END(data, MPI_File_get_position)
+    return ret;
+}
+

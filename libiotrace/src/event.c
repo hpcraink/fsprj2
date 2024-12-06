@@ -2693,7 +2693,7 @@ void check_ld_preload(char *env[], char *const envp[], const char *func) {
 
         if (MAX_EXEC_ARRAY_LENGTH <= env_element + count_libiotrace_env) {
             LOG_ERROR_AND_DIE(
-                    "during call if %s envp[] with added libiotrace-variables has more elements then buffer (%d)",
+                    "during call of %s envp[] with added libiotrace-variables has more elements then buffer (%d)",
                     func, MAX_EXEC_ARRAY_LENGTH);
         }
         env[env_element] = &ld_preload[0];

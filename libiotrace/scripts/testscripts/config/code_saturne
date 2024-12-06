@@ -1,3 +1,5 @@
+#CODE_SATURNE_VERSION="6.0.7"
+#CODE_SATURNE_VERSION="7.3.1"
 CODE_SATURNE_VERSION="8.2.0"
 CODE_SATURNE_SOURCE_URL="https://codeload.github.com/code-saturne/code_saturne/tar.gz/refs/tags/v${CODE_SATURNE_VERSION}"
 CODE_SATURNE_SOURCE_FILE="code_saturne-${CODE_SATURNE_VERSION}.tar.gz"
@@ -11,14 +13,3 @@ export CODE_SATURNE_MINICONDA_VERSION="23.9.0-py3.9.15-bwHPC-channel"
 export CODE_SATURNE_CONDA_ENV=${CODE_SATURNE_INSTALL_DIR}/code_saturne_conda_env
 
 CODE_SATURNE_MEDFILE_URL="https://www.code-saturne.org/releases/external/"
-
-export CODE_SATURNE_STUDY_NAME="damaris_test"
-export CODE_SATURNE_CASE_NAME="case1"
-export CODE_SATURNE_MESH_FILE="mesh_cube_unit_side_64_64_2048_10.med"
-export CODE_SATURNE_RESULT_DIR="tmp"
-
-export CODE_SATURNE_IO_METHOD="mpi collective"
-#export CODE_SATURNE_IO_METHOD="mpi noncollective"
-#export CODE_SATURNE_IO_METHOD="mpi independent"
-
-export CODE_SATURNE_ITERATIONS=200

@@ -5,6 +5,11 @@
   <analysis_control>
     <output>
       <listing_printing_frequency>1</listing_printing_frequency>
+      <mesh id="-1" label="Fluid domain" type="cells">
+        <all_variables status="on"/>
+        <location>all[]</location>
+        <writer id="1"/>
+      </mesh>
       <mesh id="-2" label="Boundary" type="boundary_faces">
         <all_variables status="on"/>
         <location>all[]</location>
@@ -15,6 +20,13 @@
         <directory name="postprocessing"/>
         <format name="ensight" options="separate_meshes"/>
         <frequency period="time_step">1</frequency>
+        <time_dependency choice="fixed_mesh"/>
+      </writer>
+      <writer id="1" label="catalyst_slice_xy_csv">
+        <directory name="postprocessing"/>
+        <format name="ensight" options=""/>
+        <frequency period="time_step">1</frequency>
+        <output_at_start status="on"/>
         <time_dependency choice="fixed_mesh"/>
       </writer>
     </output>

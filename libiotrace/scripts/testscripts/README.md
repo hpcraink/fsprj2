@@ -44,7 +44,9 @@ cd <test dir>
 Configures and builds libiotrace.
 Starts the test case with the build libiotrace as sbatch.
 
-6. connect to InfluxDB
+6. connect to InfluxDB and/or get a InfluxDB backup
+
+6.1. connect to InfluxDB
 
 `squeue` and `squeue --start` show if the sbatch job already runs.
 If the job has started a slurm log is written to `<test dir>`.
@@ -55,6 +57,29 @@ A new ssh connection with port forwarding is needed:
 ssh -L8086:<ib0 address of influxDB>:8086 es_<user id>@bwunicluster.scc.kit.edu
 ```
 Now the InfluxDB is available at `http://localhost:8086/`.
+
+6.2 get a InfluxDB backup
+
+The test script (see 5. run the test) makes a backup at the end of the test.
+This backup ist saved in `<test dir>/scripts/influxdb_backup/<timestamp>`.
+Zip the backup on the cluster:
+```shell
+zip -r <influxdb backup name>.zip <test dir>/scripts/influxdb_backup/<timestamp>/
+```
+Switch to a shell on your system and copy/extract the backup:
+```shell
+cd <directory of your choice>
+scp es_<user id>@bwunicluster.scc.kit.edu:/home/es/es_es/es_<user id>/<path to test dir>/<test dir>/<influxdb backup name>.zip .
+unzip <influxdb backup name>.zip
+```
+_Replace_ all content of an existing InfluxDB on your system (all existing content is _deleted_):
+```shell
+influx restore <directory of your choice>/<timestamp>/ --full
+```
+Alternatively you can add the restored data to a new bucket
+```shell
+influx restore <directory of your choice>/<timestamp>/ --bucket <name of a new bucket>
+```
 
 ## Overview Testcases
 ## test_openFOAM_motorBike

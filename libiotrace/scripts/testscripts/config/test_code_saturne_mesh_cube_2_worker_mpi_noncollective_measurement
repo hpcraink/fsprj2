@@ -1,0 +1,70 @@
+# dependencies
+test_source_configs=("influxdb" "code_saturne" "salome" "gcc_mpi")
+test_source=()
+test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
+
+# libiotrace
+test_libiotrace_cmake_options=(
+-DALL_WRAPPERS_ACTIVE=OFF
+-DENABLE_FILESYSTEM_METADATA=OFF
+-DENABLE_OUTPUT=INFLUXDB
+-DENABLE_REMOTE_CONTROL=OFF
+-DFILENAME_RESOLUTION_ENABLED=OFF
+-DLOGGING=OFF
+-DLOG_WRAPPER_TIME=OFF
+-DREALTIME=ON
+-DSENDING=ON
+-DWITH_ALLOC=OFF
+-DWITH_DL_IO=OFF
+-DWITH_MPI_IO=ON
+-DWITH_POSIX_AIO=OFF
+-DWITH_POSIX_IO=OFF
+-DWITH_STD_IO=OFF
+)
+
+# slurm
+test_nodes=3
+test_processes_per_worker=40
+export test_processes_per_influxdb=40
+test_mem="90000mb"
+test_time="10:00:00"
+test_queue_name="multiple"
+export test_threads_per_process=1
+export test_iterations=20
+export performance_data_file=${PWD}/performance_test
+
+# test script
+test_script="./code_saturne_mesh_cube_measurement.sh"
+export IOTRACE_WHITELIST_FUNCTIONS="# newline separated list of functions to trace
+MPI_File_get_size
+MPI_File_read
+MPI_File_read_all
+MPI_File_read_at
+MPI_File_read_at_all
+MPI_File_seek
+MPI_File_set_view
+MPI_File_write
+MPI_File_write_at
+MPI_File_write_all
+MPI_File_write_at_all
+MPI_File_open
+MPI_File_close
+MPI_File_get_position"
+export CODE_SATURNE_STUDY_NAME="damaris_test"
+export CODE_SATURNE_CASE_NAME="case1"
+export CODE_SATURNE_MESH_FILE="mesh_cube_unit_side_64_64_2048_10.med"
+export CODE_SATURNE_RESULT_DIR="tmp"
+#export CODE_SATURNE_IO_METHOD="stdio serial"
+#export CODE_SATURNE_IO_METHOD="stdio parallel"
+#export CODE_SATURNE_IO_METHOD="mpi independent"
+export CODE_SATURNE_IO_METHOD="mpi noncollective"
+#export CODE_SATURNE_IO_METHOD="mpi collective"
+export CODE_SATURNE_IO_RANK_STEP=1
+#export CODE_SATURNE_IO_STEP_SIZE=16384
+export CODE_SATURNE_IO_STEP_SIZE=131072
+#export CODE_SATURNE_ITERATIONS=200
+export CODE_SATURNE_ITERATIONS=100
+
+# output
+test_name="${test_nodes}_code_saturne_mesh_cube_${CODE_SATURNE_IO_METHOD// /_}"
+export IOTRACE_LOG_NAME=code_saturne_mesh_cube_test1

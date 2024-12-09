@@ -4,7 +4,8 @@ MPI_PATH=$(which mpirun)
 MPI_PATH="${MPI_PATH%/*}/../lib64/libmpi.so"
 #IOTRACE_LD_PRELOAD=${MPI_PATH}:${test_libiotrace_so}
 IOTRACE_LD_PRELOAD=${test_libiotrace_so}
-IOTRACE_WHITELIST=${3}/${2}/whitelist
+SCRATCH_TEST_DIR=${3}/${2}
+IOTRACE_WHITELIST=${SCRATCH_TEST_DIR}/whitelist
 
 PROCESS_COUNT=$(( ${5} * ${6} ))
 echo "    process count: ${PROCESS_COUNT}"
@@ -14,9 +15,9 @@ module load devel/miniconda/${CODE_SATURNE_MINICONDA_VERSION}
 conda activate ${CODE_SATURNE_CONDA_ENV}
 
 echo "    create test directory"
-rm -rf ${3}/${2}
-mkdir -p ${3}/${2}
-cd ${3}/${2}
+rm -rf ${SCRATCH_TEST_DIR}
+mkdir -p ${SCRATCH_TEST_DIR}
+cd ${SCRATCH_TEST_DIR}
 
 if [ ! -d ${CODE_SATURNE_STUDY_NAME} ]; then
     echo "    create directory structure"

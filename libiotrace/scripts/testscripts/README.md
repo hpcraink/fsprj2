@@ -68,17 +68,25 @@ zip -r <influxdb backup name>.zip <test dir>/scripts/influxdb_backup/<timestamp>
 ```
 Switch to a shell on your system and copy/extract the backup:
 ```shell
-cd <directory of your choice>
+cd <fsprj2 dir>/Live-Tracing/testbackup
 scp es_<user id>@bwunicluster.scc.kit.edu:/home/es/es_es/es_<user id>/<path to test dir>/<test dir>/<influxdb backup name>.zip .
 unzip <influxdb backup name>.zip
 ```
 _Replace_ all content of an existing InfluxDB on your system (all existing content is _deleted_):
 ```shell
-influx restore <directory of your choice>/<timestamp>/ --full
+cd <fsprj2 dir>/Live-Tracing
+sudo docker-compose up
+sudo docker exec -it libiotrace_influxdb bash
+cd backup/
+influx restore --full --token OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== <timestamp>/
 ```
 Alternatively you can add the restored data to a new bucket
 ```shell
-influx restore <directory of your choice>/<timestamp>/ --bucket <name of a new bucket>
+cd <fsprj2 dir>/Live-Tracing
+sudo docker-compose up
+sudo docker exec -it libiotrace_influxdb bash
+cd backup/
+influx restore --full --bucket <name of a new bucket> --token OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== <timestamp>/
 ```
 
 ## Overview Testcases

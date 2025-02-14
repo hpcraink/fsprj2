@@ -1,0 +1,2581 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Panel für das 2. Semester des Forschungsprojekts",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 4,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "yellow"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 0,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 35,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "horizontal",
+            "showValue": "auto",
+            "stacking": "none",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            },
+            "xField": "Funktion",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "11.5.0",
+          "repeat": "ProzessID",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\n  |> filter(fn: (r) => r[\"processid\"] == \"${ProzessID}\")\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Summed up Function Runtime Process ${ProzessID}",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 1,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": []
+          },
+          "pluginVersion": "11.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\" and r.functionname =~ /.*MPI.*/)\r\n  |> map(fn: (r) => ({\"Prozess_ID\": r. processid, \"name\": r.hostname}))\r\n  |> group(columns: [\"Prozess_ID\", \"name\"], mode:\"by\")\r\n  |> distinct(column: \"Prozess_ID\")\r\n  |> map(fn: (r) => ({\"Prozess ID\": r.Prozess_ID, \"Hostname\": r.name}))",
+              "refId": "A"
+            }
+          ],
+          "title": "Auflistung Prozesse und Hosts",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "id": 40,
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto"
+          },
+          "pluginVersion": "11.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "prozesse = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\" and r.functionname =~ /.*MPI.*/)\r\n  |> map(fn: (r) => ({\"Prozesse\": r. processid, \"Hosts\": r.hostname}))\r\n  |> distinct(column: \"Prozesse\")\r\n  |> count(column: \"_value\")\r\n  |> rename(columns: {_value: \"Anzahl Prozesse\"})\r\n\r\n\r\nhosts = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\" and r.functionname =~ /.*MPI.*/)\r\n  |> map(fn: (r) => ({\"Prozesse\": r. processid, \"Hosts\": r.hostname}))\r\n  |> distinct(column: \"Hosts\")\r\n  |> count(column: \"_value\")\r\n  |> rename(columns: {_value: \"Anzahl Hosts\"})\r\n\r\n\r\nunion(tables: [hosts, prozesse]) // Kombiniere beide Tabellen\r\n|> yield(name: \"combined\")",
+              "refId": "Prozesse"
+            }
+          ],
+          "title": "Auflistung Prozesse und Hosts",
+          "transformations": [
+            {
+              "id": "seriesToRows",
+              "options": {}
+            }
+          ],
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 78
+          },
+          "id": 33,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "11.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "mpitime = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_start\" or r[\"_field\"] == \"time_end\")\r\n  |> group(columns: [\"time\"], mode:\"by\")  \r\n  |> sort()\r\n  firstEntry = mpitime |> first() // Hole den ersten Eintrag\r\n  lastEntry = mpitime |> last()   // Hole den letzten Eintrag\r\n  \r\nunion(tables: [firstEntry, lastEntry]) // Kombiniere beide Tabellen\r\n  |> map(fn: (r) => ({\"_value\": r._value , \"Funktion\" : r.functionname }))\r\n  |> toTime()\r\n  |> rename (columns: {_value: \"Zeitstempel\"})\r\n  |> yield(name: \"mpitime\")\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Erste und letzte ausgeführte MPI Funktion von Prozess $ProzessID",
+          "type": "table"
+        }
+      ],
+      "title": "Allgemeine Job Informationen",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 4,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 241
+          },
+          "id": 3,
+          "options": {
+            "displayMode": "gradient",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 36,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/.*/",
+              "values": true
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.5.0",
+          "repeat": "ProzessID",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({\"_value\": r._value , \"Funktion\" : r.functionname }))\r\n  |> group(columns: [\"Funktion\"])\r\n  |> mean()\r\n  |> rename(columns: {_value: \"Laufzeit\"})\r\n  |> yield()\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Prozess $ProzessID: Durchschnittliche Laufzeit von Funktion: $functionname",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 344
+          },
+          "id": 41,
+          "options": {
+            "displayMode": "gradient",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/.*/",
+              "values": true
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.5.0",
+          "repeat": "ProzessID",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({\"_value\": r._value , \"Funktion\" : r.functionname }))\r\n  |> group(columns: [\"Funktion\"])\r\n  |> max()\r\n  |> rename(columns: {_value: \"Laufzeit\"})\r\n  |> yield()",
+              "refId": "A"
+            }
+          ],
+          "title": "Prozess $ProzessID: Maximale Laufzeit von Funktion: $functionname",
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "ns"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 352
+          },
+          "id": 42,
+          "options": {
+            "displayMode": "gradient",
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/.*/",
+              "values": true
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.5.0",
+          "repeat": "ProzessID",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({\"_value\": r._value , \"Funktion\" : r.functionname }))\r\n  |> group(columns: [\"Funktion\"])\r\n  |> min()\r\n  |> rename(columns: {_value: \"Laufzeit\"})\r\n  |> yield()\r\n",
+              "refId": "A"
+            }
+          ],
+          "title": "Prozess $ProzessID: Minimale Laufzeit von Funktion: $functionname",
+          "type": "bargauge"
+        }
+      ],
+      "title": "Betrachtung der Funktionen innerhalb eines Prozesses",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 37,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "unit": "ns"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "MPI_File_open"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "MPI_File_read"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 242
+          },
+          "id": 39,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^Zeit$/",
+              "values": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "groupBy": [
+                {
+                  "params": [
+                    "$__interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "orderByTime": "ASC",
+              "policy": "default",
+              "query": "from(bucket: \"hsebucket\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\n  |> filter(fn: (r) => r[\"_field\"] == \"function_name\" or r[\"_field\"] == \"time_diff\" or r[\"_field\"] == \"traced_filename\")\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\n  |> map(fn: (r) => ({Zeit: r._value, Funktion: r.functionname }))\n  |> group(columns: [\"Funktion\"]) \n  |> sum(column: \"Zeit\") \n  |>group()",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "title": "Prozess $ProzessID: Summierte Zeit in MPI-Funktionen",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "unit": "ns"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "MPI_File_open"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "MPI_File_read"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 242
+          },
+          "id": 36,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "calcs": [],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: ${functionname:json}))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid, \"Zeit in ns\": r._value, Funktion: r.functionname, Datei: r.filename }))\r\n  |> group(columns: [\"Funktion\"])\r\n  |> mean(column: \"Zeit in ns\")\r\n  |> group()",
+              "refId": "A"
+            }
+          ],
+          "title": "Durchschnittliche Zeit in MPI-Funktionen von Prozess $ProzessID",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic-by-name"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "ok"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "not ok"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "semi-dark-red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 250
+          },
+          "id": 31,
+          "maxPerRow": 2,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true,
+              "values": [
+                "percent"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/.*/",
+              "values": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.5.0",
+          "repeat": "functionname",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "ok = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"return_state\")\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"${functionname:json}\"]))\r\n  |> filter(fn: (r) => r[\"_value\"] == \"ok\")\r\n  |> map(fn: (r) => ({\"_value\": r._value}))\r\n  |> count()\r\n  |> rename(columns: {_value: \"ok\"})\r\n  |> yield(name: \"ok\")\r\n\r\n",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "hide": false,
+              "query": " notok = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"return_state\")\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"${functionname:json}\"]))\r\n  |> filter(fn: (r) => not r[\"_value\"] == \"ok\")\r\n  |> map(fn: (r) => ({\"_value\": r._value}))\r\n  |> count()\r\n  |> rename(columns: {_value: \"not ok\"})\r\n  |> yield(name: \"notok\")",
+              "refId": "B"
+            }
+          ],
+          "title": "Return Code Übersicht für MPI Funktion $functionname",
+          "type": "piechart"
+        }
+      ],
+      "title": "Prozessübergreifende Informationen zu MPI-Funktionen",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 26,
+      "panels": [],
+      "title": "Node Graph einzelner MPI-Funktionen",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "P951FEA4DE68E13C5"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 21,
+      "maxPerRow": 2,
+      "options": {
+        "edges": {
+          "mainStatUnit": "ns",
+          "secondaryStatUnit": "string"
+        },
+        "nodes": {
+          "arcs": [],
+          "mainStatUnit": "ns",
+          "secondaryStatUnit": "string"
+        },
+        "zoomMode": "cooperative"
+      },
+      "pluginVersion": "11.5.0",
+      "repeat": "functionname",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "import \"math\"\r\n\r\nsingle = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"${functionname:json}\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({mainstat: r._value, tmptitle: r.functionname, secondarystat: r.hostname, prozess: r.processid }))\r\n  |> group(columns: [\"tmptitle\"]) \r\n  |> sort(columns: [\"_time\"]) \r\n  |> map(fn: (r) => ({r with counter: 1})) // Assign 1 to each row\r\n  |> cumulativeSum(columns: [\"counter\"]) // Compute sequential identifiers\r\n  |> map(fn: (r) => ({ r with id: r.tmptitle + \":\" + string(v: r.counter)}))\r\n  |> map(fn: (r) => ({ r with title: r.tmptitle + \":\" + r.prozess}))\r\n  |> drop(columns: [\"counter\",\"prozess\",\"tmptitle\"])\r\n  |> map(fn: (r) => ({ r with key: \"const\" }))\r\n\r\ncumulativeNode = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"${functionname:json}\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({mainstat: r._value, title: r.functionname, prozess: r.processid, secondarystat: r.hostname }))\r\n  |> group(columns: [\"title\"])\r\n  |> sum(column: \"mainstat\")\r\n  |> limit(n: 1)\r\n  |> map(fn: (r) => ({ key: \"const\", MaxVal: r.mainstat }))\r\n  \r\npercent = join( tables: {const: cumulativeNode, data: single},on: [\"key\"], method: \"inner\")\r\n  |> map(fn: (r) => ({r with arc__percentage: if float(v:r.MaxVal) != 0.0 then math.round(x: (float(v: r.mainstat) / float(v: r.MaxVal)) * 100.0) / 100.0 else 0.0}))\r\n\r\n\r\nmainNode = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"${functionname:json}\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({mainstat: r._value, title: r.functionname, prozess: r.processid, secondarystat: r.hostname }))\r\n  |> group(columns: [\"title\"])\r\n  |> sum(column: \"mainstat\")\r\n  |> group()\r\n  |> map(fn: (r) => ({r with id: 1})) // Assign 1 to each row\r\n  |> cumulativeSum(columns: [\"id\"]) // Compute sequential identifiers\r\n  |> map(fn: (r) => ({ r with id: r.title}))\r\n  |> map(fn: (r) => ({ r with secondarystat: \"FA-Test\"}))\r\n  |> map(fn: (r) => ({ r with arc__percentage: 1.0}))\r\n\r\n final = union(tables: [percent, mainNode])\r\n  |> drop(columns: [\"key\",\"MaxVal\"])\r\n  |> yield(name: \"final\")",
+          "refId": "Single Nodes"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "hide": false,
+          "query": "import \"strings\"\r\n\r\nedges = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"${functionname:json}\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"time_diff\")\r\n  |> map(fn: (r) => ({mainstat: r._value, tmpsource: r.functionname, secondarystat: r.hostname}))\r\n  |> group(columns: [\"tmpsource\"]) \r\n  |> sort(columns: [\"_time\"]) \r\n  |> map(fn: (r) => ({r with counter: 1}))\r\n  |> cumulativeSum(columns: [\"counter\"])\r\n  |> map(fn: (r) => ({ r with source: r.tmpsource + \":\" + string(v: r.counter)}))\r\n  |> map(fn: (r) => ({ r with id: \"edge:\" + r.source}))\r\n  |> drop(columns: [\"counter\",\"tmpsource\"])\r\n  |> map(fn: (r) => ({ r with color: \"blue\"}))\r\n  |> map(fn: (r) => {\r\n    parts = strings.split(v: r.source, t: \":\")\r\n    return {id: r[\"id\"],source: r[\"source\"],mainstat: r[\"mainstat\"],color: r[\"color\"],secondarystat: r[\"secondarystat\"],target: string(v: parts[0])}\r\n  })\r\n  |> yield(name: \"edges\")",
+          "refId": "edges"
+        }
+      ],
+      "title": "Node Graph for $functionname und File: $filename",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "mainstat",
+            "renamePattern": "Laufzeit"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "secondarystat",
+            "renamePattern": "Hostname"
+          }
+        }
+      ],
+      "type": "nodeGraph"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 12,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 3,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Written Bytes"
+                },
+                "properties": [
+                  {
+                    "id": "custom.drawStyle",
+                    "value": "bars"
+                  },
+                  {
+                    "id": "custom.stacking",
+                    "value": {
+                      "group": "A",
+                      "mode": "none"
+                    }
+                  },
+                  {
+                    "id": "custom.barWidthFactor",
+                    "value": 0
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Read Bytes"
+                },
+                "properties": [
+                  {
+                    "id": "custom.stacking",
+                    "value": {
+                      "group": "A",
+                      "mode": "none"
+                    }
+                  },
+                  {
+                    "id": "custom.drawStyle",
+                    "value": "bars"
+                  },
+                  {
+                    "id": "custom.barWidthFactor",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 18,
+            "w": 24,
+            "x": 0,
+            "y": 75
+          },
+          "id": 13,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.5.0",
+          "repeat": "filename",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "writtenbytes = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"MPI_File_write\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_written_bytes\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\", \"_start\", \"_stop\", \"filename\", \"thread\",\"_field\",\"functionname\"])\r\n  |> map(fn:(r) => ({r with \"_value\": int(v: r[\"_value\"])}))\r\n  |> rename(columns: {_time: \"Zeit\", _value: \"Bytes written\", processid: \"Prozess\"})\r\n  |> yield(name: \"writtenbytes\")\r\n  ",
+              "refId": "Written Bytes"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "hide": false,
+              "query": "ersterEintrag = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"MPI_File_seek\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\", \"_start\", \"_stop\", \"filename\", \"thread\",\"_field\",\"functionname\"])\r\n  |> map(fn:(r) => ({r with \"_value\": int(v: r[\"_value\"])}))\r\n  |> rename(columns: {_time: \"Zeit\", _value: \"Offset\", processid: \"Prozess\"})\r\n  |> sort(columns: [\"Zeit\"], desc: false)\r\n  |> limit(n: 1)\r\n\r\noffsetNoDubs = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}])) \r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"MPI_File_seek\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\", \"_start\", \"_stop\", \"filename\", \"thread\",\"_field\",\"functionname\"])\r\n  |> map(fn:(r) => ({r with \"_value\": int(v: r[\"_value\"])}))\r\n  |> rename(columns: {_time: \"Zeit\", _value: \"Offset\", processid: \"Prozess\"})\r\n  |> sort(columns: [\"Zeit\"], desc: false)\r\n  |> elapsed(timeColumn: \"Zeit\", unit: 1ns, columnName: \"elapsed\")\r\n  |> map(fn: (r) => ({r with adjustment: if exists r.elapsed and r.elapsed < 1000000 then 1000000 else 0}))\r\n  |> map(fn: (r) => ({r with neue_Zeit: int(v:r.Zeit) + int(v: r.adjustment) }))\r\n  |> map(fn: (r) => ({r with neue_Zeit: time(v: r.neue_Zeit)}))\r\n  |> drop(columns: [\"Zeit\",\"elapsed\",\"adjustment\"])\r\n  |> rename(columns: {neue_Zeit: \"Zeit\"})\r\n\r\nunion(tables: [ersterEintrag, offsetNoDubs])\r\n  |> yield(name: \"final\")",
+              "refId": "Offsets"
+            },
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "hide": false,
+              "query": "readbytes = from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"functionname\"], set: [\"MPI_File_read\"]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_read_bytes\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\", \"_start\", \"_stop\", \"filename\", \"thread\",\"_field\",\"functionname\"])\r\n  |> map(fn:(r) => ({r with \"_value\": int(v: r[\"_value\"]) * -1}))\r\n  |> rename(columns: {_time: \"Zeit\", _value: \"Bytes read\", processid: \"Prozess\"})\r\n  |> yield(name: \"readbytes\")",
+              "refId": "Read Bytes"
+            }
+          ],
+          "title": "Zeitreihe für File: $filename mit MPI-Write/Read/Seek",
+          "transformations": [
+            {
+              "id": "prepareTimeSeries",
+              "options": {
+                "format": "multi"
+              }
+            }
+          ],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "P951FEA4DE68E13C5"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Offset",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [
+                {
+                  "options": {
+                    "8632": {
+                      "color": "yellow",
+                      "index": 0,
+                      "text": "Prozess 8632"
+                    },
+                    "8633": {
+                      "color": "green",
+                      "index": 1,
+                      "text": "Prozess 8633"
+                    },
+                    "8634": {
+                      "color": "blue",
+                      "index": 2,
+                      "text": "Prozess 8634"
+                    },
+                    "8635": {
+                      "color": "purple",
+                      "index": 3,
+                      "text": "Prozess 8635"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Prozess ID"
+                },
+                "properties": [
+                  {
+                    "id": "custom.axisLabel",
+                    "value": ""
+                  },
+                  {
+                    "id": "custom.axisPlacement",
+                    "value": "hidden"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 17,
+            "w": 24,
+            "x": 0,
+            "y": 93
+          },
+          "id": 34,
+          "options": {
+            "barRadius": 0.2,
+            "barWidth": 0.8,
+            "colorByField": "Prozess ID",
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "right",
+              "showLegend": true
+            },
+            "orientation": "vertical",
+            "showValue": "always",
+            "stacking": "none",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "asc"
+            },
+            "xField": "Prozess ID",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "11.5.0",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "P951FEA4DE68E13C5"
+              },
+              "query": "from(bucket: \"hsebucket\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"libiotrace\")\r\n  |> filter(fn: (r) => r[\"jobname\"] == \"${jobname}\")\r\n  |> filter(fn: (r) => contains(value: r[\"filename\"], set: [${filename:doublequote}]))\r\n  |> filter(fn: (r) => contains(value: r[\"processid\"], set: [${ProzessID:doublequote}]))\r\n  |> filter(fn: (r) => r[\"_field\"] == \"function_data_offset\")\r\n  |> drop(columns: [\"_measurement\", \"hostname\", \"jobname\",\"_start\", \"_stop\", \"_time\"])\r\n  |> filter(fn: (r) => r[\"functionname\"] == \"MPI_File_seek\")\r\n  |> map(fn: (r) => ({\"Prozess ID\": r. processid, Offset: r._value}))\r\n  |> group()\r\n  |> sort(columns: [\"Offset\"], desc: false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Offset der Prozesse bei MPI Seek für File: $filename",
+          "type": "barchart"
+        }
+      ],
+      "title": "File-I/O Übersicht",
+      "type": "row"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "mpi_file_io_2_10",
+          "value": "mpi_file_io_2_10"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\r\n)\r\n",
+        "includeAll": false,
+        "name": "jobname",
+        "options": [],
+        "query": {
+          "0": "i",
+          "1": "m",
+          "2": "p",
+          "3": "o",
+          "4": "r",
+          "5": "t",
+          "6": " ",
+          "7": "\"",
+          "8": "i",
+          "9": "n",
+          "10": "f",
+          "11": "l",
+          "12": "u",
+          "13": "x",
+          "14": "d",
+          "15": "a",
+          "16": "t",
+          "17": "a",
+          "18": "/",
+          "19": "i",
+          "20": "n",
+          "21": "f",
+          "22": "l",
+          "23": "u",
+          "24": "x",
+          "25": "d",
+          "26": "b",
+          "27": "/",
+          "28": "s",
+          "29": "c",
+          "30": "h",
+          "31": "e",
+          "32": "m",
+          "33": "a",
+          "34": "\"",
+          "35": "\r",
+          "36": "\n",
+          "37": "\r",
+          "38": "\n",
+          "39": "s",
+          "40": "c",
+          "41": "h",
+          "42": "e",
+          "43": "m",
+          "44": "a",
+          "45": ".",
+          "46": "t",
+          "47": "a",
+          "48": "g",
+          "49": "V",
+          "50": "a",
+          "51": "l",
+          "52": "u",
+          "53": "e",
+          "54": "s",
+          "55": "(",
+          "56": "\r",
+          "57": "\n",
+          "58": " ",
+          "59": " ",
+          "60": "b",
+          "61": "u",
+          "62": "c",
+          "63": "k",
+          "64": "e",
+          "65": "t",
+          "66": ":",
+          "67": " ",
+          "68": "\"",
+          "69": "h",
+          "70": "s",
+          "71": "e",
+          "72": "b",
+          "73": "u",
+          "74": "c",
+          "75": "k",
+          "76": "e",
+          "77": "t",
+          "78": "\"",
+          "79": ",",
+          "80": "\r",
+          "81": "\n",
+          "82": " ",
+          "83": " ",
+          "84": "t",
+          "85": "a",
+          "86": "g",
+          "87": ":",
+          "88": " ",
+          "89": "\"",
+          "90": "j",
+          "91": "o",
+          "92": "b",
+          "93": "n",
+          "94": "a",
+          "95": "m",
+          "96": "e",
+          "97": "\"",
+          "98": ",",
+          "99": "\r",
+          "100": "\n",
+          "101": " ",
+          "102": " ",
+          "103": "p",
+          "104": "r",
+          "105": "e",
+          "106": "d",
+          "107": "i",
+          "108": "c",
+          "109": "a",
+          "110": "t",
+          "111": "e",
+          "112": ":",
+          "113": " ",
+          "114": "(",
+          "115": "r",
+          "116": ")",
+          "117": " ",
+          "118": "=",
+          "119": ">",
+          "120": " ",
+          "121": "r",
+          "122": "[",
+          "123": "\"",
+          "124": "_",
+          "125": "m",
+          "126": "e",
+          "127": "a",
+          "128": "s",
+          "129": "u",
+          "130": "r",
+          "131": "e",
+          "132": "m",
+          "133": "e",
+          "134": "n",
+          "135": "t",
+          "136": "\"",
+          "137": "]",
+          "138": " ",
+          "139": "=",
+          "140": "=",
+          "141": " ",
+          "142": "\"",
+          "143": "l",
+          "144": "i",
+          "145": "b",
+          "146": "i",
+          "147": "o",
+          "148": "t",
+          "149": "r",
+          "150": "a",
+          "151": "c",
+          "152": "e",
+          "153": "\"",
+          "154": ",",
+          "155": "\r",
+          "156": "\n",
+          "157": " ",
+          "158": " ",
+          "159": "s",
+          "160": "t",
+          "161": "a",
+          "162": "r",
+          "163": "t",
+          "164": ":",
+          "165": " ",
+          "166": "-",
+          "167": "1",
+          "168": "0",
+          "169": "0",
+          "170": "d",
+          "171": "\r",
+          "172": "\n",
+          "173": ")",
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"jobname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\",\r\n)\r\n"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and r[\"jobname\"] == \"${jobname}\",\r\n)",
+        "includeAll": true,
+        "multi": true,
+        "name": "ProzessID",
+        "options": [],
+        "query": {
+          "0": "i",
+          "1": "m",
+          "2": "p",
+          "3": "o",
+          "4": "r",
+          "5": "t",
+          "6": " ",
+          "7": "\"",
+          "8": "i",
+          "9": "n",
+          "10": "f",
+          "11": "l",
+          "12": "u",
+          "13": "x",
+          "14": "d",
+          "15": "a",
+          "16": "t",
+          "17": "a",
+          "18": "/",
+          "19": "i",
+          "20": "n",
+          "21": "f",
+          "22": "l",
+          "23": "u",
+          "24": "x",
+          "25": "d",
+          "26": "b",
+          "27": "/",
+          "28": "s",
+          "29": "c",
+          "30": "h",
+          "31": "e",
+          "32": "m",
+          "33": "a",
+          "34": "\"",
+          "35": "\r",
+          "36": "\n",
+          "37": "\r",
+          "38": "\n",
+          "39": "s",
+          "40": "c",
+          "41": "h",
+          "42": "e",
+          "43": "m",
+          "44": "a",
+          "45": ".",
+          "46": "t",
+          "47": "a",
+          "48": "g",
+          "49": "V",
+          "50": "a",
+          "51": "l",
+          "52": "u",
+          "53": "e",
+          "54": "s",
+          "55": "(",
+          "56": "\r",
+          "57": "\n",
+          "58": " ",
+          "59": " ",
+          "60": "b",
+          "61": "u",
+          "62": "c",
+          "63": "k",
+          "64": "e",
+          "65": "t",
+          "66": ":",
+          "67": " ",
+          "68": "\"",
+          "69": "h",
+          "70": "s",
+          "71": "e",
+          "72": "b",
+          "73": "u",
+          "74": "c",
+          "75": "k",
+          "76": "e",
+          "77": "t",
+          "78": "\"",
+          "79": ",",
+          "80": "\r",
+          "81": "\n",
+          "82": " ",
+          "83": " ",
+          "84": "t",
+          "85": "a",
+          "86": "g",
+          "87": ":",
+          "88": " ",
+          "89": "\"",
+          "90": "p",
+          "91": "r",
+          "92": "o",
+          "93": "c",
+          "94": "e",
+          "95": "s",
+          "96": "s",
+          "97": "i",
+          "98": "d",
+          "99": "\"",
+          "100": ",",
+          "101": "\r",
+          "102": "\n",
+          "103": " ",
+          "104": " ",
+          "105": "p",
+          "106": "r",
+          "107": "e",
+          "108": "d",
+          "109": "i",
+          "110": "c",
+          "111": "a",
+          "112": "t",
+          "113": "e",
+          "114": ":",
+          "115": " ",
+          "116": "(",
+          "117": "r",
+          "118": ")",
+          "119": " ",
+          "120": "=",
+          "121": ">",
+          "122": " ",
+          "123": "r",
+          "124": "[",
+          "125": "\"",
+          "126": "_",
+          "127": "m",
+          "128": "e",
+          "129": "a",
+          "130": "s",
+          "131": "u",
+          "132": "r",
+          "133": "e",
+          "134": "m",
+          "135": "e",
+          "136": "n",
+          "137": "t",
+          "138": "\"",
+          "139": "]",
+          "140": " ",
+          "141": "=",
+          "142": "=",
+          "143": " ",
+          "144": "\"",
+          "145": "l",
+          "146": "i",
+          "147": "b",
+          "148": "i",
+          "149": "o",
+          "150": "t",
+          "151": "r",
+          "152": "a",
+          "153": "c",
+          "154": "e",
+          "155": "\"",
+          "156": " ",
+          "157": "a",
+          "158": "n",
+          "159": "d",
+          "160": " ",
+          "161": "r",
+          "162": "[",
+          "163": "\"",
+          "164": "j",
+          "165": "o",
+          "166": "b",
+          "167": "n",
+          "168": "a",
+          "169": "m",
+          "170": "e",
+          "171": "\"",
+          "172": "]",
+          "173": " ",
+          "174": "=",
+          "175": "=",
+          "176": " ",
+          "177": "\"",
+          "178": "$",
+          "179": "{",
+          "180": "j",
+          "181": "o",
+          "182": "b",
+          "183": "n",
+          "184": "a",
+          "185": "m",
+          "186": "e",
+          "187": "}",
+          "188": "\"",
+          "189": ",",
+          "190": "\r",
+          "191": "\n",
+          "192": " ",
+          "193": " ",
+          "194": "s",
+          "195": "t",
+          "196": "a",
+          "197": "r",
+          "198": "t",
+          "199": ":",
+          "200": " ",
+          "201": "-",
+          "202": "1",
+          "203": "0",
+          "204": "0",
+          "205": "d",
+          "206": "\r",
+          "207": "\n",
+          "208": ")",
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"processid\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and r[\"jobname\"] == \"${jobname}\",\r\n)"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "FA-Test"
+          ],
+          "value": [
+            "FA-Test"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"hostname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and r[\"jobname\"] == \"${jobname}\",\r\n)\r\n",
+        "includeAll": true,
+        "multi": true,
+        "name": "hostname",
+        "options": [],
+        "query": {
+          "0": "i",
+          "1": "m",
+          "2": "p",
+          "3": "o",
+          "4": "r",
+          "5": "t",
+          "6": " ",
+          "7": "\"",
+          "8": "i",
+          "9": "n",
+          "10": "f",
+          "11": "l",
+          "12": "u",
+          "13": "x",
+          "14": "d",
+          "15": "a",
+          "16": "t",
+          "17": "a",
+          "18": "/",
+          "19": "i",
+          "20": "n",
+          "21": "f",
+          "22": "l",
+          "23": "u",
+          "24": "x",
+          "25": "d",
+          "26": "b",
+          "27": "/",
+          "28": "s",
+          "29": "c",
+          "30": "h",
+          "31": "e",
+          "32": "m",
+          "33": "a",
+          "34": "\"",
+          "35": "\r",
+          "36": "\n",
+          "37": "i",
+          "38": "m",
+          "39": "p",
+          "40": "o",
+          "41": "r",
+          "42": "t",
+          "43": " ",
+          "44": "\"",
+          "45": "s",
+          "46": "t",
+          "47": "r",
+          "48": "i",
+          "49": "n",
+          "50": "g",
+          "51": "s",
+          "52": "\"",
+          "53": "\r",
+          "54": "\n",
+          "55": "\r",
+          "56": "\n",
+          "57": "s",
+          "58": "c",
+          "59": "h",
+          "60": "e",
+          "61": "m",
+          "62": "a",
+          "63": ".",
+          "64": "t",
+          "65": "a",
+          "66": "g",
+          "67": "V",
+          "68": "a",
+          "69": "l",
+          "70": "u",
+          "71": "e",
+          "72": "s",
+          "73": "(",
+          "74": "\r",
+          "75": "\n",
+          "76": " ",
+          "77": " ",
+          "78": "b",
+          "79": "u",
+          "80": "c",
+          "81": "k",
+          "82": "e",
+          "83": "t",
+          "84": ":",
+          "85": " ",
+          "86": "\"",
+          "87": "h",
+          "88": "s",
+          "89": "e",
+          "90": "b",
+          "91": "u",
+          "92": "c",
+          "93": "k",
+          "94": "e",
+          "95": "t",
+          "96": "\"",
+          "97": ",",
+          "98": "\r",
+          "99": "\n",
+          "100": " ",
+          "101": " ",
+          "102": "t",
+          "103": "a",
+          "104": "g",
+          "105": ":",
+          "106": " ",
+          "107": "\"",
+          "108": "h",
+          "109": "o",
+          "110": "s",
+          "111": "t",
+          "112": "n",
+          "113": "a",
+          "114": "m",
+          "115": "e",
+          "116": "\"",
+          "117": ",",
+          "118": "\r",
+          "119": "\n",
+          "120": " ",
+          "121": " ",
+          "122": "p",
+          "123": "r",
+          "124": "e",
+          "125": "d",
+          "126": "i",
+          "127": "c",
+          "128": "a",
+          "129": "t",
+          "130": "e",
+          "131": ":",
+          "132": " ",
+          "133": "(",
+          "134": "r",
+          "135": ")",
+          "136": " ",
+          "137": "=",
+          "138": ">",
+          "139": " ",
+          "140": "r",
+          "141": "[",
+          "142": "\"",
+          "143": "_",
+          "144": "m",
+          "145": "e",
+          "146": "a",
+          "147": "s",
+          "148": "u",
+          "149": "r",
+          "150": "e",
+          "151": "m",
+          "152": "e",
+          "153": "n",
+          "154": "t",
+          "155": "\"",
+          "156": "]",
+          "157": " ",
+          "158": "=",
+          "159": "=",
+          "160": " ",
+          "161": "\"",
+          "162": "l",
+          "163": "i",
+          "164": "b",
+          "165": "i",
+          "166": "o",
+          "167": "t",
+          "168": "r",
+          "169": "a",
+          "170": "c",
+          "171": "e",
+          "172": "\"",
+          "173": " ",
+          "174": "a",
+          "175": "n",
+          "176": "d",
+          "177": " ",
+          "178": "r",
+          "179": "[",
+          "180": "\"",
+          "181": "j",
+          "182": "o",
+          "183": "b",
+          "184": "n",
+          "185": "a",
+          "186": "m",
+          "187": "e",
+          "188": "\"",
+          "189": "]",
+          "190": " ",
+          "191": "=",
+          "192": "=",
+          "193": " ",
+          "194": "\"",
+          "195": "$",
+          "196": "{",
+          "197": "j",
+          "198": "o",
+          "199": "b",
+          "200": "n",
+          "201": "a",
+          "202": "m",
+          "203": "e",
+          "204": "}",
+          "205": "\"",
+          "206": ",",
+          "207": "\r",
+          "208": "\n",
+          "209": " ",
+          "210": " ",
+          "211": "s",
+          "212": "t",
+          "213": "a",
+          "214": "r",
+          "215": "t",
+          "216": ":",
+          "217": " ",
+          "218": "-",
+          "219": "1",
+          "220": "0",
+          "221": "0",
+          "222": "d",
+          "223": "\r",
+          "224": "\n",
+          "225": ")",
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"hostname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and r[\"jobname\"] == \"${jobname}\",\r\n)\r\n"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "MPI_File_seek",
+            "MPI_File_read"
+          ],
+          "value": [
+            "MPI_File_seek",
+            "MPI_File_read"
+          ]
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"functionname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and \r\n            r[\"jobname\"] == \"${jobname}\" and r[\"functionname\"] =~ /.*MPI.*/ ,\r\n)\r\n",
+        "includeAll": true,
+        "multi": true,
+        "name": "functionname",
+        "options": [],
+        "query": {
+          "0": "i",
+          "1": "m",
+          "2": "p",
+          "3": "o",
+          "4": "r",
+          "5": "t",
+          "6": " ",
+          "7": "\"",
+          "8": "i",
+          "9": "n",
+          "10": "f",
+          "11": "l",
+          "12": "u",
+          "13": "x",
+          "14": "d",
+          "15": "a",
+          "16": "t",
+          "17": "a",
+          "18": "/",
+          "19": "i",
+          "20": "n",
+          "21": "f",
+          "22": "l",
+          "23": "u",
+          "24": "x",
+          "25": "d",
+          "26": "b",
+          "27": "/",
+          "28": "s",
+          "29": "c",
+          "30": "h",
+          "31": "e",
+          "32": "m",
+          "33": "a",
+          "34": "\"",
+          "35": "\r",
+          "36": "\n",
+          "37": "\r",
+          "38": "\n",
+          "39": "s",
+          "40": "c",
+          "41": "h",
+          "42": "e",
+          "43": "m",
+          "44": "a",
+          "45": ".",
+          "46": "t",
+          "47": "a",
+          "48": "g",
+          "49": "V",
+          "50": "a",
+          "51": "l",
+          "52": "u",
+          "53": "e",
+          "54": "s",
+          "55": "(",
+          "56": "\r",
+          "57": "\n",
+          "58": " ",
+          "59": " ",
+          "60": "b",
+          "61": "u",
+          "62": "c",
+          "63": "k",
+          "64": "e",
+          "65": "t",
+          "66": ":",
+          "67": " ",
+          "68": "\"",
+          "69": "h",
+          "70": "s",
+          "71": "e",
+          "72": "b",
+          "73": "u",
+          "74": "c",
+          "75": "k",
+          "76": "e",
+          "77": "t",
+          "78": "\"",
+          "79": ",",
+          "80": "\r",
+          "81": "\n",
+          "82": " ",
+          "83": " ",
+          "84": "t",
+          "85": "a",
+          "86": "g",
+          "87": ":",
+          "88": " ",
+          "89": "\"",
+          "90": "f",
+          "91": "u",
+          "92": "n",
+          "93": "c",
+          "94": "t",
+          "95": "i",
+          "96": "o",
+          "97": "n",
+          "98": "n",
+          "99": "a",
+          "100": "m",
+          "101": "e",
+          "102": "\"",
+          "103": ",",
+          "104": "\r",
+          "105": "\n",
+          "106": " ",
+          "107": " ",
+          "108": "p",
+          "109": "r",
+          "110": "e",
+          "111": "d",
+          "112": "i",
+          "113": "c",
+          "114": "a",
+          "115": "t",
+          "116": "e",
+          "117": ":",
+          "118": " ",
+          "119": "(",
+          "120": "r",
+          "121": ")",
+          "122": " ",
+          "123": "=",
+          "124": ">",
+          "125": " ",
+          "126": "r",
+          "127": "[",
+          "128": "\"",
+          "129": "_",
+          "130": "m",
+          "131": "e",
+          "132": "a",
+          "133": "s",
+          "134": "u",
+          "135": "r",
+          "136": "e",
+          "137": "m",
+          "138": "e",
+          "139": "n",
+          "140": "t",
+          "141": "\"",
+          "142": "]",
+          "143": " ",
+          "144": "=",
+          "145": "=",
+          "146": " ",
+          "147": "\"",
+          "148": "l",
+          "149": "i",
+          "150": "b",
+          "151": "i",
+          "152": "o",
+          "153": "t",
+          "154": "r",
+          "155": "a",
+          "156": "c",
+          "157": "e",
+          "158": "\"",
+          "159": " ",
+          "160": "a",
+          "161": "n",
+          "162": "d",
+          "163": " ",
+          "164": "r",
+          "165": "[",
+          "166": "\"",
+          "167": "j",
+          "168": "o",
+          "169": "b",
+          "170": "n",
+          "171": "a",
+          "172": "m",
+          "173": "e",
+          "174": "\"",
+          "175": "]",
+          "176": " ",
+          "177": "=",
+          "178": "=",
+          "179": " ",
+          "180": "\"",
+          "181": "$",
+          "182": "{",
+          "183": "j",
+          "184": "o",
+          "185": "b",
+          "186": "n",
+          "187": "a",
+          "188": "m",
+          "189": "e",
+          "190": "}",
+          "191": "\"",
+          "192": " ",
+          "193": "a",
+          "194": "n",
+          "195": "d",
+          "196": " ",
+          "197": "r",
+          "198": "[",
+          "199": "\"",
+          "200": "f",
+          "201": "u",
+          "202": "n",
+          "203": "c",
+          "204": "t",
+          "205": "i",
+          "206": "o",
+          "207": "n",
+          "208": "n",
+          "209": "a",
+          "210": "m",
+          "211": "e",
+          "212": "\"",
+          "213": "]",
+          "214": " ",
+          "215": "=",
+          "216": "~",
+          "217": " ",
+          "218": "/",
+          "219": ".",
+          "220": "*",
+          "221": "M",
+          "222": "P",
+          "223": "I",
+          "224": ".",
+          "225": "*",
+          "226": "/",
+          "227": " ",
+          "228": ",",
+          "229": "\r",
+          "230": "\n",
+          "231": " ",
+          "232": " ",
+          "233": "s",
+          "234": "t",
+          "235": "a",
+          "236": "r",
+          "237": "t",
+          "238": ":",
+          "239": " ",
+          "240": "-",
+          "241": "1",
+          "242": "0",
+          "243": "0",
+          "244": "d",
+          "245": "\r",
+          "246": "\n",
+          "247": ")",
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"functionname\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and \r\n            r[\"jobname\"] == \"${jobname}\" and r[\"functionname\"] =~ /.*MPI.*/ ,\r\n)\r\n"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "allowCustomValue": false,
+        "current": {
+          "text": "mpi_file_io.txt",
+          "value": "mpi_file_io.txt"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "P951FEA4DE68E13C5"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"filename\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and \r\n            r[\"jobname\"] == \"${jobname}\" and r[\"functionname\"] =~ /.*MPI.*/ ,\r\n)\r\n",
+        "includeAll": false,
+        "name": "filename",
+        "options": [],
+        "query": {
+          "0": "i",
+          "1": "m",
+          "2": "p",
+          "3": "o",
+          "4": "r",
+          "5": "t",
+          "6": " ",
+          "7": "\"",
+          "8": "i",
+          "9": "n",
+          "10": "f",
+          "11": "l",
+          "12": "u",
+          "13": "x",
+          "14": "d",
+          "15": "a",
+          "16": "t",
+          "17": "a",
+          "18": "/",
+          "19": "i",
+          "20": "n",
+          "21": "f",
+          "22": "l",
+          "23": "u",
+          "24": "x",
+          "25": "d",
+          "26": "b",
+          "27": "/",
+          "28": "s",
+          "29": "c",
+          "30": "h",
+          "31": "e",
+          "32": "m",
+          "33": "a",
+          "34": "\"",
+          "35": "\r",
+          "36": "\n",
+          "37": "\r",
+          "38": "\n",
+          "39": "s",
+          "40": "c",
+          "41": "h",
+          "42": "e",
+          "43": "m",
+          "44": "a",
+          "45": ".",
+          "46": "t",
+          "47": "a",
+          "48": "g",
+          "49": "V",
+          "50": "a",
+          "51": "l",
+          "52": "u",
+          "53": "e",
+          "54": "s",
+          "55": "(",
+          "56": "\r",
+          "57": "\n",
+          "58": " ",
+          "59": " ",
+          "60": "b",
+          "61": "u",
+          "62": "c",
+          "63": "k",
+          "64": "e",
+          "65": "t",
+          "66": ":",
+          "67": " ",
+          "68": "\"",
+          "69": "h",
+          "70": "s",
+          "71": "e",
+          "72": "b",
+          "73": "u",
+          "74": "c",
+          "75": "k",
+          "76": "e",
+          "77": "t",
+          "78": "\"",
+          "79": ",",
+          "80": "\r",
+          "81": "\n",
+          "82": " ",
+          "83": " ",
+          "84": "t",
+          "85": "a",
+          "86": "g",
+          "87": ":",
+          "88": " ",
+          "89": "\"",
+          "90": "f",
+          "91": "u",
+          "92": "n",
+          "93": "c",
+          "94": "t",
+          "95": "i",
+          "96": "o",
+          "97": "n",
+          "98": "n",
+          "99": "a",
+          "100": "m",
+          "101": "e",
+          "102": "\"",
+          "103": ",",
+          "104": "\r",
+          "105": "\n",
+          "106": " ",
+          "107": " ",
+          "108": "p",
+          "109": "r",
+          "110": "e",
+          "111": "d",
+          "112": "i",
+          "113": "c",
+          "114": "a",
+          "115": "t",
+          "116": "e",
+          "117": ":",
+          "118": " ",
+          "119": "(",
+          "120": "r",
+          "121": ")",
+          "122": " ",
+          "123": "=",
+          "124": ">",
+          "125": " ",
+          "126": "r",
+          "127": "[",
+          "128": "\"",
+          "129": "_",
+          "130": "m",
+          "131": "e",
+          "132": "a",
+          "133": "s",
+          "134": "u",
+          "135": "r",
+          "136": "e",
+          "137": "m",
+          "138": "e",
+          "139": "n",
+          "140": "t",
+          "141": "\"",
+          "142": "]",
+          "143": " ",
+          "144": "=",
+          "145": "=",
+          "146": " ",
+          "147": "\"",
+          "148": "l",
+          "149": "i",
+          "150": "b",
+          "151": "i",
+          "152": "o",
+          "153": "t",
+          "154": "r",
+          "155": "a",
+          "156": "c",
+          "157": "e",
+          "158": "\"",
+          "159": " ",
+          "160": "a",
+          "161": "n",
+          "162": "d",
+          "163": " ",
+          "164": "r",
+          "165": "[",
+          "166": "\"",
+          "167": "j",
+          "168": "o",
+          "169": "b",
+          "170": "n",
+          "171": "a",
+          "172": "m",
+          "173": "e",
+          "174": "\"",
+          "175": "]",
+          "176": " ",
+          "177": "=",
+          "178": "=",
+          "179": " ",
+          "180": "\"",
+          "181": "$",
+          "182": "{",
+          "183": "j",
+          "184": "o",
+          "185": "b",
+          "186": "n",
+          "187": "a",
+          "188": "m",
+          "189": "e",
+          "190": "}",
+          "191": "\"",
+          "192": " ",
+          "193": "a",
+          "194": "n",
+          "195": "d",
+          "196": " ",
+          "197": "r",
+          "198": "[",
+          "199": "\"",
+          "200": "f",
+          "201": "u",
+          "202": "n",
+          "203": "c",
+          "204": "t",
+          "205": "i",
+          "206": "o",
+          "207": "n",
+          "208": "n",
+          "209": "a",
+          "210": "m",
+          "211": "e",
+          "212": "\"",
+          "213": "]",
+          "214": " ",
+          "215": "=",
+          "216": "~",
+          "217": " ",
+          "218": "/",
+          "219": ".",
+          "220": "*",
+          "221": "M",
+          "222": "P",
+          "223": "I",
+          "224": ".",
+          "225": "*",
+          "226": "/",
+          "227": " ",
+          "228": ",",
+          "229": "\r",
+          "230": "\n",
+          "231": " ",
+          "232": " ",
+          "233": "s",
+          "234": "t",
+          "235": "a",
+          "236": "r",
+          "237": "t",
+          "238": ":",
+          "239": " ",
+          "240": "-",
+          "241": "1",
+          "242": "0",
+          "243": "0",
+          "244": "d",
+          "245": "\r",
+          "246": "\n",
+          "247": ")",
+          "query": "import \"influxdata/influxdb/schema\"\r\n\r\nschema.tagValues(\r\n  bucket: \"hsebucket\",\r\n  tag: \"filename\",\r\n  predicate: (r) => r[\"_measurement\"] == \"libiotrace\" and \r\n            r[\"jobname\"] == \"${jobname}\" and r[\"functionname\"] =~ /.*MPI.*/ ,\r\n)\r\n"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Visualisierung von MPI-File-I/O",
+  "uid": "ce11jdvw238jkf",
+  "version": 21,
+  "weekStart": ""
+}

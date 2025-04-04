@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.3.2)
+
+find_program(CMAKE_C_COMPILER NAMES $ENV{CC} gcc PATHS ENV PATH NO_DEFAULT_PATH)
+find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PATH)
+
 project(libiotrace C CXX)
 
 set(CMAKE_C_STANDARD 99)

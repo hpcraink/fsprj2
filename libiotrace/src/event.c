@@ -1328,7 +1328,6 @@ void send_data(const char *message, SOCKET socket) {
             } else {
                 LOG_ERROR_AND_DIE("send() returned %d, errno: %d, socket: %d", bytes_sent,
                         errno, socket);
-
             }
         } else {
             if ((size_t)bytes_sent < bytes_to_send) {
@@ -1759,8 +1758,8 @@ void* communication_thread(ATTRIBUTE_UNUSED void *arg) {
                             4096, 0);
                     if (1 > bytes_received) {
                         //Socket is destroyed or closed by peer
-                    	LOG_DEBUG("socket destroyed or closed by peer (recv() returned %ld, errno=%d)",
-					bytes_received, errno);
+                    	LOG_DEBUG("socket (%d) destroyed or closed by peer (recv() returned %ld, errno=%d)",
+					recv_sockets[i]->socket, bytes_received, errno);
                     	CLOSESOCKET(recv_sockets[i]->socket);
                     	libiotrace_socket *s = recv_sockets[i];
                     	delete_socket(recv_sockets[i]->socket, NULL, &recv_sockets_len, &recv_sockets);

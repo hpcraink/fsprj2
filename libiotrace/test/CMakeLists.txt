@@ -601,7 +601,8 @@ if (WITH_UNIT_TESTS)
 	find_package(OpenMP)
 
         # test with: rm -f mpi_random_file_io_*.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_random_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x LD_PRELOAD=../src/libiotrace.so mpi_random_file_io 20 1 2 120 10 200 1234567
-        add_executable(mpi_random_file_io mpi_random_file_io.c)
+	# or: rm -f mpi_random_file_io_*.txt && mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_LOG_NAME=mpi_random_file_io_test1 -x LD_PRELOAD=../src/libiotrace.so mpi_random_file_io 20 1 2 120 10 200 1234567
+	add_executable(mpi_random_file_io mpi_random_file_io.c)
         target_compile_options(mpi_random_file_io PRIVATE "-DWANT_OPENMP")
         target_link_libraries(mpi_random_file_io PRIVATE ${TESTS_LINK_OPTIONS})
         target_link_libraries(mpi_random_file_io PRIVATE m)

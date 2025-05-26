@@ -1,0 +1,22 @@
+wget https://download.influxdata.com/influxdb/releases/influxdb2-2.7.10_linux_amd64.tar.gz
+wget https://download.influxdata.com/influxdb/releases/influxdb2-client-2.7.5-linux-amd64.tar.gz
+mkdir influx
+tar -xvzf influxdb2-2.7.10_linux_amd64.tar.gz -C influx --strip-components 1
+tar -xvzf influxdb2-client-2.7.5-linux-amd64.tar.gz -C influx --strip-component 1
+
+srun --partition=gpu1 --ntasks=48 --mem=300000mb --time=02:00:00 --pty /bin/bash
+
+(cd influx && taskset -c 0-31 ./usr/bin/influxd --log-level debug --bolt-path=.influxdbv2/influxd.bolt --engine-path=.influxdbv2/engine --reporting-disabled &> ./$(date '+%Y-%m-%d_%H-%M')_log_influxd.log &)
+(cd influx && ./influx setup --bucket hsebucket -t OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -o hse --username=admin --password=test12345678 -f)
+
+ccmake ..
+ALL_WRAPPERS_ACTIVE              OFF
+c
+g
+make
+
+cd test
+
+echo -e "open\nclose\nwrite\nread" > ./whitelist
+
+rm -f mpi_random_file_io_*.txt && taskset -c 32-47 mpirun -np 4 -x OMP_NUM_THREADS=2 -x IOTRACE_WHITELIST=./whitelist -x IOTRACE_LOG_NAME=mpi_random_file_io_test1 -x IOTRACE_DATABASE_IP=127.0.0.1 -x IOTRACE_DATABASE_PORT=8086 -x IOTRACE_INFLUX_ORGANIZATION=hse -x IOTRACE_INFLUX_BUCKET=hsebucket -x IOTRACE_INFLUX_TOKEN=OXBWllU1poZotgyBlLlo2XQ_u4AYGYKQmdxvJJeotKRyvdn5mwjEhCXyOjyldpMmNt_9YY4k3CK-f5Eh1bN0Ng== -x LD_PRELOAD=../src/libiotrace.so mpi_random_file_io 20 1 2 120 10 200 1234567

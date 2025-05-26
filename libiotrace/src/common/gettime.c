@@ -40,16 +40,16 @@ uint64_t gettime(void) {
     uint64_t ret;
 #if defined(WANT_GETTIME)
     struct timespec t;
-#ifdef REALTIME
+#  ifdef REALTIME
     clock_gettime(CLOCK_REALTIME, &t);
-#else
+#  else
     clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-#endif
+#  endif
     ret = (u_int64_t)t.tv_sec * 1000000000ll + (u_int64_t)t.tv_nsec;
 #elif defined(WANT_GETTIMEOFDAY)
     static struct timeval tv;
     gettimeofday(&tv, NULL);
-    ret = tv.tv_sec * 1000ll * 1000ll + tv.tv_usec * 1000ll; 
+    ret = (tv.tv_sec * 1000ll * 1000ll + tv.tv_usec) * 1000ll; 
 #elif defined(WANT_RDTSC)
     ret = getrdtsc();
 #else

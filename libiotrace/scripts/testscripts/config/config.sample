@@ -22,3 +22,5 @@ test_dir="${base_path}/scripts"
 test_libiotrace_build="${base_path}/libiotrace_build"
 export test_libiotrace_so="${test_libiotrace_build}/src/libiotrace.so"
 export test_build_test_dir="${test_libiotrace_build}/test"
+
+set -o allexport && source "${test_config_dir}/partitions" && set +o allexport

@@ -1,0 +1,11 @@
+bw_uni_cluster_partition_max_30_min="dev_cpu_il"
+bw_uni_cluster_partition="cpu_il"
+bw_uni_cluster_default_network_interface="ib0"
+
+dachs_partition_max_30_min="gpu1"
+dachs_partition="gpu1"
+dachs_default_network_interface="ibp129s0"
+
+test_partition_max_30_min="${dachs_partition_max_30_min}"
+test_partition="${dachs_partition}"
+test_default_network_interface="${dachs_default_network_interface}"

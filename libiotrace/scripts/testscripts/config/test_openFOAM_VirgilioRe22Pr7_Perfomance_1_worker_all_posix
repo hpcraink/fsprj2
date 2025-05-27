@@ -30,7 +30,7 @@ test_processes_per_worker=64
 export test_processes_per_influxdb=60
 test_mem="249600mb"
 test_time="00:30:00"
-test_queue_name="dev_multiple_il"
+test_queue_name="${test_partition_max_30_min}"
 
 # test script
 test_script="./openFOAM_VirgilioRe22Pr7_Perfomance_all_posix.sh"

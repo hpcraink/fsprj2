@@ -1,10 +1,11 @@
 # dependencies
-test_source_configs=("influxdb" "gcc_mpi" "openfoam_org_7")
+test_source_configs=("influxdb" "gcc_mpi" "openfoam_org_12")
 test_source=("${test_openfoam_dir}/etc/bashrc")
 test_modules=("compiler/gnu/${test_gcc_version}" "mpi/openmpi/${test_mpi_version}")
 
 # libiotrace
 test_libiotrace_cmake_options=(
+-DCMAKE_BUILD_TYPE=Release
 -DALL_WRAPPERS_ACTIVE=OFF
 -DENABLE_FILESYSTEM_METADATA=OFF
 -DENABLE_OUTPUT=INFLUXDB
@@ -28,11 +29,12 @@ test_processes_per_worker=16
 export test_processes_per_influxdb=40
 test_mem="90000mb"
 test_time="00:10:00"
-test_queue_name="dev_multiple"
+test_queue_name="${test_partition_max_30_min}"
 
 # test script
 test_script="./openFOAM_motorBike.sh"
-export test_end_time=2500
+export test_end_time=10000
+#export test_end_time=2500
 export IOTRACE_WHITELIST_FUNCTIONS="# newline separated list of functions to trace
 read
 pread

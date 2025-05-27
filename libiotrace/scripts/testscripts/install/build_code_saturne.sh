@@ -21,7 +21,7 @@ if command -v module &> /dev/null; then
     module purge
     module load compiler/gnu/${test_gcc_version}
     module load mpi/openmpi/${test_mpi_version}
-    module load devel/miniconda/${CODE_SATURNE_MINICONDA_VERSION}
+    module load devel/miniforge/${CODE_SATURNE_MINIFORGE_VERSION}
 fi
 
 if [ ! -f ${CODE_SATURNE_SOURCE_FILE} ]; then
@@ -93,7 +93,8 @@ if [ ! -d ${CODE_SATURNE_INSTALL_DIR} ]; then
     #sed -i 's/download\s\+yes/download  no/g' ${CODE_SATURNE_INSTALL_DIR}/setup
     sed -i "s;prefix\s\+\/.*;prefix    ${CODE_SATURNE_INSTALL_PREFIX};g" ${CODE_SATURNE_INSTALL_DIR}/setup
     #/home/es/es_es/es_pkoester/code_saturne/8.2.0
-    sed -i "s/hdf5\s\+no\s\+no\s\+None/hdf5       yes   yes      None/g" ${CODE_SATURNE_INSTALL_DIR}/setup
+    #sed -i "s/hdf5\s\+no\s\+no\s\+None/hdf5       yes   yes      None/g" ${CODE_SATURNE_INSTALL_DIR}/setup
+    sed -i "s/hdf5\s\+auto\s\+no\s\+None/hdf5       yes   yes      None/g" ${CODE_SATURNE_INSTALL_DIR}/setup
     sed -i "s/med\s\+no\s\+no\s\+None/med        yes   yes      None/g" ${CODE_SATURNE_INSTALL_DIR}/setup
 
     echo "    build from setup..."

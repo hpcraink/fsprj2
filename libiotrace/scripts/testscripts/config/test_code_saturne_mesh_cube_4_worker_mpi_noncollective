@@ -28,7 +28,7 @@ test_processes_per_worker=40
 export test_processes_per_influxdb=40
 test_mem="90000mb"
 test_time="00:10:00"
-test_queue_name="multiple"
+test_queue_name="${test_partition_max_30_min}"
 export test_threads_per_process=1
 
 # test script

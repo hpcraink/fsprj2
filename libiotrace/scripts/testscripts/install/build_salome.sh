@@ -26,7 +26,7 @@ fi
 echo "load modules..."
 if command -v module &> /dev/null; then
     module purge
-    module load devel/miniconda/${SALOME_MINICONDA_VERSION}
+    module load devel/miniforge/${SALOME_MINIFORGE_VERSION}
 fi
 
 if ! [ -d ${SALOME_CONDA_ENV} ]; then

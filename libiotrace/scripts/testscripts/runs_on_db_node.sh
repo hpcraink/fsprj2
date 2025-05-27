@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# set TMP if not set (workaround DACHS)
+if [ -z ${TMP+x} ]; then
+    export TMP="/localscratch/tmpdir.${SLURM_JOB_ID}"
+fi
+
 # delete a global influxDB configuration
 rm -f ~/${INFLUXDB_CACHE}/configs
 
@@ -24,7 +29,8 @@ cd $TMP/${INFLUXDB_DIR} && ./${INFLUXDB_EXECUTABLE} --bolt-path=${CACHE}/influxd
 # get local ip
 #ifconfig
 #lshw -class network
-network_interface="${test_network_interface:-ib0}"
+network_interface="${test_network_interface:-${test_default_network_interface}}"
+echo ${network_interface}
 influx_host_ip=$(ifconfig ${network_interface} | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
 # wait for infuxdb Startup

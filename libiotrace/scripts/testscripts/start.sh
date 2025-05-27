@@ -138,5 +138,6 @@ done
 echo "    done"
 
 echo "start sbatch"
-sbatch -p ${test_queue_name} -N ${test_nodes} --mem=${test_mem} -t ${test_time} $(dirname "$0")/manage_db_and_worker_nodes.sh ${test_script_dir}/${test_script} ${test_name} ${test_influx_dir} ${test_dir} ${test_processes_per_worker}
+echo ${test_queue_name}
+sbatch --exclusive -p ${test_queue_name} -N ${test_nodes} --mem=${test_mem} -t ${test_time} $(dirname "$0")/manage_db_and_worker_nodes.sh ${test_script_dir}/${test_script} ${test_name} ${test_influx_dir} ${test_dir} ${test_processes_per_worker}
 echo "    done"

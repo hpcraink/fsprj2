@@ -16,7 +16,8 @@ echo "    source tutorial run functions"
 echo "    copy test case"
 rm -rf ${3}/${2}
 mkdir -p ${3}/${2}
-cp -r $WM_PROJECT_DIR/tutorials/incompressible/pisoFoam/LES/motorBike/motorBike/ ${3}/${2}/
+#cp -r $WM_PROJECT_DIR/tutorials/incompressible/pisoFoam/LES/motorBike/motorBike/ ${3}/${2}/
+cp -r $WM_PROJECT_DIR/tutorials/incompressibleFluid/motorBike/motorBike/ ${3}/${2}/
 
 # patch test case
 echo "    patch test case (use ${PROCESS_COUNT} subdomains with ${PROCESS_COUNT} processes)"

@@ -21,15 +21,23 @@ git clone https://github.com/hpcraink/fsprj2.git
 ```shell
 mkdir <test dir>
 cd <test dir>
-./<libiotrace dir>/libiotrace/scripts/testscripts/install/build_and_configure_all.sh
+./../fsprj2/libiotrace/scripts/testscripts/install/build_and_configure_all.sh
 ```
 Installs InfluxDB, OpenFOAM, Code Saturne and Salome.
 Configures `<<test dir>/config/config`, so it points to `<test dir>`.
-Preferable use tmux or screen for this command (command will run for more than one hour).
+Preferable use tmux or screen for this command (command will run for some hours).
+
+If the script shows an error like
+```shell
+Please download Salome for CentOS CO8 in version 9.13.0 from https://www.salome-platform.org and rename it to SALOME-9.13.0-native-CO8-SRC.tar.gz
+```
+download (Ressources -> Download) the Salome version and copy the downloaded archive with `scp` to `<test dir>`.
+Use "I wish to stay anonymous" to download without a name and e-mail address.
+Subsequent start the `build_and_configure_all.sh` script again.
 
 4. choose a test to run
 
-All files in `<libiotrace dir>/libiotrace/scripts/testscripts/config/`
+All files in `<libiotrace dir>/fsprj2/libiotrace/scripts/testscripts/config/`
 starting with `test_` are usable test configurations.
 Choose one and change the value of the variable `test_config`
 in the file `<test dir>/config/config`
@@ -39,7 +47,7 @@ to the name of the choosen test configuration file.
 
 ```shell
 cd <test dir>
-./<libiotrace dir>/libiotrace/scripts/testscripts/start.sh
+./../fsprj2/libiotrace/scripts/testscripts/start.sh
 ```
 Configures and builds libiotrace.
 Starts the test case with the build libiotrace as sbatch.
@@ -55,6 +63,10 @@ The `ib0 address of influxDB` from the slurm log can be used to connect to the I
 A new ssh connection with port forwarding is needed:
 ```shell
 ssh -L8086:<ib0 address of influxDB>:8086 es_<user id>@bwunicluster.scc.kit.edu
+```
+or
+```shell
+ssh -L8086:<ib0 address of influxDB>:8086 es_<user id>@dachs-login.hs-esslingen.de
 ```
 Now the InfluxDB is available at `http://localhost:8086/`.
 

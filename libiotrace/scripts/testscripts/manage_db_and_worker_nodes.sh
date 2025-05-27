@@ -64,11 +64,14 @@ export PATH="$PWD:$PATH"
 rm -f ${GLOBAL_TMP_DIR}/ib0_${TEST_NAME}
 
 # start influxDB
-bash -c "srun -N 1 -n 1 -c ${test_processes_per_influxdb} -w $DBNODE bash -c \"export PATH="${PATH}" && ${test_base_script_dir}/runs_on_db_node.sh ${TEST_NAME} ${INFLUXDB_ORIG_DIR} ${GLOBAL_TMP_DIR}\"" &
+#bash -c "srun -N 1 -n 1 -c ${test_processes_per_influxdb} -w $DBNODE bash -c \"export PATH="${PATH}" && ${test_base_script_dir}/runs_on_db_node.sh ${TEST_NAME} ${INFLUXDB_ORIG_DIR} ${GLOBAL_TMP_DIR}\"" &
+srun -N 1 -n 1 -c ${test_processes_per_influxdb} --mem=0 -w $DBNODE bash -c "export PATH="${PATH}" && ${test_base_script_dir}/runs_on_db_node.sh ${TEST_NAME} ${INFLUXDB_ORIG_DIR} ${GLOBAL_TMP_DIR}" &
+
 echo "influxDB starting on node ${DBNODE}"
 
 # wait until influxDB is started
 until [ -e ${GLOBAL_TMP_DIR}/ib0_${TEST_NAME} ]; do
+    #echo "    waiting for influxDB ..."
     sleep 10
 done
 
@@ -79,9 +82,9 @@ done < ${GLOBAL_TMP_DIR}/ib0_${TEST_NAME}
 echo "ib0 address of influxDB: ${IB0ADDR}"
 
 # start worker nodes
-echo "starting test ..."
+echo "starting test $(date +"%Y-%m-%d %H:%M:%S") ..."
 cd $PWD && ${TEST_SCRIPT} ${IB0ADDR} ${TEST_NAME} ${GLOBAL_TMP_DIR} ${WORK_NODES} ${WORKER_NODE_COUNT} ${PROCESSES_PER_WORKER_NODE}
-echo "test finished"
+echo "test finished $(date +"%Y-%m-%d %H:%M:%S")"
 
 # signal to DB-node
 echo "make backup of influxDB"

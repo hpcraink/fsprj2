@@ -1,9 +1,13 @@
 #!/bin/bash
 
 # set TMP if not set (workaround DACHS)
-if [ -z ${TMP+x} ]; then
-    export TMP="/localscratch/tmpdir.${SLURM_JOB_ID}"
-fi
+#if [ -z ${TMPDIR+x} ]; then
+#    export TMP="$TMPDIR"
+#fi
+#if [ -z ${TMP+x} ]; then
+#    export TMP="/localscratch/tmpdir.${SLURM_JOB_ID}"
+#fi
+export TMP="${TMPDIR}"
 
 # delete a global influxDB configuration
 rm -f ~/${INFLUXDB_CACHE}/configs
